@@ -1,0 +1,159 @@
+<template>
+  <div class="settings">
+    <h2>{{ t('title') }}</h2>
+
+    <div class="setting-group">
+      <label for="language">{{ t('languageLabel') }}</label>
+      <select v-model="selectedLanguage" id="language">
+        <option disabled value="">{{ t('selectLanguage') }}</option>
+        <option value="ja">{{ t('japanese') }}</option>
+        <option value="en">{{ t('english') }}</option>
+      </select>
+    </div>
+
+    <div class="setting-group">
+      <label for="fontSize">{{ t('fontSizeLabel') }}</label>
+      <select v-model="selectedFontSize" id="fontSize">
+        <option disabled value="">{{ t('selectFontSize') }}</option>
+        <option value="small">{{ t('small') }}</option>
+        <option value="medium">{{ t('medium') }}</option>
+        <option value="large">{{ t('large') }}</option>
+      </select>
+    </div>
+
+    <div class="setting-group">
+      <label for="wallpaper">{{ t('wallpaperLabel') }}</label>
+      <select v-model="selectedWallpaper" id="wallpaper">
+        <option disabled value="">{{ t('selectWallpaper') }}</option>
+        <option value="image.moon.png">{{ t('moon') }}</option>
+        <option value="image.take.png">{{ t('take') }}</option>
+      </select>
+    </div>
+
+    <div v-if="selectedWallpaper">
+      <p>{{ t('preview') }}</p>
+      <img :src="`/${selectedWallpaper}`" class="preview" alt="Preview" />
+    </div>
+
+    <button @click="saveSettings">{{ t('save') }}</button>
+  </div>
+</template>
+
+<script setup>
+import { ref, onMounted } from 'vue'
+import { Auth } from 'aws-amplify'
+
+const selectedLanguage = ref('')
+const selectedFontSize = ref('')
+const selectedWallpaper = ref('')
+
+const locale = {
+  ja: {
+    title: '設定',
+    languageLabel: '言語を選択:',
+    selectLanguage: '-- 言語を選んでください --',
+    fontSizeLabel: 'フォントサイズ:',
+    selectFontSize: '-- フォントサイズを選んでください --',
+    wallpaperLabel: '壁紙を選択:',
+    selectWallpaper: '-- 壁紙を選んでください --',
+    moon: '月夜（moon）',
+    take: '竹（take）',
+    small: '小',
+    medium: '中',
+    large: '大',
+    preview: '選択中のプレビュー:',
+    save: '保存',
+    japanese: '日本語',
+    english: '英語',
+    saveMessage: '設定を保存しました！'
+  },
+  en: {
+    title: 'Settings',
+    languageLabel: 'Select Language:',
+    selectLanguage: '-- Please choose a language --',
+    fontSizeLabel: 'Font Size:',
+    selectFontSize: '-- Please choose a font size --',
+    wallpaperLabel: 'Select Wallpaper:',
+    selectWallpaper: '-- Please choose a wallpaper --',
+    moon: 'Moonlight',
+    take: 'Bamboo',
+    small: 'Small',
+    medium: 'Medium',
+    large: 'Large',
+    preview: 'Current Preview:',
+    save: 'Save',
+    japanese: 'Japanese',
+    english: 'English',
+    saveMessage: 'Settings saved!'
+  }
+}
+
+function t(key) {
+  return locale[selectedLanguage.value]?.[key] || key
+}
+
+onMounted(async () => {
+  const user = await Auth.currentAuthenticatedUser()
+  selectedLanguage.value = user.attributes['custom:language'] || 'ja'
+  selectedFontSize.value = user.attributes['custom:fontSize'] || ''
+  selectedWallpaper.value = user.attributes['custom:wallpaper'] || ''
+})
+
+async function saveSettings() {
+  const user = await Auth.currentAuthenticatedUser()
+  await Auth.updateUserAttributes(user, {
+    'custom:language': selectedLanguage.value,
+    'custom:fontSize': selectedFontSize.value,
+    'custom:wallpaper': selectedWallpaper.value
+  })
+  alert(t('saveMessage'))
+}
+</script>
+
+<style scoped>
+.settings {
+  padding: 2rem;
+  font-size: 1rem;
+}
+
+.setting-group {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.setting-group label {
+  min-width: 140px;
+  font-weight: bold;
+}
+
+.setting-group select {
+  flex: 1;
+  max-width: 260px;
+  padding: 0.2rem 0.6rem;
+  font-size: 0.9rem;
+  height: 2rem;
+  border-radius: 6px;
+}
+
+.preview {
+  width: 300px;
+  height: auto;
+  margin-top: 1rem;
+  border-radius: 8px;
+  border: 1px solid #aaa;
+}
+
+button {
+  margin-top: 1.5rem;
+  padding: 0.6rem 1.2rem;
+  font-size: 1rem;
+  background-color: #274c77;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+</style>
