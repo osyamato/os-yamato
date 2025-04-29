@@ -12,10 +12,12 @@
     </div>
 
     <!-- 下段アイコン -->
-    <div class="icon-row">
-      <button @click="goTo('weather')">🌤</button>
-      <button @click="goTo('calendar')">📅</button>
-    </div>
+<!-- 下段アイコン -->
+<div class="icon-row">
+  <button @click="goTo('weather')">🌤</button>
+  <button @click="goTo('calendar')">📅</button>
+  <button @click="goTo('diary')">🌸</button> <!-- ← 追加ここだけ -->
+</div>
   </div>
 </template>
 

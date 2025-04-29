@@ -9,6 +9,7 @@ export const createMemo = /* GraphQL */ `
     createMemo(input: $input, condition: $condition) {
       id
       content
+      tags
       owner
       createdAt
       updatedAt
@@ -24,6 +25,7 @@ export const updateMemo = /* GraphQL */ `
     updateMemo(input: $input, condition: $condition) {
       id
       content
+      tags
       owner
       createdAt
       updatedAt
@@ -39,6 +41,7 @@ export const deleteMemo = /* GraphQL */ `
     deleteMemo(input: $input, condition: $condition) {
       id
       content
+      tags
       owner
       createdAt
       updatedAt
@@ -98,6 +101,117 @@ export const deleteSchedule = /* GraphQL */ `
       title
       memo
       createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const createDiary = /* GraphQL */ `
+  mutation CreateDiary(
+    $input: CreateDiaryInput!
+    $condition: ModelDiaryConditionInput
+  ) {
+    createDiary(input: $input, condition: $condition) {
+      id
+      owner
+      content
+      date
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const updateDiary = /* GraphQL */ `
+  mutation UpdateDiary(
+    $input: UpdateDiaryInput!
+    $condition: ModelDiaryConditionInput
+  ) {
+    updateDiary(input: $input, condition: $condition) {
+      id
+      owner
+      content
+      date
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const deleteDiary = /* GraphQL */ `
+  mutation DeleteDiary(
+    $input: DeleteDiaryInput!
+    $condition: ModelDiaryConditionInput
+  ) {
+    deleteDiary(input: $input, condition: $condition) {
+      id
+      owner
+      content
+      date
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const createContact = /* GraphQL */ `
+  mutation CreateContact(
+    $input: CreateContactInput!
+    $condition: ModelContactConditionInput
+  ) {
+    createContact(input: $input, condition: $condition) {
+      id
+      name
+      furigana
+      phoneNumbers
+      emails
+      note
+      yamatoId
+      owner
+      createdAt
+      lastOpenedAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const updateContact = /* GraphQL */ `
+  mutation UpdateContact(
+    $input: UpdateContactInput!
+    $condition: ModelContactConditionInput
+  ) {
+    updateContact(input: $input, condition: $condition) {
+      id
+      name
+      furigana
+      phoneNumbers
+      emails
+      note
+      yamatoId
+      owner
+      createdAt
+      lastOpenedAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const deleteContact = /* GraphQL */ `
+  mutation DeleteContact(
+    $input: DeleteContactInput!
+    $condition: ModelContactConditionInput
+  ) {
+    deleteContact(input: $input, condition: $condition) {
+      id
+      name
+      furigana
+      phoneNumbers
+      emails
+      note
+      yamatoId
+      owner
+      createdAt
+      lastOpenedAt
       updatedAt
       __typename
     }

@@ -5,6 +5,7 @@ input AMPLIFY { globalAuthRule: AuthRule = { allow: public } } # FOR TESTING ONL
 type Memo @model @auth(rules: [{ allow: owner }]) {
   id: ID!
   content: String!
+  tags: [String]        # ← ここを追加！
   owner: String
   createdAt: AWSDateTime
   updatedAt: AWSDateTime
@@ -21,4 +22,26 @@ type Schedule @model @auth(rules: [{ allow: owner }]) {
   memo: String
   createdAt: AWSDateTime
   updatedAt: AWSDateTime
+}
+
+type Diary @model @auth(rules: [{ allow: owner }]) {
+  id: ID!
+  owner: String!
+  content: String!
+  date: AWSDate!
+  createdAt: AWSDateTime
+  updatedAt: AWSDateTime
+}
+
+type Contact @model @auth(rules: [{ allow: owner }]) {
+  id: ID!
+  name: String!
+  furigana: String
+  phoneNumbers: [String]
+  emails: [String]
+  note: String
+  yamatoId: String        # ✅ Yamato IDを追加！
+  owner: String
+  createdAt: AWSDateTime  # 芽が出た瞬間
+  lastOpenedAt: AWSDateTime # 世話をした最新
 }

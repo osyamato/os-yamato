@@ -2,7 +2,7 @@
   <div class="calendar-container" :class="animationDirection">
     <h2 class="month-title">
       <button @click="prevMonth">&lt;</button>
-      {{ currentMonth + 1 }}月
+      {{ language === 'en' ? monthsEn[currentMonth] : (currentMonth + 1) + '月' }}
       <button @click="nextMonth">&gt;</button>
     </h2>
 
@@ -16,41 +16,37 @@
       </thead>
       <tbody>
         <tr v-for="(week, index) in calendar" :key="index">
-<td
-  v-for="(date, i) in week"
-  :key="i"
-  :class="{
-    'today': !isNaN(date?.getTime?.()) && isToday(date)
-  }"
-  :style="getEventCellStyle(date)"
-  @click="openModal(date)"
->
+          <td
+            v-for="(date, i) in week"
+            :key="i"
+            :class="{ 'today': !isNaN(date?.getTime?.()) && isToday(date) }"
+            :style="getEventCellStyle(date)"
+            @click="openModal(date)"
+          >
             <span v-if="!isNaN(date?.getTime?.())" class="date-number">
               {{ date.getDate() }}
             </span>
 
-            <!-- ✅ 祝日名（付箋スタイル） -->
-            <div
-              v-if="getHolidayNameSafe(date)"
-              class="holiday-sticky"
-            >
+            <!-- 祝日 -->
+            <div v-if="getHolidayNameSafe(date)" class="holiday-sticky">
               {{ getHolidayNameSafe(date).length > 6 ? getHolidayNameSafe(date).slice(0, 6) + '…' : getHolidayNameSafe(date) }}
             </div>
 
-            <!-- イベント（付箋スタイル） -->
-<div
-  v-for="(event, idx) in getEvents(date)"
-  :key="idx"
-  class="event-sticky"
-  :style="{ marginTop: idx === 0 ? '18px' : '2px' }"
->
-  {{ event.title.length > 6 ? event.title.slice(0, 6) + '…' : event.title }}
-</div>
+            <!-- イベント -->
+            <div
+              v-for="(event, idx) in getEvents(date)"
+              :key="idx"
+              class="event-sticky"
+              :style="{ marginTop: idx === 0 ? '18px' : '2px' }"
+            >
+              {{ event.title.length > 6 ? event.title.slice(0, 6) + '…' : event.title }}
+            </div>
           </td>
         </tr>
       </tbody>
     </table>
 
+    <!-- 下部イベント一覧 -->
     <div class="event-footer">
       <div
         class="event-sticky"
@@ -61,64 +57,70 @@
         {{ new Date(event.date).getDate() }}日：{{ event.title }}
       </div>
     </div>
-<transition name="modal">
-  <div class="modal" v-if="selectedDate">
-    <div class="modal-content">
-      <h3>{{ selectedDate.toLocaleDateString() }}</h3>
 
-      <!-- ⭐ 祝日があれば表示 -->
-      <p v-if="getHolidayNameSafe(selectedDate)" class="holiday-tag">
-        🇯🇵 {{ getHolidayNameSafe(selectedDate) }}
-      </p>
+    <!-- モーダル -->
+    <transition name="modal">
+      <div class="modal" v-if="selectedDate" @click.self="selectedDate = null">
+        <div class="modal-content">
+<div class="date-wrapper">
+  <h3>{{ selectedDate.toLocaleDateString() }}</h3>
+  <button class="diary-pencil" @click="goToDiary(selectedDate)">✏️</button>
+</div>
 
-      <!-- ⭐ 複数予定の表示 -->
-      <transition name="fade-height" mode="out-in">
-        <div key="modal-inner" class="modal-inner">
-          <div v-if="selectedEvents.length">
-            <div
-              class="event-card"
-              v-for="(event, index) in selectedEvents"
-              :key="event.id || index"
-            >
-              <p><strong>{{ event.title }}</strong></p>
-              <p>{{ event.startTime }} - {{ event.endTime }}</p>
-              <p class="memo-text">{{ event.memo }}</p>
-              <div class="button-container">
-                <button class="btn-active" @click="editEvent(event)">編集</button>
-                <button class="btn-disabled" @click="deleteEvent(event.id)">削除</button>
+          <!-- 祝日 -->
+          <p v-show="getHolidayNameSafe(selectedDate)" class="holiday-tag">
+            🇯🇵 {{ getHolidayNameSafe(selectedDate) }}
+          </p>
+
+          <transition name="fade-height" mode="out-in">
+            <div key="modal-inner" class="modal-inner">
+              <!-- 予定があるとき -->
+              <div v-if="selectedEvents.length">
+                <div
+                  class="event-card"
+                  v-for="(event, index) in selectedEvents"
+                  :key="event.id || index"
+                >
+                  <p><strong>{{ event.title }}</strong></p>
+                  <p>{{ event.startTime }} - {{ event.endTime }}</p>
+                  <p class="memo-text">{{ event.memo }}</p>
+                  <div class="button-container-row">
+                    <button class="btn-active" @click="editEvent(event)">
+                      {{ t.edit[language] }}
+                    </button>
+                    <button class="btn-disabled" @click="deleteEvent(event.id)">
+                      {{ t.delete[language] }}
+                    </button>
+                  </div>
+                </div>
+                <hr />
+              </div>
+
+              <!-- 新規作成フォーム -->
+              <div>
+                <input v-model="title" :placeholder="t.title[language]" />
+                <input type="time" v-model="startTime" />
+                <input type="time" v-model="endTime" />
+                <input v-model="memo" :placeholder="t.memo[language]" />
+
+                <div class="button-container-row">
+                  <button
+                    :class="isFormFilled ? 'btn-active' : 'btn-disabled'"
+                    :disabled="!isFormFilled"
+                    @click="editingEventId ? updateSchedule() : createSchedule()"
+                  >
+                    {{ editingEventId ? t.update[language] : t.add[language] }}
+                  </button>
+                  <button class="btn-disabled" @click="selectedDate = null">
+                    {{ t.close[language] }}
+                  </button>
+                </div>
               </div>
             </div>
-            <hr />
-          </div>
-
-          <!-- 新規 or 編集フォーム -->
-          <div>
-            <input v-model="title" placeholder="予定タイトル" />
-            <input type="time" v-model="startTime" />
-            <input type="time" v-model="endTime" />
-            <input v-model="memo" placeholder="メモ" />
-
-            <div class="button-container">
-              <button
-                :class="isFormFilled ? 'btn-active' : 'btn-disabled'"
-                :disabled="!isFormFilled"
-                @click="editingEventId ? updateSchedule() : createSchedule()"
-              >
-                {{ editingEventId ? '更新' : '追加' }}
-              </button>
-            </div>
-          </div>
-
-          <div class="button-container">
-            <button class="btn-disabled" @click="selectedDate = null">閉じる</button>
-          </div>
+          </transition>
         </div>
-      </transition>
-    </div>
-  </div>
-</transition>
-
-
+      </div>
+    </transition>
   </div>
 </template>
 
@@ -144,6 +146,10 @@ import {
 } from '@/graphql/mutations'
 import * as Holidays from 'japanese-holidays'
 
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+
 const today = new Date()
 const selectedDate = ref(null)
 const selectedEvent = ref(null)
@@ -161,6 +167,22 @@ const daysOfWeekMap = {
   en: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
 }
 
+const monthsEn = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December'
+]
+const t = {
+  save: { ja: '保存', en: 'Save' },
+  delete: { ja: '削除', en: 'Delete' },
+  update: { ja: '更新', en: 'Update' },
+  add: { ja: '追加', en: 'Add' },
+  close: { ja: '閉じる', en: 'Close' },
+  edit: { ja: '編集', en: 'Edit' },
+  title: { ja: '予定タイトル', en: 'Title' },
+  memo: { ja: 'メモ', en: 'Memo' }
+}
+
+
 const localizedDaysOfWeek = computed(() => daysOfWeekMap[language.value] || daysOfWeekMap.ja)
 
 const currentMonth = ref(today.getMonth())
@@ -169,6 +191,14 @@ const animationDirection = ref('dropDown')
 
 function isValidDate(d) {
   return d instanceof Date && !isNaN(d.getTime())
+}
+
+function goToDiary(date) {
+  if (!date) return;
+  router.push({
+    name: 'diary',  // ← ✅ ここを 'diary' に直す
+    query: { date: date.toISOString() }
+  });
 }
 
 const calendar = computed(() => {
@@ -416,6 +446,20 @@ onMounted(fetchSchedules)
   animation: slideRight 0.7s ease-out;
 }
 
+.date-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.diary-pencil {
+  background: none;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+  color: #345; /* カレンダーと統一カラー */
+  padding: 0;
+}
 
 .month-title {
   font-size: 1.5rem;
@@ -527,6 +571,49 @@ display: none;
 }
 
 
+.button-container-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 0.5rem;
+}
+
+.button-container-row button {
+  flex: 1;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  border-radius: 8px;
+}
+
+.button-container {
+  display: flex;
+  justify-content: space-between; /* 横並び＆均等配置 */
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.btn-edit {
+  background-color: #274c77;
+  color: white;
+  flex: 1;
+  padding: 0.6rem 1rem;
+  font-size: 1rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.btn-delete {
+  background-color: #ccc;
+  color: #666;
+  flex: 1;
+  padding: 0.6rem 1rem;
+  font-size: 1rem;
+  border: none;
+  border-radius: 8px;
+  cursor: not-allowed;
+}
+
 .today::before {
   content: '';
   position: absolute;
@@ -579,16 +666,13 @@ display: none;
 }
 
 .holiday-tag {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  justify-content: center;
-  font-size: 0.85rem;
-  color: #b94444;
-  margin-bottom: 0.5rem;
+  margin-top: 0.5rem;      /* ✅ 上側だけ少し余白（なくてもOK） */
+  margin-bottom: 0.8rem;   /* ✅ 下側で全体の空き感を調整 */
+  padding: 6px 12px;
   background: rgba(255, 0, 0, 0.1);
-  padding: 4px 8px;
-  border-radius: 4px;
+  color: #b94444;
+  border-radius: 6px;
+  font-size: 0.85rem;
   text-align: center;
 }
 
@@ -612,8 +696,10 @@ display: none;
   background: white;
   padding: 1rem;
   border-radius: 12px;
-  width: 320px; /* ← ✅ 横幅を明示的に固定 */
-  min-height: 360px; /* ← ✅ 高さも固定済み */
+  width: 320px;
+  /* ✅ 高さを内容に合わせて調整 */
+  min-height: auto;
+
   text-align: left;
   box-sizing: border-box;
   display: flex;
