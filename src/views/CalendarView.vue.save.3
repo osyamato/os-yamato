@@ -6,6 +6,7 @@
       <button @click="nextMonth">&gt;</button>
     </h2>
 
+    <!-- カレンダー本体 -->
     <table class="calendar-grid">
       <thead>
         <tr>
@@ -19,7 +20,7 @@
           <td
             v-for="(date, i) in week"
             :key="i"
-            :class="{ today: !isNaN(date?.getTime?.()) && isToday(date) }"
+            :class="{ 'today': !isNaN(date?.getTime?.()) && isToday(date) }"
             :style="getEventCellStyle(date)"
             @click="openModal(date)"
           >
@@ -27,19 +28,12 @@
               {{ date.getDate() }}
             </span>
 
-            <!-- 祝日 -->
-            <div
-              v-if="getHolidayNameSafe(date)"
-              class="holiday-sticky"
-              :title="getHolidayNameSafe(date)"
-            >
-              {{ getHolidayNameSafe(date).length > 6
-                ? getHolidayNameSafe(date).slice(0, 6) + '…'
-                : getHolidayNameSafe(date)
-              }}
+            <!-- 祝日名 -->
+            <div v-if="getHolidayNameSafe(date)" class="holiday-sticky">
+              {{ getHolidayNameSafe(date).length > 6 ? getHolidayNameSafe(date).slice(0, 6) + '…' : getHolidayNameSafe(date) }}
             </div>
 
-            <!-- イベント -->
+            <!-- イベント表示 -->
             <div
               v-for="(event, idx) in getEvents(date)"
               :key="idx"
@@ -53,60 +47,80 @@
       </tbody>
     </table>
 
-<Modal :visible="selectedDate !== null" customClass="compact" @close="selectedDate = null">
-  <template #default>
-    <div class="date-wrapper">
-      <h3>{{ selectedDate?.toLocaleDateString() }}</h3>
-      <button class="diary-pencil" @click="goToDiary(selectedDate)">✏️</button>
+    <!-- 下部イベント表示 -->
+    <div class="event-footer">
+      <div
+        class="event-sticky"
+        v-for="(event, idx) in filteredEvents"
+        :key="idx"
+        @click="openFromFooter(event)"
+      >
+        {{ new Date(event.date).getDate() }}日：{{ event.title }}
+      </div>
     </div>
 
-    <p v-if="getHolidayNameSafe(selectedDate)" class="holiday-tag">
-      🇯🇵 {{ getHolidayNameSafe(selectedDate) }}
-    </p>
+    <!-- モーダルウィンドウ -->
+    <transition name="modal">
+      <div class="modal" v-if="selectedDate" @click.self="selectedDate = null">
+        <div class="modal-content">
+          <h3>{{ selectedDate.toLocaleDateString() }}</h3>
 
-    <transition name="fade-height" mode="out-in">
-      <div key="modal-inner" class="modal-inner">
-        <!-- 既存の予定 -->
-        <div v-if="selectedEvents.length">
-          <div
-            class="event-card"
-            v-for="(event, index) in selectedEvents"
-            :key="event.id || index"
-          >
-            <p><strong>{{ event.title }}</strong></p>
-            <p>{{ event.startTime }} - {{ event.endTime }}</p>
-            <p class="memo-text">{{ event.memo }}</p>
-            <div class="button-container-row">
-              <YamatoButton @click="editEvent(event)">{{ t.edit[language] }}</YamatoButton>
-              <YamatoButton type="danger" @click="deleteEvent(event.id)">
-                {{ t.delete[language] }}
-              </YamatoButton>
+<!-- ⭐ 祝日があれば表示（ないときは余白ごと消える） -->
+<p
+  v-if="getHolidayNameSafe(selectedDate)"
+  class="holiday-tag"
+>
+  🇯🇵 {{ getHolidayNameSafe(selectedDate) }}
+</p>
+
+          <transition name="fade-height" mode="out-in">
+            <div key="modal-inner" class="modal-inner">
+              <div v-if="selectedEvents.length">
+                <div
+                  class="event-card"
+                  v-for="(event, index) in selectedEvents"
+                  :key="event.id || index"
+                >
+                  <p><strong>{{ event.title }}</strong></p>
+                  <p>{{ event.startTime }} - {{ event.endTime }}</p>
+                  <p class="memo-text">{{ event.memo }}</p>
+                  <div class="button-container">
+                    <button class="btn-active" @click="editEvent(event)">{{ t.edit[language] }}</button>
+                    <button class="btn-disabled" @click="deleteEvent(event.id)">{{ t.delete[language] }}</button>
+                  </div>
+                </div>
+                <hr />
+              </div>
+
+              <!-- 入力フォーム -->
+              <div>
+                <input v-model="title" :placeholder="t.title[language]" />
+                <input type="time" v-model="startTime" />
+                <input type="time" v-model="endTime" />
+                <input v-model="memo" :placeholder="t.memo[language]" />
+
+                <div class="button-container-row">
+                  <button
+                    :class="isFormFilled ? 'btn-active' : 'btn-disabled'"
+                    :disabled="!isFormFilled"
+                    @click="editingEventId ? updateSchedule() : createSchedule()"
+                  >
+                    {{ editingEventId ? t.update[language] : t.add[language] }}
+                  </button>
+                  <button class="btn-disabled" @click="selectedDate = null">
+                    {{ t.close[language] }}
+                  </button>
+                </div>
+              </div>
             </div>
-          </div>
-          <hr />
-        </div>
-
-        <!-- 入力フォーム -->
-        <div>
-          <input v-model="title" :placeholder="t.title[language]" />
-          <input type="time" v-model="startTime" />
-          <input type="time" v-model="endTime" />
-          <input v-model="memo" :placeholder="t.memo[language]" />
-          <div class="button-container-row">
-            <YamatoButton
-              :disabled="!isFormFilled"
-              @click="editingEventId ? updateSchedule() : createSchedule()"
-            >
-              {{ editingEventId ? t.update[language] : t.add[language] }}
-            </YamatoButton>
-          </div>
+          </transition>
         </div>
       </div>
     </transition>
-  </template>
-</Modal>
   </div>
 </template>
+
+
 
 
 
@@ -128,12 +142,6 @@ import {
   updateSchedule as updateScheduleMutation
 } from '@/graphql/mutations'
 import * as Holidays from 'japanese-holidays'
-import YamatoButton from '@/components/YamatoButton.vue'
-
-import { useRouter } from 'vue-router'
-import Modal from '@/components/Modal.vue'
-
-const router = useRouter()
 
 const today = new Date()
 const selectedDate = ref(null)
@@ -176,14 +184,6 @@ const animationDirection = ref('dropDown')
 
 function isValidDate(d) {
   return d instanceof Date && !isNaN(d.getTime())
-}
-
-function goToDiary(date) {
-  if (!date) return;
-  router.push({
-    name: 'diary',  // ← ✅ ここを 'diary' に直す
-    query: { date: date.toISOString() }
-  });
 }
 
 const calendar = computed(() => {
@@ -413,11 +413,12 @@ onMounted(fetchSchedules)
 
 
 <style scoped>
-/* 🌸 カレンダー全体 */
 .calendar-container {
   padding: 1rem;
   font-family: sans-serif;
   text-align: center;
+
+  /* ▼ 追加部分（簾のように降りるアニメ） */
   animation: dropDown 0.4s ease-out;
   transform-origin: top center;
 }
@@ -430,7 +431,7 @@ onMounted(fetchSchedules)
   animation: slideRight 0.7s ease-out;
 }
 
-/* 🌸 月タイトル */
+
 .month-title {
   font-size: 1.5rem;
   margin-bottom: 0.5rem;
@@ -445,11 +446,17 @@ onMounted(fetchSchedules)
   color: #345;
 }
 
-/* 🌸 曜日見出し */
 .calendar-grid {
   width: 100%;
   border-collapse: collapse;
   table-layout: fixed;
+}
+
+.holiday-name {
+  font-size: 0.6rem;
+  color: crimson;
+  margin-top: 2px;
+  display: block;
 }
 
 .calendar-grid th {
@@ -458,8 +465,8 @@ onMounted(fetchSchedules)
 }
 
 .day-circle {
-  background-color: rgba(52, 85, 135, 0.15);
-  color: rgba(52, 85, 135, 0.6);
+  background-color: rgba(52, 85, 135, 0.15); /* #345 を淡く */
+  color: rgba(52, 85, 135, 0.6);             /* 白 → 柔らかブルー */
   border-radius: 50%;
   width: 32px;
   height: 32px;
@@ -468,25 +475,87 @@ onMounted(fetchSchedules)
   font-size: 0.85rem;
 }
 
-/* 🌸 日付セル */
 .calendar-grid td {
-  border-top: 1px solid rgba(150, 150, 150, 0.2);
-  border-bottom: 1px solid rgba(150, 150, 150, 0.2);
+  border-top: 1px solid rgba(150, 150, 150, 0.2);    /* やさしいグレー */
+  border-bottom: 1px solid rgba(150, 150, 150, 0.2); /* 同じく */
+  border-left: none;
+  border-right: none;
   height: 80px;
+  width: 100px;
   vertical-align: top;
   padding: 4px;
   position: relative;
   box-sizing: border-box;
 }
 
-.date-number {
-  position: absolute;
-  top: 4px;
-  right: 6px;
-  font-size: 0.85rem;
-  font-weight: bold;
-  z-index: 2;
+.holiday-under-title {
+  margin-top: -0.4rem;
+  margin-bottom: 0.8rem;
+  font-size: 0.9rem;
+  color: crimson;
+  font-weight: 500;
+  text-align: center;
 }
+
+.
+today {
+  border: 2px solid #274c77;
+  position: relative;
+}
+
+.event-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: flex-start;
+  padding: 1rem 0.5rem;
+  margin-top: 1rem;
+  border-top: 1px solid #444;
+  /* background-color: transparent; */  /* ← 背景を透明にしてもOK */
+  background-color: inherit; /* ✅ ページ全体の背景に合わせる */
+}
+
+.event-footer .event-sticky {
+display: none;
+  background-color: #fdf5c0;
+  color: #333;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  box-shadow: 1px 1px 3px rgba(255, 255, 255, 0.05);
+}
+
+
+.event-sticky {
+  position: relative;
+  background-color: #fffcbb;
+  border: 1px solid #e0c97f;
+  border-radius: 4px;
+  padding: 2px 4px;
+  font-size: 0.7rem;
+  /* margin-top は JS 側で制御する */
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
+  z-index: 1;
+}
+
+
+.button-container-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 0.5rem;
+}
+
+.button-container-row button {
+  flex: 1;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  border-radius: 8px;
+}
+
 
 .today::before {
   content: '';
@@ -500,177 +569,217 @@ onMounted(fetchSchedules)
   z-index: 0;
 }
 
-/* 🌸 イベント */
-.event-sticky {
-  background-color: #fffcbb;
-  border: 1px solid #e0c97f;
+.date-number {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  font-size: 0.85rem;
+  font-weight: bold;
+  z-index: 2; /* ← ここを追加 */
+}
+
+.event-label {
+  position: absolute;
+  bottom: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.75rem;
+  background: #88f;
+  color: white;
   border-radius: 4px;
   padding: 2px 4px;
-  font-size: 0.7rem;
-  overflow: hidden;
+  max-width: 90%;
   white-space: nowrap;
+  overflow: hidden;
   text-overflow: ellipsis;
-  box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
-  margin-top: 18px;
   z-index: 1;
 }
 
-/* 🌸 モーダル */
 .modal {
   position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0, 0, 0, 0.2);
-  backdrop-filter: blur(1px);
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
   display: flex;
   justify-content: center;
-  align-items: flex-start;
-  padding-top: 10vh;
-  z-index: 1000;
+  align-items: center;
+  z-index: 999;
 }
 
-.modal-inner-card {
-  background: #fff;
-  color: #111;
-  border-radius: 14px;
-  padding: 1.5rem;
-  width: 100%;
-  max-width: 480px;
-  max-height: 85vh;
-  overflow-y: auto;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+.holiday-tag {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  justify-content: center;
+  font-size: 0.85rem;
+  color: #b94444;
+  margin-bottom: 0.5rem;
+  background: rgba(255, 0, 0, 0.1);
+  padding: 4px 8px;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.event-card {
+  background: #f8f8f8;
+  padding: 0.5rem;
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+  border: 1px solid #ddd;
+  color: #333; /* ← ここを明示する */
+}
+
+.memo-text {
+  font-size: 0.8rem;
+  color: #555;
+  margin-bottom: 0.4rem;
+}
+
+
+.modal-content {
+  background: white;
+  padding: 1rem;
+  border-radius: 12px;
+  width: 320px; /* ← ✅ 横幅を明示的に固定 */
+  min-height: 360px; /* ← ✅ 高さも固定済み */
+  text-align: left;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
-  margin: auto;
-}
-
-.modal-inner-card.compact {
- padding: 2rem 1.5rem 1.5rem;
-  max-width: 420px;
-  border-radius: 12px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-  background: #fff;
-  color: #111;
-}
-
-.modal-title {
-  text-align: center;
-  font-size: 1.4rem;
-  font-weight: normal;
-  margin-bottom: 1rem;
-}
-
-.date-wrapper {
-  display: flex;
-  align-items: center;
   justify-content: space-between;
-  margin-bottom: 1rem;
+  transition: all 0.6s ease;
 }
 
-.diary-pencil {
-  background: none;
-  border: none;
-  font-size: 1rem;
-  cursor: pointer;
-  color: #345;
-  padding: 0;
-}
 
-input,
-textarea {
+.modal-content input {
   width: 100%;
-  padding: 0.8rem;
-  margin-top: 0.6rem;
+  margin-bottom: 0.5rem;
+  padding: 0.4rem;
   font-size: 1rem;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  box-sizing: border-box;
-  background: #fff;
-  color: #111;
 }
 
-.holiday-label,
-.holiday-sticky {
-  background-color: #fcebea;
-  color: #b33939;
-  font-size: 0.6rem;
-  padding: 0.08rem 0.3rem;
-  border-radius: 5px;
-  font-weight: 500;
-  line-height: 1;
-  max-width: 60px;               /* ✅ 幅の上限を小さく制限 */
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
 
-@media (max-width: 480px) {
-  .holiday-label,
-  .holiday-sticky {
-    font-size: 0.6rem;
-    padding: 0.1rem 0.3rem;
-  }
-}
-
-textarea {
-  min-height: 100px;
-  resize: vertical;
-}
-
-.button-container-row,
-.button-row {
-  display: flex;
-  justify-content: center;
-  gap: 1rem;
-  margin-top: 1.5rem;
-  margin-bottom: 1rem; /* ✅ 下の余白を追加 */
-}
-
-/* 🌙 ダークモード対応 */
-@media (prefers-color-scheme: dark) {
-  .modal-inner-card.compact {
-    background: #1f1f1f !important;
-    color: #f5f5f5 !important;
-  }
-
-  input,
-  textarea {
-    background: #2e2e2e !important;
-    color: #fff !important;
-    border-color: #444 !important;
-  }
-}
-
-/* 🌸 アニメーション */
 .modal-enter-active {
   animation: dropDown 0.4s ease-out;
 }
+
 .modal-leave-active {
   animation: flyUp 0.4s ease-in;
 }
 
-@keyframes dropDown {
-  0% { transform: translateY(-40px); opacity: 0; }
-  100% { transform: translateY(0); opacity: 1; }
+.button-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 0.5rem;
 }
 
-@keyframes flyUp {
-  0% { transform: translateY(0); opacity: 1; }
-  100% { transform: translateY(-40px); opacity: 0; }
+.btn-disabled {
+  background-color: #ccc;
+  color: #888;
+  cursor: not-allowed;
+}
+
+.btn-active {
+  background-color: #274c77; /* 和風ブルー */
+  color: white;
+  cursor: pointer;
+}
+
+button {
+  padding: 0.6rem 1.2rem;
+  font-size: 1rem;
+  border: none;
+  border-radius: 8px;
+  transition: background-color 0.3s;
+}
+
+.holiday-sticky {
+  position: relative;
+  background-color: rgba(255, 0, 0, 0.15); /* 当日の背景色に合わせる */
+  color: crimson;
+  border-radius: 4px;
+  padding: 2px 4px;
+  font-size: 0.65rem;
+  margin-top: 18px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  z-index: 1;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: all 0.3s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+.fade-height-enter-active,
+.fade-height-leave-active {
+  transition: all 0.3s ease;
+}
+.fade-height-enter-from,
+.fade-height-leave-to {
+  opacity: 0;
+  transform: scale(0.98);
+  max-height: 0;
+}
+.fade-height-enter-to,
+.fade-height-leave-from {
+  opacity: 1;
+  transform: scale(1);
+  max-height: 1000px; /* 適度に大きめに */
+}
+
+
+@keyframes dropDown {
+  0% {
+    transform: translateY(-40px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 @keyframes slideLeft {
-  0% { transform: translateX(40px); opacity: 0; }
-  100% { transform: translateX(0); opacity: 1; }
+  0% {
+    transform: translateX(40px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }
 
 @keyframes slideRight {
-  0% { transform: translateX(-40px); opacity: 0; }
-  100% { transform: translateX(0); opacity: 1; }
+  0% {
+    transform: translateX(-40px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }
 
-
+@keyframes flyUp {
+  0% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-40px);
+    opacity: 0;
+  }
+}
 </style>
 
 

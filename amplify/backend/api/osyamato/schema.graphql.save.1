@@ -11,16 +11,7 @@ type Memo @model @auth(rules: [{ allow: owner }]) {
   updatedAt: AWSDateTime
 }
 
-type Diary @model @auth(rules: [{ allow: owner }]) {
-  id: ID!
-  owner: String!
-  content: String!
-  date: AWSDate!
-  lastOpenedAt: AWSDateTime  # ← 追加
-  createdAt: AWSDateTime
-  updatedAt: AWSDateTime
-}
-
+# ✅ カレンダー用の予定モデル
 type Schedule @model @auth(rules: [{ allow: owner }]) {
   id: ID!
   owner: String!
@@ -29,7 +20,15 @@ type Schedule @model @auth(rules: [{ allow: owner }]) {
   endTime: String
   title: String
   memo: String
-  lastOpenedAt: AWSDateTime  # ← 追加
+  createdAt: AWSDateTime
+  updatedAt: AWSDateTime
+}
+
+type Diary @model @auth(rules: [{ allow: owner }]) {
+  id: ID!
+  owner: String!
+  content: String!
+  date: AWSDate!
   createdAt: AWSDateTime
   updatedAt: AWSDateTime
 }
@@ -102,17 +101,3 @@ type PublicProfile @model
   icon: String
   bio: String
 }
-type ChatRequest @model @auth(rules: [
-  { allow: owner, ownerField: "fromUserId", operations: [create, read, update, delete] },
-  { allow: owner, ownerField: "toUserId", operations: [read, update, delete] } # ✅ delete を追加
-]) {
-  id: ID!
-  fromUserId: ID!       # 申請者（Cognitoのsub）
-  toUserId: ID!         # 相手ユーザー
-  status: String!       # "pending" / "accepted" / "rejected"
-  message: String       # 任意の申請メッセージ
-  createdAt: AWSDateTime!
-  ttl: AWSTimestamp     # ✅ TTLによって3日で自動削除される
-}
-
-

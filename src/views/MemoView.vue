@@ -1,137 +1,136 @@
 <template>
   <div class="memo-container">
-    <!-- 🔵 ヘッダー -->
-    <div class="memo-header">
-      <button class="search-button" @click="openSearchModal">🔍</button>
-      <h2>メモ</h2>
-      <button class="edit-button" @click="openNewMemoModal">✏️</button>
-    </div>
+<!-- 🔵 ヘッダー -->
+<div class="memo-header">
+  <h2 class="header-title">メモ</h2>
+
+  <div class="header-icons">
+    <button class="icon-button" @click="openSearchModal">🔍</button>
+    <button class="icon-button" @click="openNewMemoModal">✏️</button>
+    
+    <!-- 📎: ファイルアップロード -->
+    <label class="icon-button upload-icon">
+      📎
+      <input type="file" accept=".txt" @change="handleFileUpload" hidden />
+    </label>
+  </div>
+</div>
 
     <!-- 🔵 メモ一覧 -->
-<div v-if="filteredMemos.length === 0" class="empty-message">
-  登録されたメモがありません
-</div>
-
-<div v-else class="memo-list">
-  <div
-    v-for="memo in filteredMemos"
-    :key="memo.id"
-    class="memo-card"
-    @click="openEditMemoModal(memo)"
-  >
-    <div class="name-with-icon">
-      <span class="flower-icon">{{ getLifeStageIcon(memo) }}</span>
-      <p class="memo-content">{{ memo.content }}</p>
-    </div>
-
-    <!-- ✅ 作成日 / 更新日 表示 -->
-<div class="memo-dates">
-  作成: {{ formatDate(memo.createdAt) }}
-<span v-if="memo.createdAt && memo.updatedAt && !isSameDay(memo.createdAt, memo.updatedAt)">
-  ／ 更新: {{ formatDate(memo.updatedAt) }}
-</span>
-</div>
-</div>
-</div>
-
-    <!-- 🔵 新規・編集モーダル -->
-    <transition name="modal">
-      <div v-if="showModal" class="modal" @click.self="closeModal">
-        <div class="modal-content">
-          <h3 class="modal-title-icon-only">
-            <span class="flower-icon-small">{{ getLifeStageIcon(selectedMemo) }}</span>
-          </h3>
-
-          <textarea
-            v-model="memoContent"
-            :placeholder="selectedMemo ? 'メモを編集...' : 'メモを書く...'"
-          />
-
-          <div class="button-row">
-            <button class="btn-tag" @click="toggleTagArea">🏷️</button>
-          </div>
-
-          <div v-if="showTagArea" class="tag-area">
-            <div class="tag-list">
-              <button
-                v-for="tag in allTags"
-                :key="tag"
-                class="tag-button"
-                :class="{ selected: selectedTags.includes(tag) }"
-                @click="toggleTag(tag)"
-              >
-                {{ tag }}
-              </button>
-            </div>
-            <div class="add-tag-input">
-              <input v-model="newTagInput" placeholder="新しいタグ..." />
-              <button class="add-tag-button" @click="addNewTag">追加</button>
-            </div>
-          </div>
-
-          <div class="button-row">
-            <button
-              v-if="selectedMemo"
-              class="btn-save"
-              :disabled="editMemoContent.trim().length === 0"
-              @click="updateSelectedMemo"
-            >
-              更新
-            </button>
-
-            <button
-              v-if="selectedMemo"
-              class="btn-danger"
-              @click="deleteSelectedMemo"
-            >
-              削除
-            </button>
-
-            <button
-              v-else
-              class="btn-save"
-              :disabled="newMemoContent.trim().length === 0"
-              @click="saveMemo"
-            >
-              保存
-            </button>
-          </div>
+    <div v-if="filteredMemos.length === 0" class="empty-message">メモがまだありません</div>
+    <div v-else class="memo-list">
+      <div
+        v-for="memo in filteredMemos"
+        :key="memo.id"
+        class="memo-card"
+        @click="openEditMemoModal(memo)"
+      >
+        <span class="flower-icon fixed-icon">{{ getLifeStageIcon(memo) }}</span>
+        <p class="memo-content">{{ memo.content }}</p>
+        <div class="memo-dates">
+          作成: {{ formatDate(memo.createdAt) }}
+          <span v-if="memo.createdAt && memo.updatedAt && !isSameDay(memo.createdAt, memo.updatedAt)">
+            ／ 更新: {{ formatDate(memo.updatedAt) }}
+          </span>
         </div>
       </div>
-    </transition>
+    </div>
 
-    <!-- 🔵 タグ検索モーダル -->
+    <!-- ✅ 新規・編集モーダル（.modal-content は不要） -->
     <transition name="modal">
-      <div v-if="showSearchModal" class="modal" @click.self="closeSearchModal">
-        <div class="modal-content">
-          <h3 class="modal-title">タグで検索</h3>
+      <Modal v-if="showModal" :visible="showModal" @close="closeModal">
+        <h3 class="modal-title-icon-only">
+          <span class="flower-icon-small">{{ getLifeStageIcon(selectedMemo) }}</span>
+        </h3>
+
+        <textarea
+          v-model="memoContent"
+          :placeholder="selectedMemo ? 'メモを編集...' : 'メモを書く...'"
+        />
+
+        <div class="button-row">
+          <button class="btn-tag" @click="toggleTagArea">🏷️</button>
+        </div>
+
+        <div v-if="showTagArea" class="tag-area">
           <div class="tag-list">
             <button
               v-for="tag in allTags"
               :key="tag"
               class="tag-button"
-              :class="{ selected: selectedSearchTags.includes(tag) }"
-              @click="toggleSearchTag(tag)"
+              :class="{ selected: selectedTags.includes(tag) }"
+              @click="toggleTag(tag)"
             >
               {{ tag }}
             </button>
           </div>
-          <div class="button-row">
-            <button class="btn-save" @click="clearSearchTag">すべて表示</button>
+          <div class="tag-input-row">
+            <input type="text" placeholder="新しいタグ…" v-model="newTagInput" />
+            <YamatoButton @click="addTag">追加</YamatoButton>
           </div>
         </div>
-      </div>
+
+        <div class="button-row">
+          <YamatoButton
+            v-if="selectedMemo"
+            size="small"
+            :disabled="editMemoContent.trim().length === 0"
+            @click="updateSelectedMemo"
+          >
+            更新
+          </YamatoButton>
+
+          <YamatoButton
+            v-if="selectedMemo"
+            size="small"
+            type="danger"
+            @click="deleteSelectedMemo"
+          >
+            削除
+          </YamatoButton>
+
+          <YamatoButton
+            v-else
+            size="small"
+            :disabled="newMemoContent.trim().length === 0"
+            @click="saveMemo"
+          >
+            保存
+          </YamatoButton>
+        </div>
+      </Modal>
+    </transition>
+
+    <!-- 🔍 タグ検索モーダル（.modal-content は不要） -->
+    <transition name="modal">
+      <Modal v-if="showSearchModal" :visible="showSearchModal" @close="closeSearchModal">
+        <h3 class="modal-title">タグで検索</h3>
+        <div class="tag-list">
+          <button
+            v-for="tag in allTags"
+            :key="tag"
+            class="tag-button"
+            :class="{ selected: selectedSearchTags.includes(tag) }"
+            @click="toggleSearchTag(tag)"
+          >
+            {{ tag }}
+          </button>
+        </div>
+        <div class="button-row">
+          <YamatoButton @click="clearSearchTag">すべて表示</YamatoButton>
+        </div>
+      </Modal>
     </transition>
   </div>
 </template>
-
-
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { API, graphqlOperation } from 'aws-amplify'
 import { createMemo, updateMemo as updateMemoMutation, deleteMemo } from '../graphql/mutations'
 import { listMemos } from '../graphql/queries'
+import Modal from '@/components/Modal.vue'
+import YamatoButton from '@/components/YamatoButton.vue'
 
 // --- データ ---
 const memos = ref([])
@@ -168,6 +167,19 @@ function formatDate(dateString) {
     month: 'short',
     day: 'numeric'
   })
+}
+
+function handleFileUpload(event) {
+  const file = event.target.files[0]
+  if (file && file.type === 'text/plain') {
+    const reader = new FileReader()
+    reader.onload = () => {
+      openNewMemoModal(reader.result)  // ✅ ここで中身を渡す
+    }
+    reader.readAsText(file)
+  } else {
+    alert('⚠️ .txtファイルのみ対応しています。')
+  }
 }
 
 // --- メモ取得 ---
@@ -262,13 +274,13 @@ selectedSearchTags.value = []
 }
 
 // --- 新規モーダルを開く ---
-function openNewMemoModal() {
-  newMemoContent.value = ''
+function openNewMemoModal(contentFromFile = '') {
+  newMemoContent.value = typeof contentFromFile === 'string' ? contentFromFile : ''
   selectedTags.value = []
   selectedMemo.value = null
   editMemoContent.value = ''
   isEditMode.value = false
-  showTagArea.value = false // ✅ タグエリアも閉じる
+  showTagArea.value = false
   showModal.value = true
 }
 
@@ -332,8 +344,7 @@ const memoContent = computed({
   }
 })
 
-// --- 新しいタグ追加 ---
-function addNewTag() {
+function addTag() {
   const newTag = newTagInput.value.trim()
   if (newTag && !allTags.value.includes(newTag)) {
     allTags.value.push(newTag)
@@ -380,8 +391,11 @@ function isSameDay(date1, date2) {
 }
 
 
-// --- 初回ロード ---
-onMounted(fetchMemos)
+onMounted(() => {
+  window.scrollTo(0, 0)  // ← 先頭にスクロール
+  fetchMemos()           // ← メモを読み込み
+})
+
 </script>
 
 <style scoped>
@@ -393,35 +407,45 @@ onMounted(fetchMemos)
   animation: dropDown 0.6s ease-out;
 }
 
-/* 🌸 ヘッダー */
 .memo-header {
   display: flex;
-  justify-content: center;
+  flex-direction: column; /* ← タイトルとアイコンを縦に並べる */
   align-items: center;
-  gap: 1rem;
+  gap: 0.8rem;
   margin-bottom: 2rem;
 }
 
-.search-button {
-  background: transparent;   /* ← 背景を消す */
-  border: none;              /* ← 枠線を消す */
-  font-size: 1.8rem;
-  cursor: pointer;
-  transition: color 0.3s;
-}
-.search-button:hover {
-  color: #274c77; /* 和風な深い青など */
-}
-.memo-header h2 {
-  font-size: 1.8rem;
+.header-title {
+  font-size: 1.4rem;
+  font-weight: bold;
+  font-family: 'serif';
+  color: #274c77;
+  text-align: center;
 }
 
-.edit-button {
+.header-icons {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1.2rem;
+}
+
+/* 共通アイコンボタン */
+.icon-button {
   background: transparent;
   border: none;
   font-size: 1.8rem;
   cursor: pointer;
-  transition: color 0.3s;
+  transition: opacity 0.3s;
+}
+
+.icon-button:hover {
+  opacity: 0.7;
+}
+
+.upload-icon {
+  cursor: pointer;
+  font-size: 1.8rem;
 }
 
 /* 🌸 メモ一覧 */
@@ -430,6 +454,8 @@ onMounted(fetchMemos)
 }
 
 .memo-card {
+  position: relative; /* 🌱 の位置固定に必要 */
+  padding: 1.2rem 1rem 1rem 2.5rem; 
   background: white;
   padding: 0.6rem 0.8rem;
   margin-bottom: 0.3rem;
@@ -449,6 +475,7 @@ onMounted(fetchMemos)
 .memo-content {
   flex: 1;
   text-align: left;
+  margin-left: 2rem;
   font-size: 1rem;
   overflow: hidden;
   display: -webkit-box;
@@ -460,22 +487,25 @@ onMounted(fetchMemos)
 .modal {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(0, 0, 0, 0.3); /* ✅ 少し控えめな黒 */
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  backdrop-filter: blur(2px);     /* ✅ 背景をふんわりぼかす */
 }
 
 .modal-content {
-  background: #fff;
-  padding: 1.2rem;            /* ⬅ 少しコンパクトに */
-  border-radius: 10px;
-  width: 95%;                 /* ⬅ 横幅を広めに */
-  max-width: 600px;           /* ⬅ タブレット対応 */
-  max-height: 90vh;           /* ⬅ 高さを最大90% */
-  overflow-y: auto;           /* ⬅ メモが多いときにスクロール */
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  background: #fefefe;             /* ✅ ほんのり柔らかい白 */
+  padding: 1.5rem;                 /* ✅ 余白を少し広く */
+  border-radius: 14px;
+  width: 90%;
+  max-width: 560px;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15); /* ✅ 奥行き感UP */
+  position: relative;
+  z-index: 1001;
 }
 .modal-title-icon-only {
   margin-bottom: 1rem;
@@ -489,6 +519,12 @@ onMounted(fetchMemos)
   margin: 0;
 }
 
+.fixed-icon {
+  position: absolute;
+  top: 0.6rem;
+  left: 0.8rem;
+  font-size: 1.5rem; /* 必要なら調整 */
+}
 textarea {
   min-height: 260px;      /* 最低高さ（短文でも見やすい） */
   max-height: 400px;      /* 最大高さ（長文でも伸びすぎない） */
@@ -510,18 +546,6 @@ textarea {
   gap: 1rem;
 }
 
-/* 他のボタンはそのまま */
-.btn-save,
-.add-tag-button {
-  background-color: #274c77;
-  color: white;
-  padding: 0.6rem 1.4rem;
-  border: none;
-  border-radius: 8px;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
 
 /* 🏷️ボタンだけはアイコン風に */
 .btn-tag {
@@ -537,11 +561,6 @@ textarea {
   opacity: 0.7;
 }
 
-.btn-save:disabled {
-  background-color: #ccc;
-  color: #666;
-  cursor: not-allowed;
-}
 
 /* 🌸 タグエリア */
 .tag-area {
@@ -602,21 +621,6 @@ textarea {
   font-size: 1.1rem;
 }
 
-.btn-danger {
-  background-color: #f8d7da;      /* 淡い赤（薄ピンク） */
-  color: #721c24;                 /* 濃い赤茶系の文字色 */
-  border: none;
-  padding: 0.6rem 1.4rem;
-  border-radius: 8px;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-.btn-danger:hover {
-  background-color: #f5c6cb;      /* 少し濃くなる赤 */
-}
-
 .memo-list {
   margin: 0 1rem;
 }
@@ -657,11 +661,82 @@ textarea {
   margin-top: 0.2rem;
   text-align: right;
 }
+.tag-input-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
 
-/* 🌸 アニメーション */
+@media (prefers-color-scheme: dark) {
+  .memo-card {
+    background: #2c2c2c; /* 暗めの背景色 */
+    color: #f5f5f5;       /* 文字色は白系に */
+    border-bottom: 1px solid #555;
+  }
+
+  .memo-content {
+    color: #f5f5f5; /* 明るめに */
+  }
+
+  .memo-dates {
+    color: #bbb; /* 日付はやや淡く */
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .modal-content {
+    background: #2c2c2c; /* モーダル背景を暗く */
+    color: #f5f5f5;       /* モーダル内の文字を明るく */
+  }
+
+  textarea {
+    background-color: #3a3a3a;
+    color: #f5f5f5;
+    border: 1px solid #666;
+  }
+
+  .modal-title-icon-only {
+    color: #f5f5f5;
+  }
+
+  .tag-area {
+    background: #333;
+    border-color: #666;
+  }
+
+  .tag-button {
+    background: #444;
+    color: #eee;
+    border-color: #666;
+  }
+
+  .tag-button.selected {
+    background: #567;
+    color: #fff;
+    border-color: #89a;
+  }
+
+  .add-tag-input input {
+    background: #444;
+    color: #eee;
+    border: 1px solid #666;
+  }
+}
+
+@media (max-width: 600px) {
+  .tag-input-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .tag-input-row input,
+  .tag-input-row button {
+    width: 100%;
+  }
+}
 @keyframes dropDown {
   0% {
-    transform: translateY(-30px);
+    transform: translateY(-40px);
     opacity: 0;
   }
   100% {
@@ -676,20 +751,12 @@ textarea {
     opacity: 1;
   }
   100% {
-    transform: translateY(-30px);
+    transform: translateY(-40px);
     opacity: 0;
   }
 }
 
-/* モーダルが表示されるとき */
-.modal-enter-active {
-  animation: dropDown 0.4s ease-out;
-}
 
-/* モーダルが消えるとき */
-.modal-leave-active {
-  animation: flyUp 0.3s ease-in;
-}
 
 </style>
 

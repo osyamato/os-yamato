@@ -4,11 +4,15 @@ import { schema } from './schema';
 
 
 
-const { Memo, Schedule, Diary, Contact } = initSchema(schema);
+const { Memo, Diary, Schedule, Contact, ChatRoom, Message, PublicProfile, ChatRequest } = initSchema(schema);
 
 export {
   Memo,
-  Schedule,
   Diary,
-  Contact
+  Schedule,
+  Contact,
+  ChatRoom,
+  Message,
+  PublicProfile,
+  ChatRequest
 };

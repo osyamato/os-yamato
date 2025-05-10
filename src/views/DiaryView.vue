@@ -1,52 +1,97 @@
 <template>
-  <div class="diary-container" :class="animationDirection">
-    <div class="month-header">
-      <button @click="prevMonth">&lt;</button>
-      <h2>{{ currentMonth + 1 }}月の日記</h2>
-      <button @click="nextMonth">&gt;</button>
+  <div class="gradient-background"></div>
+  <div class="diary-container">
+    <div class="year-header">
+      <!-- 年数だけ中央に -->
+      <div class="year-title">
+        <button class="arrow-inline" @click="prevYear">&lt;</button>
+        <span class="year-text">{{ currentYear }}</span>
+        <button class="arrow-inline" @click="nextYear">&gt;</button>
+      </div>
+    </div>
+
+    <!-- ペンシルボタンは年の下に独立 -->
+    <div class="edit-button-wrapper">
       <button class="edit-button" @click="openNewDiaryModal">✏️</button>
     </div>
 
-    <!-- 新規作成モーダル -->
-    <transition name="drop-modal">
-      <div class="modal" v-if="showNewDiaryModal" @click.self="closeModal">
-        <div class="modal-content">
-          <input type="date" v-model="selectedDate" class="date-picker" />
-          <textarea v-model="newDiaryContent" placeholder="日記を書く..." />
-          <div class="button-row">
-            <button class="btn-active" @click="saveDiary">保存</button>
-            <button class="btn-disabled" @click="closeModal">閉じる</button>
-          </div>
-        </div>
-      </div>
-    </transition>
-
-    <!-- 日記表示モーダル -->
-    <transition name="drop-modal">
-      <div class="modal" v-if="selectedDiary" @click.self="closeDiaryModal">
-        <div class="modal-content">
-          <p>{{ selectedDiary.content }}</p>
-          <div class="button-row">
-            <button class="btn-disabled" @click="deleteDiary(selectedDiary.id)">削除</button>
-            <button class="btn-disabled" @click="closeDiaryModal">閉じる</button>
-          </div>
-        </div>
-      </div>
-    </transition>
-
-    <!-- 花エリア -->
-    <div class="flower-area">
+    <div class="full-flower-area">
       <div
         class="flower"
         v-for="(diary, index) in diaries"
         :key="diary.id"
-        :style="randomPosition(index)"
+        :class="{ fading: isFading(diary) }"
         @click="openDiary(diary)"
       >
-        🌸<br />
-        <small>{{ new Date(diary.date).getDate() }}</small>
+        <div class="flower-icon">
+          <img
+            class="flower-img"
+            :src="`/dialy.${new Date(diary.date).getMonth() + 1}.png`"
+            alt="花"
+            @error="e => e.target.style.display = 'none'"
+          />
+          <div
+            v-if="isRecentlyOpened(diary)"
+            class="butterfly-wrapper"
+          >
+            <div
+              class="butterfly"
+              :style="{ '--delay': `${(Math.random() * 10).toFixed(2)}s` }"
+            >
+              🦋
+            </div>
+          </div>
+        </div>
+        <small>{{ formatDate(diary.date) }}</small>
       </div>
     </div>
+
+    <!-- モーダル：新規作成 -->
+    <transition name="drop-modal">
+      <div class="diary-modal-overlay" v-if="showNewDiaryModal" @click.self="closeModal">
+        <div class="diary-modal" @click.stop>
+          <div class="note-date">
+            <input
+              type="date"
+              v-model="selectedDate"
+              class="diary-date-input"
+            />
+          </div>
+<div
+  class="note-editor"
+  contenteditable="true"
+  :placeholder="'日記を書く…'"
+  @input="handleInput"
+  @keyup="handleInput"
+  @compositionend="handleInput"
+  ref="editor"
+/>
+          <div class="button-row">
+<YamatoButton
+  type="default"
+  @click="saveDiary"
+  :disabled="!newDiaryContent.replace(/\s/g, '')"
+>
+  保存
+</YamatoButton>
+          </div>
+        </div>
+      </div>
+    </transition>
+
+    <!-- モーダル：閲覧 -->
+    <transition name="drop-modal">
+      <div class="modal" v-if="selectedDiary">
+        <div class="modal-background" @click="closeDiaryModal"></div>
+        <div class="diary-modal" @click.stop>
+          <div class="note-date">{{ formatDisplayDate(selectedDiary.date) }}</div>
+          <div class="note-editor" v-text="selectedDiary.content"></div>
+          <div class="button-row">
+            <YamatoButton type="danger" @click="deleteDiary(selectedDiary.id)">削除</YamatoButton>
+          </div>
+        </div>
+      </div>
+    </transition>
   </div>
 </template>
 
@@ -54,27 +99,41 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { API, Auth, graphqlOperation } from 'aws-amplify'
-import { createDiary, deleteDiary as deleteDiaryMutation } from '@/graphql/mutations'
+import { createDiary, deleteDiary as deleteDiaryMutation, updateDiary as updateDiaryMutation } from '@/graphql/mutations'
 import { listDiaries } from '@/graphql/queries'
-import { useRoute } from 'vue-router'
-const route = useRoute()
-const dateFromQuery = route.query.date || null
+import YamatoButton from '@/components/YamatoButton.vue'
+import Modal from '@/components/Modal.vue'
 
-const newDiaryContent = ref('')
-const selectedDate = ref('')
-const showNewDiaryModal = ref(false)
-const selectedDiary = ref(null)
+const currentYear = ref(new Date().getFullYear())
 const diaries = ref([])
-const animationDirection = ref('dropDown')
 const positions = ref([])
 
+const selectedDiary = ref(null)
+const showNewDiaryModal = ref(false)
+const newDiaryContent = ref('')
+const selectedDate = ref('')
 
-const today = new Date()
-const currentYear = ref(today.getFullYear())
-const currentMonth = ref(today.getMonth())
+const backgrounds = [
+  '/back.1.png',
+  '/back.2.png',
+  '/back.3.png'
+]
+
+const currentIndex = ref(0)
+const editor = ref(null)
+
+
+onMounted(() => {
+  fetchDiaries()
+
+  // 背景フェード切り替え
+  setInterval(() => {
+    currentIndex.value = (currentIndex.value + 1) % backgrounds.length
+  }, 6000)
+})
 
 function openNewDiaryModal() {
-  selectedDate.value = new Date().toISOString().split('T')[0]
+  selectedDate.value = new Date().toLocaleDateString('sv-SE') // ← UTC回避
   newDiaryContent.value = ''
   showNewDiaryModal.value = true
 }
@@ -82,59 +141,34 @@ function openNewDiaryModal() {
 function closeModal() {
   showNewDiaryModal.value = false
   selectedDiary.value = null
+  window.scrollTo({ top: 0, behavior: 'smooth' })  // ✅ トップに戻す
 }
 
 function closeDiaryModal() {
   selectedDiary.value = null
+  window.scrollTo({ top: 0, behavior: 'smooth' }) // ← これ！
 }
 
-function openDiary(diary) {
+async function openDiary(diary) {
   selectedDiary.value = diary
+
+  try {
+    const updatedTime = new Date().toISOString()
+    await API.graphql(graphqlOperation(updateDiaryMutation, {
+      input: {
+        id: diary.id,
+        lastOpenedAt: updatedTime
+      }
+    }))
+
+    // ✅ ローカル更新も反映させる
+    diary.lastOpenedAt = updatedTime
+
+    console.log(`✅ lastOpenedAt 更新: ${diary.id}`)
+  } catch (err) {
+    console.error(`❌ 更新失敗: ${diary.id}`, err)
+  }
 }
-
-function randomPosition(index) {
-  if (positions.value[index]) {
-    return positions.value[index]
-  }
-
-  const maxAttempts = 30
-  let attempt = 0
-  let top, left
-
-  do {
-    top = 10 + Math.random() * 60  // 10〜70%
-    left = 5 + Math.random() * 85  // 5〜90%
-    const isTooClose = positions.value.some(pos => {
-      const dx = parseFloat(pos.left) - left
-      const dy = parseFloat(pos.top) - top
-      const distance = Math.sqrt(dx * dx + dy * dy)
-      return distance < 10
-    })
-
-    if (!isTooClose) break
-    attempt++
-  } while (attempt < maxAttempts)
-
-  const result = {
-    top: `${top}%`,
-    left: `${left}%`,
-    position: 'absolute',
-    textAlign: 'center',
-  }
-  positions.value[index] = result
-  return result
-}
-
-
-onMounted(() => {
-  if (dateFromQuery) {
-    const jstDate = new Date(new Date(dateFromQuery).getTime() + (9 * 60 * 60 * 1000))
-    selectedDate.value = jstDate.toISOString().slice(0, 10)
-    newDiaryContent.value = ''
-    showNewDiaryModal.value = true
-  }
-  fetchDiaries()
-})
 
 async function saveDiary() {
   try {
@@ -142,20 +176,24 @@ async function saveDiary() {
     const input = {
       date: selectedDate.value,
       content: newDiaryContent.value,
-      owner: user.username,
+      owner: user.username
     }
     await API.graphql(graphqlOperation(createDiary, { input }))
     await fetchDiaries()
     closeModal()
   } catch (e) {
-    console.error('createDiary error:', e.errors?.[0]?.message || e)
+    console.error('保存失敗:', e)
   }
 }
 
 async function deleteDiary(id) {
-  await API.graphql(graphqlOperation(deleteDiaryMutation, { input: { id } }))
-  await fetchDiaries()
-  closeDiaryModal()
+  try {
+    await API.graphql(graphqlOperation(deleteDiaryMutation, { input: { id } }))
+    await fetchDiaries()
+    closeDiaryModal()
+  } catch (e) {
+    console.error('削除失敗:', e)
+  }
 }
 
 async function fetchDiaries() {
@@ -164,129 +202,432 @@ async function fetchDiaries() {
     const res = await API.graphql(graphqlOperation(listDiaries, {
       filter: {
         owner: { eq: user.username },
-        date: {
-          beginsWith: `${currentYear.value}-${String(currentMonth.value + 1).padStart(2, '0')}`
-        }
+        date: { beginsWith: `${currentYear.value}-` }
       }
     }))
-    diaries.value = res.data.listDiaries.items
-    positions.value = [] // 🌸花位置リセット
+
+    const all = res.data.listDiaries.items
+    const now = new Date()
+    const toKeep = []
+    const toDelete = []
+
+    for (const diary of all) {
+      const lastOpened = diary.lastOpenedAt || diary.updatedAt || diary.createdAt
+      const diffDays = (now - new Date(lastOpened)) / (1000 * 60 * 60 * 24)
+      if (diffDays > 365) {
+        toDelete.push(diary.id)
+      } else {
+        toKeep.push(diary)
+      }
+    }
+
+    // 不要日記を削除
+    for (const id of toDelete) {
+      try {
+        await API.graphql(graphqlOperation(deleteDiaryMutation, { input: { id } }))
+        console.log('🗑️ 削除: ', id)
+      } catch (e) {
+        console.error('❌ 削除失敗: ', id)
+      }
+    }
+
+diaries.value = toKeep.sort((a, b) => new Date(a.date) - new Date(b.date))
+    positions.value = Array(12).fill().map(() => [])
   } catch (e) {
     console.error('fetchDiaries error:', e)
   }
 }
 
+function diariesByMonth(monthIndex) {
+  return diaries.value.filter(d => new Date(d.date).getMonth() === monthIndex)
+}
+
+
 function formatDate(dateStr) {
-  return new Date(dateStr).getDate() + '日'
+  const date = new Date(dateStr)
+  return `${date.getMonth() + 1}/${date.getDate()}`
 }
 
-function nextMonth() {
-  animationDirection.value = ''
-  setTimeout(() => {
-    animationDirection.value = 'slide-left'
-    if (currentMonth.value === 11) {
-      currentMonth.value = 0
-      currentYear.value++
-    } else {
-      currentMonth.value++
-    }
-    diaries.value = []
-    fetchDiaries()
-  }, 10)
+function nextYear() {
+  currentYear.value++
+  fetchDiaries()
 }
 
-function prevMonth() {
-  animationDirection.value = ''
-  setTimeout(() => {
-    animationDirection.value = 'slide-right'
-    if (currentMonth.value === 0) {
-      currentMonth.value = 11
-      currentYear.value--
-    } else {
-      currentMonth.value--
-    }
-    diaries.value = []
-    fetchDiaries()
-  }, 10)
+function prevYear() {
+  currentYear.value--
+  fetchDiaries()
 }
+
+function isRecentlyOpened(diary) {
+  if (!diary.lastOpenedAt || diary.lastOpenedAt === diary.createdAt) return false
+  const now = new Date()
+  const opened = new Date(diary.lastOpenedAt)
+  const diffDays = (now - opened) / (1000 * 60 * 60 * 24)
+  return diffDays <= 7
+}
+function formatDisplayDate(dateStr) {
+  const date = new Date(dateStr)
+  return date.toLocaleDateString('ja-JP') // → "2025/05/10"
+}
+
+function isFading(diary) {
+  const now = new Date()
+  const lastOpened = new Date(diary.lastOpenedAt || diary.updatedAt || diary.createdAt)
+  const diffDays = (now - lastOpened) / (1000 * 60 * 60 * 24)
+  return diffDays >= 330 && diffDays < 365
+}
+function handleInput(e) {
+  newDiaryContent.value = e.target.innerText
+}
+
 
 onMounted(fetchDiaries)
 </script>
 
 <style scoped>
 .diary-container {
+  width: 100%;           /* ✅ 横幅いっぱいに広げる */
+  max-width: none;       /* ✅ 最大幅の制限を解除 */
   padding: 2rem;
   font-family: sans-serif;
   text-align: center;
-  position: relative;
-  animation: dropDown 0.4s ease-out;
-  transform-origin: top center;
+  animation: dropDown 0.5s ease-out;
 }
 
-.date-picker {
-  border: none;
-  background: transparent;
-  font-size: 1rem;
-  font-family: serif;
-  margin-bottom: 1rem;
-  padding: 0.5rem;
-  outline: none;
-}
-
-.month-header {
+.year-header {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 1rem;
-  flex-wrap: nowrap;
-  margin-bottom: 1rem;
+  margin-bottom: 0.3rem;
 }
 
-.month-header button {
-  background: transparent; /* 背景なくす */
-  border: none;             /* 枠線も消す */
-  font-size: 1.2rem;
+.year-title {
+  display: flex;
+  align-items: center;
+  font-size: 1.4rem;
+  gap: 0.5rem;
+}
+
+.year-text {
+  width: 60px;
+  text-align: center;
+  color: #000;
+}
+
+.arrow-inline {
+  background: none;
+  border: none;
+  font-size: 1.4rem;
+  color: #274c77;
   cursor: pointer;
+}
+.edit-button-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-top: 0.5rem;
+  margin-bottom: 1rem;
 }
 
 .edit-button {
-  font-size: 1.5rem;
-  padding: 0.4rem 0.8rem;
+  background-color: #f0f0f0;
   border: none;
-  border-radius: 8px;
-  background: transparent; 
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
   cursor: pointer;
 }
 
-input[type="date"], textarea {
-  width: 100%;
-  padding: 0.8rem;
-  font-size: 1rem;
+
+.month-block {
+  position: relative;
+  border: 1px solid #ddd;
   border-radius: 8px;
-  border: 1px solid #ccc;
-  margin-bottom: 1rem;
+  padding: 1rem;
+  min-height: 180px;
+  background-color: #fafafa;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.month-label {
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+  text-align: left;
+  color: #274c77;
+}
+
+.note-style {
+  background: #f9f5ef;
+  background-image: repeating-linear-gradient(
+
+    to bottom,
+    #f9f5ef,
+    #f9f5ef 28px,
+    #d8d3c4 29px
+  );
+  background-size: 100% 30px;
+  padding: 2rem 1rem;
+  border-radius: 12px;
+  border: 1px solid #d8d3c4;
+  max-width: 480px;
+  width: 90%;
+  font-family: "Hiragino Mincho ProN", "Noto Serif JP", serif;
+  color: #111;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
   box-sizing: border-box;
 }
 
-.modal {
+.note-date {
+  font-size: 1rem;
+  margin-bottom: 1rem;
+  color: #555;
+  text-align: left;
+}
+
+.note-editor {
+  min-height: 200px;
+  max-height: 40vh;
+  padding: 1rem;
+  text-align: left;                 /* ✅ 左詰めに変更 */
+  outline: none;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 1rem;
+  color: #111;
+  line-height: 30px;
+  font-family: "Hiragino Mincho ProN", "Noto Serif JP", serif;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  overflow-y: auto;
+  margin: 0 auto;                   /* ✴️ 必要に応じて中央寄せ枠だけ維持 */
+}
+
+
+.butterfly-wrapper {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%); /* ✅ 横位置の制御は親で */
+}
+.fading {
+  filter: brightness(0.6) grayscale(40%) drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4));
+}
+
+
+.flower {
+  font-size: 1.6rem;
+  cursor: pointer;
+  user-select: none;
+  text-align: center;
+  color: #000;
+  position: relative; /* ←これを追加！ */
+}
+
+@keyframes floatOnce {
+  0%   { transform: translate(-50%, 0); }
+  10%  { transform: translate(-50%, -6px); }
+  20%  { transform: translate(-50%, 0); }
+  100% { transform: translate(-50%, 0); }
+}
+
+.butterfly {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translate(-50%, 0); /* ✅ 初期位置も中央 */
+  z-index: 10;
+  font-size: 1.2rem;
+  pointer-events: none;
+
+  animation-name: floatOnce;
+  animation-duration: 6s;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-delay: var(--delay);
+}
+
+.note-date {
+  font-size: 1rem;
+  margin-bottom: 1rem;
+  color: #555;
+  text-align: left;
+}
+.note-editor {
+  min-height: 200px;
+  outline: none;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 1rem;
+  color: #111;
+  line-height: 30px;
+  font-family: "Hiragino Mincho ProN", "Noto Serif JP", serif;
+}
+
+.diary-modal {
+  background: #f9f5ef;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    #f9f5ef,
+    #f9f5ef 28px,
+    #d8d3c4 29px
+  );
+  background-size: 100% 30px;
+  padding: 2rem 1.5rem;
+  border-radius: 12px;
+  border: 1px solid #d8d3c4;
+  width: 90%;
+  max-width: 480px;
+  min-width: 280px; /* ✅ 追加：最小幅（黒背景を防ぐ） */
+  min-height: 200px; /* ✅ 追加：最小高さ */
+  box-sizing: border-box;
+  font-family: "Hiragino Mincho ProN", "Noto Serif JP", serif;
+  color: #111;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* ✅ 影を自然に */
+  background-color: #f9f5ef !important; /* ✅ fallback（念押し） */
+margin: auto;
+
+}
+.diary-date-input {
+  appearance: none;
+  -webkit-appearance: none;
+  border: none !important;
+  background: transparent !important;
+  outline: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  font-size: 1rem;
+  font-family: "Hiragino Mincho ProN", "Noto Serif JP", serif;
+  color: #444;
+  border-radius: 0 !important; /* ✅ ← 角丸を完全除去 */
+}
+
+/* ✅ Safariなどでのカレンダーアイコン除去 */
+.diary-date-input::-webkit-inner-spin-button,
+.diary-date-input::-webkit-calendar-picker-indicator {
+  display: none !important;
+  -webkit-appearance: none;
+}
+
+.note-date {
+  display: flex;
+  justify-content: center;
+}
+.note-editor {
+  min-height: 250px;
+  outline: none;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 1rem;
+  line-height: 30px;
+  padding: 0;
+  color: #111;
+  background: transparent;
+  border: none;
+}
+.diary-modal-overlay {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(0, 0, 0, 0.2);   /* ✅ 少し暗く（透明度0.2） */
+  backdrop-filter: blur(1px);      /* ✅ ぼかしで柔らかく */
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
 }
 
-.modal-content {
-  background: #f9f5ef;
-  padding: 1.5rem;
-  border-radius: 6px;
-  border: 1px solid #d8d3c4;
-  width: 90%;
-  max-width: 400px;
-  box-sizing: border-box;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+.note-date {
+  font-size: 1rem;
+  margin-bottom: 1rem;
+  color: #555;
+  text-align: left;
+}
+.button-row {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.note-editor:empty::before {
+  content: attr(placeholder);
+  color: #999;
+  pointer-events: none;
+  display: block;
+}
+/* アニメーション */
+@keyframes dropDown {
+  0% { transform: translateY(-40px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes flyUp {
+  0% { transform: translateY(0); opacity: 1; }
+  100% { transform: translateY(-40px); opacity: 0; }
+}
+
+.drop-modal-enter-active {
+  animation: dropDown 0.4s ease-out;
+}
+.drop-modal-leave-active {
+  animation: flyUp 0.4s ease-in;
+}
+
+.flower-icon {
+  position: relative;
+  width: 60px;
+  height: 60px;           /* ✅ 花画像の高さと揃える */
+  pointer-events: none;
+}
+
+.flower-img {
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+  display: block;
+  margin: 0;
+  pointer-events: none;
+}
+
+.full-flower-area {
+  display: grid;
+ grid-template-columns: repeat(auto-fill, minmax(68px, 1fr)); /* ✅ 最小幅をさらに縮小 */
+  gap: 0.3rem;         /* ✅ 花の間隔をさらに縮める */
+  padding: 0.5rem 0.5rem 2rem 0.5rem;
+  width: 100%;
+  justify-items: center;
+  align-items: start;
+}
+
+/* スマホ専用の微調整 */
+@media (max-width: 480px) {
+  .full-flower-area {
+    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); /* より狭い幅でも2列維持 */
+    gap: 0.4rem;
+    padding: 0.5rem;
+  }
+}
+
+.flower small {
+  display: block;
+  margin-top: 0.2rem;       /* ✅ 少し詰める */
+  font-size: 0.75rem;       /* ✅ 少し小さめでスマートに */
+  line-height: 1;
+  color: #000;              /* ✅ ノート背景とのコントラスト強調 */
+  text-align: center;
+}
+.gradient-background {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: -1;
+  pointer-events: none;
 
   background-image: repeating-linear-gradient(
     to bottom,
@@ -295,113 +636,29 @@ input[type="date"], textarea {
     #d8d3c4 29px
   );
   background-size: 100% 30px;
-
-  font-family: "serif", "Hiragino Mincho ProN", "Noto Serif JP", serif;
-  color: #000; /* ← ここを黒に明示 */
 }
 
-/* 閲覧モーダル内の日記本文 */
-.modal-content p {
-  font-size: 1rem;
-  line-height: 30px;
-  white-space: pre-wrap;
-  color: #000; /* ← 明確に黒文字 */
-  margin: 0;
-}
-
-.button-row {
+.modal {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
   display: flex;
   justify-content: center;
-  gap: 1rem;
-  margin-top: 1rem;
+  align-items: flex-start;
+  padding-top: 10vh;
+  z-index: 1000;
 }
 
-textarea {
-  width: 100%;
-  height: 200px;
-  padding: 1rem;
-  font-size: 1rem;
-  line-height: 30px; /* ← 横線にぴったり合わせる */
-  background: transparent;
-  border: none;
-  resize: none;
-  box-sizing: border-box;
-  font-family: serif;
-}
-
-.btn-disabled, .btn-active {
-  font-size: 0.8rem; /* ✅ 小さめに */
-  padding: 0.4rem 0.8rem;
-  border-radius: 6px;
-  border: none;
-}
-
-.btn-disabled {
-  background-color: #ccc;
-  color: #666;
-  cursor: not-allowed;
-}
-
-.btn-active {
-  background-color: #345;
-  color: white;
-  cursor: pointer;
-}
-
-.flower-area {
-  position: relative;
-  height: 60vh;
-}
-
-.flower {
-  font-size: 1.5rem;
-  cursor: pointer;
+.modal-background {
   position: absolute;
-  text-align: center;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(1px);
+  z-index: 1;
 }
 
-/* アニメーション系 */
-.fade-enter-active, .fade-leave-active {
-  transition: opacity 0.3s ease;
-}
-.fade-enter-from, .fade-leave-to {
-  opacity: 0;
-}
-
-.slide-left {
-  animation: slideLeft 0.5s ease-out;
-}
-.slide-right {
-  animation: slideRight 0.5s ease-out;
-}
-
-.drop-modal-enter-active {
-  animation: dropDown 0.4s ease-out;
-}
-
-.drop-modal-leave-active {
-  animation: flyUp 0.4s ease-in;
-}
-
-@keyframes dropDown {
-  0% { transform: translateY(-40px); opacity: 0; }
-  100% { transform: translateY(0); opacity: 1; }
-}
-
-@keyframes slideLeft {
-  0% { transform: translateX(40px); opacity: 0; }
-  100% { transform: translateX(0); opacity: 1; }
-}
-
-@keyframes slideRight {
-  0% { transform: translateX(-40px); opacity: 0; }
-  100% { transform: translateX(0); opacity: 1; }
-}
-
-@keyframes flyUp {
-  0% { transform: translateY(0); opacity: 1; }
-  100% { transform: translateY(-40px); opacity: 0; }
+.diary-modal {
+  position: relative;
+  z-index: 2;
 }
 </style>
-
-
+ 

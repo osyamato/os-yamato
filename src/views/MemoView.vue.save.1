@@ -1,0 +1,370 @@
+<template>
+  <div class="memo-container">
+    <h2>メモ帳</h2>
+
+    <!-- 🔵 入力エリア -->
+    <textarea v-model="text" placeholder="メモを書く..." />
+
+    <!-- 🔵 保存ボタン -->
+    <button
+      @click="saveMemo"
+      :disabled="text.trim().length === 0"
+      :class="text.trim().length === 0 ? 'btn-disabled' : 'btn-active'"
+    >
+      保存
+    </button>
+
+    <!-- 🔵 メモ一覧 -->
+    <ul class="memo-list">
+      <li v-for="memo in memos" :key="memo.id" @click="openMemoOptions(memo)">
+        <div class="memo-item">
+          <span class="flower-icon">{{ getLifeStageIcon(memo) }}</span>
+          <div class="memo-content">{{ memo.content }}</div>
+        </div>
+        <small>
+          作成: {{ formatDate(memo.createdAt) }}
+          <template v-if="memo.updatedAt && memo.updatedAt !== memo.createdAt">
+            <br />更新: {{ formatDate(memo.updatedAt) }}
+          </template>
+        </small>
+      </li>
+    </ul>
+
+    <!-- 🔵 編集・削除モーダル -->
+    <transition name="memo-modal">
+      <div v-if="isModalOpen" class="modal" @click.self="closeModal">
+        <div class="modal-content">
+          <h3>メモ編集</h3>
+
+          <textarea v-model="editText" placeholder="メモを編集..." />
+
+          <div class="button-row">
+            <button
+              @click="updateSelectedMemo"
+              :disabled="editText.trim().length === 0"
+              :class="editText.trim().length === 0 ? 'btn-disabled' : 'btn-active'"
+            >
+              保存
+            </button>
+
+            <button class="btn-danger" @click="deleteSelectedMemo">
+              削除
+            </button>
+          </div>
+
+          <div class="close-button" @click="closeModal">＜</div>
+        </div>
+      </div>
+    </transition>
+  </div>
+</template>
+
+<script setup>
+import { ref, onMounted } from 'vue'
+import { Amplify, API, graphqlOperation } from 'aws-amplify'
+import awsExports from '../aws-exports'
+import { createMemo, updateMemo, deleteMemo } from '../graphql/mutations'
+import { listMemos } from '../graphql/queries'
+
+// --- 初期設定 ---
+Amplify.configure(awsExports)
+
+// --- データ ---
+const text = ref('')
+const editText = ref('')
+const memos = ref([])
+const selectedMemo = ref(null)
+const isModalOpen = ref(false)
+
+// --- メモ保存 ---
+async function saveMemo() {
+  if (text.value.trim() === '') return
+  try {
+    await API.graphql(graphqlOperation(createMemo, {
+      input: { content: text.value }
+    }))
+    text.value = ''
+    await fetchMemos()
+  } catch (err) {
+    console.error('❌ 保存失敗:', err)
+    alert('保存に失敗しました')
+  }
+}
+
+function getLifeStageIcon(memo) {
+  const now = new Date()
+  const baseDate = memo.updatedAt ? new Date(memo.updatedAt) : new Date(memo.createdAt)
+  const baseDateOnly = new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate())
+  const nowDateOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const diffDays = (nowDateOnly - baseDateOnly) / (1000 * 60 * 60 * 24)
+
+  if (diffDays < 180) return '🌱'
+  else if (diffDays < 330) return '🌷'
+  else return '🥀'
+}
+
+// --- メモ取得 ---
+async function fetchMemos() {
+  try {
+    const result = await API.graphql(graphqlOperation(listMemos))
+    const items = result.data.listMemos.items
+    memos.value = items
+      .filter(item => item)
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+  } catch (err) {
+    console.error('❌ 読み込み失敗:', err)
+  }
+}
+
+// --- メモオプション（編集画面オープン）---
+function openMemoOptions(memo) {
+  selectedMemo.value = memo
+  editText.value = memo.content
+  isModalOpen.value = true
+}
+
+// --- メモ更新 ---
+async function updateSelectedMemo() {
+  if (editText.value.trim() === '') return
+  try {
+    await API.graphql(graphqlOperation(updateMemo, {
+      input: {
+        id: selectedMemo.value.id,
+        content: editText.value
+      }
+    }))
+    isModalOpen.value = false
+    await fetchMemos()
+  } catch (err) {
+    console.error('❌ 更新失敗:', err)
+  }
+}
+
+// --- メモ削除 ---
+async function deleteSelectedMemo() {
+  try {
+    await API.graphql(graphqlOperation(deleteMemo, {
+      input: { id: selectedMemo.value.id }
+    }))
+    isModalOpen.value = false
+    await fetchMemos()
+  } catch (err) {
+    console.error('❌ 削除失敗:', err)
+  }
+}
+
+// --- 日付整形 ---
+function formatDate(dateStr) {
+  const date = new Date(dateStr)
+  return `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()} ${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`
+}
+
+// --- モーダル閉じる ---
+function closeModal() {
+  isModalOpen.value = false
+}
+
+// --- 初期ロード ---
+onMounted(() => {
+  fetchMemos()
+})
+</script>
+
+
+<style scoped>
+/* 🌸 全体レイアウト */
+.memo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+  box-sizing: border-box;
+  animation: dropDown 0.4s ease-out;
+}
+
+/* 🌸 テキストエリア */
+textarea {
+  width: 95%;
+  max-width: 700px;
+  height: 150px;
+  font-size: 1rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border-radius: 8px;
+  border: 1px solid #aaa;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+/* ✅ タブレット・PCならもう少し広げる */
+@media (min-width: 768px) {
+  textarea {
+    max-width: 800px;
+    font-size: 1.1rem;
+    padding: 1.2rem;
+  }
+}
+
+/* 🌸 ボタン（共通） */
+button {
+  padding: 0.6rem 1.2rem;
+  font-size: 1rem;
+  border: none;
+  border-radius: 8px;
+  transition: background-color 0.3s;
+}
+
+/* 🌸 保存ボタン：アクティブ */
+.btn-active {
+  background-color: #274c77; /* 和風な青 */
+  color: #fff;
+  cursor: pointer;
+}
+
+/* 🌸 保存ボタン：無効 */
+.btn-disabled {
+  background-color: #ccc;
+  color: #888;
+  cursor: not-allowed;
+}
+
+/* 🌸 メモ一覧 */
+.memo-list {
+  list-style: none;
+  padding: 0;
+  margin-top: 2rem;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.memo-list li {
+  width: 92%;
+  max-width: 750px;
+  background: #f9f6f1;
+  padding: 1.6rem;
+  margin-bottom: 1.2rem;
+  border-radius: 12px;
+  border: 1px solid #e6e3df;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+  color: #333;
+  font-size: 1.15rem;
+  cursor: pointer;
+  word-break: break-word;
+  white-space: pre-wrap;
+  transition: background 0.2s;
+}
+
+.memo-list li:hover {
+  background: #efece6;
+}
+
+/* 🌸 メモ作成・更新日 */
+.memo-list li small {
+  display: block;
+  margin-top: 0.5rem;
+  color: #555;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+/* ✅ タブレット以上 */
+@media (min-width: 768px) {
+  .memo-list li {
+    font-size: 1.2rem;
+    padding: 2rem;
+    border-radius: 14px;
+  }
+}
+
+/* 🌸 モーダル */
+.modal {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(248, 245, 239, 0.85);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: #f9f6f1;
+  padding: 2rem;
+  border-radius: 1rem;
+  text-align: center;
+  width: 90%;
+  max-width: 600px;
+}
+
+.modal-content textarea {
+  width: 95%;
+  height: 100px;
+  margin: 1.2rem auto;
+  font-size: 1.1rem;
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid #aaa;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+/* 🌸 モーダルボタン群 */
+.button-container {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+/* 🌸 削除ボタン */
+.btn-danger {
+  background-color: #cc3d3d;
+  color: white;
+  cursor: pointer;
+}
+
+/* 🌸 戻るボタン */
+.close-button {
+  margin-top: 1.5rem;
+  font-size: 1.5rem;
+  color: #888;
+  cursor: pointer;
+}
+
+/* 🌸 モーダルアニメーション */
+@keyframes dropDown {
+  0% {
+    transform: translateY(-40px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes flyUp {
+  0% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-40px);
+    opacity: 0;
+  }
+}
+
+/* モーダル開閉時アニメ */
+.memo-modal-enter-active {
+  animation: dropDown 0.4s ease-out;
+}
+.memo-modal-leave-active {
+  animation: flyUp 0.4s ease-in forwards;
+}
+</style>
+
