@@ -1,47 +1,85 @@
 <template>
   <div class="memo-container">
-<!-- 🔵 ヘッダー -->
-<div class="memo-header">
-  <h2 class="header-title">メモ</h2>
+    <!-- ヘッダー -->
+    <div class="memo-header">
+      <h2 class="header-title">メモ</h2>
 
-  <div class="header-icons">
-    <button class="icon-button" @click="openSearchModal">🔍</button>
-    <button class="icon-button" @click="openNewMemoModal">✏️</button>
-    
-    <!-- 📎: ファイルアップロード -->
-    <label class="icon-button upload-icon">
-      📎
-      <input type="file" accept=".txt" @change="handleFileUpload" hidden />
-    </label>
-  </div>
-</div>
+      <!-- 1段目アイコン -->
+      <div class="header-icons">
+        <button class="icon-button" @click="openSearchModal">🔍</button>
+        <button class="icon-button" @click="openNewMemoModal">＋</button>
+        <label class="icon-button upload-icon">
+          📎
+          <input type="file" accept=".txt" @change="handleFileUpload" hidden />
+        </label>
+        <button class="icon-button" @click="toggleSelectionMode">☑️</button>
+        <button
+          class="icon-button"
+          @click="toggleWiltFilter"
+          :class="{ active: filterWiltingOnly }"
+        >
+          🥀
+        </button>
+      </div>
 
-    <!-- 🔵 メモ一覧 -->
-    <div v-if="filteredMemos.length === 0" class="empty-message">メモがまだありません</div>
-    <div v-else class="memo-list">
+      <!-- 2段目（選択モード中のみ） -->
+      <div v-if="isSelectionMode" class="selection-actions">
+        <button class="icon-button" @click="exportSelectedMemos">📤</button>
+        <button class="icon-button" @click="deleteSelectedMemos">🗑</button>
+      </div>
+    </div>
+
+    <!-- 🥀 詩的メッセージ -->
+    <p v-if="filterWiltingOnly" class="wilted-message">
+      記憶の花は、いつか風に散る
+    </p>
+
+    <!-- 空のときのメッセージ -->
+    <p v-if="filteredMemos.length === 0" class="empty-message">
+      {{ filterWiltingOnly ? '枯れたメモはありません。' : 'メモはまだありません。' }}
+    </p>
+
+    <!-- メモ一覧 -->
+    <div v-if="filteredMemos.length > 0" class="memo-list">
       <div
         v-for="memo in filteredMemos"
         :key="memo.id"
         class="memo-card"
         @click="openEditMemoModal(memo)"
       >
+        <div v-if="isSelectionMode" class="checkbox-wrapper">
+          <label>
+            <input
+              type="checkbox"
+              :checked="selectedMemoIds.includes(memo.id)"
+              @click.stop
+              @change="toggleMemoSelection(memo.id)"
+            />
+          </label>
+        </div>
+
         <span class="flower-icon fixed-icon">{{ getLifeStageIcon(memo) }}</span>
         <p class="memo-content">{{ memo.content }}</p>
         <div class="memo-dates">
           作成: {{ formatDate(memo.createdAt) }}
-          <span v-if="memo.createdAt && memo.updatedAt && !isSameDay(memo.createdAt, memo.updatedAt)">
+          <span
+            v-if="memo.createdAt && memo.updatedAt && !isSameDay(memo.createdAt, memo.updatedAt)"
+          >
             ／ 更新: {{ formatDate(memo.updatedAt) }}
           </span>
         </div>
       </div>
     </div>
 
-    <!-- ✅ 新規・編集モーダル（.modal-content は不要） -->
+    <!-- ✅ 新規・編集モーダル -->
     <transition name="modal">
       <Modal v-if="showModal" :visible="showModal" @close="closeModal">
-        <h3 class="modal-title-icon-only">
-          <span class="flower-icon-small">{{ getLifeStageIcon(selectedMemo) }}</span>
-        </h3>
+        <div style="display: flex; justify-content: space-between; align-items: center">
+          <h3 class="modal-title-icon-only">
+            <span class="flower-icon-small">{{ getLifeStageIcon(selectedMemo) }}</span>
+          </h3>
+          <button class="export-button" v-if="selectedMemo" @click="exportMemo">📤</button>
+        </div>
 
         <textarea
           v-model="memoContent"
@@ -79,7 +117,6 @@
           >
             更新
           </YamatoButton>
-
           <YamatoButton
             v-if="selectedMemo"
             size="small"
@@ -88,7 +125,6 @@
           >
             削除
           </YamatoButton>
-
           <YamatoButton
             v-else
             size="small"
@@ -101,7 +137,7 @@
       </Modal>
     </transition>
 
-    <!-- 🔍 タグ検索モーダル（.modal-content は不要） -->
+    <!-- 🔍 タグ検索モーダル -->
     <transition name="modal">
       <Modal v-if="showSearchModal" :visible="showSearchModal" @close="closeSearchModal">
         <h3 class="modal-title">タグで検索</h3>
@@ -131,6 +167,7 @@ import { createMemo, updateMemo as updateMemoMutation, deleteMemo } from '../gra
 import { listMemos } from '../graphql/queries'
 import Modal from '@/components/Modal.vue'
 import YamatoButton from '@/components/YamatoButton.vue'
+import '@/assets/variables.css'
 
 // --- データ ---
 const memos = ref([])
@@ -146,16 +183,57 @@ const editMemoContent = ref('')
 const isEditMode = ref(false) // 🔵 新規作成か編集かを切り替える
 const showSearchModal = ref(false)    // 🔍検索モーダル表示
 const selectedSearchTags = ref([]) // ←複数選択対応
+const isSelectionMode = ref(false)
+const selectedMemoIds = ref([])
 
-// --- フィルタ ---
+function toggleMemoSelection(id) {
+  if (selectedMemoIds.value.includes(id)) {
+    selectedMemoIds.value = selectedMemoIds.value.filter(i => i !== id)
+  } else {
+    selectedMemoIds.value.push(id)
+  }
+}
+
+function clearSelectedMemos() {
+  selectedMemoIds.value = []
+}
+// ✅ これを残す
+const filterWiltingOnly = ref(false)
+
+function toggleWiltFilter() {
+  filterWiltingOnly.value = !filterWiltingOnly.value
+  selectedSearchTags.value = []
+  fetchMemos() // ← 追加してもよい
+}
+
 const filteredMemos = computed(() => {
-  if (selectedSearchTags.value.length === 0) return memos.value
+  const now = Date.now()
 
-  return memos.value.filter(memo =>
-    memo.tags &&
-    memo.tags.some(tag => selectedSearchTags.value.includes(tag))
-  )
+  // 🥀 フィルターがONなら330日以上経過したものだけ
+  if (filterWiltingOnly.value) {
+    return memos.value.filter(memo => {
+      const baseDateStr = memo.updatedAt || memo.createdAt
+      if (!baseDateStr) return false
+
+      const baseDate = new Date(baseDateStr)
+      if (isNaN(baseDate.getTime())) return false
+
+      const days = (now - baseDate.getTime()) / (1000 * 60 * 60 * 24)
+      return days >= 300
+    })
+  }
+
+  // タグ検索中
+  if (selectedSearchTags.value.length > 0) {
+    return memos.value.filter(memo =>
+      memo.tags && memo.tags.some(tag => selectedSearchTags.value.includes(tag))
+    )
+  }
+
+  // フィルターなし → 全件
+  return memos.value
 })
+
 function clearSearchTag() {
   selectedSearchTags.value = []
   showSearchModal.value = false
@@ -167,6 +245,39 @@ function formatDate(dateString) {
     month: 'short',
     day: 'numeric'
   })
+}
+
+function toggleSelectionMode() {
+  isSelectionMode.value = !isSelectionMode.value
+  if (!isSelectionMode.value) {
+    selectedMemoIds.value = []  // ✅ モードOFF時に選択をクリア
+  }
+}
+
+function exportSelectedMemos() {
+  const selected = memos.value.filter(memo => selectedMemoIds.value.includes(memo.id))
+  if (selected.length === 0) {
+    alert('⚠️ エクスポート対象のメモが選択されていません')
+    return
+  }
+
+  const content = selected.map(memo => {
+    const created = formatDate(memo.createdAt)
+    const updated = formatDate(memo.updatedAt)
+    const tags = memo.tags?.join(', ') || ''
+    return `---\n作成: ${created}${created !== updated ? ` ／ 更新: ${updated}` : ''}\nタグ: ${tags}\n\n${memo.content}\n`
+  }).join('\n')
+
+  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+
+  const a = document.createElement('a')
+  a.href = url
+  a.download = 'selected_memos_export.txt'
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
 }
 
 function handleFileUpload(event) {
@@ -235,6 +346,28 @@ async function deleteSelectedMemo() {
   } catch (err) {
     console.error('❌ メモ削除失敗:', err)
   }
+}
+
+async function deleteSelectedMemos() {
+  if (selectedMemoIds.value.length === 0) {
+    alert('⚠️ 削除するメモが選択されていません')
+    return
+  }
+
+  const confirmed = confirm(`選択された ${selectedMemoIds.value.length} 件のメモを削除しますか？`)
+  if (!confirmed) return
+
+  for (const id of selectedMemoIds.value) {
+    try {
+      await API.graphql(graphqlOperation(deleteMemo, { input: { id } }))
+      console.log(`✅ 削除成功: ${id}`)
+    } catch (err) {
+      console.error(`❌ 削除失敗: ${id}`, err)
+    }
+  }
+
+  selectedMemoIds.value = []
+  await fetchMemos()
 }
 
 // --- 新規メモ保存 ---
@@ -354,20 +487,22 @@ function addTag() {
 }
 
 // --- 成長アイコン 🌱🌷🥀
-function getLifeStageIcon(memo) {
-  if (!memo || (!memo.createdAt && !memo.updatedAt)) return '🌱'
+// --- 成長アイコン 🌱🌷🥀
+function getLifeStageIcon(item) {
+  if (!item) return '🌱'
 
   const now = new Date()
-  const baseDate = memo.updatedAt ? new Date(memo.updatedAt) : new Date(memo.createdAt)
+  const baseDateStr = item.updatedAt || item.createdAt
+  if (!baseDateStr) return '🌱'
 
-  // baseDateが無効な場合もカバー
+  const baseDate = new Date(baseDateStr)
   if (isNaN(baseDate)) return '🌱'
 
   const diffDays = (now - baseDate) / (1000 * 60 * 60 * 24)
 
-  if (diffDays < 180) return '🌱'
-  else if (diffDays < 330) return '🌷'
-  else return '🥀'
+  if (diffDays < 30) return '🌱'       // 発芽
+  else if (diffDays < 300) return '🌷' // 成長中
+  else return '🥀'                     // 枯れ
 }
 
 function openSearchModal() {
@@ -390,6 +525,27 @@ function isSameDay(date1, date2) {
   )
 }
 
+function exportMemo() {
+  if (!selectedMemo.value) {
+    alert('エクスポートするメモが見つかりません')
+    return
+  }
+
+  const memo = selectedMemo.value
+  const date = new Date().toISOString().split('T')[0]
+  const filename = `memo_${date}.txt`
+  const content = `メモ\n\n${memo.content}\n\n作成: ${formatDate(memo.createdAt)}\n更新: ${formatDate(memo.updatedAt)}`
+
+  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  a.click()
+
+  URL.revokeObjectURL(url)
+}
 
 onMounted(() => {
   window.scrollTo(0, 0)  // ← 先頭にスクロール
@@ -419,7 +575,7 @@ onMounted(() => {
   font-size: 1.4rem;
   font-weight: bold;
   font-family: 'serif';
-  color: #274c77;
+color: var(--yamato-primary);
   text-align: center;
 }
 
@@ -430,22 +586,56 @@ onMounted(() => {
   gap: 1.2rem;
 }
 
-/* 共通アイコンボタン */
 .icon-button {
-  background: transparent;
+  background-color: var(--yamato-primary);        /* ✅ 和風な淡い青に統一 */
+  color: var(--yamato-text-light);                /* ✅ 白文字に統一 */
   border: none;
-  font-size: 1.8rem;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  font-size: 1.4rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
   cursor: pointer;
-  transition: opacity 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: box-shadow 0.2s ease, background-color 0.2s ease;
 }
 
 .icon-button:hover {
-  opacity: 0.7;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  background-color: var(--yamato-primary-dark);   /* ✅ 濃い青に */
 }
 
 .upload-icon {
+  background-color: var(--yamato-primary);
+  color: var(--yamato-text-light);
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  font-size: 1.4rem;
   cursor: pointer;
-  font-size: 1.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  transition: background-color 0.3s ease;
+}
+
+.upload-icon:hover {
+  background-color: var(--yamato-primary-dark);
+}
+
+.upload-icon:hover {
+  background-color: #1e3c5a;
+}
+
+.checkbox-wrapper {
+  position: absolute;
+  top: 0.6rem;
+  left: 0.6rem;
+  z-index: 2;
 }
 
 /* 🌸 メモ一覧 */
@@ -667,6 +857,14 @@ textarea {
   align-items: center;
 }
 
+.selection-actions {
+  display: flex;
+  justify-content: center;
+  gap: 1.2rem;
+  margin-top: 0.8rem;
+}
+
+
 @media (prefers-color-scheme: dark) {
   .memo-card {
     background: #2c2c2c; /* 暗めの背景色 */
@@ -723,6 +921,29 @@ textarea {
   }
 }
 
+.export-button {
+  position: absolute;
+  top: 1.0rem;
+  right: 1.0rem; /* ← ここを調整 */
+  background-color: var(--yamato-primary);
+  color: var(--yamato-text-light);
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  font-size: 1.0rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.3s;
+}
+
+.export-button:hover {
+  background-color: var(--yamato-primary-dark);
+}
+
 @media (max-width: 600px) {
   .tag-input-row {
     flex-direction: column;
@@ -755,7 +976,21 @@ textarea {
     opacity: 0;
   }
 }
+.wilted-message {
+  margin: 0.5rem 0 1rem;
+  font-size: 0.95rem;
+  color: #888;
+  font-style: italic;
+  text-align: center;
+  animation: driftFade 3s ease-out forwards;
+  opacity: 0;
+}
 
+@keyframes driftFade {
+  0% { transform: translateY(0px) rotate(0deg); opacity: 0; }
+  30% { opacity: 1; }
+  100% { transform: translateY(-10px) rotate(-1deg); opacity: 0.85; }
+}
 
 
 </style>

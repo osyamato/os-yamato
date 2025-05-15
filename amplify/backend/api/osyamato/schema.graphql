@@ -116,3 +116,15 @@ type ChatRequest @model @auth(rules: [
 }
 
 
+type Photo @model @auth(rules: [{ allow: owner }]) {
+  id: ID!
+  owner: String!
+  fileName: String!         # フルサイズ画像
+  thumbnailFileName: String! # サムネイル画像 ← 新フィールド
+  photoTakenAt: AWSDateTime
+  lastOpenedAt: AWSDateTime
+  isFavorite: Boolean! @default(value: "false")
+  createdAt: AWSDateTime
+  updatedAt: AWSDateTime
+}
+

@@ -46,7 +46,7 @@
     <!-- 秋 -->
     <div v-if="effectType === 'autumn'" class="effect-container">
       <div
-        v-for="n in 60"
+        v-for="n in 88"
         :key="'autumn-' + n"
         class="autumn-leaf"
         :style="randomAutumnStyle(n)"
@@ -105,11 +105,14 @@ function triggerRain() { effectType.value = 'rain'; resetAfterDelay() }
 function triggerSunny() { effectType.value = 'sunny'; resetAfterDelay() }
 function triggerWind() { effectType.value = 'wind'; resetAfterDelay() }
 function triggerSpring() { effectType.value = 'spring'; resetAfterDelay() }
-function triggerAutumn() { effectType.value = 'autumn'; resetAfterDelay() }
+function triggerAutumn() {
+  effectType.value = 'autumn'
+  resetAfterDelay(7000) // 秋の葉もゆっくり落ちる
+}
 function triggerMoon() { effectType.value = 'moon'; resetAfterDelay() }
 function triggerSummer() {
   effectType.value = 'summer'
-  resetAfterDelay()
+  resetAfterDelay(8000) // 夏のツバメ：長めに見せる
 }
 function triggerMishima() {
   effectType.value = 'mishima'
@@ -199,15 +202,30 @@ function playEffect(type) {
 }
 
 defineExpose({
+  triggerRain,
+  triggerSnow,
+  triggerSunny,
+  triggerWind,
+  triggerSpring,
+  triggerAutumn,
+  triggerMoon,
+  triggerSummer,      // ← ✅ これが抜けていた
+  triggerMishima,
+  triggerSaturn,
+  triggerConfetti,
+  triggerStarry,
   playEffect
 })
 
+let resetTimer = null
+
 function resetAfterDelay(duration = 6000) {
-  setTimeout(() => {
+  if (resetTimer) clearTimeout(resetTimer)
+  resetTimer = setTimeout(() => {
     effectType.value = null
+    resetTimer = null
   }, duration)
 }
-
 function randomRainStyle() {
   const left = Math.random() * 100
   const delay = Math.random()
@@ -225,7 +243,7 @@ function randomAutumnStyle(index) {
   const dy = (Math.random() - 0.5) * 200 + 'px'
   const size = 24 + Math.random() * 16
   const imageIndex = (index % 2) + 1
-  const duration = (1.1 + Math.random() * 0.5).toFixed(2) + 's'
+const duration = (2.0 + Math.random() * 1.5).toFixed(2) + 's'  // ← 少し長めに
   const top = Math.random() * 80
   const left = Math.random() * 80
 
@@ -533,11 +551,29 @@ animation-fill-mode: both;
 }
 
 @keyframes autumn-pop {
-  0%   { transform: translate(0, 0) rotate(0deg); opacity: 0; }
-  20%  { transform: translate(var(--dx), var(--dy)) rotate(90deg); opacity: 1; }
-  50%  { transform: translate(calc(var(--dx) * 1.2), calc(var(--dy) * 1.2)) rotate(180deg); opacity: 0.9; }
-  80%  { transform: translate(calc(var(--dx) * 1.4), calc(var(--dy) * 1.4)) rotate(270deg); opacity: 0.6; }
-  100% { transform: translate(calc(var(--dx) * 1.6), calc(var(--dy) * 1.6)) rotate(360deg); opacity: 0; }
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+    opacity: 0;
+  }
+  20% {
+    transform: translate(var(--dx), var(--dy)) rotate(90deg);
+    opacity: 1;
+  }
+  50% {
+    transform: translate(calc(var(--dx) * 1.2), calc(var(--dy) * 1.2)) rotate(180deg);
+    opacity: 0.9;
+  }
+  80% {
+    transform: translate(calc(var(--dx) * 1.4), calc(var(--dy) * 1.4)) rotate(270deg);
+    opacity: 0.4;
+  }
+  90% {
+    opacity: 0.2;
+  }
+  100% {
+    transform: translate(calc(var(--dx) * 1.6), calc(var(--dy) * 1.6)) rotate(360deg);
+    opacity: 0;
+  }
 }
 
 @keyframes moonRise {

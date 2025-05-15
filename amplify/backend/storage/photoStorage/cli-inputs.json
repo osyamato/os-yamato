@@ -1,0 +1,13 @@
+{
+  "resourceName": "photoStorage",
+  "policyUUID": "3ff99361",
+  "bucketName": "osyamato462d5cceaef04cc5a79e3d8469a15eec",
+  "storageAccess": "auth",
+  "guestAccess": [],
+  "authAccess": [
+    "CREATE_AND_UPDATE",
+    "READ",
+    "DELETE"
+  ],
+  "groupAccess": {}
+}

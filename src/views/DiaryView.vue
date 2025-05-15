@@ -329,7 +329,7 @@ onMounted(fetchDiaries)
 }
 
 .edit-button {
-  background-color: #f0f0f0;
+background-color: #274c77;
   border: none;
   border-radius: 50%;
   width: 32px;
@@ -410,12 +410,13 @@ onMounted(fetchDiaries)
 
 .butterfly-wrapper {
   position: absolute;
-  top: -10px;
+ top: 8px;
   left: 50%;
   transform: translateX(-50%); /* ✅ 横位置の制御は親で */
 }
 .fading {
-  filter: brightness(0.6) grayscale(40%) drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4));
+  filter: brightness(0.45) grayscale(60%) drop-shadow(0 12px 24px rgba(0, 0, 0, 0.6));
+  transition: filter 0.3s ease;
 }
 
 
@@ -437,7 +438,7 @@ onMounted(fetchDiaries)
 
 .butterfly {
   position: absolute;
-  top: -10px;
+  top: -11px;
   left: 50%;
   transform: translate(-50%, 0); /* ✅ 初期位置も中央 */
   z-index: 10;
@@ -586,8 +587,8 @@ margin: auto;
 }
 
 .flower-img {
-  width: 60px;
-  height: 60px;
+  width: 56px;
+  height: 56px;
   object-fit: contain;
   display: block;
   margin: 0;
@@ -596,9 +597,10 @@ margin: auto;
 
 .full-flower-area {
   display: grid;
- grid-template-columns: repeat(auto-fill, minmax(68px, 1fr)); /* ✅ 最小幅をさらに縮小 */
-  gap: 0.3rem;         /* ✅ 花の間隔をさらに縮める */
-  padding: 0.5rem 0.5rem 2rem 0.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+  column-gap: 0.3rem;
+  row-gap: 1.2rem;
+  padding: 0.5rem 0.2rem 2rem 0.2rem; /* ← 左右を 0.5rem → 0.2rem に縮小 */
   width: 100%;
   justify-items: center;
   align-items: start;

@@ -12,39 +12,43 @@
     </div>
 
     <div class="setting-group">
-      <label for="fontSize">{{ t('fontSizeLabel') }}</label>
-      <select v-model="selectedFontSize" id="fontSize">
-        <option disabled value="">{{ t('selectFontSize') }}</option>
-        <option value="small">{{ t('small') }}</option>
-        <option value="medium">{{ t('medium') }}</option>
-        <option value="large">{{ t('large') }}</option>
-      </select>
-    </div>
-
-    <div class="setting-group">
       <label for="wallpaper">{{ t('wallpaperLabel') }}</label>
       <select v-model="selectedWallpaper" id="wallpaper">
         <option disabled value="">{{ t('selectWallpaper') }}</option>
+        <option value="">{{ t('none') }}</option>
         <option value="image.moon.png">{{ t('moon') }}</option>
         <option value="image.take.png">{{ t('take') }}</option>
+        <option value="color.lightBlue">{{ t('lightBlue') }}</option>
+        <option value="color.lightYellow">{{ t('lightYellow') }}</option>
+        <option value="color.lightPurple">{{ t('lightPurple') }}</option>
       </select>
     </div>
 
-    <div v-if="selectedWallpaper">
+    <div v-if="selectedWallpaper && !selectedWallpaper.startsWith('color.')">
       <p>{{ t('preview') }}</p>
       <img :src="`/${selectedWallpaper}`" class="preview" alt="Preview" />
     </div>
 
-    <button @click="saveSettings">{{ t('save') }}</button>
+    <div class="button-container">
+      <YamatoButton @click="saveSettings">{{ t('save') }}</YamatoButton>
+    </div>
+
+    <div class="account-row" @click="goToAccount">
+      <span class="account-text">{{ t('account') }}</span>
+      <div class="account-icon">→</div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { Auth } from 'aws-amplify'
+import YamatoButton from '@/components/YamatoButton.vue'
+
+const router = useRouter()
 
 const selectedLanguage = ref('')
-const selectedFontSize = ref('')
 const selectedWallpaper = ref('')
 
 const locale = {
@@ -52,39 +56,39 @@ const locale = {
     title: '設定',
     languageLabel: '言語を選択:',
     selectLanguage: '-- 言語を選んでください --',
-    fontSizeLabel: 'フォントサイズ:',
-    selectFontSize: '-- フォントサイズを選んでください --',
     wallpaperLabel: '壁紙を選択:',
     selectWallpaper: '-- 壁紙を選んでください --',
     moon: '月夜（moon）',
     take: '竹（take）',
-    small: '小',
-    medium: '中',
-    large: '大',
+    none: '背景なし',
+    lightBlue: '和色（淡青）',
+    lightYellow: '和色（淡黄）',
+    lightPurple: '和色（淡紫）',
     preview: '選択中のプレビュー:',
     save: '保存',
     japanese: '日本語',
     english: '英語',
-    saveMessage: '設定を保存しました！'
+    saveMessage: '設定を保存しました！',
+    account: 'アカウント'
   },
   en: {
     title: 'Settings',
     languageLabel: 'Select Language:',
     selectLanguage: '-- Please choose a language --',
-    fontSizeLabel: 'Font Size:',
-    selectFontSize: '-- Please choose a font size --',
     wallpaperLabel: 'Select Wallpaper:',
     selectWallpaper: '-- Please choose a wallpaper --',
     moon: 'Moonlight',
     take: 'Bamboo',
-    small: 'Small',
-    medium: 'Medium',
-    large: 'Large',
+    none: 'No Background',
+    lightBlue: 'Wafu Light Blue',
+    lightYellow: 'Wafu Light Yellow',
+    lightPurple: 'Wafu Light Purple',
     preview: 'Current Preview:',
     save: 'Save',
     japanese: 'Japanese',
     english: 'English',
-    saveMessage: 'Settings saved!'
+    saveMessage: 'Settings saved!',
+    account: 'Account'
   }
 }
 
@@ -95,29 +99,35 @@ function t(key) {
 onMounted(async () => {
   const user = await Auth.currentAuthenticatedUser()
   selectedLanguage.value = user.attributes['custom:language'] || 'ja'
-  selectedFontSize.value = user.attributes['custom:fontSize'] || ''
   selectedWallpaper.value = user.attributes['custom:wallpaper'] || ''
+  document.body.setAttribute('data-bg', selectedWallpaper.value || '')
+})
+
+watch(selectedWallpaper, (val) => {
+  document.body.setAttribute('data-bg', val || '')
 })
 
 async function saveSettings() {
   const user = await Auth.currentAuthenticatedUser()
   await Auth.updateUserAttributes(user, {
     'custom:language': selectedLanguage.value,
-    'custom:fontSize': selectedFontSize.value,
     'custom:wallpaper': selectedWallpaper.value
   })
   alert(t('saveMessage'))
 }
+
+function goToAccount() {
+  router.push('/account')
+}
 </script>
 
 <style scoped>
-.settings {
-  padding: 2rem;
-  font-size: 1rem;
-
-  /* ▼ ここに追加する */
-  animation: dropDown 0.4s ease-out;
-  transform-origin: top center;
+.settings h2 {
+  text-align: center;
+  font-size: 1.4rem;
+  font-family: var(--yamato-font-title, 'serif');
+  color: var(--yamato-primary);
+  margin-bottom: 2rem;
 }
 
 .setting-group {
@@ -134,7 +144,7 @@ async function saveSettings() {
 
 .setting-group select {
   flex: 1;
-  max-width: 100px;
+  max-width: 150px;
   padding: 0.2rem 0.6rem;
   font-size: 0.9rem;
   height: 2rem;
@@ -149,16 +159,59 @@ async function saveSettings() {
   border: 1px solid #aaa;
 }
 
-button {
-  margin-top: 1.5rem;
-  padding: 0.6rem 1.2rem;
-  font-size: 1rem;
+.button-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 2rem;
+}
+
+.yamato-button {
   background-color: #274c77;
-  color: #fff;
+  color: white;
+  padding: 0.6rem 2rem;
+  font-size: 1rem;
   border: none;
-  border-radius: 8px;
+  border-radius: 9999px;
   cursor: pointer;
   transition: background-color 0.3s;
+}
+
+.yamato-button:hover {
+  background-color: #1e3a5f;
+}
+
+.account-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 3rem;
+  padding: 0 1rem;
+  cursor: pointer;
+  color: #ccc;
+}
+
+.account-text {
+  font-size: 1rem;
+}
+
+.account-icon {
+  background-color: #274c77;
+  color: white;
+  border-radius: 9999px;
+  padding: 0.3rem 0.6rem;
+  font-weight: bold;
+  font-size: 1.1rem;
+  transition: background-color 0.3s;
+}
+
+.account-icon:hover {
+  background-color: #1e3a5f;
+}
+
+.settings {
+  animation: dropDown 0.6s ease-out;
+  opacity: 0;
+  animation-fill-mode: forwards;
 }
 
 @keyframes dropDown {
@@ -171,6 +224,5 @@ button {
     opacity: 1;
   }
 }
-
-
 </style>
+

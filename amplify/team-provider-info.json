@@ -17,6 +17,9 @@
       },
       "api": {
         "osyamato": {}
+      },
+      "storage": {
+        "photoStorage": {}
       }
     }
   }

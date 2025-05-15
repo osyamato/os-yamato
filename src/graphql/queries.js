@@ -285,6 +285,46 @@ export const listChatRequests = /* GraphQL */ `
     }
   }
 `;
+export const getPhoto = /* GraphQL */ `
+  query GetPhoto($id: ID!) {
+    getPhoto(id: $id) {
+      id
+      owner
+      fileName
+      thumbnailFileName
+      photoTakenAt
+      lastOpenedAt
+      isFavorite
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const listPhotos = /* GraphQL */ `
+  query ListPhotos(
+    $filter: ModelPhotoFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    listPhotos(filter: $filter, limit: $limit, nextToken: $nextToken) {
+      items {
+        id
+        owner
+        fileName
+        thumbnailFileName
+        photoTakenAt
+        lastOpenedAt
+        isFavorite
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
 export const getPublicProfile = /* GraphQL */ `
   query GetPublicProfile($id: ID!) {
     getPublicProfile(id: $id) {

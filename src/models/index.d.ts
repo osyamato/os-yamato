@@ -301,3 +301,39 @@ export declare type ChatRequest = LazyLoading extends LazyLoadingDisabled ? Eage
 export declare const ChatRequest: (new (init: ModelInit<ChatRequest>) => ChatRequest) & {
   copyOf(source: ChatRequest, mutator: (draft: MutableModel<ChatRequest>) => MutableModel<ChatRequest> | void): ChatRequest;
 }
+
+type EagerPhoto = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<Photo, 'id'>;
+  };
+  readonly id: string;
+  readonly owner: string;
+  readonly fileName: string;
+  readonly thumbnailFileName: string;
+  readonly photoTakenAt?: string | null;
+  readonly lastOpenedAt?: string | null;
+  readonly isFavorite: boolean;
+  readonly createdAt?: string | null;
+  readonly updatedAt?: string | null;
+}
+
+type LazyPhoto = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<Photo, 'id'>;
+  };
+  readonly id: string;
+  readonly owner: string;
+  readonly fileName: string;
+  readonly thumbnailFileName: string;
+  readonly photoTakenAt?: string | null;
+  readonly lastOpenedAt?: string | null;
+  readonly isFavorite: boolean;
+  readonly createdAt?: string | null;
+  readonly updatedAt?: string | null;
+}
+
+export declare type Photo = LazyLoading extends LazyLoadingDisabled ? EagerPhoto : LazyPhoto
+
+export declare const Photo: (new (init: ModelInit<Photo>) => Photo) & {
+  copyOf(source: Photo, mutator: (draft: MutableModel<Photo>) => MutableModel<Photo> | void): Photo;
+}

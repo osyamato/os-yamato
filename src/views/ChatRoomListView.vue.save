@@ -122,7 +122,6 @@ import ChatRequestModal from '@/components/ChatRequestModal.vue'
 import ProfileSetupView from '@/views/ProfileSetupView.vue'
 import { updateChatRequest, createChatRoom } from '@/graphql/mutations'
 import '@/assets/variables.css'
-import { deleteChatRoom } from '@/graphql/mutations'
 
 
 // 状態
@@ -347,46 +346,17 @@ async function fetchChatRooms() {
       limit: 50
     }))
 
-    const allRooms = res.data.listChatRooms.items || []
-
-    const now = new Date()
-    const retainedRooms = []
-
-    for (const room of allRooms) {
-      if (!room || !room.user1 || !room.user2) continue
-
-      // 削除フラグをチェック
+    const rooms = (res.data.listChatRooms.items || []).filter(room => {
+      if (!room || !room.user1 || !room.user2) return false
       const isUser1 = room.user1 === mySub.value
       const isUser2 = room.user2 === mySub.value
-      if (isUser1 && room.deletedByUser1) continue
-      if (isUser2 && room.deletedByUser2) continue
+      if (isUser1 && room.deletedByUser1) return false
+      if (isUser2 && room.deletedByUser2) return false
+      return true
+    })
+    chatRooms.value = rooms
 
-      // 最終活動日を取得（会話がなければ作成日）
-      const base = room.lastTimestamp || room.createdAt
-      if (!base) continue
-      const baseDate = new Date(base)
-      const diffDays = (now - baseDate) / (1000 * 60 * 60 * 24)
-
-      if (diffDays > 365) {
-        // 一年経過 → 物理削除
-        try {
-          await API.graphql(graphqlOperation(deleteChatRoom, {
-            input: { id: room.id }
-          }))
-          console.log(`🗑️ 自動削除: ${room.id}`)
-        } catch (err) {
-          console.error('❌ 削除失敗:', err)
-        }
-        continue
-      }
-
-      retainedRooms.push(room)
-    }
-
-    chatRooms.value = retainedRooms
-
-    // パートナープロフィールの取得
-    for (const room of retainedRooms) {
+    for (const room of rooms) {
       const idsToFetch = new Set([room.user1, room.user2, room.lastSenderId])
       for (const id of idsToFetch) {
         if (id && !partnerProfiles.value[id]) {
@@ -406,7 +376,6 @@ async function fetchChatRooms() {
     console.error('❌ ChatRoom一覧取得エラー:', e)
   }
 }
-
 
 function getPartnerDisplayName(room) {
   const partnerSub = room.user1 === mySub.value ? room.user2 : room.user1
@@ -466,20 +435,6 @@ function formatTime(ts) {
   })
 }
 
-function getExpiryIcon(room) {
-  const base = room.lastTimestamp || room.createdAt
-  if (!base) return '🌱'
-
-  const now = new Date()
-  const baseDate = new Date(base)
-  if (isNaN(baseDate)) return '🌱'
-
-  const diffDays = (now - baseDate) / (1000 * 60 * 60 * 24)
-
-  if (diffDays < 30) return '🌱'        // 発芽：〜29日
-  else if (diffDays < 300) return '🌷'  // 開花：30〜299日
-  else return '🥀'                      // 枯れ：300日〜
-}
 
 function goToRequestView() {
   router.push({ name: 'chat-requests' })

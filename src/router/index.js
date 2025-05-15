@@ -14,7 +14,9 @@ import ContactView from '../views/ContactView.vue'
 import ChatView from '../views/ChatView.vue'
 import ChatRoomListView from '../views/ChatRoomListView.vue'
 import ProfileSetupView from '../views/ProfileSetupView.vue'
-import ChatRequestListView from '../views/ChatRequestListView.vue' // ✅ 新しく追加
+import ChatRequestListView from '../views/ChatRequestListView.vue'
+import AccountView from '../views/AccountView.vue'
+import PhotoView from '../views/PhotoView.vue' // ✅ 追加
 
 const routes = [
   { path: '/', redirect: '/signin' },
@@ -28,6 +30,8 @@ const routes = [
   { path: '/camera', name: 'camera', component: CameraView },
   { path: '/memo', name: 'memo', component: MemoView },
   { path: '/settings', name: 'settings', component: SettingsView },
+  { path: '/account', name: 'account', component: AccountView },
+  { path: '/photo', name: 'photo', component: PhotoView }, // ✅ 追加
   {
     path: '/chat/:roomId/:receiverYamatoId',
     name: 'chat',
@@ -36,14 +40,12 @@ const routes = [
   },
   { path: '/chat-rooms', name: 'chat-rooms', component: ChatRoomListView },
   { path: '/profile-setup', name: 'profile-setup', component: ProfileSetupView },
-  { path: '/chat-requests', name: 'chat-requests', component: ChatRequestListView } // ✅ 追加
+  { path: '/chat-requests', name: 'chat-requests', component: ChatRequestListView }
 ]
 
-// ✅ router の作成
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes
 })
 
-// ✅ router を export
 export default router

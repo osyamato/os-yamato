@@ -640,6 +640,12 @@ textarea {
     color: #fff !important;
     border-color: #444 !important;
   }
+
+  .event-sticky {
+    background-color: #fffcd2;
+    color: #111 !important;
+    border: 1px solid #d8c97f;
+  }
 }
 
 /* 🌸 アニメーション */
