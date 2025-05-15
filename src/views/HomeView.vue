@@ -1,8 +1,5 @@
 <template>
-  <div
-    class="desktop"
-    :style="wallpaper ? { backgroundImage: `url(/${wallpaper})` } : {}"
-  >
+  <div class="desktop" :style="wallpaperStyle">
     <div class="icon-grid">
       <button @click="goTo('settings')">
         <img src="/images/setting.png" alt="設定" class="icon-image" />
@@ -13,22 +10,46 @@
       <button @click="goTo('diary')">🌸</button>
       <button @click="goTo('contact')">👥</button>
       <button @click="goTo('chat-rooms')">💬</button>
+      <button @click="goTo('photo')">📷</button>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { Auth } from 'aws-amplify'
 
 const router = useRouter()
 const wallpaper = ref('')
 
+// 🔷 背景スタイルを切り替える computed
+const wallpaperStyle = computed(() => {
+  if (!wallpaper.value) return {}
+
+  if (wallpaper.value.startsWith('color.')) {
+    const colorMap = {
+      'color.lightBlue': '#e6f0f9',
+      'color.lightYellow': '#fff9e3',
+      'color.lightPurple': '#f5f0fb'
+    }
+    return { backgroundColor: colorMap[wallpaper.value] || '#f5f5f5' }
+  }
+
+  return {
+    backgroundImage: `url(/${wallpaper.value})`,
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    backgroundRepeat: 'no-repeat'
+  }
+})
+
+// 🔹 画面遷移
 function goTo(path) {
-  router.push(`/${path}`)  // ✅ 正しいテンプレートリテラル
+  router.push(`/${path}`)
 }
 
+// 🔹 ユーザー属性から壁紙を取得
 onMounted(async () => {
   try {
     const user = await Auth.currentAuthenticatedUser()
@@ -39,32 +60,26 @@ onMounted(async () => {
 })
 </script>
 
-
 <style scoped>
 .desktop {
   height: 100vh;
   width: 100%;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start; /* ← 上から表示 */
+  justify-content: flex-start;
   align-items: center;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
   font-family: sans-serif;
-  padding-top: 3rem; /* ← 上の余白を適度に確保 */
-  transition: background-image 0.5s ease-in-out;
+  padding-top: 3rem;
+  transition: background 0.5s ease-in-out, background-image 0.5s ease-in-out;
 }
-
 
 .icon-grid {
   display: grid;
-  grid-template-columns: repeat(4, 70px); /* 4列 */
-  gap: 1rem 1.5rem; /* ← 縦:1rem 横:1.5rem に調整 */
+  grid-template-columns: repeat(4, 70px);
+  gap: 1rem 1.5rem;
   justify-content: center;
 }
 
-/* 共通ボタン */
 button {
   width: 70px;
   height: 70px;
@@ -85,7 +100,6 @@ button:hover {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-/* setting画像用 */
 .icon-image {
   width: 100%;
   height: 100%;
@@ -93,4 +107,3 @@ button:hover {
   border-radius: 8px;
 }
 </style>
-

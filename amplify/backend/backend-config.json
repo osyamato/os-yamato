@@ -61,5 +61,12 @@
       "providerPlugin": "awscloudformation",
       "service": "Cognito"
     }
+  },
+  "storage": {
+    "photoStorage": {
+      "dependsOn": [],
+      "providerPlugin": "awscloudformation",
+      "service": "S3"
+    }
   }
 }

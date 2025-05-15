@@ -114,11 +114,11 @@ function maybePlayEffect(content) {
   if (!chatEffect.value) return false // 🎯 false を返す
 
 const effects = [
-  { pattern: new RegExp(`(?:^|\\s|[、。！？])(?:i love you|愛している|愛してる)(?:\\s|[、。！？]|$)`, 'i'), effect: 'moon' },
-  { pattern: new RegExp(`(?:^|\\s|[、。！？])(?:金閣寺|三島由紀夫|愛国|倉岡剛)(?:\\s|[、。！？]|$)`), effect: 'mishima' },
-  { pattern: new RegExp(`(?:^|\\s|[、。！？])(?:プラネタリウム|宇宙|土星)(?:\\s|[、。！？]|$)`), effect: 'saturn' },
-  { pattern: new RegExp(`(?:^|\\s|[、。！？])(?:おめでとう|お祝い|祝|congratulations)(?:\\s|[、。！？]|$)`, 'i'), effect: 'confetti' },
-  { pattern: new RegExp(`(?:^|\\s|[、。！？])(?:星空|モンゴル|星|夜空)(?![一-龯])`, 'u'), effect: 'starry' }
+  { pattern: new RegExp(`(i love you|愛している|愛してる)(?![一-龯])`, 'i'), effect: 'moon' },
+  { pattern: new RegExp(`(金閣寺|三島由紀夫|愛国|倉岡剛)(?![一-龯])`), effect: 'mishima' },
+  { pattern: new RegExp(`(プラネタリウム|宇宙|土星)(?![一-龯])`), effect: 'saturn' },
+  { pattern: new RegExp(`(おめでとう|お祝い|祝|congratulations)(?![一-龯])`, 'i'), effect: 'confetti' },
+  { pattern: new RegExp(`(星空|モンゴル|星|夜空)(?![一-龯])`, 'u'), effect: 'starry' }
 ]
 
   for (const { pattern, effect } of effects) {

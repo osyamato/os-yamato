@@ -1,6 +1,6 @@
 <template>
   <div class="setup-container">
-    <h2>プロフィールを登録</h2>
+<h2 class="setup-title">プロフィールを登録</h2>
 
     <input
       v-model="yamatoId"
@@ -88,10 +88,24 @@ async function register() {
 .setup-container {
   max-width: 500px;
   margin: 0 auto;
-  padding: 0; /* モーダル側に任せる */
+  padding: 0;
   background: none;
   border: none;
   border-radius: 0;
+}
+
+.setup-title {
+  font-size: 1.2rem;
+  text-align: center;
+  margin-bottom: 1.5rem;
+  font-weight: 600;
+  color: #222; /* ライトモード用 */
+}
+
+@media (prefers-color-scheme: dark) {
+  .setup-title {
+    color: #fff; /* ダークモードでは白に */
+  }
 }
 
 input,

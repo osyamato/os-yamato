@@ -380,6 +380,63 @@ export const onDeleteChatRequest = /* GraphQL */ `
     }
   }
 `;
+export const onCreatePhoto = /* GraphQL */ `
+  subscription OnCreatePhoto(
+    $filter: ModelSubscriptionPhotoFilterInput
+    $owner: String
+  ) {
+    onCreatePhoto(filter: $filter, owner: $owner) {
+      id
+      owner
+      fileName
+      thumbnailFileName
+      photoTakenAt
+      lastOpenedAt
+      isFavorite
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const onUpdatePhoto = /* GraphQL */ `
+  subscription OnUpdatePhoto(
+    $filter: ModelSubscriptionPhotoFilterInput
+    $owner: String
+  ) {
+    onUpdatePhoto(filter: $filter, owner: $owner) {
+      id
+      owner
+      fileName
+      thumbnailFileName
+      photoTakenAt
+      lastOpenedAt
+      isFavorite
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const onDeletePhoto = /* GraphQL */ `
+  subscription OnDeletePhoto(
+    $filter: ModelSubscriptionPhotoFilterInput
+    $owner: String
+  ) {
+    onDeletePhoto(filter: $filter, owner: $owner) {
+      id
+      owner
+      fileName
+      thumbnailFileName
+      photoTakenAt
+      lastOpenedAt
+      isFavorite
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
 export const onCreatePublicProfile = /* GraphQL */ `
   subscription OnCreatePublicProfile(
     $filter: ModelSubscriptionPublicProfileFilterInput

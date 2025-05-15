@@ -1,0 +1,845 @@
+<template>
+  <div class="photo-view">
+    <h2 class="title">写真管理</h2>
+
+    <!-- アクションヘッダー -->
+    <div class="header-actions">
+      <label class="circle-file-button">
+        ＋
+        <input type="file" accept="image/*" multiple @change="handleFileUpload" />
+      </label>
+      <button
+        class="circle-heart-filter"
+        :class="{ active: filterFavoritesOnly }"
+        @click="filterFavoritesOnly = !filterFavoritesOnly"
+      >
+        ♡
+      </button>
+      <button
+        class="circle-check-filter"
+        @click="toggleSelectionMode"
+      >
+        ☑️
+      </button>
+ <!-- 🥀 経過写真フィルター -->
+  <button
+    class="circle-wilt-filter"
+    :class="{ active: filterWiltingOnly }"
+    @click="filterWiltingOnly = !filterWiltingOnly"
+  >
+    🥀
+  </button>
+
+
+    </div>
+
+    <!-- ローディングスピナー -->
+    <div v-if="isLoading" class="spinner-wrapper">
+      <div class="loading-spinner">⚙️</div>
+    </div>
+
+
+    <!-- 一括削除ボタン -->
+    <div v-if="isSelectionMode" class="floating-delete">
+      <button class="bulk-delete-button" @click="deleteSelectedPhotos">
+        🗑
+      </button>
+    </div>
+
+<p class="wilted-message" v-if="filterWiltingOnly">
+  記憶の花は、いつか風に散る
+</p>
+
+
+    <!-- 写真グリッド -->
+    <div class="photo-grid">
+      <div
+        v-for="photo in photoList"
+        :key="photo.id"
+        class="photo-card"
+        :class="{ selected: isSelectionMode && selectedPhotoIds.includes(photo.id) }"
+        @click="isSelectionMode ? toggleSelection(photo.id) : openModal(photo)"
+      >
+        <img
+          :src="photo.thumbnailUrl"
+          class="photo-thumbnail"
+          style="cursor: pointer"
+        />
+
+        <!-- チェックオーバーレイ -->
+        <div
+          v-if="isSelectionMode && selectedPhotoIds.includes(photo.id)"
+          class="check-overlay"
+        >
+          ☑️
+        </div>
+
+        <div class="photo-info">
+          <p class="filename">
+            📷 {{ photo.fileName }}<span v-if="isWilting(photo)">🥀</span>
+          </p>
+          <p class="timestamp">撮影日時: {{ formatDate(photo.photoTakenAt) }}</p>
+          <div class="photo-actions">
+            <button @click.stop="toggleFavorite(photo)" class="favorite-button">
+              {{ photo.isFavorite ? '❤️' : '🤍' }}
+            </button>
+            <button @click.stop="deletePhoto(photo)" class="delete-button">🗑</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- モーダル表示 -->
+    <div
+      v-if="modalVisible"
+      class="modal-overlay"
+      :class="{ closing: modalClosing }"
+      @click="startModalClose"
+    >
+      <div class="modal-content-wrapper" @click.stop>
+        <!-- ツールバー -->
+        <div v-if="isImageLoaded" class="modal-toolbar">
+          <span
+            class="modal-favorite-icon"
+            :class="{ active: currentPhoto?.isFavorite }"
+            @click.stop="toggleFavorite(currentPhoto)"
+          >♡</span>
+
+          <!-- 日付を中央付近に表示 -->
+          <span class="modal-date-text" v-if="currentPhoto?.photoTakenAt">
+            {{ formatDate(currentPhoto.photoTakenAt) }}
+          </span>
+
+          <button
+            class="modal-delete-button-above"
+            @click="deletePhoto(currentPhoto)"
+          >🗑</button>
+        </div>
+
+        <!-- モーダルコンテンツ -->
+        <div class="modal-content">
+          <div v-if="!isImageLoaded" class="loading-spinner">⚙️</div>
+          <img
+            v-show="false"
+            :src="fullImageUrl"
+            @load="isImageLoaded = true"
+          />
+          <div v-if="isImageLoaded" class="modal-image-wrapper">
+            <img :src="fullImageUrl" class="full-image" />
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+
+<script setup>
+import { ref, onMounted, watch } from 'vue'
+import { Storage, API, graphqlOperation, Auth } from 'aws-amplify'
+import { createPhoto, updatePhoto, deletePhoto as deletePhotoMutation } from '@/graphql/mutations'
+import { listPhotos } from '@/graphql/queries'
+import exifr from 'exifr'
+
+const photoList = ref([])
+const modalVisible = ref(false)
+const modalClosing = ref(false)
+const fullImageUrl = ref(null)
+const isImageLoaded = ref(false)
+const currentPhoto = ref(null)
+const filterFavoritesOnly = ref(false)
+const isLoading = ref(false)
+
+
+const filterWiltingOnly = ref(false)
+
+const isSelectionMode = ref(false)
+const selectedPhotoIds = ref([])
+function toggleSelectionMode() {
+  isSelectionMode.value = !isSelectionMode.value
+  if (!isSelectionMode.value) {
+    selectedPhotoIds.value = [] // ✅ チェックモード終了時にリセット
+  }
+}
+
+function toggleSelection(photoId) {
+  const id = photoId.toString()
+  const current = [...selectedPhotoIds.value] // 現在の配列のコピーを作成
+
+  if (current.includes(id)) {
+    // すでに含まれていれば削除
+    selectedPhotoIds.value = current.filter(i => i !== id)
+  } else {
+    // 含まれていなければ追加
+    selectedPhotoIds.value = [...current, id]
+  }
+}
+
+function toggleWiltFilter() {
+  filterFavoritesOnly.value = false
+  isSelectionMode.value = false
+  filterWiltingOnly.value = !filterWiltingOnly.value
+}
+
+function toggleFavoriteFilter() {
+  filterWiltingOnly.value = false
+  isSelectionMode.value = false
+  filterFavoritesOnly.value = !filterFavoritesOnly.value
+}
+
+function toggleSelectionMode() {
+  filterFavoritesOnly.value = false
+  filterWiltingOnly.value = false
+  isSelectionMode.value = !isSelectionMode.value
+  if (!isSelectionMode.value) {
+    selectedPhotoIds.value = []
+  }
+}
+
+watch([filterFavoritesOnly, filterWiltingOnly], () => {
+  console.log('🥀 フィルター状態:', filterWiltingOnly.value)
+  fetchPhotos()
+})
+
+
+async function handleFileUpload(event) {
+  const files = event.target.files
+  if (!files || files.length === 0) return
+
+  isLoading.value = true
+
+  try {
+    for (const file of files) {
+      await uploadSinglePhoto(file)
+    }
+    await fetchPhotos()
+  } catch (e) {
+    console.error('❌ アップロード中エラー:', e)
+    alert('アップロードに失敗しました。')
+  } finally {
+    isLoading.value = false
+  }
+}
+
+async function uploadSinglePhoto(file) {
+  const fileName = `${Date.now()}-${file.name}`
+  const thumbFileName = `thumb-${fileName}`
+
+  try {
+    const user = await Auth.currentAuthenticatedUser()
+    const owner = user.attributes.sub
+
+    await Storage.put(fileName, file, {
+      contentType: file.type,
+      level: 'protected'
+    })
+
+    const imageBitmap = await createImageBitmap(file)
+    const canvas = document.createElement('canvas')
+    const ctx = canvas.getContext('2d')
+    const maxSize = 300
+    const ratio = Math.min(maxSize / imageBitmap.width, maxSize / imageBitmap.height)
+    canvas.width = imageBitmap.width * ratio
+    canvas.height = imageBitmap.height * ratio
+    ctx.drawImage(imageBitmap, 0, 0, canvas.width, canvas.height)
+
+    const thumbBlob = await new Promise(resolve => canvas.toBlob(resolve, file.type))
+    await Storage.put(thumbFileName, thumbBlob, {
+      contentType: file.type,
+      level: 'protected'
+    })
+
+    let photoTakenAt = null
+    try {
+      const exif = await exifr.parse(file)
+      if (exif?.DateTimeOriginal) {
+        photoTakenAt = new Date(exif.DateTimeOriginal).toISOString()
+      }
+    } catch (e) {
+      console.warn('📸 EXIF 読み取り失敗:', e)
+    }
+
+    const input = {
+      owner,
+      fileName,
+      thumbnailFileName: thumbFileName,
+      photoTakenAt,
+      isFavorite: false,
+      lastOpenedAt: new Date().toISOString() // ✅ ここを追加
+    }
+
+    await API.graphql(graphqlOperation(createPhoto, { input }))
+  } catch (err) {
+    console.error('❌ アップロード中エラー:', JSON.stringify(err, null, 2))
+    alert('アップロードに失敗しました。')
+  }
+}
+
+function isWilting(photo) {
+  if (!photo.lastOpenedAt) return false
+  const days = (Date.now() - new Date(photo.lastOpenedAt)) / (1000 * 60 * 60 * 24)
+  return days >= 330
+}
+
+async function fetchPhotos() {
+  try {
+    const result = await API.graphql(graphqlOperation(listPhotos))
+    let items = result.data.listPhotos.items
+
+    if (filterFavoritesOnly.value) {
+      items = items.filter(item => item.isFavorite)
+    }
+
+    if (filterWiltingOnly.value) {
+      items = items.filter(item => {
+        if (!item.lastOpenedAt) return false
+        const days = (Date.now() - new Date(item.lastOpenedAt)) / (1000 * 60 * 60 * 24)
+        return days >= 330
+      })
+    }
+
+    const updatedItems = await Promise.all(
+      items.map(async (item) => {
+        try {
+          const signedThumbUrl = await Storage.get(item.thumbnailFileName, { level: 'protected' })
+          return { ...item, thumbnailUrl: signedThumbUrl }
+        } catch (e) {
+          console.warn(`🔸 URL取得失敗: ${item.thumbnailFileName}`, e)
+          return item
+        }
+      })
+    )
+
+    photoList.value = updatedItems.sort(
+      (a, b) => new Date(b.photoTakenAt || b.createdAt) - new Date(a.photoTakenAt || a.createdAt)
+    )
+  } catch (e) {
+    console.error('❌ 写真取得エラー:', e)
+  }
+}
+
+async function toggleFavorite(photo) {
+  try {
+    const updated = {
+      id: photo.id,
+      isFavorite: !photo.isFavorite
+    }
+    await API.graphql(graphqlOperation(updatePhoto, { input: updated }))
+    photo.isFavorite = !photo.isFavorite
+    currentPhoto.value = { ...photo }
+    await fetchPhotos()
+  } catch (err) {
+    console.error('❤️ お気に入り切り替え失敗:', err)
+  }
+}
+
+async function deletePhoto(photo) {
+  const confirmed = confirm('この写真を削除しますか？')
+  if (!confirmed) return
+
+  try {
+    await Storage.remove(photo.fileName, { level: 'protected' })
+    await Storage.remove(photo.thumbnailFileName, { level: 'protected' })
+
+    await API.graphql(
+      graphqlOperation(deletePhotoMutation, {
+        input: { id: photo.id }
+      })
+    )
+
+    modalVisible.value = false
+    fullImageUrl.value = null
+    await fetchPhotos()
+  } catch (e) {
+    console.error('🗑 写真削除エラー:', e)
+    alert('削除に失敗しました')
+  }
+}
+
+async function deleteSelectedPhotos() {
+  if (selectedPhotoIds.value.length === 0) {
+    alert('写真が選択されていません。')
+    return
+  }
+
+  const confirmed = confirm('選択した写真をすべて削除しますか？')
+  if (!confirmed) return
+
+  try {
+    for (const photo of photoList.value) {
+      if (selectedPhotoIds.value.includes(photo.id)) {
+        await Storage.remove(photo.fileName, { level: 'protected' })
+        await Storage.remove(photo.thumbnailFileName, { level: 'protected' })
+        await API.graphql(graphqlOperation(deletePhotoMutation, { input: { id: photo.id } }))
+      }
+    }
+
+    selectedPhotoIds.value = []       // 選択解除
+    isSelectionMode.value = false     // モード終了
+    await fetchPhotos()               // 再取得
+
+  } catch (e) {
+    console.error('🗑 一括削除エラー:', e)
+    alert('一部の写真の削除に失敗しました。')
+  }
+}
+
+async function openModal(photo) {
+  try {
+    const url = await Storage.get(photo.fileName, { level: 'protected' })
+    fullImageUrl.value = url
+    isImageLoaded.value = false
+    modalClosing.value = false
+    modalVisible.value = true
+    currentPhoto.value = { ...photo }
+
+    await API.graphql(graphqlOperation(updatePhoto, {
+      input: {
+        id: photo.id,
+        lastOpenedAt: new Date().toISOString()
+      }
+    }))
+  } catch (e) {
+    console.error('❌ フル画像の取得失敗:', e)
+  }
+}
+
+function startModalClose() {
+  modalClosing.value = true
+  setTimeout(() => {
+    modalVisible.value = false
+    fullImageUrl.value = null
+  }, 300)
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return '不明'
+  return new Date(dateStr).toLocaleString('ja-JP')
+}
+
+onMounted(fetchPhotos)
+</script>
+
+
+<style scoped>
+@keyframes dropDown {
+  0% {
+    transform: translateY(-40px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes flyUp {
+  0% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-40px);
+    opacity: 0;
+  }
+}
+
+@keyframes scaleFadeIn {
+  0% {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes scaleFadeOut {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+}
+
+.photo-view {
+  padding: 2rem;
+  text-align: center;
+}
+
+.title {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.photo-grid {
+  display: grid;
+  gap: 0.75rem;
+  justify-content: center;
+  grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
+}
+
+.photo-card {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 10px;
+  overflow: hidden;
+
+  /* ✅ ダークモードでも自然に見える背景に */
+  background-color: #1a1a1a; /* または透明でもOK */
+  
+  /* ✅ 枠線ではなく軽い影で縁取り */
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+box-sizing: border-box;
+  transition: transform 0.15s ease;
+  outline: none; /* ✅ 選択時の白枠を防止 */
+  border: none;
+}
+
+.photo-thumbnail {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.photo-thumbnail:hover {
+  transform: scale(1.03);
+}
+
+.photo-info {
+  padding: 0.5rem;
+  font-size: 0.85rem;
+  background-color: #111;
+  color: #fff;
+  text-align: left;
+}
+
+.favorite-button,
+.delete-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.2rem;
+}
+
+.delete-button {
+  color: #b33;
+  margin-left: 0.5rem;
+}
+
+.photo-actions {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+
+.modal-overlay {
+  position: fixed;
+  overflow: auto;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  animation: dropDown 0.2s ease-out forwards;
+}
+
+.modal-overlay.closing {
+  animation: flyUp 0.2s ease-in forwards;
+}
+
+.modal-content {
+  background: transparent;
+  padding: 0;
+  max-width: min(70vw, 480px);
+  max-height: min(70vh, 480px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+  animation: scaleFadeIn 0.2s ease-out forwards;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.modal-overlay.closing .modal-content {
+  animation: scaleFadeOut 0.2s ease-in forwards;
+}
+
+
+.modal-content-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.modal-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 1rem;
+  width: 100%;
+  background: transparent;
+  backdrop-filter: none;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+  border-bottom: none;
+  position: relative; /* ✅ 必須 */
+}
+
+.modal-date-text {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.75rem;
+  color: #ccc;
+  pointer-events: none;
+}
+.modal-delete-button-above,
+.modal-favorite-icon {
+  background: none;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  font-size: 1.1rem;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+  user-select: none;
+}
+
+.modal-delete-button-above:hover {
+  background: rgba(255, 0, 0, 0.2);
+}
+
+.modal-favorite-icon {
+  color: #ccc;
+}
+
+.modal-favorite-icon.active {
+  color: #ff8a8a;
+}
+
+.full-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.circle-file-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #2b4d77;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  font-size: 1.1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.circle-file-button input[type="file"] {
+  opacity: 0;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+
+.header-actions {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.circle-heart-filter {
+  background-color: #2b4d77;
+  color: #ccc; /* 通常時：グレー */
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  font-size: 1.2rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.circle-heart-filter.active {
+  color: #ff8a8a; /* 選択時：淡い赤い枠のハート */
+  font-weight: bold;
+}
+
+.loading-spinner {
+  margin-top: 0.5rem;
+  font-size: 1.5rem;
+  animation: gearRotate 1.5s linear infinite;
+  display: inline-block;
+}
+
+@keyframes gearRotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+.circle-check-filter {
+  background-color: #274c77; /* 常に淡い青 */
+  color: #274c77;
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  font-size: 1.1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.check-overlay {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  font-size: 1.2rem;
+  color: white;
+  background-color: #274c77;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.photo-card.selected {
+  border: 2px solid #274c77;      /* ✅ 枠線で選択を明示 */
+  background-color: #f0f4f9;      /* ✅ 淡い青背景 */
+}
+
+/* ☑️マークを表示させるとき */
+.check-overlay.selected::before {
+  content: "☑️";
+  font-size: 0.9rem;
+}
+
+.floating-delete {
+  display: flex;
+  justify-content: center;
+  margin: 1.2rem 0;
+}
+
+
+.bulk-delete-button {
+  background-color: #274c77;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.photo-card.selected .checkbox-overlay {
+  background: #274c77;
+  color: white;
+}
+
+/* ✅ 選択時の色を淡い青に */
+.check-overlay.selected {
+  background-color: #274c77;
+}
+.photo-date-overlay-absolute {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  font-size: 0.85rem;
+  color: #eee;
+  background-color: rgba(0, 0, 0, 0.5); /* 半透明の背景で読みやすく */
+  padding: 4px 8px;
+  border-radius: 6px;
+  pointer-events: none;
+}
+
+.circle-wilt-filter {
+  background-color: #2b4d77;
+  color: #ccc;
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  font-size: 1.2rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.circle-wilt-filter.active {
+  color: #f59cbf;
+}
+
+@keyframes driftFade {
+  0% {
+    transform: translateY(0px) rotate(0deg);
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-10px) rotate(-1deg);
+    opacity: 0.85;
+  }
+}
+
+.wilted-message {
+  margin: 0.5rem 0 1rem;
+  font-size: 0.95rem;
+  color: #888;
+  font-style: italic;
+  text-align: center;
+  animation: driftFade 3s ease-out forwards;
+  opacity: 0; /* 初期状態 */
+}
+</style>
+
