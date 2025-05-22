@@ -4,39 +4,47 @@
     <div class="memo-header">
       <h2 class="header-title">メモ</h2>
 
-      <!-- 1段目アイコン -->
-      <div class="header-icons">
-        <button class="icon-button" @click="openSearchModal">🔍</button>
-        <button class="icon-button" @click="openNewMemoModal">＋</button>
-        <label class="icon-button upload-icon">
-          📎
-          <input type="file" accept=".txt" @change="handleFileUpload" hidden />
-        </label>
-        <button class="icon-button" @click="toggleSelectionMode">☑️</button>
-        <button
-          class="icon-button"
-          @click="toggleWiltFilter"
-          :class="{ active: filterWiltingOnly }"
-        >
-          🥀
-        </button>
-      </div>
+<!-- 1段目 -->
+<div class="header-icons">
+  <IconButton :color="iconColor" @click="openSearchModal">🔍</IconButton>
 
-      <!-- 2段目（選択モード中のみ） -->
-      <div v-if="isSelectionMode" class="selection-actions">
-        <button class="icon-button" @click="exportSelectedMemos">📤</button>
-        <button class="icon-button" @click="deleteSelectedMemos">🗑</button>
-      </div>
+  <IconButton :color="iconColor" @click="openNewMemoModal">＋</IconButton>
+
+<!-- アイコンボタンと input を分離し、label の for 属性で連携 -->
+<IconButton :color="iconColor">
+  <label for="file-upload" style="cursor: pointer; margin: 0;">📎</label>
+</IconButton>
+<input
+  id="file-upload"
+  type="file"
+  accept=".txt"
+  @change="handleFileUpload"
+  hidden
+/>
+
+  <IconButton
+    :color="iconColor"
+    :class="{ 'selected-icon': isSelectionMode }"
+    @click="toggleSelectionMode"
+  >☑️</IconButton>
+
+  <IconButton
+    :color="iconColor"
+    :class="{ 'selected-icon': filterWiltingOnly }"
+    @click="toggleWiltFilter"
+  >🥀</IconButton>
+</div>
+
+<!-- ✅ 2段目 -->
+<div v-if="isSelectionMode" class="selection-actions">
+  <IconButton :color="iconColor" @click="exportSelectedMemos">↓</IconButton>
+  <IconButton :color="iconColor" @click="deleteSelectedMemos">🗑</IconButton>
+</div>
     </div>
 
     <!-- 🥀 詩的メッセージ -->
     <p v-if="filterWiltingOnly" class="wilted-message">
       記憶の花は、いつか風に散る
-    </p>
-
-    <!-- 空のときのメッセージ -->
-    <p v-if="filteredMemos.length === 0" class="empty-message">
-      {{ filterWiltingOnly ? '枯れたメモはありません。' : 'メモはまだありません。' }}
     </p>
 
     <!-- メモ一覧 -->
@@ -78,7 +86,14 @@
           <h3 class="modal-title-icon-only">
             <span class="flower-icon-small">{{ getLifeStageIcon(selectedMemo) }}</span>
           </h3>
-          <button class="export-button" v-if="selectedMemo" @click="exportMemo">📤</button>
+<IconButton
+  v-if="selectedMemo"
+  :color="iconColor"
+  size="small"
+  @click="exportMemo"
+>
+  ↓
+</IconButton>
         </div>
 
         <textarea
@@ -169,6 +184,7 @@ import Modal from '@/components/Modal.vue'
 import YamatoButton from '@/components/YamatoButton.vue'
 import '@/assets/variables.css'
 
+
 // --- データ ---
 const memos = ref([])
 const showModal = ref(false)
@@ -185,6 +201,17 @@ const showSearchModal = ref(false)    // 🔍検索モーダル表示
 const selectedSearchTags = ref([]) // ←複数選択対応
 const isSelectionMode = ref(false)
 const selectedMemoIds = ref([])
+
+
+import IconButton from '@/components/IconButton.vue'
+import { Auth } from 'aws-amplify'
+
+const iconColor = ref('#274c77')
+
+onMounted(async () => {
+  const user = await Auth.currentAuthenticatedUser()
+  iconColor.value = user.attributes['custom:iconColor'] || '#274c77'
+})
 
 function toggleMemoSelection(id) {
   if (selectedMemoIds.value.includes(id)) {
@@ -574,9 +601,14 @@ onMounted(() => {
 .header-title {
   font-size: 1.4rem;
   font-weight: bold;
-  font-family: 'serif';
-color: var(--yamato-primary);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  color: #000;
   text-align: center;
+}
+@media (prefers-color-scheme: dark) {
+  .header-title {
+    color: #fff;
+  }
 }
 
 .header-icons {
@@ -586,49 +618,8 @@ color: var(--yamato-primary);
   gap: 1.2rem;
 }
 
-.icon-button {
-  background-color: var(--yamato-primary);        /* ✅ 和風な淡い青に統一 */
-  color: var(--yamato-text-light);                /* ✅ 白文字に統一 */
-  border: none;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  font-size: 1.4rem;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: box-shadow 0.2s ease, background-color 0.2s ease;
-}
-
-.icon-button:hover {
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-  background-color: var(--yamato-primary-dark);   /* ✅ 濃い青に */
-}
-
 .upload-icon {
-  background-color: var(--yamato-primary);
-  color: var(--yamato-text-light);
-  border: none;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  font-size: 1.4rem;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-  transition: background-color 0.3s ease;
-}
-
-.upload-icon:hover {
-  background-color: var(--yamato-primary-dark);
-}
-
-.upload-icon:hover {
-  background-color: #1e3c5a;
 }
 
 .checkbox-wrapper {
@@ -659,7 +650,7 @@ color: var(--yamato-primary);
 }
 
 .flower-icon {
-  font-size: 1.5rem;
+  font-size: 1.2rem;
 }
 
 .memo-content {
@@ -990,6 +981,10 @@ textarea {
   0% { transform: translateY(0px) rotate(0deg); opacity: 0; }
   30% { opacity: 1; }
   100% { transform: translateY(-10px) rotate(-1deg); opacity: 0.85; }
+}
+.selected-icon {
+  background-color: white !important;
+  color: #274c77 !important;
 }
 
 

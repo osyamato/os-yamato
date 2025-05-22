@@ -28,7 +28,6 @@ function handleBackgroundClick() {
 </script>
 
 <style scoped>
-/* ✅ 背景レイヤー：クリック検出はここで */
 .modal-background {
   position: fixed;
   top: 0;
@@ -121,4 +120,3 @@ function handleBackgroundClick() {
   100% { transform: translateY(-30px); opacity: 0; }
 }
 </style>
-

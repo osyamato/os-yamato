@@ -1,18 +1,23 @@
 <template>
   <div class="gradient-background"></div>
   <div class="diary-container">
-    <div class="year-header">
-      <!-- 年数だけ中央に -->
-      <div class="year-title">
-        <button class="arrow-inline" @click="prevYear">&lt;</button>
-        <span class="year-text">{{ currentYear }}</span>
-        <button class="arrow-inline" @click="nextYear">&gt;</button>
-      </div>
+<div class="year-header">
+  <div class="year-title">
+    <button class="arrow-inline" @click="prevYear">&lt;</button>
+    <h2 class="diary-title">{{ currentYear }}年の日記</h2>
+    <button class="arrow-inline" @click="nextYear">&gt;</button>
+  </div>
     </div>
 
     <!-- ペンシルボタンは年の下に独立 -->
-    <div class="edit-button-wrapper">
-      <button class="edit-button" @click="openNewDiaryModal">✏️</button>
+<div class="edit-button-wrapper">
+  <IconButton
+    :color="selectedColor"
+    size="medium"
+    @click="openNewDiaryModal"
+  >
+    ✏️
+  </IconButton>
     </div>
 
     <div class="full-flower-area">
@@ -103,6 +108,14 @@ import { createDiary, deleteDiary as deleteDiaryMutation, updateDiary as updateD
 import { listDiaries } from '@/graphql/queries'
 import YamatoButton from '@/components/YamatoButton.vue'
 import Modal from '@/components/Modal.vue'
+import IconButton from '@/components/IconButton.vue'
+
+const selectedColor = ref('#274c77')
+
+onMounted(async () => {
+  const user = await Auth.currentAuthenticatedUser()
+  selectedColor.value = user.attributes['custom:iconColor'] || '#274c77'
+})
 
 const currentYear = ref(new Date().getFullYear())
 const diaries = ref([])
@@ -312,6 +325,14 @@ onMounted(fetchDiaries)
   width: 60px;
   text-align: center;
   color: #000;
+}
+.diary-title {
+  font-size: 1.4rem;
+  font-weight: bold;
+  font-family: var(--yamato-font-title, 'serif');
+  color: var(--yamato-primary);
+  margin: 0 1rem;
+  text-align: center;
 }
 
 .arrow-inline {

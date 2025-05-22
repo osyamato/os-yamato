@@ -11,8 +11,20 @@
 </template>
 
 <script setup>
+import { onMounted } from 'vue'
+import { Auth } from 'aws-amplify'
 import EffectOverlay from '@/components/EffectOverlay.vue'
 import ChatEffect from '@/components/ChatEffect.vue'
+
+onMounted(async () => {
+  try {
+    const user = await Auth.currentAuthenticatedUser()
+    const iconColor = user.attributes['custom:iconColor'] || '#274c77'
+    document.documentElement.style.setProperty('--yamato-button-color', iconColor)
+  } catch (e) {
+    console.warn('⚠️ ユーザー情報の取得失敗または未ログイン', e)
+  }
+})
 </script>
 
 <style>
@@ -28,7 +40,7 @@ body {
 #app {
   display: flex;
   flex-direction: column;
-  align-items: center; /* 中央寄せ */
+  align-items: center;
   justify-content: flex-start;
   min-height: 100vh;
   width: 100%;
@@ -44,4 +56,3 @@ body {
   }
 }
 </style>
-

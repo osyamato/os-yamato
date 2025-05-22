@@ -337,3 +337,83 @@ export declare type Photo = LazyLoading extends LazyLoadingDisabled ? EagerPhoto
 export declare const Photo: (new (init: ModelInit<Photo>) => Photo) & {
   copyOf(source: Photo, mutator: (draft: MutableModel<Photo>) => MutableModel<Photo> | void): Photo;
 }
+
+type EagerScheduleTemplate = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<ScheduleTemplate, 'id'>;
+    readOnlyFields: 'createdAt' | 'updatedAt';
+  };
+  readonly id: string;
+  readonly emoji?: string | null;
+  readonly label?: string | null;
+  readonly startTime: string;
+  readonly endTime: string;
+  readonly createdAt?: string | null;
+  readonly updatedAt?: string | null;
+}
+
+type LazyScheduleTemplate = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<ScheduleTemplate, 'id'>;
+    readOnlyFields: 'createdAt' | 'updatedAt';
+  };
+  readonly id: string;
+  readonly emoji?: string | null;
+  readonly label?: string | null;
+  readonly startTime: string;
+  readonly endTime: string;
+  readonly createdAt?: string | null;
+  readonly updatedAt?: string | null;
+}
+
+export declare type ScheduleTemplate = LazyLoading extends LazyLoadingDisabled ? EagerScheduleTemplate : LazyScheduleTemplate
+
+export declare const ScheduleTemplate: (new (init: ModelInit<ScheduleTemplate>) => ScheduleTemplate) & {
+  copyOf(source: ScheduleTemplate, mutator: (draft: MutableModel<ScheduleTemplate>) => MutableModel<ScheduleTemplate> | void): ScheduleTemplate;
+}
+
+type EagerWindMessage = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<WindMessage, 'id'>;
+    readOnlyFields: 'updatedAt';
+  };
+  readonly id: string;
+  readonly fromUserId: string;
+  readonly fromDisplayName: string;
+  readonly toUserId: string;
+  readonly content: string;
+  readonly deliveryDate: string;
+  readonly isOpened: boolean;
+  readonly openedAt?: string | null;
+  readonly deletedByReceiver?: boolean | null;
+  readonly favoriteByReceiver?: boolean | null;
+  readonly ttl?: number | null;
+  readonly createdAt?: string | null;
+  readonly updatedAt?: string | null;
+}
+
+type LazyWindMessage = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<WindMessage, 'id'>;
+    readOnlyFields: 'updatedAt';
+  };
+  readonly id: string;
+  readonly fromUserId: string;
+  readonly fromDisplayName: string;
+  readonly toUserId: string;
+  readonly content: string;
+  readonly deliveryDate: string;
+  readonly isOpened: boolean;
+  readonly openedAt?: string | null;
+  readonly deletedByReceiver?: boolean | null;
+  readonly favoriteByReceiver?: boolean | null;
+  readonly ttl?: number | null;
+  readonly createdAt?: string | null;
+  readonly updatedAt?: string | null;
+}
+
+export declare type WindMessage = LazyLoading extends LazyLoadingDisabled ? EagerWindMessage : LazyWindMessage
+
+export declare const WindMessage: (new (init: ModelInit<WindMessage>) => WindMessage) & {
+  copyOf(source: WindMessage, mutator: (draft: MutableModel<WindMessage>) => MutableModel<WindMessage> | void): WindMessage;
+}

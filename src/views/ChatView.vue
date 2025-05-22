@@ -115,7 +115,7 @@ function maybePlayEffect(content) {
 
 const effects = [
   { pattern: new RegExp(`(i love you|愛している|愛してる)(?![一-龯])`, 'i'), effect: 'moon' },
-  { pattern: new RegExp(`(金閣寺|三島由紀夫|愛国|倉岡剛)(?![一-龯])`), effect: 'mishima' },
+  { pattern: new RegExp(`(金閣寺|三島由紀夫|愛国|林ゆかり|倉岡剛)(?![一-龯])`), effect: 'mishima' },
   { pattern: new RegExp(`(プラネタリウム|宇宙|土星)(?![一-龯])`), effect: 'saturn' },
   { pattern: new RegExp(`(おめでとう|お祝い|祝|congratulations)(?![一-龯])`, 'i'), effect: 'confetti' },
   { pattern: new RegExp(`(星空|モンゴル|星|夜空)(?![一-龯])`, 'u'), effect: 'starry' }

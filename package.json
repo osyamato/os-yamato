@@ -13,8 +13,10 @@
   "dependencies": {
     "aws-amplify": "^4.3.46",
     "exifr": "^7.1.3",
+    "globe.gl": "^2.41.4",
     "japanese-holidays": "^1.0.10",
     "pinia": "^3.0.1",
+    "three": "^0.176.0",
     "vcard-parser": "^1.0.0",
     "vue": "^3.5.13",
     "vue-router": "^4.5.0"

@@ -325,6 +325,96 @@ export const listPhotos = /* GraphQL */ `
     }
   }
 `;
+export const getScheduleTemplate = /* GraphQL */ `
+  query GetScheduleTemplate($id: ID!) {
+    getScheduleTemplate(id: $id) {
+      id
+      emoji
+      label
+      startTime
+      endTime
+      createdAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;
+export const listScheduleTemplates = /* GraphQL */ `
+  query ListScheduleTemplates(
+    $filter: ModelScheduleTemplateFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    listScheduleTemplates(
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        emoji
+        label
+        startTime
+        endTime
+        createdAt
+        updatedAt
+        owner
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const getWindMessage = /* GraphQL */ `
+  query GetWindMessage($id: ID!) {
+    getWindMessage(id: $id) {
+      id
+      fromUserId
+      fromDisplayName
+      toUserId
+      content
+      deliveryDate
+      isOpened
+      openedAt
+      deletedByReceiver
+      favoriteByReceiver
+      ttl
+      createdAt
+      owner
+      __typename
+    }
+  }
+`;
+export const listWindMessages = /* GraphQL */ `
+  query ListWindMessages(
+    $filter: ModelWindMessageFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    listWindMessages(filter: $filter, limit: $limit, nextToken: $nextToken) {
+      items {
+        id
+        fromUserId
+        fromDisplayName
+        toUserId
+        content
+        deliveryDate
+        isOpened
+        openedAt
+        deletedByReceiver
+        favoriteByReceiver
+        ttl
+        createdAt
+        owner
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
 export const getPublicProfile = /* GraphQL */ `
   query GetPublicProfile($id: ID!) {
     getPublicProfile(id: $id) {

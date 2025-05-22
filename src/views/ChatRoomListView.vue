@@ -1,111 +1,134 @@
 <template>
   <div class="chat-room-list">
-    <!-- 🔷 ヘッダー -->
-    <div class="header">
-      <h2 class="header-title">メッセージ</h2>
-      <div class="header-icons">
-        <div class="circle-avatar" @click="openProfileModal">{{ myInitial }}</div>
-        <button
-          v-if="hasProfile"
-          class="header-button"
-          :class="{ blink: hasIncomingRequest }"
-          @click="handleRequestClick"
-        >📮</button>
-        <button
-          v-if="hasProfile"
-          class="header-button"
-          @click="openSearchModal"
-        >＋</button>
-      </div>
+    <!-- ✅ アニメーションを適用する内部ラッパー -->
+    <div class="chat-room-wrapper">
+      <!-- 🔷 ヘッダー -->
+<div class="chat-header">
+  <h2 class="header-title">メッセージ</h2>
+
+<transition name="fade-in">
+  <div class="header-icons" v-if="isReady">
+    <IconButton :color="iconColor" @click="openProfileModal">
+      {{ myInitial }}
+    </IconButton>
+    <IconButton
+      v-if="hasProfile"
+      :color="iconColor"
+      :class="{ blink: hasIncomingRequest }"
+      @click="handleRequestClick"
+    >📮</IconButton>
+    <IconButton
+      v-if="hasProfile"
+      :color="iconColor"
+      @click="openSearchModal"
+    >＋</IconButton>
+    <IconButton
+      v-if="hasProfile"
+      :color="iconColor"
+      @click="openWindInbox"
+    >🕊️</IconButton>
+  </div>
+</transition>
+ </div>
+      <!-- 🔷 チャットルーム一覧 -->
+<!-- 🔷 チャットルーム一覧 -->
+<transition name="fadeSlideIn">
+  <div class="room-list" v-if="isReady">
+    <div
+      v-for="room in sortedRooms"
+      :key="room.id"
+      class="room-card"
+      @click="goToRoom(room.id, getPartnerYamatoId(room))"
+    >
+<p class="partner-name">
+  <span class="icon">{{ getExpiryIcon(room) }}</span>
+  {{ getPartnerDisplayName(room) }}
+
+  <span class="menu-dots" @click.stop="openOptions(room)">⋯</span>
+
+  <!-- 📧 メールアイコンをメニューの右に配置 -->
+  <span class="mail-icon" @click.stop="openWindMessage(room)">✉️</span>
+</p>
+
+      <p class="last-message">
+        <span v-if="hasUnread(room)" class="unread-dot inline"></span>
+        <span class="message-text">
+          {{
+            room.lastMessage
+              ? room.lastMessage.length > 15
+                ? room.lastMessage.slice(0, 15) + '…'
+                : room.lastMessage
+              : ''
+          }}
+        </span>
+      </p>
+
+      <small class="last-time">{{ formatTime(room.lastTimestamp) }}</small>
+    </div>
+  </div>
+</transition>
     </div>
 
-    <!-- 🔷 チャットルーム一覧 -->
-    <div class="room-list">
-      <div
-        v-for="room in sortedRooms"
-        :key="room.id"
-        class="room-card"
-        @click="goToRoom(room.id, getPartnerYamatoId(room))"
-      >
-        <p class="partner-name">
-          <span class="icon">{{ getExpiryIcon(room) }}</span>
-          {{ getPartnerDisplayName(room) }}
-          <span class="menu-dots" @click.stop="openOptions(room)">⋯</span>
-        </p>
-
-        <p class="last-message">
-          <span v-if="hasUnread(room)" class="unread-dot inline"></span>
-          <span class="message-text">
-            {{
-              room.lastMessage
-                ? room.lastMessage.length > 15
-                  ? room.lastMessage.slice(0, 15) + '…'
-                  : room.lastMessage
-                : '（会話なし）'
-            }}
-          </span>
-        </p>
-
-        <small class="last-time">{{ formatTime(room.lastTimestamp) }}</small>
-      </div>
-    </div>
-
-    <!-- 🔷 検索モーダル -->
+    <!-- 🔷 Yamato ID 検索モーダル -->
     <YamatoUserSearchModal v-if="showModal" :onClose="() => showModal = false" />
 
-    <!-- 🔷 📮 チャット申請モーダル -->
-<transition name="modal">
-  <Modal
-    v-if="showRequestModal"
-    :visible="true"
-    :customClass="'modal-inner-card'"
-    @close="() => showRequestModal = false"
-  >
-    <div>
-      <h3 class="modal-title">🌱あたらしい会話の芽が届きました🌱</h3>
-      <div v-for="req in requests" :key="req.id" class="request-block">
-        <p><strong>申請者:</strong> {{ req.senderProfile?.displayName || '不明' }}</p>
-        <p><strong>メッセージ:</strong> {{ req.message || '（なし）' }}</p>
-        <div class="button-row">
-          <YamatoButton @click="accept(req)">承認</YamatoButton>
-          <YamatoButton type="danger" @click="reject(req)">拒否</YamatoButton>
+    <!-- 🔷 チャット申請モーダル -->
+    <transition name="modal">
+      <Modal
+        v-if="showRequestModal"
+        :visible="true"
+        :customClass="'modal-inner-card'"
+        @close="() => showRequestModal = false"
+      >
+        <div>
+          <h3 class="modal-title">🌱あたらしい会話の芽が届きました🌱</h3>
+          <div v-for="req in requests" :key="req.id" class="request-block">
+            <p><strong>申請者:</strong> {{ req.senderProfile?.displayName || '不明' }}</p>
+            <p><strong>メッセージ:</strong> {{ req.message || '（なし）' }}</p>
+            <div class="button-row">
+              <YamatoButton @click="accept(req)">承認</YamatoButton>
+              <YamatoButton type="danger" @click="reject(req)">拒否</YamatoButton>
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
-  </Modal>
-</transition>
+      </Modal>
+    </transition>
 
-    <!-- 🔷 ⋯ 削除確認モーダル -->
-<Modal
-  v-if="showOptionsFor"
-  :visible="true"
-  :customClass="'modal-inner-card'"
-  @close="closeOptions"
-  @after-leave="scrollToTop"
->
-  <div>
-    <p class="confirm-text">このチャットルームを削除しますか？</p>
-    <div class="modal-actions">
-      <YamatoButton type="danger" @click="deleteRoom">削除する</YamatoButton>
-    </div>
-  </div>
-</Modal>
+    <!-- 🔷 削除確認モーダル -->
+    <transition name="modal">
+      <Modal
+        v-if="showOptionsFor"
+        :visible="true"
+        :customClass="'modal-inner-card'"
+        @close="closeOptions"
+        @after-leave="scrollToTop"
+      >
+        <div>
+          <p class="confirm-text">このメッセージを雲にかくしますか？</p>
+          <div class="modal-actions">
+            <YamatoButton type="danger" @click="deleteRoom">かくす</YamatoButton>
+          </div>
+        </div>
+      </Modal>
+    </transition>
 
     <!-- 🔷 プロフィールモーダル -->
-<Modal
-  :visible="showProfileModal"
-  :customClass="'modal-inner-card'"
-  @close="() => showProfileModal = false"
-  @refresh="handleProfileRefresh"
-  @after-leave="scrollToTop"
->
-  <ProfileSetupView
-    @close="() => showProfileModal = false"
-    @refresh="handleProfileRefresh"
-  />
-</Modal>
+    <Modal
+      :visible="showProfileModal"
+      :customClass="'modal-inner-card'"
+      @close="() => showProfileModal = false"
+      @refresh="handleProfileRefresh"
+      @after-leave="scrollToTop"
+    >
+      <ProfileSetupView
+        @close="() => showProfileModal = false"
+        @refresh="handleProfileRefresh"
+      />
+    </Modal>
   </div>
 </template>
+
+
 <script setup>
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { API, graphqlOperation, Auth } from 'aws-amplify'
@@ -123,6 +146,27 @@ import ProfileSetupView from '@/views/ProfileSetupView.vue'
 import { updateChatRequest, createChatRoom } from '@/graphql/mutations'
 import '@/assets/variables.css'
 import { deleteChatRoom } from '@/graphql/mutations'
+
+import IconButton from '@/components/IconButton.vue'
+
+const iconColor = ref('#274c77')
+const isReady = ref(false)
+
+onMounted(async () => {
+  const user = await Auth.currentAuthenticatedUser()
+  mySub.value = user.attributes.sub
+  iconColor.value = user.attributes['custom:iconColor'] || '#274c77'
+
+  await Promise.all([
+    fetchChatRooms(),
+    fetchMyProfile(),
+    checkIncomingRequests()
+  ])
+
+  setTimeout(() => {
+    isReady.value = true
+  }, 300)
+})
 
 
 // 状態
@@ -208,6 +252,10 @@ async function accept(req) {
   }
 }
 
+function openWindInbox() {
+  router.push({ name: 'wind-inbox' })  // `routes.ts` にルートを定義しておく
+}
+
 async function reject(req) {
   try {
     await API.graphql(graphqlOperation(updateChatRequest, {
@@ -233,6 +281,19 @@ async function checkIncomingRequests() {
     }
   }))
   hasIncomingRequest.value = (res.data.listChatRequests.items || []).length > 0
+}
+function openWindMessage(room) {
+  const mySubValue = mySub.value
+  const toSub = room.user1 === mySubValue ? room.user2 : room.user1
+  const partner = partnerProfiles.value[toSub]
+
+  router.push({
+    name: 'wind-message',
+    query: {
+      toUserId: toSub,
+      toDisplayName: partner?.displayName || ''  // ✅ ここを追加
+    }
+  })
 }
 
 
@@ -289,7 +350,7 @@ async function deleteRoom() {
     }
     await API.graphql(graphqlOperation(updateChatRoom, { input }))
     closeOptions()
-    emit('refresh') // 🔴 ここでリフレッシュ通知
+    await fetchChatRooms() // ✅ 即再取得してリストを更新
   } catch (e) {
     console.error('❌ 削除に失敗:', e)
   }
@@ -313,11 +374,20 @@ onMounted(async () => {
 
     // 📥 チャットルーム一覧取得
     await fetchChatRooms()
-await checkIncomingRequests()
+    await checkIncomingRequests()
+
     // 🔔 サブスクリプション登録
     updateSubscription = API.graphql(graphqlOperation(onUpdateChatRoom)).subscribe({
       next: ({ value }) => {
         const updated = value.data.onUpdateChatRoom
+
+        // 🧼 自分が非表示にしているなら無視
+        const isUser1 = updated.user1 === mySub.value
+        const isUser2 = updated.user2 === mySub.value
+        if ((isUser1 && updated.deletedByUser1) || (isUser2 && updated.deletedByUser2)) {
+          return  // ✅ 自分が非表示にしたチャットは表示しない
+        }
+
         const index = chatRooms.value.findIndex(r => r.id === updated.id)
 
         if (index !== -1) {
@@ -330,6 +400,7 @@ await checkIncomingRequests()
       },
       error: err => console.warn('⚠️ onUpdateChatRoom 失敗:', err)
     })
+
   } catch (err) {
     console.error('❌ 初期化失敗:', err)
   }
@@ -355,20 +426,19 @@ async function fetchChatRooms() {
     for (const room of allRooms) {
       if (!room || !room.user1 || !room.user2) continue
 
-      // 削除フラグをチェック
       const isUser1 = room.user1 === mySub.value
       const isUser2 = room.user2 === mySub.value
-      if (isUser1 && room.deletedByUser1) continue
-      if (isUser2 && room.deletedByUser2) continue
 
-      // 最終活動日を取得（会話がなければ作成日）
+      // 🧼 自分が非表示にしたチャットルームはスキップ
+      if ((isUser1 && room.deletedByUser1) || (isUser2 && room.deletedByUser2)) continue
+
+      // ⏳ 最終活動日から365日以上経過 → 物理削除
       const base = room.lastTimestamp || room.createdAt
       if (!base) continue
       const baseDate = new Date(base)
       const diffDays = (now - baseDate) / (1000 * 60 * 60 * 24)
 
       if (diffDays > 365) {
-        // 一年経過 → 物理削除
         try {
           await API.graphql(graphqlOperation(deleteChatRoom, {
             input: { id: room.id }
@@ -385,7 +455,7 @@ async function fetchChatRooms() {
 
     chatRooms.value = retainedRooms
 
-    // パートナープロフィールの取得
+    // 👤 プロフィール取得
     for (const room of retainedRooms) {
       const idsToFetch = new Set([room.user1, room.user2, room.lastSenderId])
       for (const id of idsToFetch) {
@@ -402,11 +472,11 @@ async function fetchChatRooms() {
         }
       }
     }
+
   } catch (e) {
     console.error('❌ ChatRoom一覧取得エラー:', e)
   }
 }
-
 
 function getPartnerDisplayName(room) {
   const partnerSub = room.user1 === mySub.value ? room.user2 : room.user1
@@ -503,6 +573,11 @@ function openProfileModal() {
   showProfileModal.value = true    // 🔘 パーソナルアイコン押下で直接表示
 }
 
+function goToWindMessage() {
+  router.push({ name: 'wind-message' })  // 適宜ルート名に合わせて修正
+}
+
+
 defineExpose({ accept, reject })
 
 </script>
@@ -522,36 +597,6 @@ defineExpose({ accept, reject })
   gap: 1rem;
 }
 
-.header-button {
-  background-color: var(--yamato-primary);
-  color: var(--yamato-text-light);
-  border: none;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  font-size: 1.2rem;
-  cursor: pointer;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  transition: box-shadow 0.2s ease, background-color 0.2s ease;
-}
-
-.header-button:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  background-color: var(--yamato-primary-dark);
-}
-
-.icon-button {
-  font-size: 1.4rem;
-  cursor: pointer;
-  color: var(--yamato-primary);
-}
-
-.icon-button:hover {
-  color: var(--yamato-primary-dark);
-}
 
 .title {
   flex-grow: 1;
@@ -719,13 +764,13 @@ button {
   gap: 0.6rem;
 }
 
-.header-title {
-  font-size: 1.4rem;
-  font-weight: bold;
-  font-family: var(--yamato-font-title);
-  color: var(--yamato-primary);
-  text-align: center;
+.chat-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 1.5rem;
 }
+
 
 .header-icons {
   display: flex;
@@ -821,7 +866,58 @@ button {
     opacity: 0;
   }
 }
+.chat-room-wrapper {
+  animation: fadeSlideIn 0.5s ease-out;
+}
 
+@keyframes fadeSlideIn {
+  0% {
+    transform: translateY(-30px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.chat-room-wrapper {
+  animation: fadeSlideIn 0.5s ease-out;
+}
+
+@keyframes fadeSlideIn {
+  0% {
+    transform: translateY(-30px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+/* ふわっと表示用 */
+.fade-in-enter-active {
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+.fade-in-enter-from {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+.fade-in-enter-to {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.mail-icon {
+  margin-left: 0.6rem; /* ⋯との間に少しスペース */
+  font-size: 1.0rem;
+  cursor: pointer;
+  color: var(--yamato-primary);
+}
+
+.mail-icon:hover {
+  color: var(--yamato-primary-dark);
+}
 
 </style>
 
