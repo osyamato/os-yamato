@@ -106,4 +106,16 @@ onMounted(() => {
   from { transform: translateX(-100%); }
   to { transform: translateX(0%); }
 }
+html, body {
+  touch-action: manipulation;
+  -webkit-text-size-adjust: 100%;
+}
+
+.container {
+  user-select: none;
+  touch-action: none;
+  overscroll-behavior: none;
+}
+
+
 </style>

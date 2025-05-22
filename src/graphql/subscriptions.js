@@ -437,6 +437,129 @@ export const onDeletePhoto = /* GraphQL */ `
     }
   }
 `;
+export const onCreateScheduleTemplate = /* GraphQL */ `
+  subscription OnCreateScheduleTemplate(
+    $filter: ModelSubscriptionScheduleTemplateFilterInput
+    $owner: String
+  ) {
+    onCreateScheduleTemplate(filter: $filter, owner: $owner) {
+      id
+      emoji
+      label
+      startTime
+      endTime
+      createdAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;
+export const onUpdateScheduleTemplate = /* GraphQL */ `
+  subscription OnUpdateScheduleTemplate(
+    $filter: ModelSubscriptionScheduleTemplateFilterInput
+    $owner: String
+  ) {
+    onUpdateScheduleTemplate(filter: $filter, owner: $owner) {
+      id
+      emoji
+      label
+      startTime
+      endTime
+      createdAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;
+export const onDeleteScheduleTemplate = /* GraphQL */ `
+  subscription OnDeleteScheduleTemplate(
+    $filter: ModelSubscriptionScheduleTemplateFilterInput
+    $owner: String
+  ) {
+    onDeleteScheduleTemplate(filter: $filter, owner: $owner) {
+      id
+      emoji
+      label
+      startTime
+      endTime
+      createdAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;
+export const onCreateWindMessage = /* GraphQL */ `
+  subscription OnCreateWindMessage(
+    $filter: ModelSubscriptionWindMessageFilterInput
+    $owner: String
+  ) {
+    onCreateWindMessage(filter: $filter, owner: $owner) {
+      id
+      fromUserId
+      fromDisplayName
+      toUserId
+      content
+      deliveryDate
+      isOpened
+      openedAt
+      deletedByReceiver
+      favoriteByReceiver
+      ttl
+      createdAt
+      owner
+      __typename
+    }
+  }
+`;
+export const onUpdateWindMessage = /* GraphQL */ `
+  subscription OnUpdateWindMessage(
+    $filter: ModelSubscriptionWindMessageFilterInput
+    $owner: String
+  ) {
+    onUpdateWindMessage(filter: $filter, owner: $owner) {
+      id
+      fromUserId
+      fromDisplayName
+      toUserId
+      content
+      deliveryDate
+      isOpened
+      openedAt
+      deletedByReceiver
+      favoriteByReceiver
+      ttl
+      createdAt
+      owner
+      __typename
+    }
+  }
+`;
+export const onDeleteWindMessage = /* GraphQL */ `
+  subscription OnDeleteWindMessage(
+    $filter: ModelSubscriptionWindMessageFilterInput
+    $owner: String
+  ) {
+    onDeleteWindMessage(filter: $filter, owner: $owner) {
+      id
+      fromUserId
+      fromDisplayName
+      toUserId
+      content
+      deliveryDate
+      isOpened
+      openedAt
+      deletedByReceiver
+      favoriteByReceiver
+      ttl
+      createdAt
+      owner
+      __typename
+    }
+  }
+`;
 export const onCreatePublicProfile = /* GraphQL */ `
   subscription OnCreatePublicProfile(
     $filter: ModelSubscriptionPublicProfileFilterInput

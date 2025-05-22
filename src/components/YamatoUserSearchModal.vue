@@ -5,21 +5,26 @@
         <h3 class="modal-title">Yamato ID で相手を検索</h3>
 
         <!-- Yamato ID 入力欄 -->
-        <input v-model="inputYamatoId" placeholder="@yamato..." @input="addAtMark" />
+        <input
+          v-model="inputYamatoId"
+          placeholder="@yamato..."
+          @input="addAtMark"
+        />
         <div class="button-row top-spaced">
           <YamatoButton @click="search">検索</YamatoButton>
         </div>
 
-        <!-- 検索結果の表示 -->
-        <div v-if="foundProfile" class="profile-preview">
-          <p class="profile-name"><strong>名前：</strong>{{ foundProfile.displayName || '未設定' }}</p>
-          <p class="profile-bio"><strong>自己紹介：</strong>{{ foundProfile.bio || 'なし' }}</p>
-        </div>
-
-        <textarea v-model="requestMessage" placeholder="申請メッセージ（任意）" rows="3" />
-
-        <div class="button-row">
-          <YamatoButton @click="sendRequest">チャット申請</YamatoButton>
+        <!-- 検索結果の表示（中央寄せ）-->
+        <div class="profile-results" v-if="foundProfiles.length > 0">
+          <div
+            v-for="profile in foundProfiles"
+            :key="profile.id"
+            class="profile-preview"
+          >
+            <p class="profile-name"><strong>名前：</strong>{{ profile.displayName || '未設定' }}</p>
+            <p class="profile-bio"><strong>自己紹介：</strong>{{ profile.bio || 'なし' }}</p>
+            <YamatoButton @click="sendRequest(profile)">この人に申請</YamatoButton>
+          </div>
         </div>
 
         <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
@@ -28,6 +33,7 @@
     </div>
   </transition>
 </template>
+
 
 <script setup>
 import { ref } from 'vue'
@@ -40,8 +46,7 @@ import { useRouter } from 'vue-router'
 const props = defineProps(['onClose'])
 const showModal = ref(true)
 const inputYamatoId = ref('')
-const foundProfile = ref(null)
-const requestMessage = ref('')
+const foundProfiles = ref([])
 const errorMessage = ref('')
 const successMessage = ref('')
 const router = useRouter()
@@ -61,7 +66,7 @@ function addAtMark() {
 
 async function search() {
   errorMessage.value = ''
-  foundProfile.value = null
+  foundProfiles.value = []
   const yamatoId = inputYamatoId.value.trim()
 
   if (!yamatoId) {
@@ -75,25 +80,21 @@ async function search() {
       variables: { yamatoId },
       authMode: 'AMAZON_COGNITO_USER_POOLS'
     })
-    const profile = res.data.publicProfileByYamatoId.items[0]
-    if (!profile) {
+    foundProfiles.value = res.data.publicProfileByYamatoId.items
+    if (foundProfiles.value.length === 0) {
       errorMessage.value = '相手が見つかりませんでした'
-      return
     }
-    foundProfile.value = profile
   } catch (err) {
     console.error('❌ 検索エラー:', err)
     errorMessage.value = '検索に失敗しました'
   }
 }
 
-async function sendRequest() {
-  if (!foundProfile.value) return
-
+async function sendRequest(profile) {
   try {
     const user = await Auth.currentAuthenticatedUser()
     const mySub = user.attributes.sub
-    const partnerSub = foundProfile.value.id
+    const partnerSub = profile.id
 
     const res = await API.graphql({
       query: listChatRooms,
@@ -119,7 +120,7 @@ async function sendRequest() {
           authMode: 'AMAZON_COGNITO_USER_POOLS'
         })
       }
-      router.push({ name: 'chat', params: { roomId: existingRoom.id, receiverYamatoId: foundProfile.value.yamatoId } })
+      router.push({ name: 'chat', params: { roomId: existingRoom.id, receiverYamatoId: profile.yamatoId } })
       showModal.value = false
       return
     }
@@ -133,16 +134,15 @@ async function sendRequest() {
           toUserId: partnerSub,
           status: 'pending',
           ttl,
-          message: requestMessage.value.trim() || null
+          message: null
         }
       },
       authMode: 'AMAZON_COGNITO_USER_POOLS'
     })
 
     successMessage.value = '✅ チャット申請を送信しました'
-    requestMessage.value = ''
     inputYamatoId.value = ''
-    foundProfile.value = null
+    foundProfiles.value = []
   } catch (err) {
     console.error('❌ 申請エラー:', err)
     errorMessage.value = '申請に失敗しました'
@@ -158,7 +158,8 @@ async function sendRequest() {
   backdrop-filter: blur(2px);
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
+  padding-top: 10vh;
   z-index: 1000;
 }
 
@@ -175,7 +176,7 @@ async function sendRequest() {
 
 .modal-title {
   text-align: center;
-  font-size: 1.4rem;
+  font-size: 1.0rem;
   margin-bottom: 1rem;
 }
 
@@ -194,15 +195,26 @@ textarea {
   justify-content: center;
   margin-top: 1rem;
 }
+
 .top-spaced {
   margin-top: 0.5rem;
   margin-bottom: 1rem;
 }
+.profile-results {
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* ✅ 中央に寄せる */
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
 
 .profile-preview {
-  margin-top: 1rem;
-  font-size: 1rem;
-  text-align: left;
+  background: #f8f8f8;
+  border-radius: 12px;
+  padding: 1rem;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
 }
 
 .error,
@@ -231,24 +243,37 @@ textarea {
 
 @media (prefers-color-scheme: dark) {
   .modal-inner-card {
-    background: #1f1f1f;
-    color: #f5f5f5;
+    background-color: #2a2a2a;  /* 落ち着いたダークグレー背景 */
+    color: #ffffff;             /* 白文字 */
     box-shadow: 0 8px 24px rgba(255, 255, 255, 0.05);
   }
 
-  input, textarea {
-    background: #3a3a3a;
-    color: #f5f5f5;
+  .profile-preview {
+    background-color: #1f1f1f;  /* より濃い背景 */
+    border: 1px solid #444;
+    color: #ffffff;
+  }
+
+  input,
+  textarea {
+    background-color: #3a3a3a;
+    color: #ffffff;
     border: 1px solid #555;
   }
 
   input::placeholder,
   textarea::placeholder {
-    color: #aaa;
+    color: #aaaaaa;
   }
 
-  .error { color: #ff9999; }
-  .success { color: #b5ffb5; }
-}
-</style>
+  .error {
+    color: #ff9999;
+  }
 
+  .success {
+    color: #b5ffb5;
+  }
+
+}
+
+</style>

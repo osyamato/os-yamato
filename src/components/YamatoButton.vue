@@ -6,6 +6,7 @@
       size,
       { 'full-width': fullWidth }
     ]"
+    :style="{ backgroundColor: buttonColor, color: textColor }"
     :disabled="disabled"
     @click="$emit('click')"
   >
@@ -14,6 +15,8 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
+
 defineProps({
   type: {
     type: String,
@@ -21,7 +24,7 @@ defineProps({
   },
   size: {
     type: String,
-    default: 'small'  // ← ここを 'medium' → 'small' に変更
+    default: 'small'
   },
   fullWidth: {
     type: Boolean,
@@ -34,6 +37,18 @@ defineProps({
 })
 
 defineEmits(['click'])
+
+const darkColors = ['#274c77', '#14532d']
+
+const buttonColor = computed(() => {
+  return getComputedStyle(document.documentElement)
+    .getPropertyValue('--yamato-button-color')
+    .trim() || '#274c77'
+})
+
+const textColor = computed(() => {
+  return darkColors.includes(buttonColor.value) ? 'white' : 'black'
+})
 </script>
 
 <style scoped>
@@ -76,8 +91,6 @@ defineEmits(['click'])
 
 /* ==== Type ==== */
 .yamato-button.default {
-  background-color: #274c77;
-  color: white;
 }
 
 .yamato-button.danger {

@@ -2,23 +2,30 @@
   <div class="account-view">
 <h2 class="header-title">アカウント</h2>
 
-    <!-- サインアウト -->
-    <div class="account-item">
-      <span>サインアウト</span>
-      <button class="arrow-button" @click="showSignOutModal = true">→</button>
-    </div>
+<!-- サインアウト -->
+<!-- サインアウト -->
+<div class="account-item">
+  <span>サインアウト</span>
+  <IconButton :color="selectedColor" size="medium" @click="showSignOutModal = true">
+    →
+  </IconButton>
+</div>
 
-    <!-- プレミアム -->
-    <div class="account-item">
-      <span>Yamato プレミアム</span>
-      <button class="arrow-button" @click="showPremiumModal = true">→</button>
-    </div>
+<!-- プレミアム -->
+<div class="account-item">
+  <span>Yamato プレミアム</span>
+  <IconButton :color="selectedColor" size="medium" @click="showPremiumModal = true">
+    →
+  </IconButton>
+</div>
 
-    <!-- アカウント削除 -->
-    <div class="account-item">
-      <span>アカウント削除</span>
-      <button class="arrow-button" @click="showDeleteModal = true">→</button>
-    </div>
+<!-- アカウント削除 -->
+<div class="account-item">
+  <span>アカウント削除</span>
+  <IconButton :color="selectedColor" size="medium" @click="showDeleteModal = true">
+    →
+  </IconButton>
+</div>
 
     <!-- 🔻 サインアウトモーダル -->
     <ModalContent :visible="showSignOutModal" @close="showSignOutModal = false">
@@ -53,12 +60,24 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { Auth } from 'aws-amplify'
 import { useRouter } from 'vue-router'
+
 import YamatoButton from '@/components/YamatoButton.vue'
+import IconButton from '@/components/IconButton.vue'
 import ModalContent from '@/components/Modal.vue'
 import '@/assets/variables.css'
+
+import { ref, onMounted } from 'vue'
+import { Auth } from 'aws-amplify'
+
+const selectedColor = ref('#274c77')
+
+onMounted(async () => {
+  const user = await Auth.currentAuthenticatedUser()
+  selectedColor.value = user.attributes['custom:iconColor'] || '#274c77'
+})
+
+
 
 const showSignOutModal = ref(false)
 const router = useRouter()
@@ -93,6 +112,8 @@ function upgrade() {
 function downgrade() {
   alert('ダウングレード機能は今後実装されます')
 }
+
+
 </script>
 
 <style scoped>
@@ -102,8 +123,14 @@ function downgrade() {
   font-size: 1.4rem;
   font-weight: bold;
   font-family: var(--yamato-font-title, serif);
-  color: var(--yamato-primary);
-  margin-bottom: 2rem;
+  color: #000; /* ライトモードでは黒 */
+  margin-bottom: 1.2rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  .header-title {
+    color: #fff; /* ダークモードでは白 */
+  }
 }
 
 .account-view {

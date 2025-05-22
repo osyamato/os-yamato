@@ -1,18 +1,36 @@
 <template>
-  <div class="desktop" :style="wallpaperStyle">
-    <div class="icon-grid">
-      <button @click="goTo('settings')">
-        <img src="/images/setting.png" alt="設定" class="icon-image" />
-      </button>
-      <button @click="goTo('memo')">🗒️</button>
-      <button @click="goTo('weather')">🌤</button>
-      <button @click="goTo('calendar')">📅</button>
-      <button @click="goTo('diary')">🌸</button>
-      <button @click="goTo('contact')">👥</button>
-      <button @click="goTo('chat-rooms')">💬</button>
-      <button @click="goTo('photo')">📷</button>
-    </div>
+<div class="desktop" :style="wallpaperStyle">
+  <div class="icon-grid">
+    <button @click="goTo('settings')">
+      <img src="/images/setting.png" alt="設定" class="icon-image" />
+    </button>
+
+    <button @click="goTo('memo')">
+      <img src="/memo.icon.png" alt="メモ" class="icon-image" />
+    </button>
+
+<button @click="goTo('weather')">
+  <img src="/weather.icon.png" alt="天気" class="icon-image" />
+</button>
+    <button @click="goTo('calendar')">📅</button>
+
+    <button @click="goTo('diary')">
+      <img src="/diary.icon.png" alt="日記" class="icon-image" />
+    </button>
+
+<button @click="goTo('contact')">
+  <img src="/contact.icon.png" alt="連絡先" class="icon-image" />
+</button>
+
+    <button @click="goTo('chat-rooms')">
+      <img src="/messege.icon.png" alt="メッセージ" class="icon-image" />
+    </button>
+
+    <button @click="goTo('photo')">
+      <img src="/photo.icon.png" alt="写真" class="icon-image" />
+    </button>
   </div>
+</div>
 </template>
 
 <script setup>
@@ -49,8 +67,16 @@ function goTo(path) {
   router.push(`/${path}`)
 }
 
-// 🔹 ユーザー属性から壁紙を取得
 onMounted(async () => {
+  try {
+    // 🔒 未ログインならサインイン画面へリダイレクト
+    await Auth.currentAuthenticatedUser()
+  } catch {
+    router.push('/signin')
+    return
+  }
+
+  // ✅ 認証済み → 壁紙取得を続行
   try {
     const user = await Auth.currentAuthenticatedUser()
     wallpaper.value = user.attributes['custom:wallpaper'] || ''
@@ -58,6 +84,7 @@ onMounted(async () => {
     console.error('❌ 背景画像の取得失敗:', error)
   }
 })
+
 </script>
 
 <style scoped>
@@ -78,12 +105,13 @@ onMounted(async () => {
   grid-template-columns: repeat(4, 70px);
   gap: 1rem 1.5rem;
   justify-content: center;
+margin-top: 2rem;
 }
 
 button {
   width: 70px;
   height: 70px;
-  padding: 1rem;
+  padding: 0;
   font-size: 2rem;
   border-radius: 1rem;
   background: #dcd8d4;
@@ -103,7 +131,7 @@ button:hover {
 .icon-image {
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  border-radius: 8px;
+  object-fit: cover; /* ✅ 枠にぴったり収まる */
+  border-radius: 16px; /* ✅ 枠の角と同じに */
 }
 </style>

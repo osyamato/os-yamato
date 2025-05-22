@@ -517,3 +517,126 @@ export const deletePhoto = /* GraphQL */ `
     }
   }
 `;
+export const createScheduleTemplate = /* GraphQL */ `
+  mutation CreateScheduleTemplate(
+    $input: CreateScheduleTemplateInput!
+    $condition: ModelScheduleTemplateConditionInput
+  ) {
+    createScheduleTemplate(input: $input, condition: $condition) {
+      id
+      emoji
+      label
+      startTime
+      endTime
+      createdAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;
+export const updateScheduleTemplate = /* GraphQL */ `
+  mutation UpdateScheduleTemplate(
+    $input: UpdateScheduleTemplateInput!
+    $condition: ModelScheduleTemplateConditionInput
+  ) {
+    updateScheduleTemplate(input: $input, condition: $condition) {
+      id
+      emoji
+      label
+      startTime
+      endTime
+      createdAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;
+export const deleteScheduleTemplate = /* GraphQL */ `
+  mutation DeleteScheduleTemplate(
+    $input: DeleteScheduleTemplateInput!
+    $condition: ModelScheduleTemplateConditionInput
+  ) {
+    deleteScheduleTemplate(input: $input, condition: $condition) {
+      id
+      emoji
+      label
+      startTime
+      endTime
+      createdAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;
+export const createWindMessage = /* GraphQL */ `
+  mutation CreateWindMessage(
+    $input: CreateWindMessageInput!
+    $condition: ModelWindMessageConditionInput
+  ) {
+    createWindMessage(input: $input, condition: $condition) {
+      id
+      fromUserId
+      fromDisplayName
+      toUserId
+      content
+      deliveryDate
+      isOpened
+      openedAt
+      deletedByReceiver
+      favoriteByReceiver
+      ttl
+      createdAt
+      owner
+      __typename
+    }
+  }
+`;
+export const updateWindMessage = /* GraphQL */ `
+  mutation UpdateWindMessage(
+    $input: UpdateWindMessageInput!
+    $condition: ModelWindMessageConditionInput
+  ) {
+    updateWindMessage(input: $input, condition: $condition) {
+      id
+      fromUserId
+      fromDisplayName
+      toUserId
+      content
+      deliveryDate
+      isOpened
+      openedAt
+      deletedByReceiver
+      favoriteByReceiver
+      ttl
+      createdAt
+      owner
+      __typename
+    }
+  }
+`;
+export const deleteWindMessage = /* GraphQL */ `
+  mutation DeleteWindMessage(
+    $input: DeleteWindMessageInput!
+    $condition: ModelWindMessageConditionInput
+  ) {
+    deleteWindMessage(input: $input, condition: $condition) {
+      id
+      fromUserId
+      fromDisplayName
+      toUserId
+      content
+      deliveryDate
+      isOpened
+      openedAt
+      deletedByReceiver
+      favoriteByReceiver
+      ttl
+      createdAt
+      owner
+      __typename
+    }
+  }
+`;

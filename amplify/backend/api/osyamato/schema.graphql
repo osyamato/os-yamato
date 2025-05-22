@@ -92,9 +92,9 @@ type Message
 
 type PublicProfile @model
 @auth(rules: [
-  { allow:public, operations: [read] },
+  { allow: public, operations: [read] },
   { allow: owner },
-  { allow: private, operations: [read] }  # ← これを追加
+  { allow: private, operations: [read] }
 ]) {
   id: ID!
   yamatoId: String! @index(name: "byYamatoId", queryField: "publicProfileByYamatoId")
@@ -102,6 +102,8 @@ type PublicProfile @model
   icon: String
   bio: String
 }
+
+
 type ChatRequest @model @auth(rules: [
   { allow: owner, ownerField: "fromUserId", operations: [create, read, update, delete] },
   { allow: owner, ownerField: "toUserId", operations: [read, update, delete] } # ✅ delete を追加
@@ -128,3 +130,35 @@ type Photo @model @auth(rules: [{ allow: owner }]) {
   updatedAt: AWSDateTime
 }
 
+type ScheduleTemplate @model @auth(rules: [{ allow: owner }]) {
+  id: ID!
+  emoji: String        # オプション
+  label: String        # オプション
+  startTime: String!
+  endTime: String!
+}
+
+
+type WindMessage
+  @model(
+    timestamps: { createdAt: "createdAt", updatedAt: null }
+  )
+  @auth(rules: [
+    { allow: owner },
+    { allow: private, operations: [read, create, update, delete] }
+  ]) {
+  id: ID!
+  fromUserId: String!
+  fromDisplayName: String!
+  toUserId: String!
+
+  content: String!
+  deliveryDate: AWSDateTime!
+  isOpened: Boolean!
+  openedAt: AWSDateTime
+
+  deletedByReceiver: Boolean @default(value: "false")
+  favoriteByReceiver: Boolean @default(value: "false") # ✅ ハート機能
+  ttl: AWSTimestamp
+  createdAt: AWSDateTime
+}

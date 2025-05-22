@@ -16,7 +16,11 @@ import ChatRoomListView from '../views/ChatRoomListView.vue'
 import ProfileSetupView from '../views/ProfileSetupView.vue'
 import ChatRequestListView from '../views/ChatRequestListView.vue'
 import AccountView from '../views/AccountView.vue'
-import PhotoView from '../views/PhotoView.vue' // ✅ 追加
+import PhotoView from '../views/PhotoView.vue'
+import HiddenChatRoomListView from '../views/HiddenChatRoomListView.vue'
+import ScheduleTemplateView from '../views/ScheduleTemplateView.vue'
+import WindMessageView from '../views/WindMessageView.vue' // ✅ 風の便り送信用
+import WindInboxView from '../views/WindInboxView.vue'     // ✅ 風の便り受信用
 
 const routes = [
   { path: '/', redirect: '/signin' },
@@ -31,7 +35,7 @@ const routes = [
   { path: '/memo', name: 'memo', component: MemoView },
   { path: '/settings', name: 'settings', component: SettingsView },
   { path: '/account', name: 'account', component: AccountView },
-  { path: '/photo', name: 'photo', component: PhotoView }, // ✅ 追加
+  { path: '/photo', name: 'photo', component: PhotoView },
   {
     path: '/chat/:roomId/:receiverYamatoId',
     name: 'chat',
@@ -39,8 +43,14 @@ const routes = [
     props: true
   },
   { path: '/chat-rooms', name: 'chat-rooms', component: ChatRoomListView },
+  { path: '/chat-requests', name: 'chat-requests', component: ChatRequestListView },
   { path: '/profile-setup', name: 'profile-setup', component: ProfileSetupView },
-  { path: '/chat-requests', name: 'chat-requests', component: ChatRequestListView }
+  { path: '/hidden-chat-rooms', name: 'hidden-chat-rooms', component: HiddenChatRoomListView },
+  { path: '/scheduletemplate', name: 'scheduletemplate', component: ScheduleTemplateView },
+
+  // ✅ 風の便り関連ルート
+  { path: '/wind-message', name: 'wind-message', component: WindMessageView }, // 手紙を書く
+  { path: '/wind-inbox', name: 'wind-inbox', component: WindInboxView }        // 手紙を読む
 ]
 
 const router = createRouter({

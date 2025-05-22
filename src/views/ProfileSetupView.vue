@@ -13,6 +13,11 @@
 <div class="button-row">
   <YamatoButton @click="register">登録する</YamatoButton>
 </div>
+<div class="go-hidden">
+  <button class="hidden-icon" @click="goToHidden">
+    ☁️
+  </button>
+</div>
 
     <p v-if="errorMessage" class="error">❌ {{ errorMessage }}</p>
   </div>
@@ -24,6 +29,14 @@ import { API, graphqlOperation, Auth } from 'aws-amplify'
 import { createPublicProfile, updatePublicProfile } from '@/graphql/mutations'
 import { getPublicProfile } from '@/graphql/queries'
 import YamatoButton from '@/components/YamatoButton.vue'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+
+function goToHidden() {
+  router.push('/hidden-chat-rooms')
+}
+
 
 const yamatoId = ref('')
 const displayName = ref('')
@@ -147,6 +160,25 @@ textarea {
   display: flex;
   justify-content: center;
   margin-top: 1rem;
+}
+.go-hidden {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+
+.hidden-icon {
+  background: none;
+  border: none;
+  font-size: 1.6rem;
+  cursor: pointer;
+  color: #e89b9b; /* ✅ 淡い紅梅色 */
+  transition: transform 0.2s ease, color 0.3s ease;
+}
+
+.hidden-icon:hover {
+  transform: scale(1.2);
+  color: #f5c6c6; /* ✅ ホバー時にさらに淡く上品に */
 }
 
 </style>

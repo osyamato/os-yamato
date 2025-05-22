@@ -6,56 +6,49 @@
  </div>
 <!-- フィルターヘッダー -->
 <div class="header-actions">
-  <!-- ＋ ボタン -->
-  <button class="circle-file-button" @click="triggerFileInput">
-    ＋
-  </button>
-  <input
-    ref="fileInput"
-    type="file"
-    accept="image/*"
-    multiple
-    @change="handleFileUpload"
-    style="display: none"
-  />
+  <!-- 📎 アップロード -->
+<IconButton :color="iconColor" @click="triggerFileInput">＋</IconButton>
+<input
+  ref="fileInput"
+  type="file"
+  accept="image/*"
+  multiple
+  @change="handleFileUpload"
+  hidden
+/>
 
   <!-- ♡ フィルター -->
-  <button
-    class="circle-heart-filter"
-    :class="{ active: filterFavoritesOnly }"
+  <IconButton
+    :color="iconColor"
+    :class="{ 'selected-icon': filterFavoritesOnly }"
     @click="toggleHeartFilter"
-  >
-    ♡
-  </button>
+  >♡</IconButton>
 
   <!-- ☑️ 選択モード -->
-  <button
-    class="circle-check-filter"
-    :class="{ active: isSelectionMode }"
+  <IconButton
+    :color="iconColor"
+    :class="{ 'selected-icon': isSelectionMode }"
     @click="toggleSelectionMode"
-  >
-    ☑️
-  </button>
+  >☑️</IconButton>
 
   <!-- 🥀 経過フィルター -->
-  <button
-    class="circle-wilt-filter"
-    :class="{ active: filterWiltingOnly }"
+  <IconButton
+    :color="iconColor"
+    :class="{ 'selected-icon': filterWiltingOnly }"
     @click="toggleWiltFilter"
-  >
-    🥀
-  </button>
+  >🥀</IconButton>
 </div>
 
-    <div v-if="isLoading && iconStage" class="upload-life-cycle">
-      <span :class="'icon-seedling ' + iconStage">{{ lifeIcon }}</span>
-    </div>
+<!-- 🌱 アップロード中アイコン -->
+<div v-if="(isLoading || isDeleting) && iconStage" class="upload-life-cycle">
+  <span :class="'icon-seedling ' + iconStage">{{ lifeIcon }}</span>
+</div>
 
-    <div v-if="isSelectionMode" class="floating-delete">
-      <button class="bulk-delete-button" @click.stop="deleteSelectedPhotos">
-        🗑
-      </button>
-    </div>
+<!-- ✅ 選択中操作 -->
+<div v-if="isSelectionMode" class="floating-delete">
+<IconButton :color="iconColor" @click.stop="downloadSelectedPhotos">↓</IconButton>
+<IconButton :color="iconColor" @click.stop="deleteSelectedPhotos">🗑</IconButton>
+</div>
 
     <p class="wilted-message" v-if="filterWiltingOnly">
       記憶の花は、いつか風に散る
@@ -91,23 +84,10 @@
           </p>
           <p class="timestamp">撮影日時: {{ formatDate(photo.photoTakenAt) }}</p>
           <div class="photo-actions">
-            <button
-              @click.stop="toggleFavorite(photo)"
-              class="favorite-button"
-            >
-              {{ photo.isFavorite ? '❤️' : '🤍' }}
-            </button>
-            <button
-              @click.stop="deletePhoto(photo)"
-              class="delete-button"
-            >
-              🗑
-            </button>
-          </div>
         </div>
       </div>
-    </div>
-
+  </div> <!-- ← ここが抜けていた -->
+</div> 
     <!-- モーダル表示 -->
     <div
       v-if="modalVisible"
@@ -117,6 +97,11 @@
     >
       <div class="modal-content-wrapper" @click.stop>
         <div v-if="isImageLoaded" class="modal-toolbar-centered">
+<span
+  class="modal-download-icon"
+  @click.stop="downloadCurrentPhoto"
+>↓</span>
+
           <span
             class="modal-favorite-icon"
             :class="{ active: currentPhoto?.isFavorite }"
@@ -157,6 +142,18 @@ import { Storage, API, graphqlOperation, Auth } from 'aws-amplify'
 import { createPhoto, updatePhoto, deletePhoto as deletePhotoMutation } from '@/graphql/mutations'
 import { listPhotos } from '@/graphql/queries'
 import exifr from 'exifr'
+import IconButton from '@/components/IconButton.vue'
+
+const iconColor = ref('#274c77')
+
+onMounted(async () => {
+  try {
+    const user = await Auth.currentAuthenticatedUser()
+    iconColor.value = user.attributes['custom:iconColor'] || '#274c77'
+  } catch (e) {
+    console.error('アイコン色取得エラー:', e)
+  }
+})
 
 const photoList = ref([])
 const modalVisible = ref(false)
@@ -166,6 +163,7 @@ const isImageLoaded = ref(false)
 const currentPhoto = ref(null)
 const filterFavoritesOnly = ref(false)
 const isLoading = ref(false)
+const isDeleting = ref(false)
 
 
 const filterWiltingOnly = ref(false)
@@ -176,6 +174,12 @@ function toggleWiltFilter() {
   filterFavoritesOnly.value = false
   isSelectionMode.value = false
   filterWiltingOnly.value = !filterWiltingOnly.value
+}
+
+const fileInput = ref(null)
+
+function triggerFileInput() {
+  fileInput.value?.click()
 }
 
 function toggleHeartFilter() {
@@ -213,11 +217,6 @@ watch([filterFavoritesOnly, filterWiltingOnly], () => {
 
 
 
-const fileInput = ref(null)
-
-function triggerFileInput() {
-  fileInput.value?.click()
-}
 
 const iconStage = ref('fade-in')
 const iconIndex = ref(0)
@@ -226,10 +225,10 @@ const lifeIcon = computed(() => icons[iconIndex.value])
 
 let interval = null
 
-watch(isLoading, (val) => {
-  clearInterval(interval) // ✅ ← 先に必ず止める！
+watch([isLoading, isDeleting], ([loading, deleting]) => {
+  clearInterval(interval) // ✅ 前のアニメーション停止
 
-  if (val) {
+  if (loading || deleting) {
     iconIndex.value = 0
     iconStage.value = 'fade-in'
     interval = setInterval(() => {
@@ -243,6 +242,52 @@ watch(isLoading, (val) => {
     iconStage.value = ''
   }
 })
+
+async function downloadSelectedPhotos() {
+  if (selectedPhotoIds.value.length === 0) {
+    alert('写真が選択されていません。')
+    return
+  }
+
+  for (const photo of photoList.value) {
+    if (selectedPhotoIds.value.includes(photo.id)) {
+      try {
+        const url = await Storage.get(photo.fileName, { level: 'protected' })
+        const response = await fetch(url)
+        const blob = await response.blob()
+
+        const link = document.createElement('a')
+        link.href = URL.createObjectURL(blob)
+        link.download = photo.fileName
+        link.click()
+        URL.revokeObjectURL(link.href)
+      } catch (e) {
+        console.error(`❌ ${photo.fileName} 書き出し失敗`, e)
+      }
+    }
+  }
+}
+
+async function downloadCurrentPhoto() {
+  try {
+    const photo = currentPhoto.value
+    if (!photo || !photo.fileName) return
+
+    const url = await Storage.get(photo.fileName, { level: 'protected' })
+    const res = await fetch(url)
+    const blob = await res.blob()
+
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(blob)
+    a.download = photo.fileName
+    a.click()
+    URL.revokeObjectURL(a.href)
+  } catch (e) {
+    console.error('⬇️ ダウンロード失敗:', e)
+    alert('ダウンロードに失敗しました')
+  }
+}
+
 async function handleFileUpload(event) {
   const files = event.target.files
   if (!files || files.length === 0) return
@@ -406,6 +451,8 @@ async function deleteSelectedPhotos() {
   const confirmed = confirm('選択した写真をすべて削除しますか？')
   if (!confirmed) return
 
+  isDeleting.value = true  // 🟢 アイコン表示を開始
+
   try {
     for (const photo of photoList.value) {
       if (selectedPhotoIds.value.includes(photo.id)) {
@@ -415,13 +462,15 @@ async function deleteSelectedPhotos() {
       }
     }
 
-    selectedPhotoIds.value = []       // 選択解除
-    isSelectionMode.value = false     // モード終了
-    await fetchPhotos()               // 再取得
+    selectedPhotoIds.value = []
+    isSelectionMode.value = false
+    await fetchPhotos()
 
   } catch (e) {
     console.error('🗑 一括削除エラー:', e)
     alert('一部の写真の削除に失敗しました。')
+  } finally {
+    isDeleting.value = false  // 🔴 アイコン停止
   }
 }
 
@@ -563,6 +612,7 @@ onMounted(fetchPhotos)
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(17px); /* 🔍 追加：背景ぼかし強化 */
   z-index: 1000;
   display: flex;
   justify-content: center;
@@ -766,10 +816,11 @@ onMounted(fetchPhotos)
   opacity: 0;
 }
 
-/* 一括削除ボタン */
 .floating-delete {
   display: flex;
   justify-content: center;
+  align-items: center;
+  gap: 1.2rem; /* ← ここが重要！アイコン間の余白を作る */
   margin: 1.2rem 0;
 }
 .bulk-delete-button {
@@ -795,13 +846,56 @@ onMounted(fetchPhotos)
   margin-bottom: 1.5rem;
 }
 .header-title {
-  font-size: 1.5rem;
-  font-family: 'serif';
-  color: var(--yamato-primary);
+  font-size: 1.4rem;
+  font-weight: bold;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  color: #000;
+  text-align: center;
 }
+@media (prefers-color-scheme: dark) {
+  .header-title {
+    color: #fff;
+  }
+}
+
+
+
 .drop-animation {
   animation: dropDown 0.6s ease-out;
 }
 
-</style>
+.selected-icon {
+  background-color: white !important;
+  color: #274c77 !important;
+}
+.bulk-export-button {
+  background-color: #274c77;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  margin-right: 0.8rem; /* ゴミ箱と少し間をあける */
+}
 
+.modal-download-icon {
+  color: white;
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+</style>

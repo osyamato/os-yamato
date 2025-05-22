@@ -3,16 +3,21 @@
     <!-- 🔵 上部ヘッダー -->
     <div class="contact-header">
       <h2 class="header-title">連絡先</h2>
-      <div class="header-icons">
-        <button class="icon-circle" @click="openSearchModal">🔍</button>
-        <button class="icon-circle" @click="openNewContactModal">＋</button>
-<label class="icon-circle upload-icon">
+<div class="header-icons">
+  <IconButton :color="iconColor" @click="openSearchModal">🔍</IconButton>
+  <IconButton :color="iconColor" @click="openNewContactModal">＋</IconButton>
+
+<IconButton :color="iconColor" tag="label">
   📎
   <input type="file" accept=".csv,.vcf" @change="handleFileUpload" hidden />
-</label>
+</IconButton>
 
-<button class="icon-circle" @click="toggleWiltFilter" :class="{ active: filterWiltingOnly }">🥀</button>
-      </div>
+  <IconButton
+    :color="iconColor"
+    :class="{ 'selected-icon': filterWiltingOnly }"
+    @click="toggleWiltFilter"
+  >🥀</IconButton>
+</div>
     </div>
 <p v-if="filterWiltingOnly" class="wilted-message">
   記憶の花は、いつか風に散る
@@ -61,9 +66,13 @@
         <div v-else>
           <div class="modal-body">
             <p v-if="selectedContact?.furigana"><strong>ふりがな:</strong> {{ selectedContact.furigana }}</p>
-            <p v-if="selectedContact?.phoneNumbers?.filter(p => p.trim()).length">
-              <strong>電話:</strong> {{ selectedContact.phoneNumbers.filter(p => p.trim()).join(', ') }}
-            </p>
+<p v-if="selectedContact?.phoneNumbers?.filter(p => p.trim()).length">
+  <strong>電話:</strong>
+  <span v-for="(phone, index) in selectedContact.phoneNumbers.filter(p => p.trim())" :key="index">
+    <a :href="`tel:${phone.replace(/[^\d+]/g, '')}`" class="phone-link">{{ phone }}</a>
+    <span v-if="index < selectedContact.phoneNumbers.length - 1">, </span>
+  </span>
+</p>
             <p v-if="selectedContact?.emails?.filter(e => e.trim()).length">
               <strong>メール:</strong> {{ selectedContact.emails.filter(e => e.trim()).join(', ') }}
             </p>
@@ -102,6 +111,7 @@ import YamatoButton from '@/components/YamatoButton.vue'
 import Modal from '@/components/Modal.vue'
 import '@/assets/variables.css';
 import vCard from 'vcard-parser'
+import IconButton from '@/components/IconButton.vue'
 
 // --- データ ---
 const contacts = ref([])
@@ -122,6 +132,12 @@ const isFormValid = computed(() => {
   return editName.value.trim() !== '' || editPhone.value.trim() !== '' || editEmail.value.trim() !== ''
 })
 
+const iconColor = ref('#274c77')
+
+onMounted(async () => {
+  const user = await Auth.currentAuthenticatedUser()
+  iconColor.value = user.attributes['custom:iconColor'] || '#274c77'
+})
 async function fetchContacts() {
   try {
     const user = await Auth.currentAuthenticatedUser()
@@ -489,37 +505,24 @@ onMounted(fetchContacts)
 }
 
 .header-title {
-  font-size: 1.5rem;
-  color: #274c77;
+  font-size: 1.4rem;
   font-weight: bold;
-  font-family: 'serif'; /* ✅ Yamato統一フォント */
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: black;
   text-align: center;
 }
-.header-icons {
-  display: flex;
-  gap: 1.2rem;
-  justify-content: center;
-  align-items: center;
-}
-.icon-circle {
-  background-color: var(--yamato-primary);
-  color: var(--yamato-text-light);
-  width: 36px;
-  height: 36px;
-  border: none;
-  border-radius: 50%;
-  font-size: 1.2rem;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-  cursor: pointer;
-  transition: background-color 0.3s, box-shadow 0.3s;
+
+@media (prefers-color-scheme: dark) {
+  .header-title {
+    color: white;
+  }
 }
 
-.icon-circle:hover {
-  background-color: var(--yamato-primary-dark);
+.upload-icon {
+  cursor: pointer;
+  /* 他のスタイル */
 }
+
 
 .contact-card {
   background: white;
@@ -703,6 +706,20 @@ textarea {
   0% { transform: translateY(0px) rotate(0deg); opacity: 0; }
   30% { opacity: 1; }
   100% { transform: translateY(-10px) rotate(-1deg); opacity: 0.85; }
+}
+
+.selected-icon {
+  background-color: white !important;
+  color: #274c77 !important;
+}
+
+.phone-link {
+  color: #274c77;
+  text-decoration: none;
+  font-weight: bold;
+}
+.phone-link:hover {
+  text-decoration: underline;
 }
 
 </style>
