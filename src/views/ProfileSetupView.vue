@@ -7,7 +7,7 @@
       placeholder="Yamato ID（@から始まる）"
       @input="validateAtMark"
     />
-    <input v-model="displayName" placeholder="表示名（任意）" />
+    <input v-model="displayName" placeholder="名前やニックネーム" />
     <textarea v-model="bio" placeholder="自己紹介（任意）" rows="4" />
 
 <div class="button-row">
@@ -108,11 +108,11 @@ async function register() {
 }
 
 .setup-title {
+  color: #111; /* ← ライトモード用の黒文字 */
   font-size: 1.2rem;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  margin-bottom: 1rem;
   text-align: center;
-  margin-bottom: 1.5rem;
-  font-weight: 600;
-  color: #222; /* ライトモード用 */
 }
 
 @media (prefers-color-scheme: dark) {

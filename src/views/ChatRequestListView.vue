@@ -119,9 +119,9 @@ async function reject(req) {
 }
 
 .title {
-  font-size: 1.6rem;
+  font-size: 1.2rem;
   font-weight: bold;
-  color: #fff;
+color: #111;
   margin-bottom: 2rem;
 }
 
@@ -140,4 +140,22 @@ async function reject(req) {
   gap: 1rem;
   margin-top: 1rem;
 }
+@media (prefers-color-scheme: dark) {
+  .modal-title {
+    color: #f5f5f5;
+  }
+
+  .tag-button {
+    background: #444;
+    color: #eee;
+    border-color: #666;
+  }
+
+  .tag-button.selected {
+    background: #567;
+    color: #fff;
+    border-color: #89a;
+  }
+}
+
 </style>

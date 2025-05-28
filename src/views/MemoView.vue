@@ -38,7 +38,7 @@
 <!-- ✅ 2段目 -->
 <div v-if="isSelectionMode" class="selection-actions">
   <IconButton :color="iconColor" @click="exportSelectedMemos">↓</IconButton>
-  <IconButton :color="iconColor" @click="deleteSelectedMemos">🗑</IconButton>
+<IconButton :color="iconColor" @click="requestBulkDelete">🗑</IconButton>
 </div>
     </div>
 
@@ -132,14 +132,14 @@
           >
             更新
           </YamatoButton>
-          <YamatoButton
-            v-if="selectedMemo"
-            size="small"
-            type="danger"
-            @click="deleteSelectedMemo"
-          >
-            削除
-          </YamatoButton>
+<YamatoButton
+  v-if="selectedMemo"
+  size="small"
+  type="danger"
+  @click="promptDeleteMemo"
+>
+  削除
+</YamatoButton>
           <YamatoButton
             v-else
             size="small"
@@ -171,7 +171,24 @@
           <YamatoButton @click="clearSearchTag">すべて表示</YamatoButton>
         </div>
       </Modal>
+
     </transition>
+
+<ConfirmDialog
+      v-if="showConfirm"
+      :visible="showConfirm"
+      message="本当にこのメモを削除しますか？"
+      @confirm="handleConfirmedDelete"
+      @cancel="showConfirm = false"
+    />
+<ConfirmDialog
+  v-if="showConfirmBulkDelete"
+  :visible="showConfirmBulkDelete"
+  message="選択したメモをすべて削除しますか？"
+  @confirm="handleBulkDeleteConfirmed"
+  @cancel="showConfirmBulkDelete = false"
+/>
+
   </div>
 </template>
 
@@ -183,6 +200,7 @@ import { listMemos } from '../graphql/queries'
 import Modal from '@/components/Modal.vue'
 import YamatoButton from '@/components/YamatoButton.vue'
 import '@/assets/variables.css'
+import ConfirmDialog from '@/components/ConfirmDialog.vue'
 
 
 // --- データ ---
@@ -328,6 +346,8 @@ async function fetchMemos() {
 
     const now = new Date()
     const toDelete = []
+
+    // 1年を超えるメモは削除対象として除外
     const filtered = items.filter(memo => {
       const updatedAt = new Date(memo.updatedAt || memo.createdAt)
       const diffDays = (now - updatedAt) / (1000 * 60 * 60 * 24)
@@ -338,6 +358,7 @@ async function fetchMemos() {
       return true
     })
 
+    // 削除処理
     for (const id of toDelete) {
       try {
         await API.graphql(graphqlOperation(deleteMemo, { input: { id } }))
@@ -347,9 +368,16 @@ async function fetchMemos() {
       }
     }
 
+    // 新しいリストを反映
     memos.value = filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
 
-    // タグ一覧
+    // ✅ 再同期：選択中のメモがまだ存在しているかチェック
+    if (selectedMemo.value?.id) {
+      const matched = filtered.find(m => m.id === selectedMemo.value.id)
+      selectedMemo.value = matched || null
+    }
+
+    // タグ一覧の再構成
     const tagsSet = new Set()
     filtered.forEach(m => (m.tags || []).forEach(tag => tagsSet.add(tag)))
     allTags.value = Array.from(tagsSet)
@@ -361,7 +389,13 @@ async function fetchMemos() {
 
 async function deleteSelectedMemo() {
   if (!selectedMemo.value) return
-  if (!confirm('本当にこのメモを削除しますか？')) return
+
+  console.log('[Debug] 前: ', selectedMemo.value)
+
+  const confirmed = confirm('本当にこのメモを削除しますか？')
+  console.log('[Debug] confirm結果:', confirmed)
+
+  if (!confirmed) return
 
   try {
     await API.graphql(graphqlOperation(deleteMemo, {
@@ -579,6 +613,49 @@ onMounted(() => {
   fetchMemos()           // ← メモを読み込み
 })
 
+const showConfirm = ref(false)
+const showConfirmBulkDelete = ref(false)
+
+function promptDeleteMemo() {
+  if (!selectedMemo.value) return
+  showConfirm.value = true
+}
+
+async function handleConfirmedDelete() {
+  try {
+    await API.graphql(graphqlOperation(deleteMemo, {
+      input: { id: selectedMemo.value.id }
+    }))
+    console.log('✅ 削除成功')
+    showConfirm.value = false
+    closeModal()
+    await fetchMemos()
+  } catch (e) {
+    console.error('❌ 削除失敗:', e)
+    showConfirm.value = false
+  }
+}
+function requestBulkDelete() {
+  if (selectedMemoIds.value.length === 0) {
+    alert('⚠️ 削除するメモが選択されていません')
+    return
+  }
+  showConfirmBulkDelete.value = true
+}
+async function handleBulkDeleteConfirmed() {
+  try {
+    for (const id of selectedMemoIds.value) {
+      await API.graphql(graphqlOperation(deleteMemo, { input: { id } }))
+    }
+    selectedMemoIds.value = []
+    await fetchMemos()
+  } catch (err) {
+    console.error('❌ 一括削除失敗:', err)
+  } finally {
+    showConfirmBulkDelete.value = false
+  }
+}
+
 </script>
 
 <style scoped>
@@ -604,6 +681,8 @@ onMounted(() => {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
   color: #000;
   text-align: center;
+
+margin-bottom: 0.6rem; 
 }
 @media (prefers-color-scheme: dark) {
   .header-title {
@@ -616,6 +695,7 @@ onMounted(() => {
   justify-content: center;
   align-items: center;
   gap: 1.2rem;
+margin-top: 0; 
 }
 
 .upload-icon {
@@ -629,40 +709,11 @@ onMounted(() => {
   z-index: 2;
 }
 
-/* 🌸 メモ一覧 */
-.memo-list {
-  margin-top: 1rem;
-}
-
-.memo-card {
-  position: relative; /* 🌱 の位置固定に必要 */
-  padding: 1.2rem 1rem 1rem 2.5rem; 
-  background: white;
-  padding: 0.6rem 0.8rem;
-  margin-bottom: 0.3rem;
-  border-bottom: 1px solid #ccc;
-  border-radius: 6px;
-  display: flex;
-  flex-direction: column; /* ← ★これを追加！縦に並べる */
-  font-size: 0.9rem;
-  color: #000;
-  cursor: pointer;
-}
 
 .flower-icon {
   font-size: 1.2rem;
 }
 
-.memo-content {
-  flex: 1;
-  text-align: left;
-  margin-left: 2rem;
-  font-size: 1rem;
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-line-clamp: 3; /* ここで3行に制限 */
-  -webkit-box-orient: vertical;
-}
 
 /* 🌸 モーダル */
 .modal {
@@ -689,10 +740,18 @@ onMounted(() => {
   z-index: 1001;
 }
 .modal-title-icon-only {
+  color: #111; /* ← ライトモード用：黒文字にする */
   margin-bottom: 1rem;
   display: flex;
   justify-content: center;
   align-items: center;
+}
+
+.modal-title {
+  color: #111; /* ← ライトモード用の黒文字 */
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+  text-align: center;
 }
 
 .flower-icon-small {
@@ -803,20 +862,7 @@ textarea {
 }
 
 .memo-list {
-  margin: 0 1rem;
-}
-
-.memo-card {
-  background: white;
-  padding: 0.6rem 0.8rem;
-  margin-bottom: 0.3rem;
-  border-bottom: 1px solid #ccc;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  font-size: 0.9rem;
-  color: #000;
-  cursor: pointer;
+  margin: 1rem 1rem 0;
 }
 
 .name-with-icon {
@@ -834,6 +880,46 @@ textarea {
 .memo-content {
   font-size: 1rem;
   text-align: left;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;           /* ← 3行まで表示 */
+  -webkit-box-orient: vertical;
+  color: #000;
+  margin-left: 2rem;
+}
+
+.memo-card {
+  position: relative;
+  padding: 0.6rem 0.8rem;
+  margin-bottom: 0.3rem;
+  background: white;
+  border-bottom: 1px solid #ccc;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between; /* 📌 内容を上下に整える */
+  align-items: flex-start;
+  font-size: 0.9rem;
+  color: #000;
+  cursor: pointer;
+
+  width: 330px;     /* 📏 横幅固定 */
+  height: 90px;     /* 📏 高さ固定 */
+  box-sizing: border-box;
+  word-wrap: break-word;
+  overflow: hidden; /* 📌 はみ出しを防止 */
+}
+
+.memo-dates {
+  font-size: 0.75rem;
+  color: #888;
+  margin-top: 0.2rem;
+  text-align: right;
+}
+@media (min-width: 768px) {
+  .memo-card {
+    max-width: 480px;
+  }
 }
 
 .memo-dates {

@@ -1,10 +1,10 @@
 <template>
   <!-- 通常の送信画面 -->
 <div v-if="!sent" class="wind-message-view drop-down" v-show="recipientLoaded">
-    <h2 class="animated-title">
-      {{ recipientName ? `${recipientName}さんの未来へ言葉を届けよう` : '未来へ言葉を届けよう' }}
-    </h2>
-    <p class="subtitle">言葉を風に乗せて、静かに届くその日まで。</p>
+<h2 class="header-title">
+  {{ recipientName ? `${recipientName}さんの未来へ言葉を届けよう` : '未来へ言葉を届けよう' }}
+</h2>
+<p class="header-subtitle">言葉を風に乗せて、静かに届くその日まで。</p>
 
     <div class="letter-box">
       <textarea
@@ -12,11 +12,13 @@
         placeholder="ここに想いを綴ってください…"
         rows="8"
         class="textarea"
+:maxlength="MAX_LENGTH"
       />
     </div>
 
-    <YamatoButton @click="sendMessage" :disabled="!message.trim()">🕊️ 風に預ける</YamatoButton>
-  </div>
+<YamatoButton @click="sendMessage" :disabled="!isMessageValid">
+  風に預ける🕊️
+</YamatoButton>  </div>
 
   <!-- 送信アニメーション画面 -->
   <div v-else class="animation-overlay">
@@ -25,7 +27,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Auth, API, graphqlOperation } from 'aws-amplify'
 import { getPublicProfile } from '@/graphql/queries'
@@ -90,6 +92,11 @@ async function sendMessage() {
   }
 }
 
+const MAX_LENGTH = 1000
+const isMessageValid = computed(() => {
+  return message.value.trim().length > 0 && message.value.length <= MAX_LENGTH
+})
+
 </script>
 
 <style scoped>
@@ -101,6 +108,22 @@ async function sendMessage() {
   text-align: center;
 }
 
+.header-subtitle {
+  font-size: 0.95rem;
+  color: #555;
+  text-align: center;
+  margin-top: 0.3rem;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  opacity: 0.85;
+}
+
+@media (prefers-color-scheme: dark) {
+  .header-subtitle {
+    color: #ccc;
+    opacity: 0.85;
+  }
+}
+
 .drop-down {
   animation: dropDown 0.5s ease-out;
 }
@@ -110,18 +133,6 @@ async function sendMessage() {
   100% { opacity: 1; transform: translateY(0); }
 }
 
-.animated-title {
-  font-size: 1.6rem;
-  margin-bottom: 0.5rem;
-  color: var(--yamato-primary);
-  font-family: var(--yamato-font-title);
-}
-
-.subtitle {
-  font-size: 1rem;
-  margin-bottom: 2rem;
-  color: #666;
-}
 
 .letter-box {
   background: #fff;
@@ -211,6 +222,15 @@ background: linear-gradient(to top, #e0f2ff, #b3e5fc);
     border: none; /* ✅ 枠線なしでOK */
     box-shadow: none;
   }
+}
+.char-count {
+  text-align: right;
+  font-size: 0.85rem;
+  color: #888;
+  margin: -1rem 0 1.2rem;
+}
+.textarea:invalid {
+  border-color: red;
 }
 
 </style>

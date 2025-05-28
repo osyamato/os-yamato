@@ -1,6 +1,6 @@
 <template>
 
-  <div class="calendar-container" :class="animationDirection">
+<div class="calendar-container">
     <!-- 月表示 -->
     <h2 class="month-title">
       <button @click="prevMonth">&lt;</button>
@@ -100,7 +100,7 @@
   :color="selectedColor"
   size="small"
   class="danger"
-  @click="deleteEvent(event.id)"
+  @click="promptDeleteEvent(event.id)" 
 >
   🗑️
 </IconButton>
@@ -180,6 +180,14 @@
         </div>
       </template>
     </Modal>
+ <ConfirmDialog
+      v-if="showConfirm"
+      :visible="showConfirm"
+      message="本当に削除しますか？"
+      @confirm="handleConfirmedDelete"
+      @cancel="showConfirm = false"
+    />
+
   </div>
 </template>
 
@@ -199,6 +207,7 @@ import YamatoButton from '@/components/YamatoButton.vue'
 import Modal from '@/components/Modal.vue'
 import { useRouter } from 'vue-router'
 import IconButton from '@/components/IconButton.vue'
+import ConfirmDialog from '@/components/ConfirmDialog.vue'
 
 // -----------------------
 // 📌 State
@@ -620,6 +629,31 @@ onMounted(async () => {
 })
 
 
+const showConfirm = ref(false)
+const pendingDeleteId = ref(null)
+
+function promptDeleteEvent(id) {
+  pendingDeleteId.value = id
+  showConfirm.value = true
+}
+
+async function handleConfirmedDelete() {
+  if (!pendingDeleteId.value) return
+
+  try {
+    await API.graphql(graphqlOperation(deleteScheduleMutation, { input: { id: pendingDeleteId.value } }))
+    console.log('✅ 削除成功')
+    await fetchSchedules()
+    selectedEvents.value = selectedEvents.value.filter(e => e.id !== pendingDeleteId.value)
+  } catch (e) {
+    console.error('❌ 削除失敗:', e)
+  } finally {
+    showConfirm.value = false
+    pendingDeleteId.value = null
+  }
+}
+
+
 </script>
 
 
@@ -633,19 +667,27 @@ onMounted(async () => {
   transform-origin: top center;
 }
 
-.slide-left {
-  animation: slideLeft 0.7s ease-out;
-}
-
-.slide-right {
-  animation: slideRight 0.7s ease-out;
-}
 
 /* 🌸 月タイトル */
 .month-title {
-  font-size: 1.5rem;
-  margin-bottom: 0.5rem;
+  font-size: 1.4rem;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  font-weight: bold;
+  color: #000;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
 }
+
+@media (prefers-color-scheme: dark) {
+  .month-title {
+    color: #fff;
+  }
+}
+
 
 .month-title button {
   background: none;
@@ -770,6 +812,13 @@ onMounted(async () => {
   font-size: 1.4rem;
   font-weight: normal;
   margin-bottom: 1rem;
+  color: #000; /* デフォルト（ライトモード用） */
+}
+
+@media (prefers-color-scheme: dark) {
+  .modal-title {
+    color: #fff;
+  }
 }
 
 .date-wrapper {
@@ -910,15 +959,6 @@ textarea {
   100% { transform: translateY(-40px); opacity: 0; }
 }
 
-@keyframes slideLeft {
-  0% { transform: translateX(40px); opacity: 0; }
-  100% { transform: translateX(0); opacity: 1; }
-}
-
-@keyframes slideRight {
-  0% { transform: translateX(-40px); opacity: 0; }
-  100% { transform: translateX(0); opacity: 1; }
-}
 .template-shortcut {
   display: flex;
   justify-content: center;
@@ -1028,6 +1068,3 @@ textarea {
 }
 
 </style>
-
-
-

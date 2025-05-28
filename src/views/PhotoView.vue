@@ -1,60 +1,44 @@
 <template>
   <div class="photo-view drop-animation">
-    <!-- 🔵 タイトル -->
     <div class="photo-header">
       <h2 class="header-title">写真</h2>
- </div>
-<!-- フィルターヘッダー -->
-<div class="header-actions">
-  <!-- 📎 アップロード -->
-<IconButton :color="iconColor" @click="triggerFileInput">＋</IconButton>
-<input
-  ref="fileInput"
-  type="file"
-  accept="image/*"
-  multiple
-  @change="handleFileUpload"
-  hidden
-/>
+    </div>
 
-  <!-- ♡ フィルター -->
-  <IconButton
-    :color="iconColor"
-    :class="{ 'selected-icon': filterFavoritesOnly }"
-    @click="toggleHeartFilter"
-  >♡</IconButton>
+    <div class="header-actions">
+      <IconButton :color="iconColor" @click="triggerFileInput">＋</IconButton>
+      <input
+        ref="fileInput"
+        type="file"
+        accept="image/*"
+        multiple
+        @change="handleFileUpload"
+        hidden
+      />
+      <IconButton :color="iconColor" :class="{ 'selected-icon': filterFavoritesOnly }" @click="toggleHeartFilter">♡</IconButton>
+      <IconButton :color="iconColor" :class="{ 'selected-icon': isSelectionMode }" @click="toggleSelectionMode">☑️</IconButton>
+      <IconButton :color="iconColor" :class="{ 'selected-icon': filterWiltingOnly }" @click="toggleWiltFilter">🥀</IconButton>
+    </div>
 
-  <!-- ☑️ 選択モード -->
-  <IconButton
-    :color="iconColor"
-    :class="{ 'selected-icon': isSelectionMode }"
-    @click="toggleSelectionMode"
-  >☑️</IconButton>
+    <div v-if="(isLoading || isDeleting) && iconStage" class="upload-life-cycle">
+      <span :class="'icon-seedling ' + iconStage">{{ lifeIcon }}</span>
+    </div>
 
-  <!-- 🥀 経過フィルター -->
-  <IconButton
-    :color="iconColor"
-    :class="{ 'selected-icon': filterWiltingOnly }"
-    @click="toggleWiltFilter"
-  >🥀</IconButton>
-</div>
+    <div v-if="isSelectionMode" class="floating-delete">
+<IconButton
+  :color="iconColor"
+  @click.stop="downloadSelectedPhotos"
+>↓</IconButton>
 
-<!-- 🌱 アップロード中アイコン -->
-<div v-if="(isLoading || isDeleting) && iconStage" class="upload-life-cycle">
-  <span :class="'icon-seedling ' + iconStage">{{ lifeIcon }}</span>
-</div>
-
-<!-- ✅ 選択中操作 -->
-<div v-if="isSelectionMode" class="floating-delete">
-<IconButton :color="iconColor" @click.stop="downloadSelectedPhotos">↓</IconButton>
-<IconButton :color="iconColor" @click.stop="deleteSelectedPhotos">🗑</IconButton>
-</div>
+<IconButton
+  :color="iconColor"
+  @click.stop="promptDeleteSelectedPhotos"
+>🗑</IconButton>
+   </div>
 
     <p class="wilted-message" v-if="filterWiltingOnly">
       記憶の花は、いつか風に散る
     </p>
 
-    <!-- 写真グリッド -->
     <div class="photo-grid">
       <div
         v-for="photo in photoList"
@@ -63,78 +47,47 @@
         :class="{ selected: isSelectionMode && selectedPhotoIds.includes(photo.id) }"
         @click="isSelectionMode ? toggleSelection(photo.id) : openModal(photo)"
       >
-        <img
-          :src="photo.thumbnailUrl"
-          class="photo-thumbnail"
-          style="cursor: pointer"
-        />
-
+        <img :src="photo.thumbnailUrl" class="photo-thumbnail" style="cursor: pointer" />
         <span v-if="isWilting(photo)" class="wilt-icon">🥀</span>
-
-        <div
-          v-if="isSelectionMode && selectedPhotoIds.includes(photo.id)"
-          class="check-overlay"
-        >
-          ☑️
-        </div>
-
+        <div v-if="isSelectionMode && selectedPhotoIds.includes(photo.id)" class="check-overlay">☑️</div>
         <div class="photo-info">
-          <p class="filename">
-            📷 {{ photo.fileName }}<span v-if="isWilting(photo)">🥀</span>
-          </p>
+          <p class="filename">📷 {{ photo.fileName }}<span v-if="isWilting(photo)">🥀</span></p>
           <p class="timestamp">撮影日時: {{ formatDate(photo.photoTakenAt) }}</p>
-          <div class="photo-actions">
         </div>
       </div>
-  </div> <!-- ← ここが抜けていた -->
-</div> 
-    <!-- モーダル表示 -->
-    <div
-      v-if="modalVisible"
-      class="modal-overlay"
-      :class="{ closing: modalClosing }"
-      @click="startModalClose"
-    >
+    </div>
+
+    <div v-if="modalVisible" class="modal-overlay" :class="{ closing: modalClosing }" @click="startModalClose">
       <div class="modal-content-wrapper" @click.stop>
         <div v-if="isImageLoaded" class="modal-toolbar-centered">
-<span
-  class="modal-download-icon"
-  @click.stop="downloadCurrentPhoto"
->↓</span>
-
-          <span
-            class="modal-favorite-icon"
-            :class="{ active: currentPhoto?.isFavorite }"
-            @click.stop="toggleFavorite(currentPhoto)"
-          >♡</span>
-
-          <span class="modal-date-text" v-if="currentPhoto?.photoTakenAt">
-            {{ formatDate(currentPhoto.photoTakenAt) }}
-          </span>
-
-          <button
-            class="modal-delete-button-above"
-            @click.stop="deletePhoto(currentPhoto)"
-          >🗑</button>
+          <span class="modal-download-icon" @click.stop="downloadCurrentPhoto">↓</span>
+          <span class="modal-favorite-icon" :class="{ active: currentPhoto?.isFavorite }" @click.stop="toggleFavorite(currentPhoto)">♡</span>
+          <span class="modal-date-text" v-if="currentPhoto?.photoTakenAt">{{ formatDate(currentPhoto.photoTakenAt) }}</span>
+          <button class="modal-delete-button-above" @click.stop.prevent="promptDeletePhoto(currentPhoto)">🗑</button>
         </div>
 
         <div class="modal-content">
           <div v-if="!isImageLoaded" class="upload-life-cycle">
             <span :class="'icon-seedling ' + iconStage">{{ lifeIcon }}</span>
           </div>
-          <img
-            v-show="false"
-            :src="fullImageUrl"
-            @load="isImageLoaded = true"
-          />
+          <img v-show="false" :src="fullImageUrl" @load="isImageLoaded = true" />
           <div v-if="isImageLoaded" class="modal-image-wrapper">
             <img :src="fullImageUrl" class="full-image" />
           </div>
         </div>
       </div>
     </div>
+
+    <ConfirmDialog
+      v-if="showConfirm"
+      :visible="showConfirm"
+      :message="confirmMessage"
+      @confirm="handleConfirmedDelete"
+      @cancel="cancelDelete"
+    />
   </div>
 </template>
+
 
 <script setup>
 import { ref, onMounted, watch, computed } from 'vue'
@@ -143,6 +96,8 @@ import { createPhoto, updatePhoto, deletePhoto as deletePhotoMutation } from '@/
 import { listPhotos } from '@/graphql/queries'
 import exifr from 'exifr'
 import IconButton from '@/components/IconButton.vue'
+import ConfirmDialog from '@/components/ConfirmDialog.vue'
+
 
 const iconColor = ref('#274c77')
 
@@ -170,10 +125,72 @@ const filterWiltingOnly = ref(false)
 
 const isSelectionMode = ref(false)
 const selectedPhotoIds = ref([])
+
+const showConfirm = ref(false)
+const confirmMessage = ref('')
+const pendingDeletePhotos = ref([]) // 1枚 or 複数保持用
+function promptDeletePhoto(photo) {
+  confirmMessage.value = 'この写真を削除しますか？'
+  pendingDeletePhotos.value = [photo]
+  showConfirm.value = true
+}
+
+function promptDeleteSelectedPhotos() {
+  if (selectedPhotoIds.value.length === 0) {
+    alert('写真が選択されていません')
+    return
+  }
+  const targets = photoList.value.filter(p => selectedPhotoIds.value.includes(p.id))
+  confirmMessage.value = '選択した写真をすべて削除しますか？'
+  pendingDeletePhotos.value = [...targets]
+  showConfirm.value = true
+}
+async function handleConfirmedDelete() {
+  isDeleting.value = true
+  try {
+    for (const photo of pendingDeletePhotos.value) {
+      await Storage.remove(photo.fileName, { level: 'protected' })
+      await Storage.remove(photo.thumbnailFileName, { level: 'protected' })
+      await API.graphql(graphqlOperation(deletePhotoMutation, { input: { id: photo.id } }))
+    }
+
+    if (modalVisible.value && pendingDeletePhotos.value.some(p => p.id === currentPhoto.value?.id)) {
+      modalVisible.value = false
+      fullImageUrl.value = null
+    }
+
+    selectedPhotoIds.value = []
+    isSelectionMode.value = false
+    await fetchPhotos()
+  } catch (e) {
+    console.error('🗑 削除エラー:', e)
+    alert('削除に失敗しました')
+  } finally {
+    isDeleting.value = false
+    showConfirm.value = false
+    pendingDeletePhotos.value = []
+  }
+}
+function cancelDelete() {
+  showConfirm.value = false
+  pendingDeletePhotos.value = []
+}
+
+
 function toggleWiltFilter() {
   filterFavoritesOnly.value = false
   isSelectionMode.value = false
   filterWiltingOnly.value = !filterWiltingOnly.value
+}
+
+function handlePromptDeleteSelectedPhotos() {
+  console.log('🗑')
+  promptDeleteSelectedPhotos()
+}
+
+function handleDownloadSelectedPhotos() {
+  console.log('⬇')
+  downloadSelectedPhotos()
 }
 
 const fileInput = ref(null)
@@ -420,16 +437,24 @@ async function toggleFavorite(photo) {
 }
 
 async function deletePhoto(photo) {
+  const photoId = photo?.id
+  const fileName = photo?.fileName
+  const thumbnailFileName = photo?.thumbnailFileName
+  if (!photoId || !fileName || !thumbnailFileName) {
+    alert('削除に必要な情報が不足しています')
+    return
+  }
+
   const confirmed = confirm('この写真を削除しますか？')
   if (!confirmed) return
 
   try {
-    await Storage.remove(photo.fileName, { level: 'protected' })
-    await Storage.remove(photo.thumbnailFileName, { level: 'protected' })
+    await Storage.remove(fileName, { level: 'protected' })
+    await Storage.remove(thumbnailFileName, { level: 'protected' })
 
     await API.graphql(
       graphqlOperation(deletePhotoMutation, {
-        input: { id: photo.id }
+        input: { id: photoId }
       })
     )
 
@@ -705,14 +730,15 @@ onMounted(fetchPhotos)
   border-radius: 8px;
 }
 
-/* ヘッダーボタン群 */
 .header-actions {
   display: flex;
   justify-content: center;
-  gap: 0.75rem;
-  margin-bottom: 1rem;
+  align-items: center;
+  gap: 1.2rem;
+  margin-top: -0.5rem;       /* ← これはアイコンを上に詰める目的 */
+  margin-bottom: 1.5rem;     /* ← これを追加して「写真」との間に余白を作る */
 }
-.circle-file-button,
+
 .circle-heart-filter,
 .circle-check-filter,
 .circle-wilt-filter {

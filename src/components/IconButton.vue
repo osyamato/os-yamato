@@ -4,7 +4,7 @@
     class="icon-button"
     :class="size"
     :style="{ backgroundColor: color || defaultColor, color: textColor }"
-    @click="$emit('click')"
+@click="$emit('click', $event)"
   >
     <slot />
   </component>

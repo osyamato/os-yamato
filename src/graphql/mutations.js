@@ -640,3 +640,72 @@ export const deleteWindMessage = /* GraphQL */ `
     }
   }
 `;
+export const createBlossom = /* GraphQL */ `
+  mutation CreateBlossom(
+    $input: CreateBlossomInput!
+    $condition: ModelBlossomConditionInput
+  ) {
+    createBlossom(input: $input, condition: $condition) {
+      id
+      lat
+      lng
+      comment
+      yamatoId
+      nickname
+      emoji
+      hobby
+      country
+      region
+      createdAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;
+export const updateBlossom = /* GraphQL */ `
+  mutation UpdateBlossom(
+    $input: UpdateBlossomInput!
+    $condition: ModelBlossomConditionInput
+  ) {
+    updateBlossom(input: $input, condition: $condition) {
+      id
+      lat
+      lng
+      comment
+      yamatoId
+      nickname
+      emoji
+      hobby
+      country
+      region
+      createdAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;
+export const deleteBlossom = /* GraphQL */ `
+  mutation DeleteBlossom(
+    $input: DeleteBlossomInput!
+    $condition: ModelBlossomConditionInput
+  ) {
+    deleteBlossom(input: $input, condition: $condition) {
+      id
+      lat
+      lng
+      comment
+      yamatoId
+      nickname
+      emoji
+      hobby
+      country
+      region
+      createdAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;

@@ -415,6 +415,54 @@ export const listWindMessages = /* GraphQL */ `
     }
   }
 `;
+export const getBlossom = /* GraphQL */ `
+  query GetBlossom($id: ID!) {
+    getBlossom(id: $id) {
+      id
+      lat
+      lng
+      comment
+      yamatoId
+      nickname
+      emoji
+      hobby
+      country
+      region
+      createdAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;
+export const listBlossoms = /* GraphQL */ `
+  query ListBlossoms(
+    $filter: ModelBlossomFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    listBlossoms(filter: $filter, limit: $limit, nextToken: $nextToken) {
+      items {
+        id
+        lat
+        lng
+        comment
+        yamatoId
+        nickname
+        emoji
+        hobby
+        country
+        region
+        createdAt
+        updatedAt
+        owner
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
 export const getPublicProfile = /* GraphQL */ `
   query GetPublicProfile($id: ID!) {
     getPublicProfile(id: $id) {

@@ -560,6 +560,75 @@ export const onDeleteWindMessage = /* GraphQL */ `
     }
   }
 `;
+export const onCreateBlossom = /* GraphQL */ `
+  subscription OnCreateBlossom(
+    $filter: ModelSubscriptionBlossomFilterInput
+    $owner: String
+  ) {
+    onCreateBlossom(filter: $filter, owner: $owner) {
+      id
+      lat
+      lng
+      comment
+      yamatoId
+      nickname
+      emoji
+      hobby
+      country
+      region
+      createdAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;
+export const onUpdateBlossom = /* GraphQL */ `
+  subscription OnUpdateBlossom(
+    $filter: ModelSubscriptionBlossomFilterInput
+    $owner: String
+  ) {
+    onUpdateBlossom(filter: $filter, owner: $owner) {
+      id
+      lat
+      lng
+      comment
+      yamatoId
+      nickname
+      emoji
+      hobby
+      country
+      region
+      createdAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;
+export const onDeleteBlossom = /* GraphQL */ `
+  subscription OnDeleteBlossom(
+    $filter: ModelSubscriptionBlossomFilterInput
+    $owner: String
+  ) {
+    onDeleteBlossom(filter: $filter, owner: $owner) {
+      id
+      lat
+      lng
+      comment
+      yamatoId
+      nickname
+      emoji
+      hobby
+      country
+      region
+      createdAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;
 export const onCreatePublicProfile = /* GraphQL */ `
   subscription OnCreatePublicProfile(
     $filter: ModelSubscriptionPublicProfileFilterInput
