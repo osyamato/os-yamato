@@ -158,8 +158,13 @@ const effects = [
 }
 
 watch(messages, () => {
-  const lastMsg = messages.value[messages.value.length - 1]?.content || ''
-  maybePlayEffect(lastMsg)
+  const lastMsg = messages.value[messages.value.length - 1]
+  if (!lastMsg) return
+
+  // ✅ 自分の送信したメッセージならスキップ（sendMessage内で処理済みだから）
+  if (lastMsg.senderYamatoId === myYamatoId.value) return
+
+  maybePlayEffect(lastMsg.content)
 })
 
 function hideKeyboard() {
@@ -269,13 +274,6 @@ async function sendMessage() {
   }
 }
 
-setTimeout(() => {
-  const triggered = maybePlayEffect(content)
-  if (!triggered) {
-    // hideKeyboard() // 必要に応じて
-  }
-}, 0)
-
 function autoResize(event) {
   const textarea = event.target
   textarea.style.height = 'auto'
@@ -335,15 +333,6 @@ function groupMessagesByDate(messages) {
   return grouped
 }
 
-function dismissKeyboard(e) {
-  const tag = e.target.tagName
-  if (tag !== 'TEXTAREA' && tag !== 'INPUT' && tag !== 'BUTTON') {
-    const el = document.activeElement
-    if (el && typeof el.blur === 'function') {
-      el.blur()
-    }
-  }
-}
 
 function scrollToBottom() {
   bottomOfChat.value?.scrollIntoView({ behavior: 'smooth' })
@@ -431,6 +420,13 @@ button.disabled {
   padding: 1rem;
   border-top: 1px solid #333;
   gap: 0.5rem;
+}
+
+.modal-title {
+  color: #111; /* ← ライトモード用の黒文字 */
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+  text-align: center;
 }
 
 .message-input {

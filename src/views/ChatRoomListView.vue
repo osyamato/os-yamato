@@ -42,11 +42,14 @@
     >
 <p class="partner-name">
   <span class="icon">{{ getExpiryIcon(room) }}</span>
-  {{ getPartnerDisplayName(room) }}
-
+<span class="name-text">
+  {{
+    getPartnerDisplayName(room).length > 15
+      ? getPartnerDisplayName(room).slice(0, 15) + '…'
+      : getPartnerDisplayName(room)
+  }}
+</span>
   <span class="menu-dots" @click.stop="openOptions(room)">⋯</span>
-
-  <!-- 📧 メールアイコンをメニューの右に配置 -->
   <span class="mail-icon" @click.stop="openWindMessage(room)">✉️</span>
 </p>
 
@@ -587,7 +590,7 @@ defineExpose({ accept, reject })
 
 .chat-room-list {
   padding: 2rem;
-  font-family: var(--yamato-font-body);
+ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
 }
 
 .header {
@@ -622,22 +625,71 @@ button {
   margin-top: 1.5rem;
 }
 
+.room-list {
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* ✅ 中央寄せ */
+}
+
+/* 📦 カード自体のレイアウトを固定 */
 .room-card {
+  width: 100%;
+  max-width: 330px;       /* ✅ 最大幅を固定 */
+  min-width: 300px;
+  margin-bottom: 1rem;
   padding: 1rem;
   border-bottom: 1px solid var(--yamato-border);
   cursor: pointer;
   display: flex;
   flex-direction: column;
-  width: 100%;
   box-sizing: border-box;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: var(--yamato-shadow);
 }
 
+
+@media (prefers-color-scheme: dark) {
+  .room-card {
+    background: #444; /* ダークモード時はグレーに */
+  }
+}
+
+/* 🧍 名前とアイコンの行 */
 .partner-name {
   display: flex;
   align-items: center;
-  font-weight: bold;
-  font-size: 1.1rem;
+  justify-content: space-between; /* ✅ 左右に分ける */
   gap: 0.5rem;
+  font-size: 1.05rem;
+  font-weight: bold;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+/* 🧾 名前部分だけを省略対応に */
+.name-text {
+  max-width: 180px; /* 💡 好みに応じて調整可 */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+/* 📧 メニューとメールアイコン */
+.menu-dots,
+.mail-icon {
+  flex-shrink: 0;
+  margin-left: 0.5rem;
+  font-size: 1.1rem;
+  color: #888;
+  cursor: pointer;
+}
+.mail-icon:hover,
+.menu-dots:hover {
+  color: #333;
 }
 
 .icon-stack {
@@ -726,6 +778,19 @@ button {
   margin-top: 1.5rem;
 }
 
+.modal-title {
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+  text-align: center;
+  color: black; /* デフォルト（ライトモード） */
+}
+
+@media (prefers-color-scheme: dark) {
+  .modal-title {
+    color: white; /* ダークモード時は白に */
+  }
+}
+
 @media (prefers-color-scheme: dark) {
   .header-button {
     background-color: #333;
@@ -776,8 +841,10 @@ button {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 1rem;
+  gap: 1.5rem;
+  margin-top: 1rem; /* ← ここで上にスペース追加 */
 }
+
 
 .modal-overlay {
   position: fixed;
@@ -790,12 +857,6 @@ button {
   text-align: center;
 }
 
-.modal-title {
-  font-size: 1.0rem;
-  margin-bottom: 2rem;
-  text-align: center;
-  color: inherit;
-}
 
 .request-block {
   margin: 1.5rem auto;
@@ -919,7 +980,20 @@ button {
   color: var(--yamato-primary-dark);
 }
 
-</style>
+.header-title {
+  font-size: 1.4rem;
+  font-weight: bold;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  color: black; /* デフォルトは黒（ライトモード用） */
+  text-align: center;
+}
 
+@media (prefers-color-scheme: dark) {
+  .header-title {
+    color: white; /* ダークモード時のみ白に上書き */
+  }
+}
+
+</style>
 
 

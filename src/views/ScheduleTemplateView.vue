@@ -1,40 +1,22 @@
 <template>
-  <div class="template-view drop-down-animation"> 
-
-  <div class="template-view">
+  <div class="template-view drop-down-animation">
     <h2 class="header-title">スケジュールテンプレート</h2>
 
     <!-- アイコン群 -->
-<div class="header-icons">
-<IconButton
-  :color="iconColor"
-  size="medium"
-  @click="openCreateModal"
->
-  ＋
-</IconButton>
+    <div class="header-icons">
+      <IconButton :color="iconColor" size="medium" @click="openCreateModal">＋</IconButton>
+      <IconButton
+        :color="iconColor"
+        size="medium"
+        :class="{ 'selected-icon': isSelectionMode }"
+        @click="toggleSelectionMode"
+      >☑️</IconButton>
+    </div>
 
-<IconButton
-  :color="iconColor"
-  size="medium"
-  :class="{ 'selected-icon': isSelectionMode }"
-  @click="toggleSelectionMode"
->
-  ☑️
-</IconButton>
-
-</div>
-<!-- ✅ 選択モード時：ゴミ箱 -->
-<div class="selection-actions" v-if="isSelectionMode">
-<IconButton
-  :color="iconColor"
-  size="medium"
-  @click="deleteSelectedTemplates"
->
-  🗑️
-</IconButton>
-</div>
-
+    <!-- ✅ 選択モード時：ゴミ箱 -->
+    <div class="selection-actions" v-if="isSelectionMode">
+      <IconButton :color="iconColor" size="medium" @click="promptBulkDelete">🗑️</IconButton>
+    </div>
 
     <!-- テンプレート一覧 -->
     <div class="template-list">
@@ -61,27 +43,22 @@
     <!-- 作成モーダル -->
     <Modal :visible="showModal" @close="showModal = false">
       <h3 class="modal-title">テンプレートを作成</h3>
-
       <input v-model="newTemplate.emoji" placeholder="絵文字 (例: 📚)" class="input-field" />
-<!-- ✅ 絵文字候補 -->
-<div class="emoji-options">
-  <span
-    v-for="emoji in emojiSamples"
-    :key="emoji"
-    class="emoji-button"
-    @click="newTemplate.emoji = emoji"
-  >
-    {{ emoji }}
-  </span>
-</div>
-
+      <div class="emoji-options">
+        <span
+          v-for="emoji in emojiSamples"
+          :key="emoji"
+          class="emoji-button"
+          @click="newTemplate.emoji = emoji"
+        >
+          {{ emoji }}
+        </span>
+      </div>
       <input v-model="newTemplate.label" placeholder="タイトル (例: 日勤)" class="input-field" />
-
       <div class="time-row">
         <input type="time" v-model="newTemplate.startTime" class="time-input" />
         <input type="time" v-model="newTemplate.endTime" class="time-input" />
       </div>
-
       <div class="button-row">
         <YamatoButton @click="createTemplate">登録</YamatoButton>
       </div>
@@ -89,23 +66,32 @@
 
     <!-- 編集モーダル -->
     <Modal :visible="!!selectedTemplate" @close="selectedTemplate = null">
-      <h3 class="modal-title">テンプレート編集</h3>
-
-      <input v-model="selectedTemplate.emoji" class="input-field" placeholder="絵文字" />
-      <input v-model="selectedTemplate.label" class="input-field" placeholder="タイトル" />
-
-      <div class="time-row">
-        <input type="time" v-model="selectedTemplate.startTime" class="time-input" />
-        <input type="time" v-model="selectedTemplate.endTime" class="time-input" />
-      </div>
-
-      <div class="button-row">
-        <YamatoButton @click="updateTemplate">更新</YamatoButton>
-        <YamatoButton type="danger" @click="deleteTemplate(selectedTemplate.id)">削除</YamatoButton>
-      </div>
+      <template #default>
+        <div v-if="selectedTemplate">
+          <h3 class="modal-title">テンプレート編集</h3>
+          <input v-model="selectedTemplate.emoji" class="input-field" placeholder="絵文字" />
+          <input v-model="selectedTemplate.label" class="input-field" placeholder="タイトル" />
+          <div class="time-row">
+            <input type="time" v-model="selectedTemplate.startTime" class="time-input" />
+            <input type="time" v-model="selectedTemplate.endTime" class="time-input" />
+          </div>
+          <div class="button-row">
+            <YamatoButton @click="updateTemplate">更新</YamatoButton>
+            <YamatoButton type="danger" @click="promptSingleDelete(selectedTemplate.id)">削除</YamatoButton>
+          </div>
+        </div>
+      </template>
     </Modal>
+
+    <!-- 削除確認 -->
+    <ConfirmDialog
+      v-if="showConfirm"
+      :visible="showConfirm"
+      :message="confirmMessage"
+      @confirm="handleConfirmedDelete"
+      @cancel="() => { showConfirm = false; pendingDeleteIds = [] }"
+    />
   </div>
-</div>
 </template>
 
 <script setup>
@@ -121,6 +107,7 @@ import Modal from '@/components/Modal.vue'
 import YamatoButton from '@/components/YamatoButton.vue'
 import IconButton from '@/components/IconButton.vue'
 import { Auth } from 'aws-amplify'
+import ConfirmDialog from '@/components/ConfirmDialog.vue'
 
 const iconColor = ref('#274c77')
 
@@ -145,6 +132,40 @@ const newTemplate = ref({
   startTime: '',
   endTime: ''
 })
+
+const showConfirm = ref(false)
+const pendingDeleteIds = ref([])
+const confirmMessage = ref('')
+
+function promptSingleDelete(id) {
+  pendingDeleteIds.value = [id]
+  confirmMessage.value = 'このテンプレートを削除しますか？'
+  showConfirm.value = true
+}
+
+function promptBulkDelete() {
+  if (selectedTemplateIds.value.length === 0) return
+  pendingDeleteIds.value = [...selectedTemplateIds.value]
+  confirmMessage.value = '選択したテンプレートを削除しますか？'
+  showConfirm.value = true
+}
+async function handleConfirmedDelete() {
+  try {
+    for (const id of pendingDeleteIds.value) {
+      await API.graphql(graphqlOperation(deleteScheduleTemplate, { input: { id } }))
+    }
+    await fetchTemplates()
+    selectedTemplateIds.value = []
+    selectedTemplate.value = null
+    isSelectionMode.value = false
+    console.log('✅ テンプレート削除完了')
+  } catch (e) {
+    console.error('❌ テンプレート削除失敗:', e)
+  } finally {
+    showConfirm.value = false
+    pendingDeleteIds.value = []
+  }
+}
 
 
 function openCreateModal() {
@@ -452,4 +473,3 @@ onMounted(fetchTemplates)
   animation: dropDown 0.5s ease-out;
 }
 </style>
-	

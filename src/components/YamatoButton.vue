@@ -119,5 +119,13 @@ const textColor = computed(() => {
     transform: none;
   }
 }
+
+button:disabled {
+  background-color: #555;
+  color: #aaa;
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
 </style>
 

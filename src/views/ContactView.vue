@@ -81,7 +81,7 @@
           </div>
           <div class="button-row">
             <YamatoButton @click="startEdit">編集</YamatoButton>
-            <YamatoButton type="danger" @click="confirmDelete(selectedContact.id)">削除</YamatoButton>
+<YamatoButton type="danger" @click="confirmDelete(selectedContact.id)">削除</YamatoButton>
           </div>
         </div>
       </template>
@@ -96,7 +96,17 @@
           <YamatoButton @click="closeSearchModal">閉じる</YamatoButton>
         </div>
       </template>
+
     </Modal>
+<ConfirmDialog
+  v-if="showConfirm"
+  :visible="showConfirm"
+  message="本当に削除しますか？"
+  @confirm="handleConfirmedDelete"
+  @cancel="showConfirm = false"
+/>
+
+
   </div>
 </template>
 
@@ -112,6 +122,9 @@ import Modal from '@/components/Modal.vue'
 import '@/assets/variables.css';
 import vCard from 'vcard-parser'
 import IconButton from '@/components/IconButton.vue'
+import { nextTick } from 'vue'
+import ConfirmDialog from '@/components/ConfirmDialog.vue'
+
 
 // --- データ ---
 const contacts = ref([])
@@ -301,18 +314,13 @@ async function saveContact({ name, phone, email, note }) {
 }
 
 // --- 削除処理 ---
-async function confirmDelete(id) {
-  if (!id) return
-  if (confirm('本当に削除しますか？')) {
-    await deleteContactItem(id)
-    closeModal()
-  }
-}
+
 
 async function deleteContactItem(id) {
   try {
     await API.graphql(graphqlOperation(deleteContact, { input: { id } }))
     console.log('✅ 連絡先 削除成功')
+    await nextTick()             // ← これが重要（VueのDOM更新を待つ）
     await fetchContacts()
   } catch (e) {
     console.error('削除エラー:', e)
@@ -461,6 +469,30 @@ const filteredContacts = computed(() => {
 // --- 初期ロード ---
 onMounted(fetchContacts)
 
+const showConfirm = ref(false)
+const pendingDeleteId = ref(null)
+
+function confirmDelete(id) {
+  pendingDeleteId.value = id
+  showConfirm.value = true
+}
+
+async function handleConfirmedDelete() {
+  if (!pendingDeleteId.value) return
+
+  try {
+    await deleteContactItem(pendingDeleteId.value)
+    console.log('✅ 連絡先削除')
+  } catch (e) {
+    console.error('❌ 削除失敗:', e)
+  } finally {
+    showConfirm.value = false
+    pendingDeleteId.value = null
+    closeModal()
+    await fetchContacts()
+  }
+}
+
 </script>
 
 <style scoped>
@@ -509,6 +541,7 @@ onMounted(fetchContacts)
   font-weight: bold;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   color: black;
+margin-bottom: 0.3rem;
   text-align: center;
 }
 
@@ -523,33 +556,61 @@ onMounted(fetchContacts)
   /* 他のスタイル */
 }
 
-
 .contact-card {
-  background: white;
-  padding: 0.6rem 0.8rem;
+  width: 330px;
+  height: 50px; /* 👈 高さを固定 */
+  overflow: hidden; /* 👈 はみ出しを防ぐ */
+  padding: 0.6rem 0.8rem 0.8rem 2.4rem; /* 👈 左パディングを追加（重要） */
   margin-bottom: 0.3rem;
+  background: white;
   border-bottom: 1px solid #ccc;
   border-radius: 6px;
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
   font-size: 0.9rem;
   color: #000;
   cursor: pointer;
+  box-sizing: border-box;
+  word-wrap: break-word;
+  position: relative;
 }
+
+@media (min-width: 768px) {
+  .contact-card {
+    width: 400px; /* タブレット以上では少し広く */
+  }
+}
+
+@media (min-width: 1024px) {
+  .contact-card {
+    width: 480px; /* デスクトップではさらに広く */
+  }
+}
+
 .name-with-icon {
   display: flex;
   align-items: center;
-  justify-content: center;
+justify-content: flex-start; 
   margin-bottom: 0.3rem;
 }
+
 .flower-icon {
-  font-size: 1.2rem;
-  margin-right: 0.4rem;
-  vertical-align: middle;
+  position: absolute;
+  top: 0.6rem;
+  left: 0.8rem;
+  font-size: 1.2rem; /* ← カード左上に少し大きめで表示 */
+  z-index: 1;
 }
+
 .contact-name {
   font-size: 1rem;
   font-weight: normal;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%; /* ✅ 安心して省略できるように */
 }
 
 .modal {
@@ -584,11 +645,12 @@ onMounted(fetchContacts)
 
 /* 🌸 タイトル */
 .modal-title {
+  color: #111; /* ← ライトモード用の黒文字 */
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
   text-align: center;
-  font-size: 1.4rem;
-  font-weight: normal;
-  margin-bottom: 1.2rem;
 }
+
 .modal-inner-card.naked {
   max-width: 640px; /* ✅ ここを任意の幅に変更 */
   width: 90vw;       /* スマホでも自然に広がるように */
@@ -720,6 +782,14 @@ textarea {
 }
 .phone-link:hover {
   text-decoration: underline;
+}
+
+.header-icons {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1.5rem;
+  margin-top: 0rem; /* ← ここで上にスペース追加 */
 }
 
 </style>

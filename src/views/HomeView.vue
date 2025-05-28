@@ -9,18 +9,19 @@
       <img src="/memo.icon.png" alt="メモ" class="icon-image" />
     </button>
 
-<button @click="goTo('weather')">
-  <img src="/weather.icon.png" alt="天気" class="icon-image" />
-</button>
+    <button @click="goTo('weather')">
+      <img src="/weather.icon.png" alt="天気" class="icon-image" />
+    </button>
+
     <button @click="goTo('calendar')">📅</button>
 
     <button @click="goTo('diary')">
       <img src="/diary.icon.png" alt="日記" class="icon-image" />
     </button>
 
-<button @click="goTo('contact')">
-  <img src="/contact.icon.png" alt="連絡先" class="icon-image" />
-</button>
+    <button @click="goTo('contact')">
+      <img src="/contact.icon.png" alt="連絡先" class="icon-image" />
+    </button>
 
     <button @click="goTo('chat-rooms')">
       <img src="/messege.icon.png" alt="メッセージ" class="icon-image" />
@@ -28,6 +29,11 @@
 
     <button @click="goTo('photo')">
       <img src="/photo.icon.png" alt="写真" class="icon-image" />
+    </button>
+
+    <!-- 🌍 新しく追加：GlobeView -->
+    <button @click="goTo('globe')">
+      <img src="/earth.png" alt="地球" class="icon-image" />
     </button>
   </div>
 </div>
@@ -84,7 +90,6 @@ onMounted(async () => {
     console.error('❌ 背景画像の取得失敗:', error)
   }
 })
-
 </script>
 
 <style scoped>
@@ -105,7 +110,7 @@ onMounted(async () => {
   grid-template-columns: repeat(4, 70px);
   gap: 1rem 1.5rem;
   justify-content: center;
-margin-top: 2rem;
+  margin-top: 2rem;
 }
 
 button {

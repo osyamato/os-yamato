@@ -1,6 +1,6 @@
 <template>
   <transition name="modal">
-    <div v-if="visible" class="modal-background" @click="handleBackgroundClick">
+    <div v-show="visible" class="modal-background" @click="handleBackgroundClick">
       <div class="modal-inner-card" :class="customClass" @click.stop>
         <slot />
       </div>

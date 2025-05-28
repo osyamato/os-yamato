@@ -1,16 +1,16 @@
-<template>
+]<template>
   <div class="wind-inbox-view">
 <div class="title-with-icon">
-  <h2 class="title">届いた風の便り</h2>
-<IconButton
-  :color="selectedColor"
-  :class="{ 'selected-icon': showFavoritesOnly }"
+  <h2 class="header-title">届いた風の便り</h2>
+  <div class="heart-button-wrapper">
+<button
+  :class="['under-title-heart', { favorited: showFavoritesOnly }]"
   @click="toggleFavoriteFilter"
 >
-  ♡
-</IconButton>
-
- </div>
+  <span>♡</span>
+</button>
+  </div>
+</div>
     <!-- 🦋 ポストと蝶 -->
     <div class="post-butterfly-area">
       <img src="/Post.png" alt="Post Icon" class="post-image" />
@@ -68,26 +68,30 @@
     @click.self="selectedMessage = null"
   >
     <div class="letter-card">
-
-      <!-- ✅ ここに追加：右上 ⋯ ボタン -->
-
-      <button class="delete-button" @click="deleteMessage(selectedMessage.id)">
-        ⋯
+      <button class="delete-button" @click="promptDeleteMessage(selectedMessage.id)">⋯</button>
+      <button class="favorite-button" @click="toggleFavorite(selectedMessage)">
+        <span :class="{ 'favorited': selectedMessage?.favoriteByReceiver }">♡</span>
       </button>
-<button class="favorite-button" @click="toggleFavorite(selectedMessage)">
-  <span :class="{ 'favorited': selectedMessage?.favoriteByReceiver }">♡</span>
-</button>
 
       <h3 class="letter-title">風の便り</h3>
-      <p class="letter-body">{{ selectedMessage.content }}</p>
 
-      <div class="letter-footer">
-        <p class="from">{{ selectedMessage.fromDisplayName }} より</p>
-        <p class="date">{{ formatDate(selectedMessage.deliveryDate) }}</p>
+      <div class="letter-content">
+        <p class="letter-body">{{ selectedMessage.content }}</p>
+        <div class="signature">
+          ― {{ selectedMessage.fromDisplayName }} より<br />
+          {{ formatDate(selectedMessage.deliveryDate) }}
+        </div>
       </div>
     </div>
   </div>
 </Transition>
+<ConfirmDialog
+  :visible="showConfirm"
+  :message="confirmMessage"
+  @confirm="handleConfirmedDelete"
+  @cancel="cancelDeleteMessage"
+/>
+
   </div>
 </template>
 
@@ -98,6 +102,8 @@ import { listWindMessages } from '@/graphql/queries'
 import { updateWindMessage } from '@/graphql/mutations'
 import YamatoButton from '@/components/YamatoButton.vue'
 import IconButton from '@/components/IconButton.vue'
+
+import ConfirmDialog from '@/components/ConfirmDialog.vue'
 
 const selectedColor = ref('#274c77')
 
@@ -116,6 +122,38 @@ const openedMessages = ref([])
 const selectedMessage = ref(null)
 const showModal = ref(false)
 
+const showConfirm = ref(false)
+const confirmMessage = ref('')
+const pendingDeleteId = ref(null)
+function promptDeleteMessage(id) {
+  confirmMessage.value = 'この便りを削除しますか？'
+  pendingDeleteId.value = id
+  showConfirm.value = true
+}
+
+async function handleConfirmedDelete() {
+  if (!pendingDeleteId.value) return
+  try {
+    await API.graphql(graphqlOperation(updateWindMessage, {
+      input: {
+        id: pendingDeleteId.value,
+        deletedByReceiver: true
+      }
+    }))
+    openedMessages.value = openedMessages.value.filter(msg => msg.id !== pendingDeleteId.value)
+    selectedMessage.value = null
+  } catch (e) {
+    console.error("🗑️ 削除失敗:", e)
+  } finally {
+    showConfirm.value = false
+    pendingDeleteId.value = null
+  }
+}
+
+function cancelDeleteMessage() {
+  showConfirm.value = false
+  pendingDeleteId.value = null
+}
 
 function closeModal() {
   selectedMessage.value = null
@@ -278,7 +316,13 @@ const filteredOpenedMessages = computed(() =>
 </script>
 
 <style>
-.wind-inbox-view { padding: 2rem; text-align: center; font-family: var(--yamato-font-body); position: relative; overflow: hidden; }
+.wind-inbox-view {
+  padding: 2rem;
+  text-align: center;
+  font-family: var(--yamato-font-body);
+  position: relative;
+  overflow: hidden;
+}
 
 .header-title {
   font-size: 1.4rem;
@@ -298,34 +342,125 @@ const filteredOpenedMessages = computed(() =>
   display: inline-block;
   margin-bottom: 2rem;
 }
-
 .post-image {
   width: 120px;
   height: auto;
   z-index: 1;
   position: relative;
 }
-
 .butterfly {
   position: absolute;
   font-size: 1.6rem;
   pointer-events: none;
-  z-index: 2; /* ポストより上に表示 */
+  z-index: 2;
   transform: translate(-50%, -50%);
   animation: flutter 6s ease-in-out infinite;
 }
 @keyframes flutter {
-  0%   { transform: translate(-50%, -50%) rotate(0deg); }
-  20%  { transform: translate(-46%, -60%) rotate(10deg); }
-  40%  { transform: translate(-54%, -40%) rotate(-12deg); }
-  60%  { transform: translate(-45%, -58%) rotate(8deg); }
-  80%  { transform: translate(-53%, -42%) rotate(-6deg); }
+  0% { transform: translate(-50%, -50%) rotate(0deg); }
+  20% { transform: translate(-46%, -60%) rotate(10deg); }
+  40% { transform: translate(-54%, -40%) rotate(-12deg); }
+  60% { transform: translate(-45%, -58%) rotate(8deg); }
+  80% { transform: translate(-53%, -42%) rotate(-6deg); }
   100% { transform: translate(-50%, -50%) rotate(0deg); }
 }
+
 .receive-button-area { margin-bottom: 2rem; }
-.message-list { margin-top: 1rem; padding: 0; list-style: none; }
-.wind-message { background: rgba(255, 255, 255, 0.05); padding: 1rem; margin-bottom: 1rem; border-radius: 1rem; cursor: pointer; transition: background 0.3s; }
-.wind-message:hover { background: rgba(255, 255, 255, 0.08); }
+
+.message-list {
+  margin-top: 1rem;
+  padding: 0;
+  list-style: none;
+}
+
+.wind-message {
+  background: rgba(255, 255, 245, 0.8);
+  padding: 1.2rem;
+  margin-bottom: 1.2rem;
+  border-radius: 1rem;
+  cursor: pointer;
+  transition: background 0.3s;
+  border: 1px solid #e0dcc8;
+  box-shadow:
+    inset 0 1px 2px rgba(255, 255, 255, 0.4),
+    0 4px 12px rgba(0, 0, 0, 0.04);
+  background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 2px, transparent 2px, transparent 4px);
+  background-blend-mode: overlay;
+  font-family: 'serif';
+}
+.wind-message:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.wind-list {
+  padding: 1rem;
+  list-style: none;
+  margin-top: 1rem;
+}
+
+.wind-list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;  /* ← 名前とFromを左右に振りたいなら */
+  background-color: #fdfaf3;
+  padding: 1rem 1.5rem;
+  position: relative;
+  margin: 0 auto 1rem;              /* ✅ 中央寄せ + 下マージン */
+  width: 100%;
+  max-width: 230px;                /* ✅ カードの最大幅（調整可） */
+  min-width: 200px;                /* 任意：狭すぎを防止 */
+  border: 1.5px solid #ddd;
+  border-radius: 4px;
+  font-family: 'serif';
+  background-image: repeating-linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.08) 0px,
+    rgba(0, 0, 0, 0.08) 2px,
+    transparent 2px,
+    transparent 7px
+  );
+  background-blend-mode: overlay;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+  transition: box-shadow 0.3s, background 0.3s;
+  cursor: pointer;
+}
+.wind-list-item::after {
+  content: "🕊️";
+  position: absolute;
+  bottom: -20px;
+  right: -20px;
+  font-size: 1.8rem;
+  opacity: 0.85;
+  pointer-events: none;
+  z-index: 10;
+  animation: float 3s ease-in-out infinite;
+}
+
+.recipient-label {
+  margin-right: 0.5rem;
+  color: #555;
+  font-weight: 500;
+  font-size: 1rem;
+  font-family: 'Georgia', 'Times New Roman', serif;
+
+  min-width: 60px; /* From: の幅を確保 */
+}
+
+.name {
+  font-size: 0.95rem;
+  font-weight: 160;
+  color: #222;
+
+  /* ⬇️ 幅を制限して省略処理 */
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotate(-10deg); }
+  50% { transform: translateY(-3px) rotate(-10deg); }
+}
 
 .letter-overlay {
   position: fixed;
@@ -334,29 +469,44 @@ const filteredOpenedMessages = computed(() =>
   backdrop-filter: blur(6px);
   display: flex;
   justify-content: center;
-  align-items: flex-start;
-  padding-top: 8vh;
+  align-items: flex-start; /* ✅ 中央ではなく上揃えに */
   z-index: 1000;
+  padding: 8vh 1rem 2rem;  /* ✅ 上下パディングで調整しやすく */
 }
 
 .letter-card {
-  background: #fdfaf3 !important;   /* 明るい封筒色、ダークモードでも強制 */
-  color: #222 !important;           /* 文字は濃くて読みやすく */
-  border: 1px solid #e4ded0;        /* 封筒の縁っぽい明るい枠線 */
-  border-radius: 0;                 /* ✅ 角ばった便箋風 */
+  position: relative;
+  margin-top: 8vh;
+  background: #fdfaf3 !important;
+  color: #222 !important;
+  border: 1px solid #e4ded0;
+  border-radius: 0;
   padding: 2rem 2.5rem;
   width: 90%;
   max-width: 480px;
+  max-height: 80vh;              /* ⬅ 長すぎる場合にスクロール */
+  overflow-y: auto;              /* ⬅ 縦スクロールのみ許可 */
+  overflow-x: hidden;            /* ⬅ 横スクロールは完全禁止 */
+  word-wrap: break-word;         /* ⬅ 単語途中でも折り返す */
+  white-space: normal;           /* ⬅ テキストを折り返す */
+  -ms-overflow-style: none;      /* IE用: スクロールバー非表示 */
+  scrollbar-width: none;         /* Firefox用: スクロールバー非表示 */
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
   font-size: 1.05rem;
   line-height: 1.7;
   font-family: 'serif';
-  position: relative;
 }
+
+/* Chrome / Safari 用: スクロールバー非表示 */
+.letter-card::-webkit-scrollbar {
+  display: none;
+}
+
 .letter-title {
   font-size: 1.1rem;
   color: #444;
   margin-bottom: 1.2rem;
+  margin-top: 0rem; /* ← 追加: 少し上に詰める */
   text-align: center;
   letter-spacing: 0.05em;
   font-weight: 500;
@@ -368,27 +518,8 @@ const filteredOpenedMessages = computed(() =>
   white-space: pre-wrap;
   color: #222;
 }
-.letter-footer {
-  position: absolute;
-  bottom: 1rem;
-  right: 1.5rem;
-  text-align: right;
-  font-size: 0.95rem;
-  color: #444;
-  line-height: 1.4;
-}
 
-.letter-footer .from {
-  display: block;
-  font-weight: 500;
-  margin-bottom: 0.3rem;
-}
 
-.letter-footer .date {
-  display: block;
-  font-size: 0.9rem;
-  color: #666;
-}
 .delete-button {
   position: absolute;
   top: 1rem;
@@ -400,145 +531,7 @@ const filteredOpenedMessages = computed(() =>
   cursor: pointer;
   transition: color 0.2s ease;
 }
-.delete-button:hover {
-  color: #222;
-}
-
-@keyframes dropDown { 0% { transform: translateY(-40px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
-
-@media (prefers-color-scheme: dark) {
-  .wind-message { background: rgba(255, 255, 255, 0.05); color: #f0f0f0; }
-  .wind-message:hover { background: rgba(255, 255, 255, 0.1); }
-  .letter-card { background: #1a1a1a; color: #f2f2f2; box-shadow: 0 8px 24px rgba(255, 255, 255, 0.05); }
-  .letter-date { color: #aaa; }
-}
-.fly-enter-active {
-  animation: dropDown 0.4s ease-out;
-}
-.fly-leave-active {
-  animation: flyUp 0.3s ease-in;
-}
-
-@keyframes dropDown {
-  0% { transform: translateY(-40px); opacity: 0; }
-  100% { transform: translateY(0); opacity: 1; }
-}
-
-@keyframes flyUp {
-  0% { transform: translateY(0); opacity: 1; }
-  100% { transform: translateY(-40px); opacity: 0; }
-}
-.wind-message {
-  background: rgba(255, 255, 245, 0.8); /* 少し黄味がかった和紙風 */
-  padding: 1.2rem;
-  margin-bottom: 1.2rem;
-  border-radius: 1rem;
-  cursor: pointer;
-  transition: background 0.3s;
-  border: 1px solid #e0dcc8; /* 和紙の縁取り色 */
-
-  /* ✅ 和紙の質感に近づけるためのテクスチャ風影 */
-  box-shadow:
-    inset 0 1px 2px rgba(255, 255, 255, 0.4),
-    0 4px 12px rgba(0, 0, 0, 0.04);
-
-  /* ✅ 背景に微細なパターン（SVGや和紙画像を使う場合はここで） */
-  background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 2px, transparent 2px, transparent 4px);
-  background-blend-mode: overlay;
-
-  font-family: 'serif'; /* より筆記感のあるフォントに */
-}
-
-.wind-list {
-  padding: 1rem;
-  list-style: none;
-  margin-top: 1rem;
-}
-.wind-list-item {
-  display: flex;
-  align-items: center;
-  background-color: #fdfaf3; /* 少し黄みを足して和紙感を強化 */
-  padding: 1rem 1.5rem;
-  position: relative; 
-  margin-bottom: 1rem;
-  border: 1.5px solid #ddd;
-  border-radius: 4px;
-  font-family: 'serif';
-
-  /* 👇 縦線を太く＆濃くして明瞭に */
-  background-image: repeating-linear-gradient(
-    90deg,
-    rgba(0, 0, 0, 0.08) 0px,
-    rgba(0, 0, 0, 0.08) 2px,
-    transparent 2px,
-    transparent 7px
-  );
-
-  background-blend-mode: overlay;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
-  transition: box-shadow 0.3s, background 0.3s;
-  cursor: pointer;
-}
-.wind-list-item::after {
-  content: "🕊️";
-  position: absolute;
-  bottom: -20px;       /* さらに下へ */
-  right: -20px;        /* さらに右へ */
-  font-size: 1.8rem;   /* 少し大きめで存在感 */
-  opacity: 0.85;
-  pointer-events: none;
-  z-index: 10;         /* 🕊️ を前面に */
-}
-
-.wind-list-item:hover {
-  background-color: #ffffff;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.recipient-label {
-  margin-right: 0.5rem;
-  color: #555;
-  font-style: normal;              /* ← 斜体を解除 */
-  font-weight: 500;
-  font-size: 1rem;
-  font-family: 'Georgia', 'Times New Roman', serif;
-}
-
-.name {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #222;
-}
-
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0) rotate(-10deg);
-  }
-  50% {
-    transform: translateY(-3px) rotate(-10deg);
-  }
-}
-
-.wind-list-item::after {
-  animation: float 3s ease-in-out infinite;
-}
-
-/* 🌙 ダークモード用に上書き */
-@media (prefers-color-scheme: dark) {
-  .wind-list-item {
-    background-color: #fdfaf3; /* 明るい封筒色をキープ */
-    color: #222;               /* テキストを黒に */
-  }
-
-  .recipient-label,
-  .name {
-    color: #222; /* ← 明示的に黒に指定（デフォルト白を上書き） */
-  }
-
-  .wind-list-item::after {
-    filter: none; /* 🕊️が白背景で見えすぎる場合は調整 */
-  }
-}
+.delete-button:hover { color: #222; }
 
 .favorite-button {
   position: absolute;
@@ -547,50 +540,104 @@ const filteredOpenedMessages = computed(() =>
   background: none;
   border: none;
   font-size: 1.6rem;
-  color: #aaa;
+  color: #aaa; /* ← 初期状態をグレイに */
   cursor: pointer;
-  transition: color 0.3s ease;
+  transition: color 0.3s ease, transform 0.2s ease;
 }
 
+/* 押したときに色を淡い赤に */
 .favorite-button .favorited {
-  color: #e77474; /* 淡い赤 */
+  color: #e77474; /* ← 押されたときのハート色 */
 }
+
 .title-with-icon {
   display: flex;
-  flex-direction: column;  /* ← 横並びを縦並びにする */
+  flex-direction: column;
   align-items: center;
   margin-bottom: 1.5rem;
+  position: relative;
 }
-
-.icon-circle {
-  background-color: #1c355e;
-  color: white;
+.heart-button-wrapper {
+  margin-top: 0.6rem;
+}
+.under-title-heart {
+  font-size: 1.4rem;
+  color: #fff;
   border: none;
   border-radius: 50%;
-  width: 38px;
-  height: 38px;
-  font-size: 1.3rem;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  transition: background 0.3s, transform 0.2s;
+  background-color: #e6ffe6;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
-.icon-circle:hover {
-  background-color: #274c77;
-  transform: scale(1.05);
+
+/* ✅ 押したときだけ白に */
+.under-title-heart.favorited {
+  background-color: #fff !important;
 }
+
+.under-title-heart.favorited span {
+  color: #e77474 !important; /* 押したときのハート色 */
+}
+
 .selected-icon {
   background-color: #ffb6c1;
-  color: #e77474 !important;  /* ← ここが重要 */
+  color: #e77474 !important;
 }
 
-.favorited {
-  animation: pop 0.3s ease;
+
+/* ✨ Yamato スタイル：上から降りてくる、上に消える */
+.fly-enter-active,
+.fly-leave-active {
+  transition: transform 0.4s ease, opacity 0.4s ease;
+  will-change: transform, opacity;
 }
 
-@keyframes pop {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.4); }
-  100% { transform: scale(1); }
+.fly-enter-from {
+  transform: translateY(-40px);
+  opacity: 0;
 }
+.fly-enter-to {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.fly-leave-from {
+  transform: translateY(0);
+  opacity: 1;
+}
+.fly-leave-to {
+  transform: translateY(-40px);
+  opacity: 0;
+}
+
+@media (prefers-color-scheme: dark) {
+  .wind-message { background: rgba(255, 255, 255, 0.05); color: #f0f0f0; }
+  .wind-message:hover { background: rgba(255, 255, 255, 0.1); }
+  .letter-card { background: #1a1a1a; color: #f2f2f2; }
+  .letter-date { color: #aaa; }
+}
+.letter-content {
+  max-height: 60vh;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+  position: relative;
+}
+
+.signature {
+  text-align: right;
+  font-size: 0.9rem;
+  color: #444;
+  margin-top: 2rem;
+  white-space: nowrap;
+}
+
 
 </style>
+
+

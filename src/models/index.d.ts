@@ -417,3 +417,47 @@ export declare type WindMessage = LazyLoading extends LazyLoadingDisabled ? Eage
 export declare const WindMessage: (new (init: ModelInit<WindMessage>) => WindMessage) & {
   copyOf(source: WindMessage, mutator: (draft: MutableModel<WindMessage>) => MutableModel<WindMessage> | void): WindMessage;
 }
+
+type EagerBlossom = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<Blossom, 'id'>;
+    readOnlyFields: 'updatedAt';
+  };
+  readonly id: string;
+  readonly lat: number;
+  readonly lng: number;
+  readonly comment?: string | null;
+  readonly yamatoId?: string | null;
+  readonly nickname?: string | null;
+  readonly emoji?: string | null;
+  readonly hobby?: string | null;
+  readonly country?: string | null;
+  readonly region?: string | null;
+  readonly createdAt: string;
+  readonly updatedAt?: string | null;
+}
+
+type LazyBlossom = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<Blossom, 'id'>;
+    readOnlyFields: 'updatedAt';
+  };
+  readonly id: string;
+  readonly lat: number;
+  readonly lng: number;
+  readonly comment?: string | null;
+  readonly yamatoId?: string | null;
+  readonly nickname?: string | null;
+  readonly emoji?: string | null;
+  readonly hobby?: string | null;
+  readonly country?: string | null;
+  readonly region?: string | null;
+  readonly createdAt: string;
+  readonly updatedAt?: string | null;
+}
+
+export declare type Blossom = LazyLoading extends LazyLoadingDisabled ? EagerBlossom : LazyBlossom
+
+export declare const Blossom: (new (init: ModelInit<Blossom>) => Blossom) & {
+  copyOf(source: Blossom, mutator: (draft: MutableModel<Blossom>) => MutableModel<Blossom> | void): Blossom;
+}

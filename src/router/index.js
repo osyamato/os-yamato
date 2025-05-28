@@ -21,6 +21,7 @@ import HiddenChatRoomListView from '../views/HiddenChatRoomListView.vue'
 import ScheduleTemplateView from '../views/ScheduleTemplateView.vue'
 import WindMessageView from '../views/WindMessageView.vue' // ✅ 風の便り送信用
 import WindInboxView from '../views/WindInboxView.vue'     // ✅ 風の便り受信用
+import GlobeView from '../views/GlobeView.vue'             // ✅ 追加: 地球儀View
 
 const routes = [
   { path: '/', redirect: '/signin' },
@@ -49,8 +50,11 @@ const routes = [
   { path: '/scheduletemplate', name: 'scheduletemplate', component: ScheduleTemplateView },
 
   // ✅ 風の便り関連ルート
-  { path: '/wind-message', name: 'wind-message', component: WindMessageView }, // 手紙を書く
-  { path: '/wind-inbox', name: 'wind-inbox', component: WindInboxView }        // 手紙を読む
+  { path: '/wind-message', name: 'wind-message', component: WindMessageView },
+  { path: '/wind-inbox', name: 'wind-inbox', component: WindInboxView },
+
+  // ✅ 地球儀Viewルート
+  { path: '/globe', name: 'globe', component: GlobeView }
 ]
 
 const router = createRouter({

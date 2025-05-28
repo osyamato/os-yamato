@@ -122,7 +122,7 @@ function downgrade() {
   text-align: center;
   font-size: 1.4rem;
   font-weight: bold;
-  font-family: var(--yamato-font-title, serif);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
   color: #000; /* ライトモードでは黒 */
   margin-bottom: 1.2rem;
 }

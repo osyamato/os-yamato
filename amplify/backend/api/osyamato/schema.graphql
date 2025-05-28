@@ -162,3 +162,21 @@ type WindMessage
   ttl: AWSTimestamp
   createdAt: AWSDateTime
 }
+
+type Blossom @model @auth(rules: [
+  { allow: owner },
+  { allow: private, operations: [read] }
+]) {
+  id: ID!
+  lat: Float!
+  lng: Float!
+  comment: String
+  yamatoId: String
+  nickname: String
+  emoji: String
+  hobby: String
+  country: String
+  region: String
+  createdAt: AWSDateTime!
+}
+

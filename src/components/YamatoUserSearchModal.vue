@@ -14,7 +14,7 @@
           <YamatoButton @click="search">検索</YamatoButton>
         </div>
 
-        <!-- 検索結果の表示（中央寄せ）-->
+        <!-- 検索結果の表示 -->
         <div class="profile-results" v-if="foundProfiles.length > 0">
           <div
             v-for="profile in foundProfiles"
@@ -34,16 +34,19 @@
   </transition>
 </template>
 
-
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { API, Auth, graphqlOperation } from 'aws-amplify'
 import { listChatRooms, publicProfileByYamatoId } from '@/graphql/queries'
 import { updateChatRoom, createChatRequest } from '@/graphql/mutations'
 import YamatoButton from '@/components/YamatoButton.vue'
 import { useRouter } from 'vue-router'
 
-const props = defineProps(['onClose'])
+const props = defineProps({
+  onClose: Function,
+  initialYamatoId: String
+})
+
 const showModal = ref(true)
 const inputYamatoId = ref('')
 const foundProfiles = ref([])
@@ -54,8 +57,9 @@ const router = useRouter()
 function handleClose() {
   showModal.value = false
 }
+
 function afterLeave() {
-  props.onClose?.()
+  if (typeof props.onClose === 'function') props.onClose()
 }
 
 function addAtMark() {
@@ -148,9 +152,48 @@ async function sendRequest(profile) {
     errorMessage.value = '申請に失敗しました'
   }
 }
+
+onMounted(() => {
+  if (props.initialYamatoId) {
+    const safeYamatoId = props.initialYamatoId.startsWith('@')
+      ? props.initialYamatoId
+      : '@' + props.initialYamatoId
+    inputYamatoId.value = safeYamatoId
+    search()
+  }
+})
 </script>
 
+
+
 <style scoped>
+
+.modal-title {
+  color: #111; /* ← ライトモード用の黒文字 */
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+  text-align: center;
+font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  .modal-title {
+    color: #f5f5f5;
+  }
+
+  .tag-button {
+    background: #444;
+    color: #eee;
+    border-color: #666;
+  }
+
+  .tag-button.selected {
+    background: #567;
+    color: #fff;
+    border-color: #89a;
+  }
+}
+
+
 .modal-overlay {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
@@ -174,11 +217,6 @@ async function sendRequest(profile) {
   animation: dropDown 0.4s ease-out;
 }
 
-.modal-title {
-  text-align: center;
-  font-size: 1.0rem;
-  margin-bottom: 1rem;
-}
 
 input,
 textarea {
