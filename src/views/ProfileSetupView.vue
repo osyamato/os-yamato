@@ -1,23 +1,22 @@
 <template>
   <div class="setup-container">
-<h2 class="setup-title">プロフィールを登録</h2>
+    <h2 class="setup-title">{{ t('profile.title') }}</h2>
 
     <input
       v-model="yamatoId"
-      placeholder="Yamato ID（@から始まる）"
+      :placeholder="t('profile.yamatoIdPlaceholder')"
       @input="validateAtMark"
     />
-    <input v-model="displayName" placeholder="名前やニックネーム" />
-    <textarea v-model="bio" placeholder="自己紹介（任意）" rows="4" />
+    <input v-model="displayName" :placeholder="t('profile.displayNamePlaceholder')" />
+    <textarea v-model="bio" :placeholder="t('profile.bioPlaceholder')" rows="4" />
 
-<div class="button-row">
-  <YamatoButton @click="register">登録する</YamatoButton>
-</div>
-<div class="go-hidden">
-  <button class="hidden-icon" @click="goToHidden">
-    ☁️
-  </button>
-</div>
+    <div class="button-row">
+      <YamatoButton @click="register">{{ t('profile.registerButton') }}</YamatoButton>
+    </div>
+
+    <div class="go-hidden">
+      <button class="hidden-icon" @click="goToHidden">☁️</button>
+    </div>
 
     <p v-if="errorMessage" class="error">❌ {{ errorMessage }}</p>
   </div>
@@ -30,6 +29,9 @@ import { createPublicProfile, updatePublicProfile } from '@/graphql/mutations'
 import { getPublicProfile } from '@/graphql/queries'
 import YamatoButton from '@/components/YamatoButton.vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
+
 
 const router = useRouter()
 

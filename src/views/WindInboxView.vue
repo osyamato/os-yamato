@@ -1,14 +1,17 @@
-]<template>
+<template>
+<div class="wind-container">
+
   <div class="wind-inbox-view">
 <div class="title-with-icon">
-  <h2 class="header-title">届いた風の便り</h2>
+<h2 class="header-title">{{ t('wind.inboxTitle') }}</h2>
   <div class="heart-button-wrapper">
-<button
-  :class="['under-title-heart', { favorited: showFavoritesOnly }]"
+<IconButton
+  :color="selectedColor"
+  :class="{ favorited: showFavoritesOnly }"
   @click="toggleFavoriteFilter"
 >
-  <span>♡</span>
-</button>
+  <span class="heart-icon">♡</span>
+</IconButton>
   </div>
 </div>
     <!-- 🦋 ポストと蝶 -->
@@ -26,9 +29,9 @@
 
     <!-- 📬 開封ボタン -->
     <div class="receive-button-area">
-      <YamatoButton v-if="unopenedMessages.length > 0" @click="receiveMessages">
-        📬 便りを受け取る
-      </YamatoButton>
+<YamatoButton v-if="unopenedMessages.length > 0" @click="receiveMessages">
+  📬 {{ t('wind.receiveButton') }}
+</YamatoButton>
     </div>
 
     <!-- ✅ openedMessages を ul 内で描画 -->
@@ -49,14 +52,14 @@
 
     <!-- 🆕 受信直後の開封メッセージ（名前だけ） -->
     <ul v-if="showLetters" class="message-list">
-      <li
-        v-for="msg in unopenedMessages"
-        :key="msg.id"
-        class="wind-message clickable"
-        @click="openModal(msg)"
-      >
-        {{ msg.fromDisplayName }} より
-      </li>
+<li
+  v-for="msg in unopenedMessages"
+  :key="msg.id"
+  class="wind-message clickable"
+  @click="openModal(msg)"
+>
+  {{ t('wind.fromDisplayName', { name: msg.fromDisplayName }) }}
+</li>
     </ul>
 
 
@@ -73,14 +76,14 @@
         <span :class="{ 'favorited': selectedMessage?.favoriteByReceiver }">♡</span>
       </button>
 
-      <h3 class="letter-title">風の便り</h3>
+<h3 class="letter-title">{{ t('wind.title') }}</h3>   
 
       <div class="letter-content">
         <p class="letter-body">{{ selectedMessage.content }}</p>
-        <div class="signature">
-          ― {{ selectedMessage.fromDisplayName }} より<br />
-          {{ formatDate(selectedMessage.deliveryDate) }}
-        </div>
+<div class="signature">
+  ― {{ t('wind.fromDisplayName', { name: selectedMessage.fromDisplayName }) }}<br />
+  {{ formatDate(selectedMessage.deliveryDate) }}
+</div>
       </div>
     </div>
   </div>
@@ -91,7 +94,7 @@
   @confirm="handleConfirmedDelete"
   @cancel="cancelDeleteMessage"
 />
-
+  </div>
   </div>
 </template>
 
@@ -104,6 +107,9 @@ import YamatoButton from '@/components/YamatoButton.vue'
 import IconButton from '@/components/IconButton.vue'
 
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
+
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 
 const selectedColor = ref('#274c77')
 
@@ -316,12 +322,26 @@ const filteredOpenedMessages = computed(() =>
 </script>
 
 <style>
-.wind-inbox-view {
+.wind-container {
+  max-width: 100%;
   padding: 2rem;
   text-align: center;
-  font-family: var(--yamato-font-body);
-  position: relative;
-  overflow: hidden;
+}
+.wind-inbox-view {
+  margin: 0 auto;
+  width: fit-content;
+  animation: dropDownCentered 0.6s ease-out;
+}
+
+@keyframes dropDownCentered {
+  0% {
+    transform: translateY(-40px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 .header-title {
@@ -476,7 +496,7 @@ const filteredOpenedMessages = computed(() =>
 
 .letter-card {
   position: relative;
-  margin-top: 8vh;
+  /* margin-top: 8vh; ← 削除！ */
   background: #fdfaf3 !important;
   color: #222 !important;
   border: 1px solid #e4ded0;
@@ -489,7 +509,7 @@ const filteredOpenedMessages = computed(() =>
   overflow-x: hidden;            /* ⬅ 横スクロールは完全禁止 */
   word-wrap: break-word;         /* ⬅ 単語途中でも折り返す */
   white-space: normal;           /* ⬅ テキストを折り返す */
-  -ms-overflow-style: none;      /* IE用: スクロールバー非表示 */
+  -ms-overflow-style: none;	     /* IE用: スクロールバー非表示 */
   scrollbar-width: none;         /* Firefox用: スクロールバー非表示 */
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
   font-size: 1.05rem;
@@ -561,6 +581,7 @@ const filteredOpenedMessages = computed(() =>
   margin-top: 0.6rem;
 }
 .under-title-heart {
+font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
   font-size: 1.4rem;
   color: #fff;
   border: none;
@@ -636,8 +657,28 @@ const filteredOpenedMessages = computed(() =>
   margin-top: 2rem;
   white-space: nowrap;
 }
+.heart-icon {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif !important;
+  font-size: 1.4rem;
+}
 
+.IconButton.favorited {
+  background-color: #fff !important;
+}
+
+.IconButton.favorited .heart-icon {
+  color: #e77474 !important;
+}
+
+button.favorited {
+  background-color: #fff !important;
+}
+button.favorited .heart-icon {
+  color: #e77474 !important;
+}
 
 </style>
+  
+ 
 
-
+ 

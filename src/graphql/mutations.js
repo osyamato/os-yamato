@@ -10,9 +10,10 @@ export const createMemo = /* GraphQL */ `
       id
       content
       tags
-      owner
+      sharedWith
       createdAt
       updatedAt
+      owner
       __typename
     }
   }
@@ -26,9 +27,10 @@ export const updateMemo = /* GraphQL */ `
       id
       content
       tags
-      owner
+      sharedWith
       createdAt
       updatedAt
+      owner
       __typename
     }
   }
@@ -42,9 +44,10 @@ export const deleteMemo = /* GraphQL */ `
       id
       content
       tags
-      owner
+      sharedWith
       createdAt
       updatedAt
+      owner
       __typename
     }
   }
@@ -173,10 +176,10 @@ export const createContact = /* GraphQL */ `
       emails
       note
       yamatoId
-      owner
-      createdAt
       lastOpenedAt
+      createdAt
       updatedAt
+      owner
       __typename
     }
   }
@@ -194,10 +197,10 @@ export const updateContact = /* GraphQL */ `
       emails
       note
       yamatoId
-      owner
-      createdAt
       lastOpenedAt
+      createdAt
       updatedAt
+      owner
       __typename
     }
   }
@@ -215,10 +218,10 @@ export const deleteContact = /* GraphQL */ `
       emails
       note
       yamatoId
-      owner
-      createdAt
       lastOpenedAt
+      createdAt
       updatedAt
+      owner
       __typename
     }
   }
@@ -303,7 +306,9 @@ export const createMessage = /* GraphQL */ `
     createMessage(input: $input, condition: $condition) {
       id
       roomId
+      senderSub
       senderYamatoId
+      receiverSub
       receiverYamatoId
       content
       timestamp
@@ -322,7 +327,9 @@ export const updateMessage = /* GraphQL */ `
     updateMessage(input: $input, condition: $condition) {
       id
       roomId
+      senderSub
       senderYamatoId
+      receiverSub
       receiverYamatoId
       content
       timestamp
@@ -341,7 +348,9 @@ export const deleteMessage = /* GraphQL */ `
     deleteMessage(input: $input, condition: $condition) {
       id
       roomId
+      senderSub
       senderYamatoId
+      receiverSub
       receiverYamatoId
       content
       timestamp

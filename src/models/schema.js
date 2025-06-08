@@ -25,12 +25,13 @@ export const schema = {
                     "attributes": [],
                     "isArrayNullable": true
                 },
-                "owner": {
-                    "name": "owner",
-                    "isArray": false,
+                "sharedWith": {
+                    "name": "sharedWith",
+                    "isArray": true,
                     "type": "String",
                     "isRequired": false,
-                    "attributes": []
+                    "attributes": [],
+                    "isArrayNullable": true
                 },
                 "createdAt": {
                     "name": "createdAt",
@@ -69,6 +70,16 @@ export const schema = {
                                     "delete",
                                     "read"
                                 ]
+                            },
+                            {
+                                "provider": "userPools",
+                                "ownerField": "sharedWith",
+                                "allow": "owner",
+                                "operations": [
+                                    "read",
+                                    "update"
+                                ],
+                                "identityClaim": "cognito:username"
                             }
                         ]
                     }
@@ -312,22 +323,15 @@ export const schema = {
                     "isRequired": false,
                     "attributes": []
                 },
-                "owner": {
-                    "name": "owner",
-                    "isArray": false,
-                    "type": "String",
-                    "isRequired": false,
-                    "attributes": []
-                },
-                "createdAt": {
-                    "name": "createdAt",
+                "lastOpenedAt": {
+                    "name": "lastOpenedAt",
                     "isArray": false,
                     "type": "AWSDateTime",
                     "isRequired": false,
                     "attributes": []
                 },
-                "lastOpenedAt": {
-                    "name": "lastOpenedAt",
+                "createdAt": {
+                    "name": "createdAt",
                     "isArray": false,
                     "type": "AWSDateTime",
                     "isRequired": false,
@@ -520,8 +524,22 @@ export const schema = {
                     "isRequired": true,
                     "attributes": []
                 },
+                "senderSub": {
+                    "name": "senderSub",
+                    "isArray": false,
+                    "type": "String",
+                    "isRequired": true,
+                    "attributes": []
+                },
                 "senderYamatoId": {
                     "name": "senderYamatoId",
+                    "isArray": false,
+                    "type": "String",
+                    "isRequired": true,
+                    "attributes": []
+                },
+                "receiverSub": {
+                    "name": "receiverSub",
                     "isArray": false,
                     "type": "String",
                     "isRequired": true,
@@ -608,8 +626,7 @@ export const schema = {
                             {
                                 "allow": "private",
                                 "operations": [
-                                    "read",
-                                    "create"
+                                    "read"
                                 ]
                             }
                         ]
@@ -1265,5 +1282,5 @@ export const schema = {
     "enums": {},
     "nonModels": {},
     "codegenVersion": "3.4.4",
-    "version": "a542b543bc8c920d9152ced34eb0837f"
+    "version": "4ca44d785d621f896a6da9a7a9dd200d"
 };

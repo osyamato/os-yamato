@@ -10,9 +10,10 @@ export const onCreateMemo = /* GraphQL */ `
       id
       content
       tags
-      owner
+      sharedWith
       createdAt
       updatedAt
+      owner
       __typename
     }
   }
@@ -26,9 +27,10 @@ export const onUpdateMemo = /* GraphQL */ `
       id
       content
       tags
-      owner
+      sharedWith
       createdAt
       updatedAt
+      owner
       __typename
     }
   }
@@ -42,9 +44,10 @@ export const onDeleteMemo = /* GraphQL */ `
       id
       content
       tags
-      owner
+      sharedWith
       createdAt
       updatedAt
+      owner
       __typename
     }
   }
@@ -173,10 +176,10 @@ export const onCreateContact = /* GraphQL */ `
       emails
       note
       yamatoId
-      owner
-      createdAt
       lastOpenedAt
+      createdAt
       updatedAt
+      owner
       __typename
     }
   }
@@ -194,10 +197,10 @@ export const onUpdateContact = /* GraphQL */ `
       emails
       note
       yamatoId
-      owner
-      createdAt
       lastOpenedAt
+      createdAt
       updatedAt
+      owner
       __typename
     }
   }
@@ -215,10 +218,10 @@ export const onDeleteContact = /* GraphQL */ `
       emails
       note
       yamatoId
-      owner
-      createdAt
       lastOpenedAt
+      createdAt
       updatedAt
+      owner
       __typename
     }
   }
@@ -300,7 +303,9 @@ export const onCreateMessage = /* GraphQL */ `
     onCreateMessage(filter: $filter) {
       id
       roomId
+      senderSub
       senderYamatoId
+      receiverSub
       receiverYamatoId
       content
       timestamp

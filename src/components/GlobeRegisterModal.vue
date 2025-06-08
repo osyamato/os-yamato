@@ -2,22 +2,30 @@
   <transition name="fade-modal">
     <div v-if="visible" class="modal-overlay" @click.self="handleClose">
       <div class="modal-card">
-        <h2 class="modal-title">あなたの花を咲かせよう</h2>
+<h2 class="modal-title">{{ t('blossom.title') }}</h2>
 
         <div class="form-area">
 <input
   v-model="nickname"
-  placeholder="ニックネーム（必須）"
+  :placeholder="t('blossom.nicknamePlaceholder')"
   class="modal-input"
 />
 
-          <input v-model="comment" placeholder="自己紹介などを自由に書きましょう" class="modal-input" />
-          <input v-model="yamatoId" placeholder="YamatoID メッセージでつながれます" class="modal-input" />
+<input
+  v-model="comment"
+  :placeholder="t('blossom.commentPlaceholder')"
+  class="modal-input"
+/>
+<input
+  v-model="yamatoId"
+  :placeholder="t('blossom.yamatoIdPlaceholder')"
+  class="modal-input"
+/>
 
-          <div class="select-labels">
-            <span>国を選択</span>
-            <span>趣味を選択</span>
-          </div>
+<div class="select-labels">
+  <span>{{ t('blossom.selectCountry') }}</span>
+  <span>{{ t('blossom.selectHobby') }}</span>
+</div>
 
           <div class="row-fields">
             <select v-model="selectedCountry" class="modal-select">
@@ -33,9 +41,11 @@
 
           <div class="button-row">
 <YamatoButton :disabled="!nickname" @click="submitForm">
-  登録
+  {{ t('button.register') }}
 </YamatoButton>
-            <YamatoButton v-if="hasExisting" type="danger" @click="handleDelete">削除</YamatoButton>
+<YamatoButton v-if="hasExisting" type="danger" @click="handleDelete">
+  {{ t('delete') }}
+</YamatoButton>
           </div>
         </div>
       </div>
@@ -48,6 +58,8 @@ import { ref, watch, computed } from 'vue'
 import YamatoButton from '@/components/YamatoButton.vue'
 import { API, graphqlOperation } from 'aws-amplify'
 import { deleteBlossom } from '@/graphql/mutations'
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 
 const props = defineProps({
   visible: Boolean,

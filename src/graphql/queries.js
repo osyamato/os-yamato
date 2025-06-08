@@ -7,9 +7,10 @@ export const getMemo = /* GraphQL */ `
       id
       content
       tags
-      owner
+      sharedWith
       createdAt
       updatedAt
+      owner
       __typename
     }
   }
@@ -25,9 +26,10 @@ export const listMemos = /* GraphQL */ `
         id
         content
         tags
-        owner
+        sharedWith
         createdAt
         updatedAt
+        owner
         __typename
       }
       nextToken
@@ -123,10 +125,10 @@ export const getContact = /* GraphQL */ `
       emails
       note
       yamatoId
-      owner
-      createdAt
       lastOpenedAt
+      createdAt
       updatedAt
+      owner
       __typename
     }
   }
@@ -146,10 +148,10 @@ export const listContacts = /* GraphQL */ `
         emails
         note
         yamatoId
-        owner
-        createdAt
         lastOpenedAt
+        createdAt
         updatedAt
+        owner
         __typename
       }
       nextToken
@@ -212,7 +214,9 @@ export const getMessage = /* GraphQL */ `
     getMessage(id: $id) {
       id
       roomId
+      senderSub
       senderYamatoId
+      receiverSub
       receiverYamatoId
       content
       timestamp
@@ -233,7 +237,9 @@ export const listMessages = /* GraphQL */ `
       items {
         id
         roomId
+        senderSub
         senderYamatoId
+        receiverSub
         receiverYamatoId
         content
         timestamp

@@ -1,7 +1,7 @@
 <template>
   <div class="photo-view drop-animation">
     <div class="photo-header">
-      <h2 class="header-title">写真</h2>
+<h2 class="header-title">{{ t('photo.title') }}</h2>
     </div>
 
     <div class="header-actions">
@@ -24,19 +24,12 @@
     </div>
 
     <div v-if="isSelectionMode" class="floating-delete">
-<IconButton
-  :color="iconColor"
-  @click.stop="downloadSelectedPhotos"
->↓</IconButton>
+      <IconButton :color="iconColor" @click.stop="downloadSelectedPhotos">↓</IconButton>
+      <IconButton :color="iconColor" @click.stop="promptDeleteSelectedPhotos">🗑</IconButton>
+    </div>
 
-<IconButton
-  :color="iconColor"
-  @click.stop="promptDeleteSelectedPhotos"
->🗑</IconButton>
-   </div>
-
-    <p class="wilted-message" v-if="filterWiltingOnly">
-      記憶の花は、いつか風に散る
+ <p v-if="filterWiltingOnly" class="wilted-message">
+      {{ t('message.memoryFlower') }}
     </p>
 
     <div class="photo-grid">
@@ -57,46 +50,64 @@
       </div>
     </div>
 
-    <div v-if="modalVisible" class="modal-overlay" :class="{ closing: modalClosing }" @click="startModalClose">
-      <div class="modal-content-wrapper" @click.stop>
-        <div v-if="isImageLoaded" class="modal-toolbar-centered">
-          <span class="modal-download-icon" @click.stop="downloadCurrentPhoto">↓</span>
-          <span class="modal-favorite-icon" :class="{ active: currentPhoto?.isFavorite }" @click.stop="toggleFavorite(currentPhoto)">♡</span>
-          <span class="modal-date-text" v-if="currentPhoto?.photoTakenAt">{{ formatDate(currentPhoto.photoTakenAt) }}</span>
-          <button class="modal-delete-button-above" @click.stop.prevent="promptDeletePhoto(currentPhoto)">🗑</button>
-        </div>
-
-        <div class="modal-content">
-          <div v-if="!isImageLoaded" class="upload-life-cycle">
-            <span :class="'icon-seedling ' + iconStage">{{ lifeIcon }}</span>
-          </div>
-          <img v-show="false" :src="fullImageUrl" @load="isImageLoaded = true" />
-          <div v-if="isImageLoaded" class="modal-image-wrapper">
-            <img :src="fullImageUrl" class="full-image" />
-          </div>
-        </div>
-      </div>
+<!-- 🌕 モーダル -->
+<div
+  v-if="modalVisible"
+  class="modal-overlay"
+  :class="{ closing: modalClosing }"
+  @click="startModalClose"
+  @touchstart="handleTouchStart"
+  @touchend="handleTouchEnd"
+>
+  <div class="modal-content-wrapper" @click.stop>
+    <div v-if="isImageLoaded" class="modal-toolbar-centered">
+      <span class="modal-download-icon" @click.stop="downloadCurrentPhoto">↓</span>
+      <span class="modal-favorite-icon" :class="{ active: currentPhoto?.isFavorite }" @click.stop="toggleFavorite(currentPhoto)">♡</span>
+      <span class="modal-date-text" v-if="currentPhoto?.photoTakenAt">{{ formatDate(currentPhoto.photoTakenAt) }}</span>
+      <button class="modal-delete-button-above" @click.stop.prevent="promptDeletePhoto(currentPhoto)">🗑</button>
     </div>
 
-    <ConfirmDialog
-      v-if="showConfirm"
-      :visible="showConfirm"
-      :message="confirmMessage"
-      @confirm="handleConfirmedDelete"
-      @cancel="cancelDelete"
-    />
+    <div class="modal-content">
+<div v-if="!isImageLoaded" class="modal-loading-overlay">
+  <span class="modal-loading-icon">🌱</span>
+</div>
+
+      <!-- ✅ 1枚のみ表示・読み込み検知＋フェード -->
+      <div class="modal-image-wrapper fade-in-image">
+        <img
+          :src="fullImageUrl"
+          class="full-image"
+          @load="isImageLoaded = true"
+          v-show="isImageLoaded"
+        />
+      </div>
+    </div>
+  </div>
+
+  <!-- 📝 削除確認モーダル -->
+  <ConfirmDialog
+    v-if="showConfirm"
+    :visible="showConfirm"
+    :message="confirmMessage"
+    @confirm="handleConfirmedDelete"
+    @cancel="cancelDelete"
+  />
+</div>
   </div>
 </template>
 
 
 <script setup>
-import { ref, onMounted, watch, computed } from 'vue'
+import { ref, onMounted, watch, computed, onBeforeUnmount } from 'vue'
 import { Storage, API, graphqlOperation, Auth } from 'aws-amplify'
 import { createPhoto, updatePhoto, deletePhoto as deletePhotoMutation } from '@/graphql/mutations'
 import { listPhotos } from '@/graphql/queries'
 import exifr from 'exifr'
 import IconButton from '@/components/IconButton.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 
 const iconColor = ref('#274c77')
@@ -125,6 +136,7 @@ const filterWiltingOnly = ref(false)
 
 const isSelectionMode = ref(false)
 const selectedPhotoIds = ref([])
+
 
 const showConfirm = ref(false)
 const confirmMessage = ref('')
@@ -501,12 +513,17 @@ async function deleteSelectedPhotos() {
 
 async function openModal(photo) {
   try {
-    const url = await Storage.get(photo.fileName, { level: 'protected' })
-    fullImageUrl.value = url
+    const index = photoList.value.findIndex(p => p.id === photo.id)
+    if (index === -1) return
+
+    currentPhotoIndex.value = index
+    currentPhoto.value = { ...photo }
     isImageLoaded.value = false
     modalClosing.value = false
     modalVisible.value = true
-    currentPhoto.value = { ...photo }
+
+    const url = await Storage.get(photo.fileName, { level: 'protected' })
+    fullImageUrl.value = url
 
     const nowIso = new Date().toISOString()
 
@@ -519,10 +536,7 @@ async function openModal(photo) {
     }))
 
     // ✅ ローカル photoList を即時反映
-    const index = photoList.value.findIndex(p => p.id === photo.id)
-    if (index !== -1) {
-      photoList.value[index].lastOpenedAt = nowIso
-    }
+    photoList.value[index].lastOpenedAt = nowIso
 
   } catch (e) {
     console.error('❌ フル画像の取得失敗:', e)
@@ -543,6 +557,69 @@ function formatDate(dateStr) {
 }
 
 onMounted(fetchPhotos)
+
+const touchStartX = ref(0)
+
+function handleTouchStart(e) {
+  touchStartX.value = e.touches[0].clientX
+}
+
+function handleTouchEnd(e) {
+  const touchEndX = e.changedTouches[0].clientX
+  const diff = touchStartX.value - touchEndX
+  if (diff > 50) showNextPhoto()
+  else if (diff < -50) showPrevPhoto()
+}
+
+
+onMounted(() => {
+  window.addEventListener('keydown', handleKeydown)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', handleKeydown)
+})  const currentPhotoIndex = ref(0)
+
+function showPrevPhoto() {
+  if (currentPhotoIndex.value > 0) {
+    currentPhotoIndex.value--
+    updateCurrentPhoto()
+  }
+}
+
+function showNextPhoto() {
+  if (currentPhotoIndex.value < photoList.value.length - 1) {
+    currentPhotoIndex.value++
+    updateCurrentPhoto()
+  }
+}
+
+async function updateCurrentPhoto() {
+  const photo = photoList.value[currentPhotoIndex.value]
+  if (!photo) return
+
+  currentPhoto.value = { ...photo }
+  isImageLoaded.value = false
+
+  try {
+    const url = await Storage.get(photo.fileName, { level: 'protected' })
+fullImageUrl.value = url
+  } catch (e) {
+    console.error('❌ 画像URL取得失敗:', e)
+  }
+}
+
+watch(fullImageUrl, () => {
+  isImageLoaded.value = false
+})
+
+function handleKeydown(e) {
+  if (!modalVisible.value) return
+  if (e.key === 'ArrowLeft') showPrevPhoto()
+  if (e.key === 'ArrowRight') showNextPhoto()
+  if (e.key === 'Escape') startModalClose()
+}
+
 </script>
 
 
@@ -715,8 +792,25 @@ onMounted(fetchPhotos)
 }
 
 /* ハートがアクティブなときは常に赤 */
+.modal-favorite-icon {
+  font-size: 2.4rem; /* ← お好みで 1.6rem ~ 2.4rem など調整可 */
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
 .modal-favorite-icon.active {
-  color: #ff8a8a;
+  color: #ff4d6d; /* お好みで色も変えられます */
+  transform: scale(1.2); /* お好みで強調も可能 */
+}
+@keyframes heartBounce {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.4); }
+  60%  { transform: scale(0.95); }
+  100% { transform: scale(1); }
+}
+
+.modal-favorite-icon.bounce {
+  animation: heartBounce 0.4s ease;
 }
 
 /* 画像表示 */
@@ -922,6 +1016,45 @@ onMounted(fetchPhotos)
   align-items: center;
   justify-content: center;
   cursor: pointer;
+}
+.fade-in-image {
+  animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.modal-loading-icon {
+  font-size: 1.8rem;
+  opacity: 0;
+  animation: fadeInOnly 1s ease-out forwards;
+}
+
+@keyframes fadeInOnly {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.modal-loading-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: transparent;        /* ✅ 背景を完全透明に */
+  padding: 0;
+  border-radius: 0;
+  box-shadow: none;               /* ✅ 影も消す */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
 }
 
 </style>

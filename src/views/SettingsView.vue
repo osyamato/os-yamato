@@ -2,7 +2,7 @@
   <div class="settings">
     <h2>{{ t('title') }}</h2>
 
-    <!-- 🈶 言語選択 -->
+    <!-- 🇾有 言語選択 -->
     <div class="setting-group">
       <label for="language">{{ t('languageLabel') }}</label>
       <select v-model="selectedLanguage" id="language">
@@ -13,21 +13,21 @@
     </div>
 
     <!-- 🎨 アイコン色選択 -->
-<div class="setting-group">
-  <label>{{ t('iconColorLabel') }}</label>
-  <div class="color-picker-grid">
-    <div
-      v-for="color in availableColors"
-      :key="color"
-      class="color-circle"
-      :style="{ backgroundColor: color }"
-      :class="{ selected: selectedColor === color }"
-      @click="selectColor(color)"
-    />
-  </div>
-</div>
+    <div class="setting-group">
+      <label>{{ t('iconColorLabel') }}</label>
+      <div class="color-picker-grid">
+        <div
+          v-for="color in availableColors"
+          :key="color"
+          class="color-circle"
+          :style="{ backgroundColor: color }"
+          :class="{ selected: selectedColor === color }"
+          @click="selectColor(color)"
+        />
+      </div>
+    </div>
 
-    <!-- 🖼️ 壁紙選択 -->
+    <!-- 🗾️ 壁紙選択 -->
     <div class="setting-group">
       <label for="wallpaper">{{ t('wallpaperLabel') }}</label>
       <select v-model="selectedWallpaper" id="wallpaper">
@@ -49,109 +49,36 @@
 
     <!-- 💾 保存ボタン -->
     <div class="button-container">
-<YamatoButton :key="buttonKey" @click="saveSettings">{{ t('save') }}</YamatoButton>
+      <YamatoButton :key="buttonKey" @click="saveSettings">{{ t('save') }}</YamatoButton>
     </div>
 
     <!-- 👤 アカウントリンク -->
-<!-- 👤 アカウントリンク -->
-<div class="account-row" @click="goToAccount">
-  <span class="account-text">{{ t('account') }}</span>
-<IconButton
-  :color="selectedColor"
-  size="medium"
-  @click="goToAccount"
->
-  →
-</IconButton>
-</div>
-</div>
-
+    <div class="account-row" @click="goToAccount">
+      <span class="account-text">{{ t('account') }}</span>
+      <IconButton :color="selectedColor" size="medium" @click="goToAccount">→</IconButton>
+    </div>
+  </div>
 </template>
 
 <script setup>
 import { ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { Auth } from 'aws-amplify'
+import { useI18n } from 'vue-i18n'
 import YamatoButton from '@/components/YamatoButton.vue'
 import IconButton from '@/components/IconButton.vue'
 
+const { t, locale } = useI18n()
 const router = useRouter()
 const selectedLanguage = ref('')
 const selectedWallpaper = ref('')
 const selectedColor = ref('')
-
 const buttonKey = ref(0)
 
 const availableColors = [
-  '#274c77', // デフォルト藍色
-  '#f7a3b3', // 淡い桃色
-  '#fef3a3', // 淡い黄色
-  '#c2f2d0', // 淡い緑
-  '#aedbff', // 薄い青
-  '#d6bbf9', // 淡い紫
-  '#cccccc', // グレー
-  '#ffd8a8', // 淡いオレンジ
-  '#14532d'  // 深い緑
+  '#274c77', '#f7a3b3', '#fef3a3', '#c2f2d0',
+  '#aedbff', '#d6bbf9', '#cccccc', '#ffd8a8', '#14532d'
 ]
-
-const locale = {
-  ja: {
-    title: '設定',
-    languageLabel: '言語を選択:',
-    selectLanguage: '-- 言語を選んでください --',
-    wallpaperLabel: '壁紙を選択:',
-    selectWallpaper: '-- 壁紙を選んでください --',
-    moon: '月夜（moon）',
-    take: '竹（take）',
-    none: '背景なし',
-    lightBlue: '和色（淡青）',
-    lightYellow: '和色（淡黄）',
-    lightPurple: '和色（淡紫）',
-    iconColorLabel: 'アイコンの色:',
-    selectIconColor: '-- アイコンの色を選んでください --',
-    defaultBlue: '藍色（デフォルト）',
-    deepBlue: '深青',
-    red: '桃色',
-    green: '緑',
-    purple: '紫',
-    preview: '選択中のプレビュー:',
-    save: '保存',
-    japanese: '日本語',
-    english: '英語',
-    saveMessage: '設定を保存しました！',
-    account: 'アカウント'
-  },
-  en: {
-    title: 'Settings',
-    languageLabel: 'Select Language:',
-    selectLanguage: '-- Please choose a language --',
-    wallpaperLabel: 'Select Wallpaper:',
-    selectWallpaper: '-- Please choose a wallpaper --',
-    moon: 'Moonlight',
-    take: 'Bamboo',
-    none: 'No Background',
-    lightBlue: 'Wafu Light Blue',
-    lightYellow: 'Wafu Light Yellow',
-    lightPurple: 'Wafu Light Purple',
-    iconColorLabel: 'Icon Color:',
-    selectIconColor: '-- Choose icon color --',
-    defaultBlue: 'Default Blue',
-    deepBlue: 'Deep Blue',
-    red: 'Light Pink',
-    green: 'Green',
-    purple: 'Purple',
-    preview: 'Current Preview:',
-    save: 'Save',
-    japanese: 'Japanese',
-    english: 'English',
-    saveMessage: 'Settings saved!',
-    account: 'Account'
-  }
-}
-
-function t(key) {
-  return locale[selectedLanguage.value]?.[key] || key
-}
 
 onMounted(async () => {
   const user = await Auth.currentAuthenticatedUser()
@@ -159,6 +86,7 @@ onMounted(async () => {
   selectedWallpaper.value = user.attributes['custom:wallpaper'] || ''
   selectedColor.value = user.attributes['custom:iconColor'] || '#274c77'
   document.body.setAttribute('data-bg', selectedWallpaper.value || '')
+  locale.value = selectedLanguage.value
 })
 
 watch(selectedWallpaper, (val) => {
@@ -177,20 +105,17 @@ async function saveSettings() {
     'custom:iconColor': selectedColor.value
   })
 
-  // ✅ 即時反映（CSS変数更新）
   document.documentElement.style.setProperty('--yamato-button-color', selectedColor.value)
-
-  // ✅ 強制的に YamatoButton を再描画させる
+  locale.value = selectedLanguage.value
   buttonKey.value++
-
   alert(t('saveMessage'))
 }
+
 function goToAccount() {
   router.push('/account')
 }
-
-
 </script>
+
 
 
 

@@ -1,25 +1,35 @@
 <template>
-
-<div class="calendar-container">
+  <div class="calendar-container">
     <!-- 月表示 -->
     <h2 class="month-title">
       <button @click="prevMonth">&lt;</button>
-      {{ language === 'en' ? monthsEn[currentMonth] : (currentMonth + 1) + '月' }}
+      {{ t(`month.${currentMonth}`) }}
       <button @click="nextMonth">&gt;</button>
     </h2>
 
-
     <!-- テンプレートショートカット -->
-    <div class="template-shortcut">
-<IconButton :color="selectedColor" size="medium" @click="handleQuickTagClick">＋</IconButton>
-<IconButton :color="selectedColor" size="medium" @click="goToTemplateView">🏷️</IconButton>
-    </div>
+<div class="template-shortcut">
+  <!-- 🗑️ 削除ボタン -->
+  <IconButton :color="selectedColor" size="medium" @click="confirmAndDeleteMonth">
+    🗑️
+  </IconButton>
+
+  <!-- ＋ クイック作成 -->
+  <IconButton :color="selectedColor" size="medium" @click="handleQuickTagClick">
+    ＋
+  </IconButton>
+
+  <!-- 🏷️ テンプレート画面 -->
+  <IconButton :color="selectedColor" size="medium" @click="goToTemplateView">
+    🏷️
+  </IconButton>
+</div>
 
     <!-- カレンダーグリッド -->
     <table class="calendar-grid">
       <thead>
         <tr>
-          <th v-for="(day, index) in localizedDaysOfWeek" :key="index">
+          <th v-for="(day, index) in daysOfWeek" :key="index">
             <div class="day-circle">{{ day }}</div>
           </th>
         </tr>
@@ -64,14 +74,12 @@
             <!-- 日付ヘッダーと祝日 -->
             <div class="date-header-with-icon">
               <h3>{{ selectedDate?.toLocaleDateString() }}</h3>
-<IconButton
-  v-if="!isEditing && selectedEvents.length"
-  @click="resetNewEvent"
-  size="small"
-  :color="selectedColor"
->
-  ＋
-</IconButton>
+              <IconButton
+                v-if="!isEditing && selectedEvents.length"
+                @click="resetNewEvent"
+                size="small"
+                :color="selectedColor"
+              >＋</IconButton>
             </div>
             <p v-if="getHolidayNameSafe(selectedDate)" class="holiday-tag">
               🇯🇵 {{ getHolidayNameSafe(selectedDate) }}
@@ -88,52 +96,37 @@
                 <p>{{ event.startTime }} - {{ event.endTime }}</p>
                 <p class="memo-text">{{ event.memo }}</p>
                 <div class="button-container-row">
-<IconButton
-  :color="selectedColor"
-  size="small"
-  @click="startEdit(event)"
->
-  ✏️
-</IconButton>
-
-<IconButton
-  :color="selectedColor"
-  size="small"
-  class="danger"
-  @click="promptDeleteEvent(event.id)" 
->
-  🗑️
-</IconButton>
+                  <IconButton :color="selectedColor" size="small" @click="startEdit(event)">✏️</IconButton>
+                  <IconButton :color="selectedColor" size="small" class="danger" @click="promptDeleteEvent(event.id)">🗑️</IconButton>
                 </div>
               </div>
             </div>
 
             <!-- 編集・追加モード -->
             <div v-else>
-              <input v-model="title" :placeholder="t.title[language]" />
+              <input v-model="title" :placeholder="t('form.title')" />
               <div class="template-tag-row" v-if="templates.length">
-<YamatoButton
-  v-for="tpl in templates"
-  :key="tpl.id"
-  :color="selectedColor"
-  size="small"
-  @click="applyTemplate(tpl)"
->
-  {{ tpl.emoji }} {{ tpl.label }}
-</YamatoButton>
-              </div>
-              <input type="time" v-model="startTime" />
-              <input type="time" v-model="endTime" />
-              <input v-model="memo" :placeholder="t.memo[language]" />
-              <div class="button-container-row">
                 <YamatoButton
-                  :disabled="!isFormFilled"
-                  @click="editingEventId ? updateSchedule() : createSchedule()"
+                  v-for="tpl in templates"
+                  :key="tpl.id"
+                  :color="selectedColor"
+                  size="small"
+                  @click="applyTemplate(tpl)"
                 >
-                  {{ editingEventId ? t.update[language] : t.add[language] }}
+                  {{ tpl.emoji }} {{ tpl.label }}
+                </YamatoButton>
+              </div>
+<div class="time-input-row">
+  <input type="time" v-model="startTime" />
+  <input type="time" v-model="endTime" />
+</div>
+              <input v-model="memo" :placeholder="t('form.memo')" />
+              <div class="button-container-row">
+                <YamatoButton :disabled="!isFormFilled" @click="editingEventId ? updateSchedule() : createSchedule()">
+                  {{ editingEventId ? t('button.update') : t('button.add') }}
                 </YamatoButton>
                 <YamatoButton v-if="selectedEvents.length" @click="cancelEdit">
-                  戻る
+                  {{ t('button.back') }}
                 </YamatoButton>
               </div>
             </div>
@@ -143,53 +136,53 @@
     </Modal>
 
     <!-- クイックタグモーダル -->
-    <Modal :visible="showQuickTagModal" @close="showQuickTagModal = false">
+    <Modal :visible="showQuickTagModal" customClass="compact" @close="showQuickTagModal = false">
       <template #default>
-        <!-- 🌸 タイトル -->
-        <h3 class="modal-title">テンプレート一括登録</h3>
-
-        <!-- 🌱 テンプレート選択 -->
+        <h3 class="modal-title">{{ t('quickTag.title') }}</h3>
         <div class="quick-tag-grid" v-if="templates.length">
- <YamatoButton
-    v-for="tpl in templates"
-    :key="tpl.id"
-    :color="selectedColor"
-    size="small"
-    :class="{ selected: selectedQuickTemplate?.id === tpl.id }"
-    @click="applyQuickTemplate(tpl)"
-  >
-    {{ tpl.emoji }} {{ tpl.label }}
-  </YamatoButton>
+<YamatoButton
+            v-for="tpl in templates"
+            :key="tpl.id"
+            :color="selectedColor"
+            size="small"
+            :class="{ selected: selectedQuickTemplate?.id === tpl.id }"
+            @click="applyQuickTemplate(tpl)"
+          >
+            {{ tpl.emoji }} {{ tpl.label }}
+          </YamatoButton>
         </div>
-
-        <!-- 📅 日付選択 -->
         <div class="date-number-picker">
           <button
             v-for="n in 31"
             :key="n"
-            :class="['date-button', { selected: quickDates.includes(n) }]"
+            :class="['date-button', { selected: quickDates.includes(n) } ]"
             @click="toggleQuickDate(n)"
           >
             {{ n }}
           </button>
         </div>
-
-        <!-- ✅ 登録ボタン -->
-        <div class="button-row">
-          <YamatoButton @click="registerQuickTagSchedule">登録</YamatoButton>
+<div class="button-row">
+<YamatoButton
+  :disabled="!selectedQuickTemplate || quickDates.length === 0"
+  @click="registerQuickTagSchedule"
+>
+  {{ t('button.register') }}
+</YamatoButton>
         </div>
       </template>
     </Modal>
- <ConfirmDialog
+
+    <!-- 削除確認 -->
+    <ConfirmDialog
       v-if="showConfirm"
       :visible="showConfirm"
-      message="本当に削除しますか？"
+      :message="t('confirm.delete')"
       @confirm="handleConfirmedDelete"
       @cancel="showConfirm = false"
     />
-
   </div>
 </template>
+
 
 
 
@@ -205,9 +198,13 @@ import {
 import * as Holidays from 'japanese-holidays'
 import YamatoButton from '@/components/YamatoButton.vue'
 import Modal from '@/components/Modal.vue'
-import { useRouter } from 'vue-router'
 import IconButton from '@/components/IconButton.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
+import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
+
+const { t, locale } = useI18n()
+const router = useRouter()
 
 // -----------------------
 // 📌 State
@@ -225,7 +222,8 @@ const title = ref('')
 const startTime = ref('12:00')
 const endTime = ref('13:00')
 const memo = ref('')
-const language = ref('ja')
+const language = ref(locale.value) // ロケールに連動
+
 const editingEventId = ref(null)
 const endDate = ref(null)
 
@@ -233,39 +231,24 @@ const today = new Date()
 const currentMonth = ref(today.getMonth())
 const currentYear = ref(today.getFullYear())
 const animationDirection = ref('')
-const selectedColor = ref('#274c77') 
+const selectedColor = ref('#274c77')
 
 const selectedEvents = ref([])
-const router = useRouter()
+
+// 例：曜日ローカライズ
+const daysOfWeek = computed(() =>
+  locale.value === 'en'
+    ? ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+    : ['日', '月', '火', '水', '木', '金', '土']
+)
 
 
-
-// -----------------------
-// 📌 Constants
-// -----------------------
-const daysOfWeekMap = {
-  ja: ['日', '月', '火', '水', '木', '金', '土'],
-  en: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-}
-
-const monthsEn = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December'
-]
-
-const t = {
-  save: { ja: '保存', en: 'Save' },
-  delete: { ja: '削除', en: 'Delete' },
-  update: { ja: '更新', en: 'Update' },
-  add: { ja: '追加', en: 'Add' },
-  close: { ja: '閉じる', en: 'Close' },
-  edit: { ja: '編集', en: 'Edit' },
-  title: { ja: '予定タイトル', en: 'Title' },
-  memo: { ja: 'メモ', en: 'Memo' }
-}
 
 const localizedDaysOfWeek = computed(() => daysOfWeekMap[language.value] || daysOfWeekMap.ja)
 const isFormFilled = computed(() => title.value.trim() && startTime.value && endTime.value)
+
+const selectedYear = ref(new Date().getFullYear());
+const selectedMonth = ref(new Date().getMonth());
 
 // -----------------------
 // 📌 Fetch & Apply
@@ -348,7 +331,7 @@ function applyTemplate(template) {
 
 function handleQuickTagClick() {
   if (!templates.value.length) {
-    const confirmed = confirm('テンプレートがまだ作成されていません。\n作成画面へ移動しますか？')
+const confirmed = confirm(t('noTemplate'))
     if (confirmed) {
       router.push({ path: '/scheduletemplate' })
     }
@@ -654,6 +637,35 @@ async function handleConfirmedDelete() {
 }
 
 
+async function confirmAndDeleteMonth() {
+  const ok = window.confirm(t('calendar.confirmDeleteMonth'))
+  if (!ok) return
+
+  const user = await Auth.currentAuthenticatedUser()
+  const owner = user.username
+
+  const year = currentYear.value
+  const month = currentMonth.value + 1
+  const prefix = `${year}-${month.toString().padStart(2, '0')}`
+
+  const { data } = await API.graphql(graphqlOperation(listSchedules, {
+    filter: {
+      owner: { eq: owner },
+      date: { beginsWith: prefix }
+    }
+  }))
+
+  const items = data?.listSchedules?.items ?? []
+  for (const item of items) {
+    await API.graphql(graphqlOperation(deleteScheduleMutation, {
+      input: { id: item.id }
+    }))
+  }
+
+  alert(t('calendar.deletedCount', { count: items.length }))
+  await fetchSchedules()
+}
+
 </script>
 
 
@@ -835,6 +847,11 @@ async function handleConfirmedDelete() {
   cursor: pointer;
   color: #345;
   padding: 0;
+}
+
+input[type="time"] {
+  width: 100% !important; /* ← 幅を親要素に合わせて広げる */
+  box-sizing: border-box;
 }
 
 input,
@@ -1065,6 +1082,36 @@ textarea {
   background-color: white !important;
   color: var(--yamato-primary) !important;
   border: 2px solid var(--yamato-primary);
+}
+.time-input-row {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+.time-input-row input[type="time"] {
+  flex: 1;
+  max-width: 120px; /* ← 必要に応じて調整 */
+  padding: 0.6rem;
+  font-size: 1rem;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  background-color: #f5f5f5;
+  text-align: center;
+}
+
+@media (prefers-color-scheme: dark) {
+  .time-input-row input[type="time"] {
+    background-color: #2e2e2e;
+    color: #fff;
+    border-color: #444;
+  }
+}
+.icon-circle.medium {
+  width: 36px;
+  height: 36px;
+  font-size: 1.2rem;
 }
 
 </style>

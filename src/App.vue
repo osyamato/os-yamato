@@ -13,14 +13,22 @@
 <script setup>
 import { onMounted } from 'vue'
 import { Auth } from 'aws-amplify'
+import { i18n } from '@/i18n'
 import EffectOverlay from '@/components/EffectOverlay.vue'
 import ChatEffect from '@/components/ChatEffect.vue'
 
 onMounted(async () => {
   try {
     const user = await Auth.currentAuthenticatedUser()
+
     const iconColor = user.attributes['custom:iconColor'] || '#274c77'
     document.documentElement.style.setProperty('--yamato-button-color', iconColor)
+
+    const userLang = user.attributes['custom:language']
+    if (userLang === 'en' || userLang === 'ja') {
+      i18n.global.locale.value = userLang
+    }
+
   } catch (e) {
     console.warn('⚠️ ユーザー情報の取得失敗または未ログイン', e)
   }
@@ -55,4 +63,5 @@ body {
     color: #ddd;
   }
 }
-</style>
+</style> 
+

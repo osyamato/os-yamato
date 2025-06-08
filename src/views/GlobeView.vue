@@ -24,7 +24,7 @@
     <div class="globe-toolbar" :class="{ 'no-user-color': showStars }">
       <button class="toolbar-button" @click="toggleStars">🪐</button>
 <button class="toolbar-button" @click="openSearchModal">🔍</button>
-      <button class="toolbar-button" @click="openRegisterModal">✏️</button>
+      <button class="toolbar-button" @click="openRegisterModal">🌸</button>
     </div>
 
     <!-- 地球描画 -->
@@ -243,15 +243,21 @@ onMounted(async () => {
   }
 
   try {
+    // ✅ Cognitoユーザー情報の取得
     const user = await Auth.currentAuthenticatedUser()
     const sub = user.attributes.sub
+    const iconColor = user.attributes['custom:iconColor'] || '#a8dadc'
+
+    // ✅ CSS変数に反映
+    document.documentElement.style.setProperty('--userColor', iconColor)
+
     const result = await API.graphql(graphqlOperation(listBlossoms))
     const blossoms = result.data.listBlossoms.items
 
-  console.log('🌸 allBlossoms:', blossoms) 
+    console.log('🌸 allBlossoms:', blossoms)
 
     allBlossoms.value = blossoms
-clearAllFlowers() 
+    clearAllFlowers()
     blossoms.forEach(b => {
       if (b.lat && b.lng && b.id) addFlower(b.id, b.lat, b.lng, b)
       if (b.owner === sub) {
@@ -260,7 +266,7 @@ clearAllFlowers()
       }
     })
   } catch (e) {
-    console.error('❌ 花の取得失敗', e)
+    console.error('❌ 花またはユーザー情報の取得失敗', e)
   }
 
   const animate = () => {

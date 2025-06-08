@@ -107,55 +107,5 @@ async function reject(req) {
 </script>
 
 <style scoped>
-.overlay {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(4px);
-  z-index: 1000;
-  overflow-y: auto;
-  padding: 2rem 1rem;
-  text-align: center;
-}
-
-.title {
-  font-size: 1.2rem;
-  font-weight: bold;
-color: #111;
-  margin-bottom: 2rem;
-}
-
-.request-block {
-  margin: 2rem auto;
-  padding: 1rem;
-  color: #fff;
-  font-size: 1.1rem;
-  max-width: 520px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.button-row {
-  display: flex;
-  justify-content: center;
-  gap: 1rem;
-  margin-top: 1rem;
-}
-@media (prefers-color-scheme: dark) {
-  .modal-title {
-    color: #f5f5f5;
-  }
-
-  .tag-button {
-    background: #444;
-    color: #eee;
-    border-color: #666;
-  }
-
-  .tag-button.selected {
-    background: #567;
-    color: #fff;
-    border-color: #89a;
-  }
-}
 
 </style>

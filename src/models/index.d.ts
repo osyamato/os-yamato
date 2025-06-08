@@ -13,7 +13,7 @@ type EagerMemo = {
   readonly id: string;
   readonly content: string;
   readonly tags?: (string | null)[] | null;
-  readonly owner?: string | null;
+  readonly sharedWith?: (string | null)[] | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
 }
@@ -25,7 +25,7 @@ type LazyMemo = {
   readonly id: string;
   readonly content: string;
   readonly tags?: (string | null)[] | null;
-  readonly owner?: string | null;
+  readonly sharedWith?: (string | null)[] | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
 }
@@ -118,9 +118,8 @@ type EagerContact = {
   readonly emails?: (string | null)[] | null;
   readonly note?: string | null;
   readonly yamatoId?: string | null;
-  readonly owner?: string | null;
-  readonly createdAt?: string | null;
   readonly lastOpenedAt?: string | null;
+  readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
 }
 
@@ -136,9 +135,8 @@ type LazyContact = {
   readonly emails?: (string | null)[] | null;
   readonly note?: string | null;
   readonly yamatoId?: string | null;
-  readonly owner?: string | null;
-  readonly createdAt?: string | null;
   readonly lastOpenedAt?: string | null;
+  readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
 }
 
@@ -201,7 +199,9 @@ type EagerMessage = {
   };
   readonly id: string;
   readonly roomId: string;
+  readonly senderSub: string;
   readonly senderYamatoId: string;
+  readonly receiverSub: string;
   readonly receiverYamatoId: string;
   readonly content: string;
   readonly timestamp: string;
@@ -217,7 +217,9 @@ type LazyMessage = {
   };
   readonly id: string;
   readonly roomId: string;
+  readonly senderSub: string;
   readonly senderYamatoId: string;
+  readonly receiverSub: string;
   readonly receiverYamatoId: string;
   readonly content: string;
   readonly timestamp: string;

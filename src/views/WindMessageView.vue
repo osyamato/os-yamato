@@ -1,30 +1,32 @@
 <template>
   <!-- 通常の送信画面 -->
-<div v-if="!sent" class="wind-message-view drop-down" v-show="recipientLoaded">
-<h2 class="header-title">
-  {{ recipientName ? `${recipientName}さんの未来へ言葉を届けよう` : '未来へ言葉を届けよう' }}
-</h2>
-<p class="header-subtitle">言葉を風に乗せて、静かに届くその日まで。</p>
+  <div v-if="!sent" class="wind-message-view drop-down" v-show="recipientLoaded">
+    <h2 class="header-title">
+      {{ recipientName ? t('wind.sendTitleWithName', { name: recipientName }) : t('wind.sendTitle') }}
+    </h2>
+    <p class="header-subtitle">{{ t('wind.sendSubtitle') }}</p>
 
     <div class="letter-box">
       <textarea
         v-model="message"
-        placeholder="ここに想いを綴ってください…"
+        :placeholder="t('wind.placeholder')"
         rows="8"
         class="textarea"
-:maxlength="MAX_LENGTH"
+        :maxlength="MAX_LENGTH"
       />
     </div>
 
-<YamatoButton @click="sendMessage" :disabled="!isMessageValid">
-  風に預ける🕊️
-</YamatoButton>  </div>
+<YamatoButton size="large" @click="sendMessage" :disabled="!isMessageValid">
+  {{ t('wind.sendButton') }}
+</YamatoButton>
+  </div>
 
   <!-- 送信アニメーション画面 -->
   <div v-else class="animation-overlay">
     <div class="bird fly">🕊️</div>
   </div>
 </template>
+
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
@@ -33,6 +35,9 @@ import { Auth, API, graphqlOperation } from 'aws-amplify'
 import { getPublicProfile } from '@/graphql/queries'
 import { createWindMessage } from '@/graphql/mutations'
 import YamatoButton from '@/components/YamatoButton.vue'
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
+
 
 const route = useRoute()
 const router = useRouter()
@@ -112,7 +117,8 @@ const isMessageValid = computed(() => {
   font-size: 0.95rem;
   color: #555;
   text-align: center;
-  margin-top: 0.3rem;
+  margin-top: 1.0rem;
+  margin-bottom: 1rem; 
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
   opacity: 0.85;
 }
@@ -232,6 +238,7 @@ background: linear-gradient(to top, #e0f2ff, #b3e5fc);
 .textarea:invalid {
   border-color: red;
 }
+
 
 </style>
  

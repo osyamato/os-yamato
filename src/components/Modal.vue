@@ -102,6 +102,19 @@ function handleBackgroundClick() {
     color: #aaa !important;
   }
 }
+.modal-title {
+  color: #111;
+  font-weight: bold;
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+@media (prefers-color-scheme: dark) {
+  .modal-title {
+    color: #f5f5f5;
+  }
+}
 
 /* ✨ アニメーション */
 .modal-enter-active {
@@ -109,6 +122,23 @@ function handleBackgroundClick() {
 }
 .modal-leave-active {
   animation: flyUp 0.3s ease-in;
+}
+
+::v-deep(.modal-title) {
+  font-size: 1.2rem;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  margin-bottom: 1rem;
+  text-align: center;
+  color: #222 !important;
+  opacity: 1 !important;
+  filter: none !important;
+  mix-blend-mode: normal !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  ::v-deep(.modal-title) {
+    color: #f5f5f5 !important;
+  }
 }
 
 @keyframes dropDown {

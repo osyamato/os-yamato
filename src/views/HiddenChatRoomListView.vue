@@ -1,6 +1,6 @@
 <template>
   <div class="chat-room-list">
-    <h2 class="header-title">雲の中メッセージリスト</h2>
+<h2 class="header-title">{{ t('wind.cloudListTitle') }}</h2>
 
     <div class="room-list">
       <div
@@ -19,7 +19,9 @@
         <small class="last-time">{{ formatTime(room.lastTimestamp) }}</small>
 
 <div class="reopen-button-wrapper">
-  <YamatoButton @click="restoreRoom(room)">そっと戻す</YamatoButton>
+<YamatoButton @click="restoreRoom(room)">
+  {{ t('wind.restoreButton') }}
+</YamatoButton>
 </div>
  </div>   
  </div>
@@ -32,6 +34,9 @@ import { API, graphqlOperation, Auth } from 'aws-amplify'
 import { listChatRooms, getPublicProfile } from '@/graphql/queries'
 import { updateChatRoom } from '@/graphql/mutations'
 import YamatoButton from '@/components/YamatoButton.vue'
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
+
 
 const mySub = ref('')
 const chatRooms = ref([])
@@ -148,6 +153,22 @@ const sortedRooms = computed(() => {
   display: flex;
   justify-content: center;
   margin-top: 1rem; /* 任意で余白 */
+}
+.chat-room-list {
+  animation: dropDown 0.5s ease-out;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+@keyframes dropDown {
+  0% {
+    transform: translateY(-40px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 

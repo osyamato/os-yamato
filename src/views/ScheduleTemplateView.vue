@@ -1,6 +1,6 @@
 <template>
   <div class="template-view drop-down-animation">
-    <h2 class="header-title">スケジュールテンプレート</h2>
+<h2 class="header-title">{{ t('template.header') }}</h2>
 
     <!-- アイコン群 -->
     <div class="header-icons">
@@ -41,47 +41,60 @@
     </div>
 
     <!-- 作成モーダル -->
-    <Modal :visible="showModal" @close="showModal = false">
-      <h3 class="modal-title">テンプレートを作成</h3>
-      <input v-model="newTemplate.emoji" placeholder="絵文字 (例: 📚)" class="input-field" />
-      <div class="emoji-options">
-        <span
-          v-for="emoji in emojiSamples"
-          :key="emoji"
-          class="emoji-button"
-          @click="newTemplate.emoji = emoji"
-        >
-          {{ emoji }}
-        </span>
-      </div>
-      <input v-model="newTemplate.label" placeholder="タイトル (例: 日勤)" class="input-field" />
+<!-- 作成モーダル -->
+<Modal :visible="showModal" customClass="compact" @close="showModal = false">
+<h3 class="modal-title">{{ t('template.create') }}</h3>
+<input v-model="newTemplate.emoji" :placeholder="t('template.emojiPlaceholder')" class="input-field" />
+  <div class="emoji-options">
+    <span
+      v-for="emoji in emojiSamples"
+      :key="emoji"
+      class="emoji-button"
+      @click="newTemplate.emoji = emoji"
+    >
+      {{ emoji }}
+    </span>
+  </div>
+<input
+  v-model="newTemplate.label"
+  :placeholder="t('template.labelPlaceholder')"
+  class="input-field"
+/>
+  <div class="time-row">
+    <input type="time" v-model="newTemplate.startTime" class="time-input" />
+    <input type="time" v-model="newTemplate.endTime" class="time-input" />
+  </div>
+  <div class="button-row">
+<YamatoButton @click="createTemplate">{{ t('add') }}</YamatoButton>
+  </div>
+</Modal>
+
+<!-- 編集モーダル -->
+<Modal :visible="!!selectedTemplate" customClass="compact" @close="selectedTemplate = null">
+  <template #default>
+    <div v-if="selectedTemplate">
+<h3 class="modal-title">{{ t('template.edit') }}</h3>
+<input
+  v-model="selectedTemplate.emoji"
+  :placeholder="t('template.emojiPlaceholder')"
+  class="input-field"
+/>
+<input
+  v-model="selectedTemplate.label"
+  class="input-field"
+  :placeholder="t('template.labelPlaceholder')"
+/>
       <div class="time-row">
-        <input type="time" v-model="newTemplate.startTime" class="time-input" />
-        <input type="time" v-model="newTemplate.endTime" class="time-input" />
+        <input type="time" v-model="selectedTemplate.startTime" class="time-input" />
+        <input type="time" v-model="selectedTemplate.endTime" class="time-input" />
       </div>
       <div class="button-row">
-        <YamatoButton @click="createTemplate">登録</YamatoButton>
+<YamatoButton @click="updateTemplate">{{ t('update') }}</YamatoButton>
+<YamatoButton type="danger" @click="promptSingleDelete(selectedTemplate.id)">{{ t('delete') }}</YamatoButton>
       </div>
-    </Modal>
-
-    <!-- 編集モーダル -->
-    <Modal :visible="!!selectedTemplate" @close="selectedTemplate = null">
-      <template #default>
-        <div v-if="selectedTemplate">
-          <h3 class="modal-title">テンプレート編集</h3>
-          <input v-model="selectedTemplate.emoji" class="input-field" placeholder="絵文字" />
-          <input v-model="selectedTemplate.label" class="input-field" placeholder="タイトル" />
-          <div class="time-row">
-            <input type="time" v-model="selectedTemplate.startTime" class="time-input" />
-            <input type="time" v-model="selectedTemplate.endTime" class="time-input" />
-          </div>
-          <div class="button-row">
-            <YamatoButton @click="updateTemplate">更新</YamatoButton>
-            <YamatoButton type="danger" @click="promptSingleDelete(selectedTemplate.id)">削除</YamatoButton>
-          </div>
-        </div>
-      </template>
-    </Modal>
+    </div>
+  </template>
+</Modal>
 
     <!-- 削除確認 -->
     <ConfirmDialog
@@ -108,6 +121,9 @@ import YamatoButton from '@/components/YamatoButton.vue'
 import IconButton from '@/components/IconButton.vue'
 import { Auth } from 'aws-amplify'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const iconColor = ref('#274c77')
 
