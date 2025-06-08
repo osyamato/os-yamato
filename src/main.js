@@ -2,18 +2,23 @@ import './assets/main.css'
 
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
-
 import App from './App.vue'
 import router from './router'
 
-// ✅ ここから Amplify を追加
 import { Amplify } from 'aws-amplify'
 import awsconfig from './aws-exports'
-Amplify.configure(awsconfig) // ← これが超重要！
- 
+
+// ✅ 追加：i18n をインポート
+import { i18n } from './i18n'
+
+Amplify.configure(awsconfig)
+
 const app = createApp(App)
 
+// ✅ 各種プラグインを登録
+app.use(i18n)          // ← 🌐 ここが重要！
 app.use(createPinia())
 app.use(router)
 
 app.mount('#app')
+

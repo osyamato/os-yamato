@@ -17,10 +17,10 @@
           <div
             v-else
             class="message-row"
-            :class="{ mine: msg.senderYamatoId === myYamatoId }"
+:class="{ mine: msg.senderSub === mySub }"
           >
             <!-- 相手メッセージ -->
-            <template v-if="msg.senderYamatoId !== myYamatoId">
+<template v-if="msg.senderSub !== mySub">
               <div class="message" v-html="msg.content.replace(/\n/g, '<br>')"></div>
               <span class="timestamp-side">{{ formatTime(msg.timestamp) }}</span>
             </template>
@@ -94,10 +94,12 @@ const myYamatoId = ref('')
 const mySub = ref('')
 const roomId = ref('')
 const receiverYamatoId = ref('')
+const receiverSub = ref('')
 const route = useRoute()
 let subscription = null
 
 const groupedMessages = computed(() => groupMessagesByDate(messages.value))
+
 
 watchEffect(() => {
   roomId.value = route.params.roomId || ''
@@ -162,7 +164,7 @@ watch(messages, () => {
   if (!lastMsg) return
 
   // ✅ 自分の送信したメッセージならスキップ（sendMessage内で処理済みだから）
-  if (lastMsg.senderYamatoId === myYamatoId.value) return
+if (lastMsg.senderSub === mySub.value) return
 
   maybePlayEffect(lastMsg.content)
 })
@@ -192,11 +194,21 @@ onMounted(async () => {
   })
   myYamatoId.value = res.data.getPublicProfile.yamatoId
 
-  // 相手の名前取得
+  // 👇 相手の Yamato ID から PublicProfile を取得
   const profileRes = await API.graphql(graphqlOperation(publicProfileByYamatoId, {
     yamatoId: receiverYamatoId.value
   }))
-  partnerDisplayName.value = profileRes.data.publicProfileByYamatoId.items[0]?.displayName || '相手'
+  const partner = profileRes.data.publicProfileByYamatoId.items[0]
+
+  // 🔐 null チェック
+  if (!partner) {
+    console.warn('⚠️ partner が見つかりませんでした')
+    partnerDisplayName.value = '不明'
+    return
+  }
+
+  partnerDisplayName.value = partner.displayName || '相手'
+  receiverSub.value = partner.id // ← partner はここで定義されている
 
   await fetchMessages()
   subscribeToNewMessages()
@@ -231,14 +243,16 @@ async function sendMessage() {
   const now = new Date()
   const expiresAt = Math.floor(now.getTime() / 1000) + 365 * 24 * 60 * 60
 
-  const input = {
-    roomId: roomId.value,
-    senderYamatoId: myYamatoId.value,
-    receiverYamatoId: receiverYamatoId.value,
-    content,
-    timestamp: now.toISOString(),
-    expiresAt
-  }
+const input = {
+  roomId: roomId.value,
+  senderSub: mySub.value,
+  senderYamatoId: myYamatoId.value,
+  receiverSub: receiverSub.value,   // ← NEW
+  receiverYamatoId: receiverYamatoId.value,
+  content,
+  timestamp: now.toISOString(),
+  expiresAt
+}
 
   try {
     await API.graphql(graphqlOperation(createMessage, { input }))
@@ -296,9 +310,9 @@ function subscribeToNewMessages() {
       if (newMsg.roomId === roomId.value) {
         messages.value.push(newMsg)
 
-        if (newMsg.senderYamatoId !== myYamatoId.value) {
-          maybePlayEffect(newMsg.content)
-        }
+if (newMsg.senderSub !== mySub.value) {
+  maybePlayEffect(newMsg.content)
+}
 
         await nextTick()
         scrollToBottom()

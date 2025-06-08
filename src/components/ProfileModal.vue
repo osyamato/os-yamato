@@ -2,45 +2,45 @@
   <transition name="fade-modal">
     <div v-if="visible" class="modal-overlay" @click.self="emit('back')">
       <div class="profile-modal">
-        <h2 class="modal-title">🌸 花のプロフィール</h2>
+<h2 class="modal-title">{{ t('blossom.profileTitle') }}</h2>
 
         <div v-if="profile.nickname" class="profile-section">
-          <label>🧑 ニックネーム</label>
+<label>{{ t('blossom.nickname') }}</label>
           <p class="profile-text">{{ profile.nickname }}</p>
         </div>
 
         <div v-if="profile.comment" class="profile-section">
-          <label>🗒️ コメント</label>
+<label>{{ t('blossom.comment') }}</label>
           <p class="profile-text">{{ profile.comment }}</p>
         </div>
 
         <div v-if="profile.country" class="profile-section">
-          <label>🌍 国</label>
+<label>{{ t('blossom.country') }}</label>
           <p class="profile-text">{{ emojiCountry(profile.country) }}</p>
         </div>
 
         <div v-if="profile.hobby" class="profile-section">
-          <label>🎯 趣味</label>
+<label>{{ t('blossom.hobby') }}</label>
           <p class="profile-text">{{ emojiHobby(profile.hobby) }}</p>
         </div>
 
         <div v-if="profile.yamatoId" class="profile-section">
-          <label>🆔 Yamato ID</label>
+          <label>Yamato ID</label>
           <p class="profile-text">{{ profile.yamatoId }}</p>
         </div>
 <div class="button-row">
-  <YamatoButton
-    v-if="profile.yamatoId"
-    type="primary"
-    @click="emit('request', profile.yamatoId)"
-  >
-    📮 チャット申請へ
-  </YamatoButton>
+<YamatoButton
+  v-if="profile.yamatoId"
+  type="primary"
+  @click="emit('request', profile.yamatoId)"
+>
+  📮 {{ t('blossom.requestButton') }}
+</YamatoButton>
 </div>
 
 
         <div class="button-row">
-          <YamatoButton @click="emit('back')">← 戻る</YamatoButton>
+<YamatoButton @click="emit('back')">{{ t('close') }}</YamatoButton>
         </div>
       </div>
     </div>
@@ -49,6 +49,9 @@
 
 <script setup>
 import YamatoButton from '@/components/YamatoButton.vue'
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
+
 
 const props = defineProps({
   visible: Boolean,
@@ -59,46 +62,46 @@ const emit = defineEmits(['back', 'request'])
 
 function emojiCountry(code) {
   return {
-    jp: '🇯🇵 日本',
-    us: '🇺🇸 アメリカ',
-    fr: '🇫🇷 フランス',
-    de: '🇩🇪 ドイツ',
-    in: '🇮🇳 インド',
-    kr: '🇰🇷 韓国',
-    cn: '🇨🇳 中国',
-    uk: '🇬🇧 イギリス',
-    br: '🇧🇷 ブラジル',
-    ca: '🇨🇦 カナダ',
-    it: '🇮🇹 イタリア',
-    es: '🇪🇸 スペイン',
-    au: '🇦🇺 オーストラリア',
-    sg: '🇸🇬 シンガポール',
-    th: '🇹🇭 タイ',
-    ph: '🇵🇭 フィリピン',
-    vn: '🇻🇳 ベトナム'
-  }[code] || '🌍 未選択'
+    jp: '🇯🇵',
+    us: '🇺🇸',
+    fr: '🇫🇷',
+    de: '🇩🇪',
+    in: '🇮🇳',
+    kr: '🇰🇷',
+    cn: '🇨🇳',
+    uk: '🇬🇧',
+    br: '🇧🇷',
+    ca: '🇨🇦',
+    it: '🇮🇹',
+    es: '🇪🇸',
+    au: '🇦🇺',
+    sg: '🇸🇬',
+    th: '🇹🇭',
+    ph: '🇵🇭',
+    vn: '🇻🇳'
+  }[code] || '🌍'
 }
 
 function emojiHobby(code) {
   return {
-    art: '🎨 アート',
-    music: '🎸 音楽',
-    reading: '📚 読書',
-    running: '🏃 ランニング',
-    travel: '✈️ 旅行',
-    gaming: '🎮 ゲーム',
-    coffee: '☕ コーヒー',
-    hanami: '🌸 花見',
-    surfing: '🌊 サーフィン',
-    photography: '📷 写真',
-    meditation: '🧘 瞑想',
-    dogs: '🐶 犬',
-    cats: '🐱 猫',
-    cooking: '🍳 料理',
-    crafting: '🧵 手芸',
-    movies: '🎬 映画',
-    gardening: '🌱 ガーデニング'
-  }[code] || '🎯 未選択'
+    art: '🎨',
+    music: '🎸',
+    reading: '📚',
+    running: '🏃',
+    travel: '✈️',
+    gaming: '🎮',
+    coffee: '☕',
+    hanami: '🌸',
+    surfing: '🌊',
+    photography: '📷',
+    meditation: '🧘',
+    dogs: '🐶',
+    cats: '🐱',
+    cooking: '🍳',
+    crafting: '🧵',
+    movies: '🎬',
+    gardening: '🌱'
+  }[code] || '🎯'
 }
 </script>
 

@@ -2,11 +2,17 @@
 # all models in this schema. Learn more about authorization rules here: https://docs.>
 input AMPLIFY { globalAuthRule: AuthRule = { allow: public } } # FOR TESTING ONLY!
 
-type Memo @model @auth(rules: [{ allow: owner }]) {
+type Memo
+  @model
+  @auth(rules: [
+    { allow: owner },  # 作成者にフルアクセス（create, read, update, delete）
+    { allow: owner, ownerField: "sharedWith", operations: [read, update] } # 共有先は read＋update
+  ])
+{
   id: ID!
   content: String!
-  tags: [String]        # ← ここを追加！
-  owner: String
+  tags: [String]
+  sharedWith: [String]     # ✅ 各ユーザーの Cognito `sub` を配列で保持
   createdAt: AWSDateTime
   updatedAt: AWSDateTime
 }
@@ -41,11 +47,11 @@ type Contact @model @auth(rules: [{ allow: owner }]) {
   phoneNumbers: [String]
   emails: [String]
   note: String
-  yamatoId: String        # ✅ Yamato IDを追加！
-  owner: String
-  createdAt: AWSDateTime  # 芽が出た瞬間
-  lastOpenedAt: AWSDateTime # 世話をした最新
+  yamatoId: String            # 表示用はそのまま残してOK
+  lastOpenedAt: AWSDateTime
+  createdAt: AWSDateTime
 }
+
 
 type ChatRoom
   @model
@@ -76,14 +82,17 @@ type Message
     subscriptions: { level: public, onCreate: ["onCreateMessage"] }
   )
   @auth(rules: [
-    { allow: owner },
-    { allow: private, operations: [read, create] }
+    { allow: owner },  # 送信者（自動的に sub に基づく）にフルアクセス
+    { allow: private, operations: [read] } # ログインユーザー全員が読み取り可（最低限の制御）
   ])
 {
   id: ID!
   roomId: ID!
-  senderYamatoId: String!
-  receiverYamatoId: String!
+  senderSub: String!        # ← 新規追加（これで識別）
+  senderYamatoId: String!   # ← 表示用（変更可能）
+  receiverSub: String!      # ← 新規追加（受信者の権限にも使える）
+  receiverYamatoId: String! # ← 表示用（変更可能）
+
   content: String!
   timestamp: AWSDateTime!
   createdAt: AWSDateTime

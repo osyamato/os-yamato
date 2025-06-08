@@ -3,73 +3,68 @@
     <!-- ✅ アニメーションを適用する内部ラッパー -->
     <div class="chat-room-wrapper">
       <!-- 🔷 ヘッダー -->
-<div class="chat-header">
-  <h2 class="header-title">メッセージ</h2>
+      <div class="chat-header">
+<h2 class="header-title">{{ t('chat.title') }}</h2>
+        <transition name="fade-in">
+          <div class="header-icons" v-if="isReady">
+            <IconButton :color="iconColor" @click="openProfileModal">{{ myInitial }}</IconButton>
+            <IconButton
+              v-if="hasProfile"
+              :color="iconColor"
+              :class="{ blink: hasIncomingRequest }"
+              @click="handleRequestClick"
+            >📮</IconButton>
+            <IconButton
+              v-if="hasProfile"
+              :color="iconColor"
+              @click="openSearchModal"
+            >＋</IconButton>
+            <IconButton
+              v-if="hasProfile"
+              :color="iconColor"
+              @click="openWindInbox"
+            >🕊️</IconButton>
+          </div>
+        </transition>
+      </div>
 
-<transition name="fade-in">
-  <div class="header-icons" v-if="isReady">
-    <IconButton :color="iconColor" @click="openProfileModal">
-      {{ myInitial }}
-    </IconButton>
-    <IconButton
-      v-if="hasProfile"
-      :color="iconColor"
-      :class="{ blink: hasIncomingRequest }"
-      @click="handleRequestClick"
-    >📮</IconButton>
-    <IconButton
-      v-if="hasProfile"
-      :color="iconColor"
-      @click="openSearchModal"
-    >＋</IconButton>
-    <IconButton
-      v-if="hasProfile"
-      :color="iconColor"
-      @click="openWindInbox"
-    >🕊️</IconButton>
-  </div>
-</transition>
- </div>
       <!-- 🔷 チャットルーム一覧 -->
-<!-- 🔷 チャットルーム一覧 -->
-<transition name="fadeSlideIn">
-  <div class="room-list" v-if="isReady">
-    <div
-      v-for="room in sortedRooms"
-      :key="room.id"
-      class="room-card"
-      @click="goToRoom(room.id, getPartnerYamatoId(room))"
-    >
-<p class="partner-name">
-  <span class="icon">{{ getExpiryIcon(room) }}</span>
-<span class="name-text">
-  {{
-    getPartnerDisplayName(room).length > 15
-      ? getPartnerDisplayName(room).slice(0, 15) + '…'
-      : getPartnerDisplayName(room)
-  }}
-</span>
-  <span class="menu-dots" @click.stop="openOptions(room)">⋯</span>
-  <span class="mail-icon" @click.stop="openWindMessage(room)">✉️</span>
-</p>
-
-      <p class="last-message">
-        <span v-if="hasUnread(room)" class="unread-dot inline"></span>
-        <span class="message-text">
-          {{
-            room.lastMessage
-              ? room.lastMessage.length > 15
-                ? room.lastMessage.slice(0, 15) + '…'
-                : room.lastMessage
-              : ''
-          }}
-        </span>
-      </p>
-
-      <small class="last-time">{{ formatTime(room.lastTimestamp) }}</small>
-    </div>
-  </div>
-</transition>
+      <transition name="fadeSlideIn">
+        <div class="room-list" v-if="isReady">
+          <div
+            v-for="room in sortedRooms"
+            :key="room.id"
+            class="room-card"
+            @click="goToRoom(room.id, getPartnerYamatoId(room))"
+          >
+            <p class="partner-name">
+              <span class="icon">{{ getExpiryIcon(room) }}</span>
+              <span class="name-text">
+                {{
+                  getPartnerDisplayName(room).length > 15
+                    ? getPartnerDisplayName(room).slice(0, 15) + '…'
+                    : getPartnerDisplayName(room)
+                }}
+              </span>
+              <span class="menu-dots" @click.stop="openOptions(room)">⋯</span>
+              <span class="mail-icon" @click.stop="openWindMessage(room)">✉️</span>
+            </p>
+            <p class="last-message">
+              <span v-if="hasUnread(room)" class="unread-dot inline"></span>
+              <span class="message-text">
+                {{
+                  room.lastMessage
+                    ? room.lastMessage.length > 15
+                      ? room.lastMessage.slice(0, 15) + '…'
+                      : room.lastMessage
+                    : ''
+                }}
+              </span>
+            </p>
+            <small class="last-time">{{ formatTime(room.lastTimestamp) }}</small>
+          </div>
+        </div>
+      </transition>
     </div>
 
     <!-- 🔷 Yamato ID 検索モーダル -->
@@ -80,17 +75,17 @@
       <Modal
         v-if="showRequestModal"
         :visible="true"
-        :customClass="'modal-inner-card'"
+        customClass="compact"
         @close="() => showRequestModal = false"
       >
         <div>
-          <h3 class="modal-title">🌱あたらしい会話の芽が届きました🌱</h3>
+<h3 class="modal-title">{{ t('chat.newConversationRequest') }}</h3>
           <div v-for="req in requests" :key="req.id" class="request-block">
-            <p><strong>申請者:</strong> {{ req.senderProfile?.displayName || '不明' }}</p>
-            <p><strong>メッセージ:</strong> {{ req.message || '（なし）' }}</p>
+<p><strong>{{ t('chat.requester') }}:</strong> {{ req.senderProfile?.displayName || t('chat.unknown') }}</p>
+<p><strong>{{ t('chat.message') }}:</strong> {{ req.message || t('chat.none') }}</p>
             <div class="button-row">
-              <YamatoButton @click="accept(req)">承認</YamatoButton>
-              <YamatoButton type="danger" @click="reject(req)">拒否</YamatoButton>
+<YamatoButton @click="accept(req)">{{ t('chat.accept') }}</YamatoButton>
+<YamatoButton type="danger" @click="reject(req)">{{ t('chat.reject') }}</YamatoButton>
             </div>
           </div>
         </div>
@@ -102,15 +97,15 @@
       <Modal
         v-if="showOptionsFor"
         :visible="true"
-        :customClass="'modal-inner-card'"
+        customClass="compact"
         @close="closeOptions"
         @after-leave="scrollToTop"
       >
         <div>
-          <p class="confirm-text">このメッセージを雲にかくしますか？</p>
-          <div class="modal-actions">
-            <YamatoButton type="danger" @click="deleteRoom">かくす</YamatoButton>
-          </div>
+<p class="confirm-text">{{ t('chat.confirmHideMessage') }}</p>
+<div class="modal-actions">
+  <YamatoButton type="danger" @click="deleteRoom">{{ t('chat.hide') }}</YamatoButton>
+</div>
         </div>
       </Modal>
     </transition>
@@ -118,7 +113,7 @@
     <!-- 🔷 プロフィールモーダル -->
     <Modal
       :visible="showProfileModal"
-      :customClass="'modal-inner-card'"
+      customClass="compact"
       @close="() => showProfileModal = false"
       @refresh="handleProfileRefresh"
       @after-leave="scrollToTop"
@@ -151,6 +146,10 @@ import '@/assets/variables.css'
 import { deleteChatRoom } from '@/graphql/mutations'
 
 import IconButton from '@/components/IconButton.vue'
+
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const iconColor = ref('#274c77')
 const isReady = ref(false)
@@ -782,7 +781,10 @@ button {
   font-size: 1.2rem;
   margin-bottom: 1rem;
   text-align: center;
-  color: black; /* デフォルト（ライトモード） */
+  color: #222222; /* より濃い黒に変更 */
+  opacity: 1 !important; /* 透明度を強制解除 */
+  filter: none !important; /* もしフィルターがかかっていたら解除 */
+  mix-blend-mode: normal !important; /* ブレンドモード解除 */
 }
 
 @media (prefers-color-scheme: dark) {
@@ -994,6 +996,30 @@ button {
   }
 }
 
+.modal-inner-card {
+  background: #fff !important;
+  color: #222 !important;
+  opacity: 1 !important;
+  filter: none !important;
+  mix-blend-mode: normal !important;
+}
+
+.compact {
+  background: #fff;
+  color: #111; /* 💡 これでライトモード時に文字が黒くなる */
+  padding: 1.2rem;
+  max-width: 400px;
+  border-radius: 14px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+/* ダークモード対応 */
+@media (prefers-color-scheme: dark) {
+  .compact {
+    background-color: #2a2a2a;
+    color: #fff;
+    box-shadow: 0 8px 24px rgba(255, 255, 255, 0.05);
+  }
+}
+
 </style>
-
-

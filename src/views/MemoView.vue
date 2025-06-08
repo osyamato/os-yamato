@@ -2,7 +2,7 @@
   <div class="memo-container">
     <!-- ヘッダー -->
     <div class="memo-header">
-      <h2 class="header-title">メモ</h2>
+ <h2 class="header-title">{{ t('memoTitle') }}</h2>
 
 <!-- 1段目 -->
 <div class="header-icons">
@@ -43,8 +43,8 @@
     </div>
 
     <!-- 🥀 詩的メッセージ -->
-    <p v-if="filterWiltingOnly" class="wilted-message">
-      記憶の花は、いつか風に散る
+ <p v-if="filterWiltingOnly" class="wilted-message">
+      {{ t('message.memoryFlower') }}
     </p>
 
     <!-- メモ一覧 -->
@@ -67,21 +67,21 @@
         </div>
 
         <span class="flower-icon fixed-icon">{{ getLifeStageIcon(memo) }}</span>
-        <p class="memo-content">{{ memo.content }}</p>
-        <div class="memo-dates">
-          作成: {{ formatDate(memo.createdAt) }}
-          <span
-            v-if="memo.createdAt && memo.updatedAt && !isSameDay(memo.createdAt, memo.updatedAt)"
-          >
-            ／ 更新: {{ formatDate(memo.updatedAt) }}
-          </span>
+<p class="memo-content">{{ memo.content }}</p>
+<div class="memo-dates">
+  {{ t('created') }}: {{ formatDate(memo.createdAt) }}
+  <span
+    v-if="memo.createdAt && memo.updatedAt && !isSameDay(memo.createdAt, memo.updatedAt)"
+  >
+    ／ {{ t('updated') }}: {{ formatDate(memo.updatedAt) }}
+  </span>
         </div>
       </div>
     </div>
 
     <!-- ✅ 新規・編集モーダル -->
     <transition name="modal">
-      <Modal v-if="showModal" :visible="showModal" @close="closeModal">
+<Modal v-if="showModal" :visible="showModal" @close="closeModal" customClass="compact">
         <div style="display: flex; justify-content: space-between; align-items: center">
           <h3 class="modal-title-icon-only">
             <span class="flower-icon-small">{{ getLifeStageIcon(selectedMemo) }}</span>
@@ -96,10 +96,10 @@
 </IconButton>
         </div>
 
-        <textarea
-          v-model="memoContent"
-          :placeholder="selectedMemo ? 'メモを編集...' : 'メモを書く...'"
-        />
+<textarea
+  v-model="memoContent"
+  :placeholder="selectedMemo ? t('editPlaceholder') : t('newPlaceholder')"
+/>
 
         <div class="button-row">
           <button class="btn-tag" @click="toggleTagArea">🏷️</button>
@@ -117,45 +117,50 @@
               {{ tag }}
             </button>
           </div>
-          <div class="tag-input-row">
-            <input type="text" placeholder="新しいタグ…" v-model="newTagInput" />
-            <YamatoButton @click="addTag">追加</YamatoButton>
-          </div>
+<div class="tag-input-row">
+  <input
+    type="text"
+    :placeholder="t('tagInputPlaceholder')"
+    v-model="newTagInput"
+  />
+  <YamatoButton @click="addTag">{{ t('add') }}</YamatoButton>
+</div>
         </div>
 
         <div class="button-row">
-          <YamatoButton
-            v-if="selectedMemo"
-            size="small"
-            :disabled="editMemoContent.trim().length === 0"
-            @click="updateSelectedMemo"
-          >
-            更新
-          </YamatoButton>
+<YamatoButton
+  v-if="selectedMemo"
+  size="small"
+  :disabled="editMemoContent.trim().length === 0"
+  @click="updateSelectedMemo"
+>
+  {{ t('update') }}
+</YamatoButton>
+
 <YamatoButton
   v-if="selectedMemo"
   size="small"
   type="danger"
   @click="promptDeleteMemo"
 >
-  削除
+  {{ t('delete') }}
 </YamatoButton>
-          <YamatoButton
-            v-else
-            size="small"
-            :disabled="newMemoContent.trim().length === 0"
-            @click="saveMemo"
-          >
-            保存
-          </YamatoButton>
+<YamatoButton
+  v-else
+  size="small"
+  :disabled="newMemoContent.trim().length === 0"
+  @click="saveMemo"
+>
+  {{ t('save') }}
+</YamatoButton>
         </div>
       </Modal>
     </transition>
 
     <!-- 🔍 タグ検索モーダル -->
     <transition name="modal">
-      <Modal v-if="showSearchModal" :visible="showSearchModal" @close="closeSearchModal">
-        <h3 class="modal-title">タグで検索</h3>
+<Modal v-if="showSearchModal" :visible="showSearchModal" @close="closeSearchModal" customClass="compact">
+ <h3 class="modal-title">{{ t('searchByTag') }}</h3>
         <div class="tag-list">
           <button
             v-for="tag in allTags"
@@ -168,29 +173,31 @@
           </button>
         </div>
         <div class="button-row">
-          <YamatoButton @click="clearSearchTag">すべて表示</YamatoButton>
+<YamatoButton @click="clearSearchTag">{{ t('showAll') }}</YamatoButton>
         </div>
       </Modal>
 
     </transition>
 
 <ConfirmDialog
-      v-if="showConfirm"
-      :visible="showConfirm"
-      message="本当にこのメモを削除しますか？"
-      @confirm="handleConfirmedDelete"
-      @cancel="showConfirm = false"
-    />
+  v-if="showConfirm"
+  :visible="showConfirm"
+  :message="t('confirmDeleteSingle')"
+  @confirm="handleConfirmedDelete"
+  @cancel="showConfirm = false"
+/>
+
 <ConfirmDialog
   v-if="showConfirmBulkDelete"
   :visible="showConfirmBulkDelete"
-  message="選択したメモをすべて削除しますか？"
+  :message="t('confirmDeleteBulk')"
   @confirm="handleBulkDeleteConfirmed"
   @cancel="showConfirmBulkDelete = false"
 />
 
   </div>
 </template>
+
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
@@ -201,6 +208,10 @@ import Modal from '@/components/Modal.vue'
 import YamatoButton from '@/components/YamatoButton.vue'
 import '@/assets/variables.css'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
+import { useI18n } from 'vue-i18n'
+import { i18n } from '@/i18n'
+
+const { t } = useI18n()
 
 
 // --- データ ---
@@ -283,9 +294,11 @@ function clearSearchTag() {
   selectedSearchTags.value = []
   showSearchModal.value = false
 }
+
 function formatDate(dateString) {
   const date = new Date(dateString)
-  return date.toLocaleDateString('ja-JP', {
+  const locale = i18n.global.locale.value
+  return date.toLocaleDateString(locale, {
     year: 'numeric',
     month: 'short',
     day: 'numeric'
@@ -341,8 +354,17 @@ function handleFileUpload(event) {
 // --- メモ取得 ---
 async function fetchMemos() {
   try {
-    const result = await API.graphql(graphqlOperation(listMemos))
+    const user = await Auth.currentAuthenticatedUser()
+    const sub = user.attributes.sub
+    console.log('👤 現在のユーザー sub:', sub)
+
+    const result = await API.graphql(graphqlOperation(listMemos, {
+      filter: { owner: { contains: sub } }  // 🔑 sub を含む owner を取得
+    }))
+    console.log('📦 GraphQL 結果:', result)
+
     const items = result.data.listMemos.items
+    console.log('📋 フェッチされたメモ数:', items.length)
 
     const now = new Date()
     const toDelete = []
@@ -370,8 +392,9 @@ async function fetchMemos() {
 
     // 新しいリストを反映
     memos.value = filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    console.log('✅ 表示用 memos 更新完了:', memos.value.length, '件')
 
-    // ✅ 再同期：選択中のメモがまだ存在しているかチェック
+    // ✅ 選択中メモを再同期
     if (selectedMemo.value?.id) {
       const matched = filtered.find(m => m.id === selectedMemo.value.id)
       selectedMemo.value = matched || null
@@ -383,7 +406,7 @@ async function fetchMemos() {
     allTags.value = Array.from(tagsSet)
 
   } catch (err) {
-    console.error('❌ 読み込み失敗:', err)
+    console.error('❌ メモ読み込み失敗:', err)
   }
 }
 
@@ -434,15 +457,17 @@ async function deleteSelectedMemos() {
 // --- 新規メモ保存 ---
 async function saveMemo() {
   if (newMemoContent.value.trim() === '') return
+
   try {
     await API.graphql(graphqlOperation(createMemo, {
       input: {
         content: newMemoContent.value.trim(),
-        tags: selectedTags.value
+        tags: selectedTags.value,
+        sharedWith: [] // ← 🔁 現時点では空配列でOK。将来的にUIから設定可能に
       }
     }))
     closeModal()
-selectedSearchTags.value = []
+    selectedSearchTags.value = []
     await fetchMemos()
   } catch (err) {
     console.error('保存失敗:', err)
@@ -451,16 +476,18 @@ selectedSearchTags.value = []
 
 async function updateSelectedMemo() {
   if (!selectedMemo.value || editMemoContent.value.trim() === '') return
+
   try {
     await API.graphql(graphqlOperation(updateMemoMutation, {
       input: {
         id: selectedMemo.value.id,
         content: editMemoContent.value.trim(),
-        tags: selectedTags.value  // ← ここ！！！重要！！
+        tags: selectedTags.value,
+        sharedWith: selectedMemo.value.sharedWith || [] // ← 🔁 ここを追加（null対策も含む）
       }
     }))
     closeModal()
-selectedSearchTags.value = []
+    selectedSearchTags.value = []
     await fetchMemos()
   } catch (err) {
     console.error('更新失敗:', err)
@@ -489,11 +516,12 @@ function openMemo(memo) {
 }
 
 function openEditMemoModal(memo) {
+  console.log(`[MemoView] openEditMemoModal called. iconColor=${iconColor.value}`)
   selectedMemo.value = memo
   editMemoContent.value = memo.content
   selectedTags.value = memo.tags ? [...memo.tags] : []
   isEditMode.value = true
-  showTagArea.value = false // ←★ これ必ず入れる！
+  showTagArea.value = false
   showModal.value = true
 }
 
@@ -888,6 +916,7 @@ textarea {
   margin-left: 2rem;
 }
 
+
 .memo-card {
   position: relative;
   padding: 0.6rem 0.8rem;
@@ -918,9 +947,10 @@ textarea {
 }
 @media (min-width: 768px) {
   .memo-card {
-    max-width: 480px;
+    max-width: 600px;
   }
-}
+} 
+
 
 .memo-dates {
   font-size: 0.75rem;
@@ -959,9 +989,9 @@ textarea {
 }
 
 @media (prefers-color-scheme: dark) {
-  .modal-content {
+  .modal-inner-card {
     background: #2c2c2c; /* モーダル背景を暗く */
-    color: #f5f5f5;       /* モーダル内の文字を明るく */
+    color: #f5f5f5;	  /* モーダル内の文字を明るく */
   }
 
   textarea {
@@ -1075,4 +1105,3 @@ textarea {
 
 
 </style>
-

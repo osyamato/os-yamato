@@ -1,36 +1,43 @@
 <template>
   <transition name="fade-modal" appear @after-leave="afterLeave">
-    <div v-if="showModal" class="modal-overlay" @click.self="handleClose">
-      <div class="modal-inner-card">
-        <h3 class="modal-title">Yamato ID で相手を検索</h3>
+    <Modal
+      v-if="showModal"
+      :visible="true"
+      customClass="compact"
+      @close="handleClose"
+    >
+<h3 class="modal-title">{{ t('chat.searchTitle') }}</h3>
 
-        <!-- Yamato ID 入力欄 -->
-        <input
-          v-model="inputYamatoId"
-          placeholder="@yamato..."
-          @input="addAtMark"
-        />
-        <div class="button-row top-spaced">
-          <YamatoButton @click="search">検索</YamatoButton>
+      <!-- Yamato ID 入力欄 -->
+      <input
+        v-model="inputYamatoId"
+        placeholder="@yamato..."
+        @input="addAtMark"
+      />
+<div class="button-row top-spaced">
+  <YamatoButton @click="search">{{ t('chat.search') }}</YamatoButton>
+</div>
+
+      <!-- 検索結果の表示 -->
+      <div class="profile-results" v-if="foundProfiles.length > 0">
+        <div
+          v-for="profile in foundProfiles"
+          :key="profile.id"
+          class="profile-preview"
+        >
+<p class="profile-name">
+  <strong>{{ t('chat.name') }}：</strong>{{ profile.displayName || t('chat.unset') }}
+</p>
+<p class="profile-bio">
+  <strong>{{ t('chat.bio') }}：</strong>{{ profile.bio || t('chat.none') }}
+</p>
+<YamatoButton @click="sendRequest(profile)">{{ t('chat.sendRequest') }}</YamatoButton>
         </div>
-
-        <!-- 検索結果の表示 -->
-        <div class="profile-results" v-if="foundProfiles.length > 0">
-          <div
-            v-for="profile in foundProfiles"
-            :key="profile.id"
-            class="profile-preview"
-          >
-            <p class="profile-name"><strong>名前：</strong>{{ profile.displayName || '未設定' }}</p>
-            <p class="profile-bio"><strong>自己紹介：</strong>{{ profile.bio || 'なし' }}</p>
-            <YamatoButton @click="sendRequest(profile)">この人に申請</YamatoButton>
-          </div>
-        </div>
-
-        <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
-        <p v-if="successMessage" class="success">{{ successMessage }}</p>
       </div>
-    </div>
+
+      <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
+      <p v-if="successMessage" class="success">{{ successMessage }}</p>
+    </Modal>
   </transition>
 </template>
 
@@ -41,6 +48,10 @@ import { listChatRooms, publicProfileByYamatoId } from '@/graphql/queries'
 import { updateChatRoom, createChatRequest } from '@/graphql/mutations'
 import YamatoButton from '@/components/YamatoButton.vue'
 import { useRouter } from 'vue-router'
+import Modal from '@/components/Modal.vue'
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
+
 
 const props = defineProps({
   onClose: Function,
@@ -74,7 +85,7 @@ async function search() {
   const yamatoId = inputYamatoId.value.trim()
 
   if (!yamatoId) {
-    errorMessage.value = 'Yamato ID を入力してください'
+    errorMessage.value = t('chat.enterYamatoId')
     return
   }
 
@@ -86,11 +97,11 @@ async function search() {
     })
     foundProfiles.value = res.data.publicProfileByYamatoId.items
     if (foundProfiles.value.length === 0) {
-      errorMessage.value = '相手が見つかりませんでした'
+      errorMessage.value = t('chat.notFound')
     }
   } catch (err) {
     console.error('❌ 検索エラー:', err)
-    errorMessage.value = '検索に失敗しました'
+    errorMessage.value = t('chat.searchFailed')
   }
 }
 
@@ -144,12 +155,12 @@ async function sendRequest(profile) {
       authMode: 'AMAZON_COGNITO_USER_POOLS'
     })
 
-    successMessage.value = '✅ チャット申請を送信しました'
+successMessage.value = t('chat.requestSent')
     inputYamatoId.value = ''
     foundProfiles.value = []
   } catch (err) {
     console.error('❌ 申請エラー:', err)
-    errorMessage.value = '申請に失敗しました'
+errorMessage.value = t('chat.requestFailed')
   }
 }
 

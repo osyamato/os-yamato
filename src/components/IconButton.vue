@@ -75,4 +75,9 @@ const textColor = computed(() => {
 .icon-button:hover {
   opacity: 0.9;
 }
+
+::v-deep(.icon-button) {
+  font-family: inherit !important;
+}
+
 </style>

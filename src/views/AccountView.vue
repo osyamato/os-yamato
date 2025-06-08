@@ -1,61 +1,69 @@
 <template>
   <div class="account-view">
-<h2 class="header-title">アカウント</h2>
+    <h2 class="header-title">アカウント</h2>
 
-<!-- サインアウト -->
-<!-- サインアウト -->
-<div class="account-item">
-  <span>サインアウト</span>
-  <IconButton :color="selectedColor" size="medium" @click="showSignOutModal = true">
-    →
-  </IconButton>
-</div>
+    <!-- サインアウト -->
+    <div class="account-item">
+      <span>サインアウト</span>
+      <IconButton :color="selectedColor" size="medium" @click="showSignOutModal = true">
+        →
+      </IconButton>
+    </div>
 
-<!-- プレミアム -->
-<div class="account-item">
-  <span>Yamato プレミアム</span>
-  <IconButton :color="selectedColor" size="medium" @click="showPremiumModal = true">
-    →
-  </IconButton>
-</div>
+    <!-- プレミアム -->
+    <div class="account-item">
+      <span>Yamato プレミアム</span>
+      <IconButton :color="selectedColor" size="medium" @click="showPremiumModal = true">
+        →
+      </IconButton>
+    </div>
 
-<!-- アカウント削除 -->
-<div class="account-item">
-  <span>アカウント削除</span>
-  <IconButton :color="selectedColor" size="medium" @click="showDeleteModal = true">
-    →
-  </IconButton>
-</div>
+    <!-- アカウント削除 -->
+    <div class="account-item">
+      <span>アカウント削除</span>
+      <IconButton :color="selectedColor" size="medium" @click="showDeleteModal = true">
+        →
+      </IconButton>
+    </div>
+<ModalContent
+  :visible="showSignOutModal"
+  @close="showSignOutModal = false"
+  customClass="compact"
+>
+  <h3>サインアウト</h3>
+  <p>本当にサインアウトしますか？</p>
+  <div class="button-row">
+    <YamatoButton @click="confirmSignOut">サインアウト</YamatoButton>
+    <YamatoButton @click="showSignOutModal = false">キャンセル</YamatoButton>
+  </div>
+</ModalContent>
 
-    <!-- 🔻 サインアウトモーダル -->
-    <ModalContent :visible="showSignOutModal" @close="showSignOutModal = false">
-      <h3>サインアウト</h3>
-      <p>本当にサインアウトしますか？</p>
-      <div class="button-row">
-        <YamatoButton @click="confirmSignOut">サインアウト</YamatoButton>
-        <YamatoButton @click="showSignOutModal = false">キャンセル</YamatoButton>
-      </div>
-    </ModalContent>
+<ModalContent
+  :visible="showPremiumModal"
+  @close="showPremiumModal = false"
+  customClass="compact"
+>
+  <h3>Yamato プレミアム</h3>
+  <p>アップグレードまたはダウングレードを選択してください。</p>
+  <div class="button-row">
+    <YamatoButton @click="upgrade">アップグレード</YamatoButton>
+    <YamatoButton @click="downgrade">ダウングレード</YamatoButton>
+  </div>
+</ModalContent>
 
-    <!-- 🔻 プレミアムモーダル -->
-    <ModalContent :visible="showPremiumModal" @close="showPremiumModal = false">
-      <h3>Yamato プレミアム</h3>
-      <p>アップグレードまたはダウングレードを選択してください。</p>
-      <div class="button-row">
-        <YamatoButton @click="upgrade">アップグレード</YamatoButton>
-        <YamatoButton @click="downgrade">ダウングレード</YamatoButton>
-      </div>
-    </ModalContent>
+<ModalContent
+  :visible="showDeleteModal"
+  @close="showDeleteModal = false"
+  customClass="compact"
+>
+  <h3>アカウント削除</h3>
+  <p>この操作は取り消せません。本当に削除しますか？</p>
+  <div class="button-row">
+    <YamatoButton type="danger" @click="handleDeleteAccount">完全に削除</YamatoButton>
+    <YamatoButton @click="showDeleteModal = false">キャンセル</YamatoButton>
+  </div>
+</ModalContent>
 
-    <!-- 🔻 アカウント削除モーダル -->
-    <ModalContent :visible="showDeleteModal" @close="showDeleteModal = false">
-      <h3>アカウント削除</h3>
-      <p>この操作は取り消せません。本当に削除しますか？</p>
-      <div class="button-row">
-        <YamatoButton type="danger" @click="handleDeleteAccount">完全に削除</YamatoButton>
-        <YamatoButton @click="showDeleteModal = false">キャンセル</YamatoButton>
-      </div>
-    </ModalContent>
   </div>
 </template>
 
@@ -66,6 +74,8 @@ import YamatoButton from '@/components/YamatoButton.vue'
 import IconButton from '@/components/IconButton.vue'
 import ModalContent from '@/components/Modal.vue'
 import '@/assets/variables.css'
+
+import Modal from '@/components/Modal.vue'
 
 import { ref, onMounted } from 'vue'
 import { Auth } from 'aws-amplify'

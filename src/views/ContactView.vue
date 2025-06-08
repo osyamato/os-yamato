@@ -2,7 +2,7 @@
   <div class="contact-container">
     <!-- 🔵 上部ヘッダー -->
     <div class="contact-header">
-      <h2 class="header-title">連絡先</h2>
+<h2 class="header-title">{{ t('contactTitle') }}</h2>
 <div class="header-icons">
   <IconButton :color="iconColor" @click="openSearchModal">🔍</IconButton>
   <IconButton :color="iconColor" @click="openNewContactModal">＋</IconButton>
@@ -19,9 +19,9 @@
   >🥀</IconButton>
 </div>
     </div>
-<p v-if="filterWiltingOnly" class="wilted-message">
-  記憶の花は、いつか風に散る
-</p>
+ <p v-if="filterWiltingOnly" class="wilted-message">
+      {{ t('message.memoryFlower') }}
+    </p>
 
     <!-- 🔵 連絡先一覧 -->
     <div v-if="filteredContacts.length === 0" class="empty-message">
@@ -41,33 +41,40 @@
     </div>
 
     <!-- 🔵 閲覧・編集モーダル -->
-    <Modal :visible="showModal" @close="closeModal">
+<Modal :visible="showModal" @close="closeModal" customClass="compact">
       <template #default>
-        <h3 class="modal-title">
-          <span v-if="!isEditMode" class="flower-icon">
-            {{ selectedContact ? getLifeStageIcon(selectedContact) : '' }}
-          </span>
-          {{ isEditMode ? (selectedContact ? '連絡先を編集' : '新しい連絡先を追加') : selectedContact?.name }}
-        </h3>
+<h3 class="modal-title">
+  <span v-if="!isEditMode" class="flower-icon">
+    {{ selectedContact ? getLifeStageIcon(selectedContact) : '' }}
+  </span>
+  {{
+    isEditMode
+      ? (selectedContact ? t('editContactTitle') : t('addContactTitle'))
+      : selectedContact?.name
+  }}
+</h3>
 
         <div v-if="isEditMode">
-          <input v-model="editName" placeholder="名前" />
-          <input v-model="editFurigana" placeholder="ふりがな" />
-          <input v-model="editPhone" placeholder="電話番号" />
-          <input v-model="editEmail" placeholder="メールアドレス" />
-          <textarea v-model="editNote" placeholder="メモ"></textarea>
+<input v-model="editName" :placeholder="t('contactForm.name')" />
+<input v-model="editFurigana" :placeholder="t('contactForm.furigana')" />
+<input v-model="editPhone" :placeholder="t('contactForm.phone')" />
+<input v-model="editEmail" :placeholder="t('contactForm.email')" />
+<textarea v-model="editNote" :placeholder="t('contactForm.note')"></textarea>
           <input v-model="editYamatoId" placeholder="Yamato ID" />
 
-          <div class="button-row">
-            <YamatoButton :disabled="!isFormValid" @click="saveEdit">保存</YamatoButton>
-          </div>
+ <YamatoButton :disabled="!isFormValid" @click="saveEdit">
+      {{ t('save') }}
+    </YamatoButton>
         </div>
 
         <div v-else>
           <div class="modal-body">
-            <p v-if="selectedContact?.furigana"><strong>ふりがな:</strong> {{ selectedContact.furigana }}</p>
+<p v-if="selectedContact?.furigana">
+  <strong>{{ t('contactForm.furigana') }}:</strong> {{ selectedContact.furigana }}
+</p>
+
 <p v-if="selectedContact?.phoneNumbers?.filter(p => p.trim()).length">
-  <strong>電話:</strong>
+  <strong>{{ t('contactForm.phone') }}:</strong>
   <span v-for="(phone, index) in selectedContact.phoneNumbers.filter(p => p.trim())" :key="index">
     <a :href="`tel:${phone.replace(/[^\d+]/g, '')}`" class="phone-link">{{ phone }}</a>
     <span v-if="index < selectedContact.phoneNumbers.length - 1">, </span>
@@ -76,32 +83,36 @@
             <p v-if="selectedContact?.emails?.filter(e => e.trim()).length">
               <strong>メール:</strong> {{ selectedContact.emails.filter(e => e.trim()).join(', ') }}
             </p>
-            <p v-if="selectedContact?.note"><strong>メモ:</strong> {{ selectedContact.note }}</p>
+<p v-if="selectedContact?.note">
+  <strong>{{ t('contactForm.note') }}:</strong> {{ selectedContact.note }}
+</p>
             <p v-if="selectedContact?.yamatoId"><strong>Yamato ID:</strong> {{ selectedContact.yamatoId }}</p>
           </div>
           <div class="button-row">
-            <YamatoButton @click="startEdit">編集</YamatoButton>
-<YamatoButton type="danger" @click="confirmDelete(selectedContact.id)">削除</YamatoButton>
+<YamatoButton @click="startEdit">{{ t('edit') }}</YamatoButton>
+<YamatoButton type="danger" @click="confirmDelete(selectedContact.id)">
+  {{ t('delete') }}
+</YamatoButton>
           </div>
         </div>
       </template>
     </Modal>
 
     <!-- 🔵 検索モーダル -->
-    <Modal :visible="showSearchModal" @close="closeSearchModal">
+<Modal :visible="showSearchModal" @close="closeSearchModal" customClass="compact">
       <template #default>
-        <h3 class="modal-title">連絡先を検索</h3>
-        <input v-model="searchQuery" placeholder="名前またはふりがなで検索" />
-        <div class="button-row">
-          <YamatoButton @click="closeSearchModal">閉じる</YamatoButton>
-        </div>
+<h3 class="modal-title">{{ t('contactSearch.title') }}</h3>
+<input v-model="searchQuery" :placeholder="t('contactSearch.placeholder')" />
+<div class="button-row">
+  <YamatoButton @click="closeSearchModal">{{ t('close') }}</YamatoButton>
+</div>
       </template>
 
     </Modal>
 <ConfirmDialog
   v-if="showConfirm"
   :visible="showConfirm"
-  message="本当に削除しますか？"
+  :message="t('confirm.delete')"
   @confirm="handleConfirmedDelete"
   @cancel="showConfirm = false"
 />
@@ -124,6 +135,8 @@ import vCard from 'vcard-parser'
 import IconButton from '@/components/IconButton.vue'
 import { nextTick } from 'vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 
 
 // --- データ ---
@@ -152,16 +165,17 @@ onMounted(async () => {
   iconColor.value = user.attributes['custom:iconColor'] || '#274c77'
 })
 async function fetchContacts() {
+  console.log('📥 fetchContacts 開始')
+
   try {
-    const user = await Auth.currentAuthenticatedUser()
-    const res = await API.graphql(graphqlOperation(listContacts, {
-      filter: { owner: { eq: user.username } }
-    }))
+    const res = await API.graphql(graphqlOperation(listContacts))
+    console.log('📦 GraphQL 結果:', res)
 
     const now = new Date()
-    const items = res.data.listContacts.items.filter(item => item)
+    const items = res.data?.listContacts?.items?.filter(item => item) || []
+    console.log('📋 フェッチされた件数:', items.length)
 
-    // ✅ lastOpenedAtを使って「1年以上未使用なら削除」
+    // 削除チェックなどはそのままでOK
     for (const contact of items) {
       const base = contact.lastOpenedAt || contact.createdAt
       const baseDate = new Date(base)
@@ -178,7 +192,6 @@ async function fetchContacts() {
       }
     }
 
-    // ✅ 残ったデータのみ表示用にフィルタ
     contacts.value = items
       .filter(contact => {
         const base = contact.lastOpenedAt || contact.createdAt
@@ -192,8 +205,10 @@ async function fetchContacts() {
         return aFurigana.localeCompare(bFurigana, 'ja')
       })
 
+    console.log('✅ 表示用 contacts 更新完了:', contacts.value.length, '件')
+
   } catch (e) {
-    console.error('fetchContacts error:', e)
+    console.error('❌ fetchContacts エラー:', JSON.stringify(e, null, 2))
   }
 }
 
@@ -275,7 +290,6 @@ async function saveEdit() {
       emails: [editEmail.value],
       note: editNote.value,
       yamatoId: editYamatoId.value,
-      owner: user.username,
       lastOpenedAt: new Date().toISOString(), 
     }
 
@@ -494,6 +508,8 @@ async function handleConfirmedDelete() {
 }
 
 </script>
+
+
 
 <style scoped>
 /* 🌸 全体レイアウト */
@@ -793,6 +809,3 @@ textarea {
 }
 
 </style>
-
-
-

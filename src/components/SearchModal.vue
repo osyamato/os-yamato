@@ -2,20 +2,20 @@
   <transition name="fade-drop">
     <div v-if="visible" class="modal-overlay" @click.self="close">
       <div class="search-modal">
-        <h2 class="modal-title">花を咲かせた人を探しにいく</h2>
+<h2 class="modal-title">{{ t('blossom.searchTitle') }}</h2>
 
         <!-- ニックネーム -->
-        <input
-          v-model="nickname"
-          placeholder="ニックネーム（例：はなこ）"
-          class="modal-input"
-        />
+<input
+  v-model="nickname"
+  :placeholder="t('blossom.nicknamePlaceholder')"
+  class="modal-input"
+/>
 
         <!-- ラベル -->
-        <div class="select-labels">
-          <span>国を選択</span>
-          <span>趣味を選択</span>
-        </div>
+<div class="select-labels">
+  <span>{{ t('blossom.selectCountry') }}</span>
+  <span>{{ t('blossom.selectHobby') }}</span>
+</div>
 
         <!-- セレクト（横並び） -->
         <div class="row-fields">
@@ -43,9 +43,9 @@
         </div>
 
         <!-- ボタン -->
-        <div class="button-row">
-          <YamatoButton @click="search">ヤマトで検索</YamatoButton>
-        </div>
+<div class="button-row">
+  <YamatoButton @click="search">{{ t('blossom.searchByYamatoId') }}</YamatoButton>
+</div>
 
         <!-- 結果リスト -->
         <div class="result-list">
@@ -59,9 +59,9 @@
             <p>{{ emojiCountry(item.country) }} / {{ emojiHobby(item.hobby) }}</p>
           </div>
 
-          <p v-if="filteredResults.length === 0 && hasSearched" class="no-result">
-            見つかりませんでした
-          </p>
+<p v-if="filteredResults.length === 0 && hasSearched" class="no-result">
+  {{ t('blossom.notFound') }}
+</p>
         </div>
       </div>
     </div>
@@ -72,6 +72,8 @@
 import { ref, watch } from 'vue'
 import YamatoButton from '@/components/YamatoButton.vue'
 import { countryMap, hobbyMap } from '@/utils/emojiMaps'
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 
 const emit = defineEmits(['close', 'select'])
 const props = defineProps({
