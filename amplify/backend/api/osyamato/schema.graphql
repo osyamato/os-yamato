@@ -82,21 +82,38 @@ type Message
     subscriptions: { level: public, onCreate: ["onCreateMessage"] }
   )
   @auth(rules: [
-    { allow: owner },  # 送信者（自動的に sub に基づく）にフルアクセス
-    { allow: private, operations: [read] } # ログインユーザー全員が読み取り可（最低限の制御）
+    { allow: owner },
+    { allow: private, operations: [read] }
   ])
 {
   id: ID!
   roomId: ID!
-  senderSub: String!        # ← 新規追加（これで識別）
-  senderYamatoId: String!   # ← 表示用（変更可能）
-  receiverSub: String!      # ← 新規追加（受信者の権限にも使える）
-  receiverYamatoId: String! # ← 表示用（変更可能）
+  senderSub: String!
+  senderYamatoId: String!
+  receiverSub: String!
+  receiverYamatoId: String!
 
   content: String!
+  contentType: String         # "text" or "image"
+  imageKey: String            # フルサイズ画像
+  thumbnailKey: String        # サムネイル ← ★ 追加
   timestamp: AWSDateTime!
   createdAt: AWSDateTime
   expiresAt: AWSTimestamp
+}
+type Reaction
+  @model
+  @auth(rules: [
+    { allow: owner },
+    { allow: private, operations: [read] }
+  ])
+{
+  id: ID!
+  messageId: ID!
+  emoji: String!
+  reactorSub: String!
+  reactorYamatoId: String
+  createdAt: AWSDateTime
 }
 
 type PublicProfile @model

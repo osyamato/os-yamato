@@ -219,6 +219,9 @@ export const getMessage = /* GraphQL */ `
       receiverSub
       receiverYamatoId
       content
+      contentType
+      imageKey
+      thumbnailKey
       timestamp
       createdAt
       expiresAt
@@ -242,9 +245,50 @@ export const listMessages = /* GraphQL */ `
         receiverSub
         receiverYamatoId
         content
+        contentType
+        imageKey
+        thumbnailKey
         timestamp
         createdAt
         expiresAt
+        owner
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const getReaction = /* GraphQL */ `
+  query GetReaction($id: ID!) {
+    getReaction(id: $id) {
+      id
+      messageId
+      emoji
+      reactorSub
+      reactorYamatoId
+      createdAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;
+export const listReactions = /* GraphQL */ `
+  query ListReactions(
+    $filter: ModelReactionFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    listReactions(filter: $filter, limit: $limit, nextToken: $nextToken) {
+      items {
+        id
+        messageId
+        emoji
+        reactorSub
+        reactorYamatoId
+        createdAt
+        updatedAt
         owner
         __typename
       }

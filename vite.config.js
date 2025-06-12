@@ -1,12 +1,12 @@
 import { fileURLToPath, URL } from 'node:url'
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
-import vueDevTools from 'vite-plugin-vue-devtools'
-
+// ✅ vueDevTools を削除（完全無効化のため）
+ 
 export default defineConfig({
   plugins: [
     vue(),
-    vueDevTools(),
+    // ❌ vueDevTools({ overlay: false }), ← 削除済
   ],
   resolve: {
     alias: {
@@ -25,7 +25,6 @@ export default defineConfig({
     }
   },
 
-  // ✅ ここを追加！
   optimizeDeps: {
     include: ['three/examples/jsm/controls/OrbitControls']
   }

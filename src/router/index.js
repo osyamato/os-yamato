@@ -23,6 +23,7 @@ import WindMessageView from '../views/WindMessageView.vue' // ✅ 風の便り�
 import WindInboxView from '../views/WindInboxView.vue'     // ✅ 風の便り受信用
 import GlobeView from '../views/GlobeView.vue'             // ✅ 追加: 地球儀View
 import TimeView from '../views/TimeView.vue'
+import AboutView from '../views/AboutView.vue' // ← これを他のViewと同じ場所に追加
 
 const routes = [
   { path: '/', redirect: '/signin' },
@@ -56,7 +57,9 @@ const routes = [
 
   // ✅ 地球儀Viewルート
   { path: '/globe', name: 'globe', component: GlobeView },
-  { path: '/time', name: 'time', component: TimeView }
+  { path: '/time', name: 'time', component: TimeView },
+  { path: '/about', name: 'about', component: AboutView }
+
 ]
 
 const router = createRouter({

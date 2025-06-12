@@ -25,6 +25,9 @@
   "japanese": "Japanese",
   "english": "English",
   "account": "Account",
+"about": "About OS Yamato",
+
+
  "memoTitle": "Memos",
 "message.memoryFlower": "The flower of memory eventually scatters in the wind",
 "createdAt": "Created",
@@ -32,6 +35,13 @@
   "editPlaceholder": "Edit memo...",
 
   "newPlaceholder": "Write a memo...",
+"memo.uploadInvalidFormat": "⚠️ Only .txt files are supported.",
+  "memo.exportEmptyWarning": "⚠️ No memos selected for export.",
+  "memo.confirmDeleteSingle": "Are you sure you want to delete this memo?",
+  "memo.confirmDeleteMultiple": "Are you sure you want to delete {count} selected memos?",
+  "memo.deleteEmptyWarning": "⚠️ No memos selected for deletion.",
+
+
 
 
  "update": "Update",
@@ -59,6 +69,15 @@
 "contactSearch.placeholder": "Search by name or furigana",
 "confirm.delete": "Are you sure you want to delete this?",
 "photo.title": "Photo", 
+"confirm.deleteSingle": "Do you want to delete this photo?",
+"confirm.deleteMultiple": "Do you want to delete all selected photos?",
+"confirm.noSelection": "No photos selected.",
+"confirm.noTarget": "No photos found for deletion.",
+"confirm.noSelection": "No photos selected.",
+ "message.chatPhotoMemory": "Memories shared with others linger like quiet reels of film",
+
+
+
 
 "month.0": "January",
 "month.1": "February",
@@ -147,7 +166,7 @@
 "chat.requestFailed": "Failed to send request",
 "chat.searchTitle": "Search by Yamato ID",
 "profile.title": "Register Profile",
-"profile.yamatoIdPlaceholder": "Yamato ID (starts with @)",
+"profile.yamatoIdPlaceholder": "Yamato ID",
 "profile.displayNamePlaceholder": "Name or Nickname",
 "profile.bioPlaceholder": "Self Introduction (optional)",
 "profile.registerButton": "Register",
@@ -156,6 +175,7 @@
 "wind.sendSubtitle": "Let your words ride the wind until the day they gently arrive.",
 "wind.placeholder": "Write your thoughts here...",
 "wind.sendButton": "Send with the wind 🕊️",
+"photo.saved": "Photo saved 🎞️",
 
 
 "wind.inboxTitle": "Messages Carried by the Wind",
@@ -183,6 +203,9 @@
 "blossom.comment": "Comment",
 "blossom.hobby": "Hobby",
 "blossom.country": "Country",
-"blossom.requestButton": "Send Request"
+"blossom.requestButton": "Send Request",
+
+"diary.title": "Diary of {year}",
+"diary.placeholder": "Write your diary..."
 
 }

@@ -311,6 +311,9 @@ export const createMessage = /* GraphQL */ `
       receiverSub
       receiverYamatoId
       content
+      contentType
+      imageKey
+      thumbnailKey
       timestamp
       createdAt
       expiresAt
@@ -332,6 +335,9 @@ export const updateMessage = /* GraphQL */ `
       receiverSub
       receiverYamatoId
       content
+      contentType
+      imageKey
+      thumbnailKey
       timestamp
       createdAt
       expiresAt
@@ -353,9 +359,66 @@ export const deleteMessage = /* GraphQL */ `
       receiverSub
       receiverYamatoId
       content
+      contentType
+      imageKey
+      thumbnailKey
       timestamp
       createdAt
       expiresAt
+      owner
+      __typename
+    }
+  }
+`;
+export const createReaction = /* GraphQL */ `
+  mutation CreateReaction(
+    $input: CreateReactionInput!
+    $condition: ModelReactionConditionInput
+  ) {
+    createReaction(input: $input, condition: $condition) {
+      id
+      messageId
+      emoji
+      reactorSub
+      reactorYamatoId
+      createdAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;
+export const updateReaction = /* GraphQL */ `
+  mutation UpdateReaction(
+    $input: UpdateReactionInput!
+    $condition: ModelReactionConditionInput
+  ) {
+    updateReaction(input: $input, condition: $condition) {
+      id
+      messageId
+      emoji
+      reactorSub
+      reactorYamatoId
+      createdAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;
+export const deleteReaction = /* GraphQL */ `
+  mutation DeleteReaction(
+    $input: DeleteReactionInput!
+    $condition: ModelReactionConditionInput
+  ) {
+    deleteReaction(input: $input, condition: $condition) {
+      id
+      messageId
+      emoji
+      reactorSub
+      reactorYamatoId
+      createdAt
+      updatedAt
       owner
       __typename
     }
