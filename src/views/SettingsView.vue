@@ -52,7 +52,15 @@
       <YamatoButton :key="buttonKey" @click="saveSettings">{{ t('save') }}</YamatoButton>
     </div>
 
+<!-- 🌿 Yamatoについてリンク -->
+<div class="account-row" @click="goToAbout">
+  <span class="account-text">{{ t('about') }}</span>
+  <IconButton :color="selectedColor" size="medium" @click="goToAbout">→</IconButton>
+</div>
+
+
     <!-- 👤 アカウントリンク -->
+
     <div class="account-row" @click="goToAccount">
       <span class="account-text">{{ t('account') }}</span>
       <IconButton :color="selectedColor" size="medium" @click="goToAccount">→</IconButton>
@@ -114,6 +122,11 @@ async function saveSettings() {
 function goToAccount() {
   router.push('/account')
 }
+
+function goToAbout() {
+  router.push('/about')
+}
+
 </script>
 
 

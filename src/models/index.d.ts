@@ -204,6 +204,9 @@ type EagerMessage = {
   readonly receiverSub: string;
   readonly receiverYamatoId: string;
   readonly content: string;
+  readonly contentType?: string | null;
+  readonly imageKey?: string | null;
+  readonly thumbnailKey?: string | null;
   readonly timestamp: string;
   readonly createdAt?: string | null;
   readonly expiresAt?: number | null;
@@ -222,6 +225,9 @@ type LazyMessage = {
   readonly receiverSub: string;
   readonly receiverYamatoId: string;
   readonly content: string;
+  readonly contentType?: string | null;
+  readonly imageKey?: string | null;
+  readonly thumbnailKey?: string | null;
   readonly timestamp: string;
   readonly createdAt?: string | null;
   readonly expiresAt?: number | null;
@@ -232,6 +238,40 @@ export declare type Message = LazyLoading extends LazyLoadingDisabled ? EagerMes
 
 export declare const Message: (new (init: ModelInit<Message>) => Message) & {
   copyOf(source: Message, mutator: (draft: MutableModel<Message>) => MutableModel<Message> | void): Message;
+}
+
+type EagerReaction = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<Reaction, 'id'>;
+    readOnlyFields: 'updatedAt';
+  };
+  readonly id: string;
+  readonly messageId: string;
+  readonly emoji: string;
+  readonly reactorSub: string;
+  readonly reactorYamatoId?: string | null;
+  readonly createdAt?: string | null;
+  readonly updatedAt?: string | null;
+}
+
+type LazyReaction = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<Reaction, 'id'>;
+    readOnlyFields: 'updatedAt';
+  };
+  readonly id: string;
+  readonly messageId: string;
+  readonly emoji: string;
+  readonly reactorSub: string;
+  readonly reactorYamatoId?: string | null;
+  readonly createdAt?: string | null;
+  readonly updatedAt?: string | null;
+}
+
+export declare type Reaction = LazyLoading extends LazyLoadingDisabled ? EagerReaction : LazyReaction
+
+export declare const Reaction: (new (init: ModelInit<Reaction>) => Reaction) & {
+  copyOf(source: Reaction, mutator: (draft: MutableModel<Reaction>) => MutableModel<Reaction> | void): Reaction;
 }
 
 type EagerPublicProfile = {

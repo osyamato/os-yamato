@@ -16,6 +16,13 @@
       />
       <IconButton :color="iconColor" :class="{ 'selected-icon': filterFavoritesOnly }" @click="toggleHeartFilter">♡</IconButton>
       <IconButton :color="iconColor" :class="{ 'selected-icon': isSelectionMode }" @click="toggleSelectionMode">☑️</IconButton>
+
+<IconButton
+  :color="iconColor"
+  :class="{ 'selected-icon': filterChatPhotosOnly }"
+  @click="toggleChatPhotoFilter"
+>🎞️</IconButton>
+
       <IconButton :color="iconColor" :class="{ 'selected-icon': filterWiltingOnly }" @click="toggleWiltFilter">🥀</IconButton>
     </div>
 
@@ -31,6 +38,9 @@
  <p v-if="filterWiltingOnly" class="wilted-message">
       {{ t('message.memoryFlower') }}
     </p>
+<p v-if="filterChatPhotosOnly" class="wilted-message">
+  {{ t('message.chatPhotoMemory') }}
+</p>
 
     <div class="photo-grid">
       <div
@@ -83,17 +93,16 @@
       </div>
     </div>
   </div>
-
-  <!-- 📝 削除確認モーダル -->
-  <ConfirmDialog
-    v-if="showConfirm"
-    :visible="showConfirm"
-    :message="confirmMessage"
-    @confirm="handleConfirmedDelete"
-    @cancel="cancelDelete"
-  />
-</div>
   </div>
+  <!-- 📝 削除確認モーダル -->
+<ConfirmDialog
+  v-if="showConfirm"
+  :visible="showConfirm"
+  :message="confirmMessage"
+  @confirm="handleConfirmedDelete"
+  @cancel="cancelDelete"
+/>
+</div>
 </template>
 
 
@@ -141,22 +150,50 @@ const selectedPhotoIds = ref([])
 const showConfirm = ref(false)
 const confirmMessage = ref('')
 const pendingDeletePhotos = ref([]) // 1枚 or 複数保持用
+
+const filterChatPhotosOnly = ref(false)
+
+function toggleChatPhotoFilter() {
+  filterFavoritesOnly.value = false
+  filterWiltingOnly.value = false
+  isSelectionMode.value = false
+  filterChatPhotosOnly.value = !filterChatPhotosOnly.value
+}
+
+
 function promptDeletePhoto(photo) {
-  confirmMessage.value = 'この写真を削除しますか？'
+  confirmMessage.value = t('confirm.deleteSingle')
   pendingDeletePhotos.value = [photo]
   showConfirm.value = true
 }
 
 function promptDeleteSelectedPhotos() {
   if (selectedPhotoIds.value.length === 0) {
-    alert('写真が選択されていません')
+    alert(t('confirm.noSelection'))
     return
   }
-  const targets = photoList.value.filter(p => selectedPhotoIds.value.includes(p.id))
-  confirmMessage.value = '選択した写真をすべて削除しますか？'
+
+  const targets = photoList.value.filter(p =>
+    selectedPhotoIds.value.includes(p.id.toString())
+  )
+
+  console.log('🗑 selectedPhotoIds:', selectedPhotoIds.value)
+  console.log('🗑 削除対象:', targets.map(p => p.fileName))
+
+  if (targets.length === 0) {
+    alert(t('confirm.noTarget'))
+    return
+  }
+
   pendingDeletePhotos.value = [...targets]
-  showConfirm.value = true
+  confirmMessage.value = t('confirm.deleteMultiple')
+
+  setTimeout(() => {
+    showConfirm.value = true
+  }, 0)
 }
+
+
 async function handleConfirmedDelete() {
   isDeleting.value = true
   try {
@@ -239,8 +276,12 @@ function toggleSelection(photoId) {
   }
 }
 
-watch([filterFavoritesOnly, filterWiltingOnly], () => {
-  console.log('🥀 フィルター状態:', filterWiltingOnly.value)
+watch([filterFavoritesOnly, filterWiltingOnly, filterChatPhotosOnly], () => {
+  console.log('🎞️ フィルター状態:', {
+    favorite: filterFavoritesOnly.value,
+    wilt: filterWiltingOnly.value,
+    chat: filterChatPhotosOnly.value
+  })
   fetchPhotos()
 })
 
@@ -274,7 +315,7 @@ watch([isLoading, isDeleting], ([loading, deleting]) => {
 
 async function downloadSelectedPhotos() {
   if (selectedPhotoIds.value.length === 0) {
-    alert('写真が選択されていません。')
+    alert(t('confirm.noSelection')) // ← ローカライズ対応
     return
   }
 
@@ -395,22 +436,28 @@ function isWilting(photo) {
   const days = (Date.now() - new Date(photo.lastOpenedAt)) / (1000 * 60 * 60 * 24)
   return days >= 330
 }
-
 async function fetchPhotos() {
   try {
     const result = await API.graphql(graphqlOperation(listPhotos))
     let items = result.data.listPhotos.items
 
+    // ❤️ お気に入りのみ
     if (filterFavoritesOnly.value) {
       items = items.filter(item => item.isFavorite)
     }
 
+    // 🥀 枯れかけ（330日以上未開封）
     if (filterWiltingOnly.value) {
       items = items.filter(item => {
         if (!item.lastOpenedAt) return false
         const days = (Date.now() - new Date(item.lastOpenedAt)) / (1000 * 60 * 60 * 24)
         return days >= 330
       })
+    }
+
+    // 🎞️ チャット写真のみ（fileNameに 'chat/' を含む）
+    if (filterChatPhotosOnly.value) {
+      items = items.filter(item => item.fileName?.includes('chat/'))
     }
 
     const updatedItems = await Promise.all(
@@ -433,6 +480,7 @@ async function fetchPhotos() {
   }
 }
 
+
 async function toggleFavorite(photo) {
   try {
     const updated = {
@@ -448,68 +496,6 @@ async function toggleFavorite(photo) {
   }
 }
 
-async function deletePhoto(photo) {
-  const photoId = photo?.id
-  const fileName = photo?.fileName
-  const thumbnailFileName = photo?.thumbnailFileName
-  if (!photoId || !fileName || !thumbnailFileName) {
-    alert('削除に必要な情報が不足しています')
-    return
-  }
-
-  const confirmed = confirm('この写真を削除しますか？')
-  if (!confirmed) return
-
-  try {
-    await Storage.remove(fileName, { level: 'protected' })
-    await Storage.remove(thumbnailFileName, { level: 'protected' })
-
-    await API.graphql(
-      graphqlOperation(deletePhotoMutation, {
-        input: { id: photoId }
-      })
-    )
-
-    modalVisible.value = false
-    fullImageUrl.value = null
-    await fetchPhotos()
-  } catch (e) {
-    console.error('🗑 写真削除エラー:', e)
-    alert('削除に失敗しました')
-  }
-}
-
-async function deleteSelectedPhotos() {
-  if (selectedPhotoIds.value.length === 0) {
-    alert('写真が選択されていません。')
-    return
-  }
-
-  const confirmed = confirm('選択した写真をすべて削除しますか？')
-  if (!confirmed) return
-
-  isDeleting.value = true  // 🟢 アイコン表示を開始
-
-  try {
-    for (const photo of photoList.value) {
-      if (selectedPhotoIds.value.includes(photo.id)) {
-        await Storage.remove(photo.fileName, { level: 'protected' })
-        await Storage.remove(photo.thumbnailFileName, { level: 'protected' })
-        await API.graphql(graphqlOperation(deletePhotoMutation, { input: { id: photo.id } }))
-      }
-    }
-
-    selectedPhotoIds.value = []
-    isSelectionMode.value = false
-    await fetchPhotos()
-
-  } catch (e) {
-    console.error('🗑 一括削除エラー:', e)
-    alert('一部の写真の削除に失敗しました。')
-  } finally {
-    isDeleting.value = false  // 🔴 アイコン停止
-  }
-}
 
 async function openModal(photo) {
   try {
@@ -553,7 +539,14 @@ function startModalClose() {
 
 function formatDate(dateStr) {
   if (!dateStr) return '不明'
-  return new Date(dateStr).toLocaleString('ja-JP')
+  return new Date(dateStr).toLocaleString('ja-JP', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  })
 }
 
 onMounted(fetchPhotos)
@@ -652,12 +645,17 @@ function handleKeydown(e) {
   margin-bottom: 1rem;
 }
 
-/* 写真グリッド */
 .photo-grid {
   display: grid;
-  gap: 0.75rem;
+  gap: 0.5rem;
   justify-content: center;
-  grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+}
+
+@media (max-width: 430px) {
+  .photo-grid {
+    grid-template-columns: repeat(4, 1fr); /* iPhoneは4列固定 */
+  }
 }
 .photo-card {
   position: relative;

@@ -315,7 +315,7 @@ function toggleSelectionMode() {
 function exportSelectedMemos() {
   const selected = memos.value.filter(memo => selectedMemoIds.value.includes(memo.id))
   if (selected.length === 0) {
-    alert('⚠️ エクスポート対象のメモが選択されていません')
+    alert(t('memo.exportEmptyWarning'))
     return
   }
 
@@ -323,7 +323,7 @@ function exportSelectedMemos() {
     const created = formatDate(memo.createdAt)
     const updated = formatDate(memo.updatedAt)
     const tags = memo.tags?.join(', ') || ''
-    return `---\n作成: ${created}${created !== updated ? ` ／ 更新: ${updated}` : ''}\nタグ: ${tags}\n\n${memo.content}\n`
+    return `---\n作成: ${created}${created !== updated ? ` ／ 更新: ${updated}` : ''}\nタグ: ${tags}\n\n${memo.content}`
   }).join('\n')
 
   const blob = new Blob([content], { type: 'text/plain;charset=utf-8' })
@@ -340,15 +340,15 @@ function exportSelectedMemos() {
 
 function handleFileUpload(event) {
   const file = event.target.files[0]
-  if (file && file.type === 'text/plain') {
-    const reader = new FileReader()
-    reader.onload = () => {
-      openNewMemoModal(reader.result)  // ✅ ここで中身を渡す
-    }
-    reader.readAsText(file)
-  } else {
-    alert('⚠️ .txtファイルのみ対応しています。')
+if (file && file.type === 'text/plain') {
+  const reader = new FileReader()
+  reader.onload = () => {
+    openNewMemoModal(reader.result)
   }
+  reader.readAsText(file)
+} else {
+  alert(t('memo.uploadInvalidFormat'))  // ← ローカライズ
+}
 }
 
 // --- メモ取得 ---
@@ -413,18 +413,13 @@ async function fetchMemos() {
 async function deleteSelectedMemo() {
   if (!selectedMemo.value) return
 
-  console.log('[Debug] 前: ', selectedMemo.value)
-
-  const confirmed = confirm('本当にこのメモを削除しますか？')
-  console.log('[Debug] confirm結果:', confirmed)
-
+  const confirmed = confirm(t('memo.confirmDeleteSingle'))
   if (!confirmed) return
 
   try {
     await API.graphql(graphqlOperation(deleteMemo, {
       input: { id: selectedMemo.value.id }
     }))
-    console.log('✅ メモ削除成功')
     closeModal()
     await fetchMemos()
   } catch (err) {
@@ -434,17 +429,16 @@ async function deleteSelectedMemo() {
 
 async function deleteSelectedMemos() {
   if (selectedMemoIds.value.length === 0) {
-    alert('⚠️ 削除するメモが選択されていません')
+    alert(t('memo.deleteEmptyWarning'))
     return
   }
 
-  const confirmed = confirm(`選択された ${selectedMemoIds.value.length} 件のメモを削除しますか？`)
+  const confirmed = confirm(t('memo.confirmDeleteMultiple', { count: selectedMemoIds.value.length }))
   if (!confirmed) return
 
   for (const id of selectedMemoIds.value) {
     try {
       await API.graphql(graphqlOperation(deleteMemo, { input: { id } }))
-      console.log(`✅ 削除成功: ${id}`)
     } catch (err) {
       console.error(`❌ 削除失敗: ${id}`, err)
     }
@@ -947,9 +941,15 @@ textarea {
 }
 @media (min-width: 768px) {
   .memo-card {
-    max-width: 600px;
+    width: 400px; /* タブレットで広めに */
   }
-} 
+}
+
+@media (min-width: 1024px) {
+  .memo-card {
+    width: 480px; /* PCでさらに広く */
+  }
+}
 
 
 .memo-dates {

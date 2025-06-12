@@ -308,9 +308,66 @@ export const onCreateMessage = /* GraphQL */ `
       receiverSub
       receiverYamatoId
       content
+      contentType
+      imageKey
+      thumbnailKey
       timestamp
       createdAt
       expiresAt
+      owner
+      __typename
+    }
+  }
+`;
+export const onCreateReaction = /* GraphQL */ `
+  subscription OnCreateReaction(
+    $filter: ModelSubscriptionReactionFilterInput
+    $owner: String
+  ) {
+    onCreateReaction(filter: $filter, owner: $owner) {
+      id
+      messageId
+      emoji
+      reactorSub
+      reactorYamatoId
+      createdAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;
+export const onUpdateReaction = /* GraphQL */ `
+  subscription OnUpdateReaction(
+    $filter: ModelSubscriptionReactionFilterInput
+    $owner: String
+  ) {
+    onUpdateReaction(filter: $filter, owner: $owner) {
+      id
+      messageId
+      emoji
+      reactorSub
+      reactorYamatoId
+      createdAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;
+export const onDeleteReaction = /* GraphQL */ `
+  subscription OnDeleteReaction(
+    $filter: ModelSubscriptionReactionFilterInput
+    $owner: String
+  ) {
+    onDeleteReaction(filter: $filter, owner: $owner) {
+      id
+      messageId
+      emoji
+      reactorSub
+      reactorYamatoId
+      createdAt
+      updatedAt
       owner
       __typename
     }

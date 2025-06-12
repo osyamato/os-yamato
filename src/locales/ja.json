@@ -22,6 +22,10 @@
   "english": "英語",
   "saveMessage": "設定を保存しました！",
   "account": "アカウント",
+"about": "OS Yamatoについて",
+
+
+
   "memoTitle": "メモ",
   "message.memoryFlower": "記憶の花は、いつか風に散る",
  "newPlaceholder": "メモを書く...",
@@ -33,10 +37,16 @@
  "deleteMemo": "本当にこのメモを削除しますか？",
   "deleteAllMemos": "選択したメモをすべて削除しますか？",
  "createdAt": "作成",
-  "updateed": "更新",
+  "updated": "更新",
  "created": "作成",
   "editPlaceholder": "メモを編集...",
   "newPlaceholder": "メモを書く...",
+ "memo.uploadInvalidFormat": "⚠️ .txtファイルのみ対応しています。",
+  "memo.exportEmptyWarning": "⚠️ エクスポート対象のメモが選択されていません",
+  "memo.confirmDeleteSingle": "本当にこのメモを削除しますか？",
+  "memo.confirmDeleteMultiple": "選択された {count} 件のメモを削除しますか？",
+  "memo.deleteEmptyWarning": "⚠️ 削除するメモが選択されていません",
+
 
 
   "addTagButton": "追加",
@@ -64,8 +74,15 @@
   "contactForm.phone": "電話番号",
   "contactForm.email": "メールアドレス",
   "contactForm.note": "メモ",
+
 "confirm.delete": "本当に削除しますか？",
 "photo.title": "写真",
+"confirm.deleteSingle": "この写真を削除しますか？",
+"confirm.deleteMultiple": "選択した写真をすべて削除しますか？",
+"confirm.noSelection": "写真が選択されていません",
+"confirm.noTarget": "削除対象が見つかりません",
+ "confirm.noSelection": "写真が選択されていません",
+"message.chatPhotoMemory": "誰かと交わした記憶は、静かに残るフィルムのように",
 
 "month.0": "1月",
 "month.1": "2月",
@@ -128,6 +145,9 @@
 "chat.reject": "拒否",
 "chat.confirmHideMessage": "このメッセージを雲にかくしますか？",
 "chat.hide": "かくす",
+"photo.saved": "写真を保存しました🎞️",
+
+
 
 "chat.searchTitle": "Yamato ID で相手を検索",
 "chat.search": "検索",
@@ -142,7 +162,7 @@
 "chat.requestSent": "✅ チャット申請を送信しました",
 "chat.requestFailed": "申請に失敗しました",
 "profile.title": "プロフィールを登録",
-"profile.yamatoIdPlaceholder": "Yamato ID（@から始まる）",
+"profile.yamatoIdPlaceholder": "Yamato ID",
 "profile.displayNamePlaceholder": "名前やニックネーム",
 "profile.bioPlaceholder": "自己紹介（任意）",
 "profile.registerButton": "登録する",
@@ -177,6 +197,11 @@
 "blossom.country": "国",
 "blossom.comment": "コメント",
 "blossom.nickname": "ニックネーム",
-"blossom.requestButton": "リクエスト申請"
+"blossom.requestButton": "リクエスト申請",
+
+"diary.title": "{year}年の日記",
+"diary.placeholder": "日記を書く…"
+
+
 }
 

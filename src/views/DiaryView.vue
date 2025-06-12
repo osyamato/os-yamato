@@ -4,7 +4,7 @@
 <div class="year-header">
   <div class="year-title">
     <button class="arrow-inline" @click="prevYear">&lt;</button>
-    <h2 class="diary-title">{{ currentYear }}年の日記</h2>
+<h2 class="diary-title">{{ $t('diary.title', { year: currentYear }) }}</h2>
     <button class="arrow-inline" @click="nextYear">&gt;</button>
   </div>
     </div>
@@ -18,7 +18,19 @@
   >
     ✏️
   </IconButton>
-    </div>
+<IconButton
+  :color="filterWiltingOnly ? 'white' : selectedColor"
+  size="medium"
+  @click="toggleWiltingFilter"
+>
+  🥀
+</IconButton>
+</div>
+
+<p v-if="filterWiltingOnly" class="wilted-message">
+  {{ t('message.memoryFlower') }}
+</p>
+
 
     <div class="full-flower-area">
       <div
@@ -65,7 +77,7 @@
 <div
   class="note-editor"
   contenteditable="true"
-  :placeholder="'日記を書く…'"
+  :data-placeholder="$t('diary.placeholder')"
   @input="handleInput"
   @keyup="handleInput"
   @compositionend="handleInput"
@@ -77,7 +89,7 @@
   @click="saveDiary"
   :disabled="!newDiaryContent.replace(/\s/g, '')"
 >
-  保存
+  {{ t('save') }}
 </YamatoButton>
           </div>
         </div>
@@ -85,23 +97,44 @@
     </transition>
 
     <!-- モーダル：閲覧 -->
-    <transition name="drop-modal">
-      <div class="modal" v-if="selectedDiary">
-        <div class="modal-background" @click="closeDiaryModal"></div>
-        <div class="diary-modal" @click.stop>
-          <div class="note-date">{{ formatDisplayDate(selectedDiary.date) }}</div>
-          <div class="note-editor" v-text="selectedDiary.content"></div>
-          <div class="button-row">
-            <YamatoButton type="danger" @click="deleteDiary(selectedDiary.id)">削除</YamatoButton>
-          </div>
-        </div>
+<transition name="drop-modal">
+  <div class="modal" v-if="selectedDiary">
+    <div class="modal-background" @click="closeDiaryModal"></div>
+    <div class="diary-modal" @click.stop>
+      
+      <!-- ✅ ヘッダー（日付：中央、メニュー：右上） -->
+      <div class="modal-header">
+        <div class="note-date center">{{ formatDisplayDate(selectedDiary.date) }}</div>
+        <IconButton
+          class="menu-button no-bg no-radius"
+          :color="'transparent'"
+          size="small"
+          @click="showDiaryMenu = true"
+        >
+          ⋯
+        </IconButton>
       </div>
-    </transition>
+
+      <!-- ✅ 本文 -->
+      <div class="note-editor" v-text="selectedDiary.content"></div>
+    </div>
+
+    <!-- ✅ 削除確認ダイアログ -->
+    <ConfirmDialog
+      v-if="showDiaryMenu"
+      :visible="true"
+      :message="t('confirm.delete')"
+      @confirm="handleConfirmedDelete"
+      @cancel="showDiaryMenu = false"
+    />
+  </div>
+</transition>
   </div>
 </template>
 
 
 <script setup>
+import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import { ref, onMounted } from 'vue'
 import { API, Auth, graphqlOperation } from 'aws-amplify'
 import { createDiary, deleteDiary as deleteDiaryMutation, updateDiary as updateDiaryMutation } from '@/graphql/mutations'
@@ -109,6 +142,8 @@ import { listDiaries } from '@/graphql/queries'
 import YamatoButton from '@/components/YamatoButton.vue'
 import Modal from '@/components/Modal.vue'
 import IconButton from '@/components/IconButton.vue'
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 
 const selectedColor = ref('#274c77')
 
@@ -134,6 +169,15 @@ const backgrounds = [
 
 const currentIndex = ref(0)
 const editor = ref(null)
+
+const showDiaryMenu = ref(false)
+
+function handleConfirmedDelete() {
+  if (selectedDiary.value?.id) {
+    deleteDiary(selectedDiary.value.id)
+    showDiaryMenu.value = false
+  }
+}
 
 
 onMounted(() => {
@@ -227,8 +271,13 @@ async function fetchDiaries() {
     for (const diary of all) {
       const lastOpened = diary.lastOpenedAt || diary.updatedAt || diary.createdAt
       const diffDays = (now - new Date(lastOpened)) / (1000 * 60 * 60 * 24)
+
       if (diffDays > 365) {
         toDelete.push(diary.id)
+      } else if (filterWiltingOnly.value) {
+        if (diffDays >= 330 && diffDays < 365) {
+          toKeep.push(diary)
+        }
       } else {
         toKeep.push(diary)
       }
@@ -244,7 +293,7 @@ async function fetchDiaries() {
       }
     }
 
-diaries.value = toKeep.sort((a, b) => new Date(a.date) - new Date(b.date))
+    diaries.value = toKeep.sort((a, b) => new Date(a.date) - new Date(b.date))
     positions.value = Array(12).fill().map(() => [])
   } catch (e) {
     console.error('fetchDiaries error:', e)
@@ -295,6 +344,14 @@ function handleInput(e) {
 
 
 onMounted(fetchDiaries)
+
+const filterWiltingOnly = ref(false)
+
+function toggleWiltingFilter() {
+  filterWiltingOnly.value = !filterWiltingOnly.value
+  fetchDiaries()
+}
+
 </script>
 
 <style scoped>
@@ -569,12 +626,6 @@ margin: auto;
   color: #555;
   text-align: left;
 }
-.button-row {
-  display: flex;
-  justify-content: center;
-  gap: 1rem;
-  margin-top: 1rem;
-}
 
 .note-editor:empty::before {
   content: attr(placeholder);
@@ -683,5 +734,67 @@ margin: auto;
   position: relative;
   z-index: 2;
 }
+
+.note-editor:empty:before {
+  content: attr(data-placeholder);
+  color: #aaa;
+  pointer-events: none;
+}
+
+.modal-header {
+  position: relative;
+  margin-bottom: 1rem;
+}
+
+.note-date.center {
+  font-family: "Hiragino Mincho ProN", "Noto Serif JP", serif;
+  font-weight: normal;
+  font-size: 1rem;
+  color: #444;
+}
+
+/* ...メニューの配置 */
+.menu-button {
+  position: absolute;
+  top: 0.2rem;
+  right: 0.2rem;
+}
+
+/* 背景なし + 角丸除去 */
+.no-bg {
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+.no-radius {
+  border-radius: 0 !important;
+}
+.icon-button.active {
+  border: 2px solid #cc4444;
+  box-shadow: 0 0 4px rgba(204, 68, 68, 0.6);
+}
+.edit-button-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-top: 0.5rem;
+  margin-bottom: 1rem;
+  gap: 1rem; /* ← ✅ この行が隙間を作ります */
+}
+.wilted-message {
+  margin: 0.5rem 0 1rem;
+  font-size: 0.95rem;
+  color: #888;
+  font-style: italic;
+  text-align: center;
+  animation: driftFade 3s ease-out forwards;
+  opacity: 0;
+}
+
+@keyframes driftFade {
+  0% { transform: translateY(0px) rotate(0deg); opacity: 0; }
+  30% { opacity: 1; }
+  100% { transform: translateY(-10px) rotate(-1deg); opacity: 0.85; }
+}
+
+
 </style>
  
