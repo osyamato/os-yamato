@@ -35,7 +35,8 @@ type Schedule @model @auth(rules: [{ allow: owner }]) {
   endTime: String
   title: String
   memo: String
-  lastOpenedAt: AWSDateTime  # ← 追加
+  isAllDay: Boolean       # ✅ 終日予定かどうか
+  lastOpenedAt: AWSDateTime
   createdAt: AWSDateTime
   updatedAt: AWSDateTime
 }
@@ -64,6 +65,7 @@ type ChatRoom
   user1: String!
   user2: String!
   lastMessage: String
+  lastContentType: String       # ← ✅ 追加
   lastTimestamp: AWSDateTime
   lastReadAtUser2: AWSDateTime
   lastReadAtUser1: AWSDateTime
@@ -72,8 +74,6 @@ type ChatRoom
 
   deletedByUser1: Boolean @default(value: "false")
   deletedByUser2: Boolean @default(value: "false")
-
-  # `updatedAt` は Amplify により自動生成・更新されるので明示的に追加しなくてOK
 }
 
 type Message
@@ -101,6 +101,7 @@ type Message
   createdAt: AWSDateTime
   expiresAt: AWSTimestamp
 }
+
 type Reaction
   @model
   @auth(rules: [
@@ -158,10 +159,11 @@ type Photo @model @auth(rules: [{ allow: owner }]) {
 
 type ScheduleTemplate @model @auth(rules: [{ allow: owner }]) {
   id: ID!
-  emoji: String        # オプション
-  label: String        # オプション
-  startTime: String!
-  endTime: String!
+  emoji: String
+  label: String
+  startTime: String
+  endTime: String
+  isAllDay: Boolean     # ✅ ← 追加！
 }
 
 

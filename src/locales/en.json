@@ -48,6 +48,8 @@
 "delete": "Delete",
 "edit": "Edit",
 "close": "Close",
+"button.update": "Update",
+"button.back": "Back",
 
 
   "searchByTag": "Search by Tag",
@@ -100,6 +102,8 @@
   "label.edit": "Edit",
   "label.title": "Title",
   "label.memo": "Memo",
+"calendar.allDay": "All Day",
+
 
   "weekday.0": "Sun",
   "weekday.1": "Mon",
@@ -109,7 +113,7 @@
   "weekday.5": "Fri",
   "weekday.6": "Sat",
  "confirm.delete": "Are you sure you want to delete this?",
-  "photo.title": "Photo",
+  "photo.title": "Photo...",
 
   "label.save": "Save",
   "label.delete": "Delete",
@@ -176,11 +180,12 @@
 "wind.placeholder": "Write your thoughts here...",
 "wind.sendButton": "Send with the wind 🕊️",
 "photo.saved": "Photo saved 🎞️",
-
+"chat.photo": "Photo",
 
 "wind.inboxTitle": "Messages Carried by the Wind",
 "wind.receiveButton": "Receive the message",
-"wind.fromDisplayName": "From {{name}}",
+"wind.fromDisplayName": "From {name}",
+
 "wind.title": "Wind Message",
 
 "wind.cloudListTitle": "Messages Hidden in the Cloud",
@@ -206,6 +211,86 @@
 "blossom.requestButton": "Send Request",
 
 "diary.title": "Diary of {year}",
-"diary.placeholder": "Write your diary..."
+"diary.placeholder": "Write your diary...",
+
+"about.title": "OS Yamato - ver.0",
+  "about.conceptTitle": "Concept",
+  "about.conceptText": "OS Yamato is a new kind of OS that embraces the idea: \"If a record is not touched, it returns to the wind.\" It avoids hoarding data, and stays quiet and gentle.",
+  "about.featuresTitle": "Main Features",
+  "about.feature.diary": "Diary: Memories bloom like flowers",
+  "about.feature.calendar": "Calendar: Use templates to stay organized",
+  "about.feature.chat": "Messages: Gentle, seasonal message style",
+  "about.feature.memo": "Memos, Contacts, and Wind Messages: Keep only what you need, lightly",
+  "about.feature.photo": "Photos: Organize them and let them return to the wind",
+  "about.contactTitle": "Contact",
+  "about.developer": "Developer",
+"about.language": "Language",
+"about.termsTitle": "Terms of Use & Privacy Policy",
+"about.termsText": "View the details",
+
+"terms.title": "Terms of Use and Privacy Policy",
+"terms.body": "This service values your personal records.\n\nData is temporarily stored on our server and will be deleted automatically if inactive for a certain period. We minimize the collection of personal information and never share it with third parties.",
+
+  "calendar.selectYearMonth": "Select Year and Month",
+  "calendar.year": "{year}",
+  "calendar.month": "{month}",
+  "calendar.goTo": "Go to this month",
+  "calendar.cancel": "Cancel",
+
+ "auth.email": "Email Address",
+  "auth.password": "Password",
+  "auth.signin": "Sign In",
+  "auth.noAccount": "Don't have an account?",
+  "auth.registerHere": "Here",
+  "about.linkText": "About Yamato (Terms & Policies)",
+  "auth.error": "Failed to sign in.",
+  "auth.language": "Language",
+
+  "auth.register": "Register",
+  "auth.confirm": "Confirm",
+  "auth.confirmCode": "6-digit confirmation code",
+  "auth.haveAccount": "Already have an account?",
+  "auth.signinHere": "Sign In",
+  "auth.codeSent": "Confirmation code sent.",
+  "auth.success": "Registration complete!",
+  "auth.registerTitle": "Register",
+
+ "auth.userExists": "This email is already registered.",
+  "auth.passwordInvalid": "The password format is invalid.",
+  "auth.passwordTooShort": "Password is too short. Please use at least 8 characters.",
+  "auth.codeSent": "Confirmation code has been sent to your email.",
+  "auth.success": "Registration completed. Please sign in.",
+  "auth.error": "Registration failed.",
+  "auth.resendCode": "Resend verification code",
+  "auth.codeResent": "Verification code has been resent.",
+  "auth.confirmCode": "Verification code",
+  "auth.confirm": "Verify",
+  "auth.verifyTitle": "Verify Your Email",
+  "auth.verifyInstruction": "Please enter the verification code sent to your email address.",
+  "auth.email": "Email Address",
+  "auth.haveAccount": "Already have an account?",
+  "auth.signinHere": "Sign in here",
+  "auth.forgotPassword": "Forgot your password?",
+  "auth.userNotConfirmed": "This account has not been verified yet.",
+  "auth.userNotFound": "User not found.",
+  "auth.invalidCode": "The verification code is invalid.",
+  "auth.resetPassword": "Reset Password",
+  "auth.newPassword": "New Password",
+  "auth.resetCodeSent": "A code to reset your password has been sent to your email.",
+  "auth.resetSuccess": "Your password has been reset. Please sign in.",
+  "auth.backToSignIn": "Back to Sign In",
+"auth.sendResetCode": "Send Reset Code",
+"auth.resetPassword": "Reset Password",
+"auth.newPassword": "New Password",
+"auth.passwordResetSuccess": "Your password has been reset. Please sign in again.",
+"auth.emailRequired": "Please enter your email address.",
+"auth.backToSignIn": "Back to Sign In",
+"auth.forgotPasswordPrompt": "Forgot your password?",
+"auth.forgotPassword": "Reset password"
+
+
+
+
+
 
 }

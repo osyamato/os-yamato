@@ -77,6 +77,11 @@ const textColor = computed(() => {
   padding: 0.3rem 0.8rem;
   max-width: 100px;
   min-width: 80px;
+
+  /* ✅ テキストがはみ出さないように */
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .yamato-button.medium {

@@ -116,6 +116,7 @@ export const onCreateSchedule = /* GraphQL */ `
       endTime
       title
       memo
+      isAllDay
       lastOpenedAt
       createdAt
       updatedAt
@@ -136,6 +137,7 @@ export const onUpdateSchedule = /* GraphQL */ `
       endTime
       title
       memo
+      isAllDay
       lastOpenedAt
       createdAt
       updatedAt
@@ -156,6 +158,7 @@ export const onDeleteSchedule = /* GraphQL */ `
       endTime
       title
       memo
+      isAllDay
       lastOpenedAt
       createdAt
       updatedAt
@@ -236,6 +239,7 @@ export const onCreateChatRoom = /* GraphQL */ `
       user1
       user2
       lastMessage
+      lastContentType
       lastTimestamp
       lastReadAtUser2
       lastReadAtUser1
@@ -260,6 +264,7 @@ export const onUpdateChatRoom = /* GraphQL */ `
       user1
       user2
       lastMessage
+      lastContentType
       lastTimestamp
       lastReadAtUser2
       lastReadAtUser1
@@ -284,6 +289,7 @@ export const onDeleteChatRoom = /* GraphQL */ `
       user1
       user2
       lastMessage
+      lastContentType
       lastTimestamp
       lastReadAtUser2
       lastReadAtUser1
@@ -510,6 +516,7 @@ export const onCreateScheduleTemplate = /* GraphQL */ `
       label
       startTime
       endTime
+      isAllDay
       createdAt
       updatedAt
       owner
@@ -528,6 +535,7 @@ export const onUpdateScheduleTemplate = /* GraphQL */ `
       label
       startTime
       endTime
+      isAllDay
       createdAt
       updatedAt
       owner
@@ -546,6 +554,7 @@ export const onDeleteScheduleTemplate = /* GraphQL */ `
       label
       startTime
       endTime
+      isAllDay
       createdAt
       updatedAt
       owner

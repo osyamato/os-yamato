@@ -83,6 +83,7 @@ export const getSchedule = /* GraphQL */ `
       endTime
       title
       memo
+      isAllDay
       lastOpenedAt
       createdAt
       updatedAt
@@ -105,6 +106,7 @@ export const listSchedules = /* GraphQL */ `
         endTime
         title
         memo
+        isAllDay
         lastOpenedAt
         createdAt
         updatedAt
@@ -166,6 +168,7 @@ export const getChatRoom = /* GraphQL */ `
       user1
       user2
       lastMessage
+      lastContentType
       lastTimestamp
       lastReadAtUser2
       lastReadAtUser1
@@ -192,6 +195,7 @@ export const listChatRooms = /* GraphQL */ `
         user1
         user2
         lastMessage
+        lastContentType
         lastTimestamp
         lastReadAtUser2
         lastReadAtUser1
@@ -383,6 +387,7 @@ export const getScheduleTemplate = /* GraphQL */ `
       label
       startTime
       endTime
+      isAllDay
       createdAt
       updatedAt
       owner
@@ -407,6 +412,7 @@ export const listScheduleTemplates = /* GraphQL */ `
         label
         startTime
         endTime
+        isAllDay
         createdAt
         updatedAt
         owner

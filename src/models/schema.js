@@ -219,6 +219,13 @@ export const schema = {
                     "isRequired": false,
                     "attributes": []
                 },
+                "isAllDay": {
+                    "name": "isAllDay",
+                    "isArray": false,
+                    "type": "Boolean",
+                    "isRequired": false,
+                    "attributes": []
+                },
                 "lastOpenedAt": {
                     "name": "lastOpenedAt",
                     "isArray": false,
@@ -400,6 +407,13 @@ export const schema = {
                 },
                 "lastMessage": {
                     "name": "lastMessage",
+                    "isArray": false,
+                    "type": "String",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "lastContentType": {
+                    "name": "lastContentType",
                     "isArray": false,
                     "type": "String",
                     "isRequired": false,
@@ -1071,14 +1085,21 @@ export const schema = {
                     "name": "startTime",
                     "isArray": false,
                     "type": "String",
-                    "isRequired": true,
+                    "isRequired": false,
                     "attributes": []
                 },
                 "endTime": {
                     "name": "endTime",
                     "isArray": false,
                     "type": "String",
-                    "isRequired": true,
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "isAllDay": {
+                    "name": "isAllDay",
+                    "isArray": false,
+                    "type": "Boolean",
+                    "isRequired": false,
                     "attributes": []
                 },
                 "createdAt": {
@@ -1391,5 +1412,5 @@ export const schema = {
     "enums": {},
     "nonModels": {},
     "codegenVersion": "3.4.4",
-    "version": "7df3136418ad69f74e4976560f4851ed"
+    "version": "ddf946eacfcd310479ec6ff8793290be"
 };

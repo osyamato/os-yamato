@@ -79,6 +79,7 @@ type EagerSchedule = {
   readonly endTime?: string | null;
   readonly title?: string | null;
   readonly memo?: string | null;
+  readonly isAllDay?: boolean | null;
   readonly lastOpenedAt?: string | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
@@ -95,6 +96,7 @@ type LazySchedule = {
   readonly endTime?: string | null;
   readonly title?: string | null;
   readonly memo?: string | null;
+  readonly isAllDay?: boolean | null;
   readonly lastOpenedAt?: string | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
@@ -155,6 +157,7 @@ type EagerChatRoom = {
   readonly user1: string;
   readonly user2: string;
   readonly lastMessage?: string | null;
+  readonly lastContentType?: string | null;
   readonly lastTimestamp?: string | null;
   readonly lastReadAtUser2?: string | null;
   readonly lastReadAtUser1?: string | null;
@@ -175,6 +178,7 @@ type LazyChatRoom = {
   readonly user1: string;
   readonly user2: string;
   readonly lastMessage?: string | null;
+  readonly lastContentType?: string | null;
   readonly lastTimestamp?: string | null;
   readonly lastReadAtUser2?: string | null;
   readonly lastReadAtUser1?: string | null;
@@ -388,8 +392,9 @@ type EagerScheduleTemplate = {
   readonly id: string;
   readonly emoji?: string | null;
   readonly label?: string | null;
-  readonly startTime: string;
-  readonly endTime: string;
+  readonly startTime?: string | null;
+  readonly endTime?: string | null;
+  readonly isAllDay?: boolean | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
 }
@@ -402,8 +407,9 @@ type LazyScheduleTemplate = {
   readonly id: string;
   readonly emoji?: string | null;
   readonly label?: string | null;
-  readonly startTime: string;
-  readonly endTime: string;
+  readonly startTime?: string | null;
+  readonly endTime?: string | null;
+  readonly isAllDay?: boolean | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
 }

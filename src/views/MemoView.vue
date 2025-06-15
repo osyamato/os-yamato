@@ -391,7 +391,11 @@ async function fetchMemos() {
     }
 
     // 新しいリストを反映
-    memos.value = filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+memos.value = filtered.sort((a, b) => {
+  const dateA = new Date(b.updatedAt || b.createdAt)
+  const dateB = new Date(a.updatedAt || a.createdAt)
+  return dateA - dateB
+})
     console.log('✅ 表示用 memos 更新完了:', memos.value.length, '件')
 
     // ✅ 選択中メモを再同期

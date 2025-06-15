@@ -243,7 +243,7 @@ async function sendImageMessage(imageKey, thumbnailKey) {
     senderYamatoId: myYamatoId.value,
     receiverSub: receiverSub.value,
     receiverYamatoId: receiverYamatoId.value,
-    content: '', // 📷 写真なのでテキストは空でOK
+    content: '',
     contentType: 'image',
     imageKey,
     thumbnailKey,
@@ -252,7 +252,19 @@ async function sendImageMessage(imageKey, thumbnailKey) {
   }
 
   try {
+    // ① メッセージ送信
     await API.graphql(graphqlOperation(createMessage, { input }))
+
+    // ② ChatRoom を更新（❗️これがなかった）
+    await API.graphql(graphqlOperation(updateChatRoom, {
+      input: {
+        id: roomId.value,
+        lastMessage: '', // または "📷 写真"
+        lastContentType: 'image',
+        lastSenderId: mySub.value,
+        lastTimestamp: now.toISOString()
+      }
+    }))
   } catch (err) {
     console.error('❌ 画像メッセージ送信エラー:', JSON.stringify(err, null, 2))
   }
@@ -275,7 +287,8 @@ function maybePlayEffect(content) {
     { pattern: new RegExp(`(金閣寺|三島由紀夫|愛国|林ゆかり|倉岡剛)(?![一-龯])`), effect: 'mishima' },
     { pattern: new RegExp(`(プラネタリウム|宇宙|土星)(?![一-龯])`), effect: 'saturn' },
     { pattern: new RegExp(`(おめでとう|お祝い|祝|congratulations)(?![一-龯])`, 'i'), effect: 'confetti' },
-    { pattern: new RegExp(`(星空|モンゴル|星|夜空)(?![一-龯])`, 'u'), effect: 'starry' }
+    { pattern: new RegExp(`(星空|モンゴル|星|夜空)(?![一-龯])`, 'u'), effect: 'starry' },
+    { pattern: new RegExp(`(シャボン玉|泡|bubble)(?![一-龯])`, 'i'), effect: 'bubble' } 
   ]
   for (const { pattern, effect } of effects) {
     if (pattern.test(content)) {
