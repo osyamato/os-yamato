@@ -81,7 +81,7 @@
       <div class="letter-content">
         <p class="letter-body">{{ selectedMessage.content }}</p>
 <div class="signature">
-  ― {{ t('wind.fromDisplayName', { name: selectedMessage.fromDisplayName }) }}<br />
+   {{ t('wind.fromDisplayName', { name: selectedMessage.fromDisplayName }) }}<br />
   {{ formatDate(selectedMessage.deliveryDate) }}
 </div>
       </div>

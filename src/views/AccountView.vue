@@ -13,8 +13,7 @@
     <!-- プレミアム -->
     <div class="account-item">
       <span>Yamato プレミアム</span>
-      <IconButton :color="selectedColor" size="medium" @click="showPremiumModal = true">
-        →
+      <IconButton :color="selectedColor" size="medium" @click="showPremiumModal = true">→
       </IconButton>
     </div>
 
@@ -205,3 +204,4 @@ function downgrade() {
   100% { transform: translateY(0); opacity: 1; }
 }
 </style>
+ 

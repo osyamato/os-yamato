@@ -68,9 +68,13 @@ const wallpaperStyle = computed(() => {
   }
 })
 
-// 🔹 画面遷移
+// 🔹 画面遷移（チャットのみ ?from=home を追加）
 function goTo(path) {
-  router.push(`/${path}`)
+  if (path === 'chat-rooms') {
+    router.push({ path: `/${path}`, query: { from: 'home' } })
+  } else {
+    router.push(`/${path}`)
+  }
 }
 
 onMounted(async () => {

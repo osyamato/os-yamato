@@ -4,10 +4,6 @@
     <div class="contact-header">
 <h2 class="header-title">{{ t('contactTitle') }}</h2>
 <div class="header-icons">
-<IconButton
-  :color="iconColor"
-  :class="{ 'active-icon': showSearchModal || searchQuery.trim().length > 0 }"
-  @click="openSearchModal"
 >
   🔍
 </IconButton>
@@ -914,7 +910,7 @@ textarea {
 .active-icon {
   background-color: white !important;
   color: black !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25); /* 濃くて柔らかい影 */
+  border: 1px solid #999 !important;
 }
 
 </style>

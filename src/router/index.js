@@ -21,9 +21,11 @@ import HiddenChatRoomListView from '../views/HiddenChatRoomListView.vue'
 import ScheduleTemplateView from '../views/ScheduleTemplateView.vue'
 import WindMessageView from '../views/WindMessageView.vue' // ✅ 風の便り送信用
 import WindInboxView from '../views/WindInboxView.vue'     // ✅ 風の便り受信用
-import GlobeView from '../views/GlobeView.vue'             // ✅ 追加: 地球儀View
+import GlobeView from '../views/GlobeView.vue'             // ✅ 地球儀View
 import TimeView from '../views/TimeView.vue'
-import AboutView from '../views/AboutView.vue' // ← これを他のViewと同じ場所に追加
+import AboutView from '../views/AboutView.vue'
+import VerifyEmailView from '../views/VerifyEmailView.vue' // ✅ 新規追加
+import ForgotPasswordView from '../views/ForgotPasswordView.vue'
 
 const routes = [
   { path: '/', redirect: '/signin' },
@@ -58,7 +60,11 @@ const routes = [
   // ✅ 地球儀Viewルート
   { path: '/globe', name: 'globe', component: GlobeView },
   { path: '/time', name: 'time', component: TimeView },
-  { path: '/about', name: 'about', component: AboutView }
+  { path: '/about', name: 'about', component: AboutView },
+
+  // ✅ メール認証View
+  { path: '/verify-email', name: 'verify-email', component: VerifyEmailView },
+  { path: '/forgot-password', name: 'forgot-password', component: ForgotPasswordView } 
 
 ]
 
@@ -67,4 +73,29 @@ const router = createRouter({
   routes
 })
 
+
+let historyStack = []
+let isBack = false
+
+router.beforeEach((to, from, next) => {
+  const toIndex = historyStack.indexOf(to.fullPath)
+  const fromIndex = historyStack.indexOf(from.fullPath)
+
+  if (toIndex !== -1 && toIndex < fromIndex) {
+    isBack = true // ⬅️ 戻り遷移
+    historyStack = historyStack.slice(0, toIndex + 1)
+  } else {
+    isBack = false
+    historyStack.push(to.fullPath)
+  }
+
+  next()
+})
+
+// 他ファイルで取得する用にエクスポート
+export function getIsBack() {
+  return isBack
+}
+
 export default router
+

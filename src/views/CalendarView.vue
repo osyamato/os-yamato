@@ -1,11 +1,21 @@
 <template>
-  <div class="calendar-container">
+<div
+  class="calendar-container"
+  :class="{ dropDown: !getIsBack() }"
+  @touchstart="handleTouchStart"
+  @touchend="handleTouchEnd"
+>
     <!-- 月表示 -->
-    <h2 class="month-title">
-      <button @click="prevMonth">&lt;</button>
-      {{ t(`month.${currentMonth}`) }}
-      <button @click="nextMonth">&gt;</button>
-    </h2>
+<h2 class="month-title">
+  <button @click="prevMonth">&lt;</button>
+
+  <!-- 👇 月を押すとピッカーが開く -->
+  <span @click="showMonthPicker = true" style="cursor: pointer;">
+    {{ t(`month.${currentMonth}`) }}
+  </span>
+
+  <button @click="nextMonth">&gt;</button>
+</h2>
 
     <!-- テンプレートショートカット -->
 <div class="template-shortcut">
@@ -93,7 +103,11 @@
                 :key="event.id || index"
               >
                 <p><strong>{{ event.title }}</strong></p>
-                <p>{{ event.startTime }} - {{ event.endTime }}</p>
+<p>
+  <span v-if="event.isAllDay">- {{ t('calendar.allDay') }} -</span>
+  <span v-else>{{ event.startTime }} - {{ event.endTime }}</span>
+</p>
+
                 <p class="memo-text">{{ event.memo }}</p>
                 <div class="button-container-row">
                   <IconButton :color="selectedColor" size="small" @click="startEdit(event)">✏️</IconButton>
@@ -116,7 +130,15 @@
                   {{ tpl.emoji }} {{ tpl.label }}
                 </YamatoButton>
               </div>
-<div class="time-input-row">
+<div class="all-day-wrapper">
+  <label class="all-day-toggle">
+    <input type="checkbox" v-model="isAllDay" />
+    <span>{{ t('calendar.allDay') }}</span>
+  </label>
+</div>
+
+<!-- ✅ 終日なら時間入力を非表示 -->
+<div class="time-input-row" v-if="!isAllDay">
   <input type="time" v-model="startTime" />
   <input type="time" v-model="endTime" />
 </div>
@@ -180,6 +202,32 @@
       @confirm="handleConfirmedDelete"
       @cancel="showConfirm = false"
     />
+
+<Modal :visible="showMonthPicker" customClass="compact" @close="showMonthPicker = false">
+  <template #default>
+    <h3 class="modal-title">{{ $t('calendar.selectYearMonth') }}</h3>
+
+    <div class="time-input-row">
+      <select v-model="selectedYear">
+        <option v-for="y in yearOptions" :key="y" :value="y">
+          {{ $t('calendar.year', { year: y }) }}
+        </option>
+      </select>
+
+      <select v-model="selectedMonth">
+        <option v-for="m in 12" :key="m" :value="m - 1">
+          {{ $t('calendar.month', { month: m }) }}
+        </option>
+      </select>
+    </div>
+
+    <div class="button-container-row">
+      <YamatoButton @click="jumpToSelectedMonth">{{ $t('calendar.goTo') }}</YamatoButton>
+      <YamatoButton @click="showMonthPicker = false" type="danger">{{ $t('calendar.cancel') }}</YamatoButton>
+    </div>
+  </template>
+</Modal>
+
   </div>
 </template>
 
@@ -187,7 +235,7 @@
 
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch, onBeforeUnmount } from 'vue'
 import { API, Auth, graphqlOperation } from 'aws-amplify'
 import { listSchedules, listScheduleTemplates } from '@/graphql/queries'
 import {
@@ -202,6 +250,8 @@ import IconButton from '@/components/IconButton.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+
+import { getIsBack } from '@/router' 
 
 const { t, locale } = useI18n()
 const router = useRouter()
@@ -243,12 +293,31 @@ const daysOfWeek = computed(() =>
 )
 
 
+const showMonthPicker = ref(false)
+
+const yearOptions = computed(() => {
+  const current = new Date().getFullYear()
+  return Array.from({ length: 10 }, (_, i) => current - 5 + i)
+})
+
+function jumpToSelectedMonth() {
+  currentYear.value = selectedYear.value
+  currentMonth.value = selectedMonth.value
+  showMonthPicker.value = false
+}
+
 
 const localizedDaysOfWeek = computed(() => daysOfWeekMap[language.value] || daysOfWeekMap.ja)
-const isFormFilled = computed(() => title.value.trim() && startTime.value && endTime.value)
+const isFormFilled = computed(() =>
+  title.value.trim() &&
+  (isAllDay.value || (startTime.value && endTime.value))
+)
 
 const selectedYear = ref(new Date().getFullYear());
 const selectedMonth = ref(new Date().getMonth());
+
+const isAllDay = ref(false)
+
 
 // -----------------------
 // 📌 Fetch & Apply
@@ -264,18 +333,58 @@ async function fetchSchedules() {
 
 const isEditing = ref(false)
 
-function startEdit(event) {
-  animationDirection.value = 'flyUp'
-  setTimeout(() => {
-    editingEventId.value = event.id
-    isEditing.value = true
-    title.value = event.title
-    startTime.value = event.startTime
-    endTime.value = event.endTime
-    memo.value = event.memo
-    animationDirection.value = 'dropDown'
-  }, 300)
+let touchStartX = 0
+
+function handleTouchStart(e) {
+  touchStartX = e.changedTouches[0].clientX
 }
+
+function handleTouchEnd(e) {
+  const touchEndX = e.changedTouches[0].clientX
+  const diffX = touchEndX - touchStartX
+
+  if (Math.abs(diffX) > 50) {
+    if (diffX > 0) {
+      prevMonth()  // 右スワイプ → 前月
+    } else {
+      nextMonth()  // 左スワイプ → 翌月
+    }
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', handleKeydown)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', handleKeydown)
+})
+
+function handleKeydown(e) {
+  if (e.key === 'ArrowLeft') {
+    prevMonth()
+  } else if (e.key === 'ArrowRight') {
+    nextMonth()
+  }
+}
+
+
+function startEdit(event) {
+  editingEventId.value = event.id
+  isEditing.value = true
+  title.value = event.title
+  startTime.value = event.startTime
+  endTime.value = event.endTime
+  memo.value = event.memo
+  isAllDay.value = event.isAllDay ?? false
+
+  // ✅ 追加：終日が外れていて時間が空なら初期値を入れる
+  if (!isAllDay.value && (!startTime.value || !endTime.value)) {
+    startTime.value = '12:00'
+    endTime.value = '13:00'
+  }
+}
+
 async function deleteEvent(id) {
   const confirmed = confirm('本当に削除しますか？')
   if (!confirmed) return
@@ -325,9 +434,18 @@ async function fetchTemplates() {
 
 function applyTemplate(template) {
   title.value = `${template.emoji} ${template.label}`.trim()
-  startTime.value = template.startTime
-  endTime.value = template.endTime
+
+  if (template.isAllDay) {
+    isAllDay.value = true
+    startTime.value = null
+    endTime.value = null
+  } else {
+    isAllDay.value = false
+    startTime.value = template.startTime
+    endTime.value = template.endTime
+  }
 }
+
 
 function handleQuickTagClick() {
   if (!templates.value.length) {
@@ -363,20 +481,23 @@ async function registerQuickTagSchedule() {
     return
   }
 
-  for (const day of quickDates.value) {
-    const date = new Date(currentYear.value, currentMonth.value, day)
+for (const day of quickDates.value) {
+  const date = new Date(currentYear.value, currentMonth.value, day)
 
-    const input = {
-      date: date.toLocaleDateString('sv-SE'),
-      title: `${selectedQuickTemplate.value.emoji} ${selectedQuickTemplate.value.label}`.trim(),
-      startTime: selectedQuickTemplate.value.startTime,
-      endTime: selectedQuickTemplate.value.endTime,
-      memo: '',
-      owner: user.username
-    }
+  const isAllDay = selectedQuickTemplate.value.isAllDay ?? false
 
-    await API.graphql(graphqlOperation(createScheduleMutation, { input }))
+  const input = {
+    date: date.toLocaleDateString('sv-SE'),
+    title: `${selectedQuickTemplate.value.emoji} ${selectedQuickTemplate.value.label}`.trim(),
+    startTime: isAllDay ? null : selectedQuickTemplate.value.startTime,
+    endTime: isAllDay ? null : selectedQuickTemplate.value.endTime,
+    memo: '',
+    isAllDay,
+    owner: user.username
   }
+
+  await API.graphql(graphqlOperation(createScheduleMutation, { input }))
+}
 
   await fetchSchedules()
   showQuickTagModal.value = false
@@ -469,6 +590,8 @@ function openModal(date) {
   editingEventId.value = null
   title.value = ''
   memo.value = ''
+  isAllDay.value = false  // ✅ 終日チェックを初期化
+
   const now = new Date()
   const hour = now.getHours().toString().padStart(2, '0')
   startTime.value = `${hour}:00`
@@ -482,6 +605,7 @@ function editEvent(event) {
   startTime.value = event.startTime
   endTime.value = event.endTime
   memo.value = event.memo
+  isAllDay.value = event.isAllDay ?? false  // ✅ 終日予定を反映
 }
 
 function openFromFooter(event) {
@@ -495,15 +619,23 @@ function openFromFooter(event) {
 }
 
 async function createSchedule() {
+  if (!selectedDate.value) {
+    alert('日付が選択されていません')
+    return
+  }
+
   const user = await Auth.currentAuthenticatedUser()
+
   const input = {
     date: selectedDate.value.toLocaleDateString('sv-SE'),
     title: title.value,
-    startTime: startTime.value,
-    endTime: endTime.value,
+    startTime: isAllDay.value ? null : startTime.value,
+    endTime: isAllDay.value ? null : endTime.value,
     memo: memo.value,
+    isAllDay: isAllDay.value,
     owner: user.username
   }
+
   await API.graphql(graphqlOperation(createScheduleMutation, { input }))
   await fetchSchedules()
   selectedDate.value = null
@@ -516,36 +648,30 @@ async function updateSchedule() {
     id: editingEventId.value,
     date: selectedDate.value.toLocaleDateString('sv-SE'),
     title: title.value,
-    startTime: startTime.value,
-    endTime: endTime.value,
-    memo: memo.value
+    startTime: isAllDay.value ? null : startTime.value,
+    endTime: isAllDay.value ? null : endTime.value,
+    memo: memo.value,
+    isAllDay: isAllDay.value
   }
 
   await API.graphql(graphqlOperation(updateScheduleMutation, { input }))
   await fetchSchedules()
 
-  // ✅ 一度 flyUp で上げて…
-  animationDirection.value = 'flyUp'
+  // ✅ アニメーションなし
+  editingEventId.value = null
+  isEditing.value = false
 
-  setTimeout(() => {
-    // ✅ 下ろす前に isEditing を false にして表示を切り替える
-    editingEventId.value = null
-    isEditing.value = false
+  const dateKey = selectedDate.value.toLocaleDateString('sv-SE')
+  selectedEvents.value = schedules.value.filter(e => e.date === dateKey)
 
-    // 🎯 そのあと dropDown で戻す
-    animationDirection.value = 'dropDown'
-
-    // ✅ 再表示に向けて一覧を抽出
-    const dateKey = selectedDate.value.toLocaleDateString('sv-SE')
-    selectedEvents.value = schedules.value.filter(e => e.date === dateKey)
-
-    // 入力クリア
-    title.value = ''
-    startTime.value = '12:00'
-    endTime.value = '13:00'
-    memo.value = ''
-  }, 300) // 🕒 CSSアニメーションと同じ時間に合わせる
+  title.value = ''
+  startTime.value = '12:00'
+  endTime.value = '13:00'
+  memo.value = ''
+  isAllDay.value = false
 }
+
+
 function nextMonth() {
   animationDirection.value = ''
   setTimeout(() => {
@@ -584,11 +710,20 @@ watch(selectedEvent, (event) => {
 })
 
 watch(startTime, (newStart) => {
+  if (!newStart || !endTime.value) return
+
   const startHour = parseInt(newStart.split(':')[0])
   const endHour = parseInt(endTime.value.split(':')[0])
   if (endHour <= startHour) {
     const nextHour = (startHour + 1).toString().padStart(2, '0')
     endTime.value = `${nextHour}:00`
+  }
+})
+
+watch(isAllDay, (newVal) => {
+  if (!newVal) {
+    if (!startTime.value) startTime.value = '12:00'
+    if (!endTime.value) endTime.value = '13:00'
   }
 })
 
@@ -675,8 +810,12 @@ async function confirmAndDeleteMonth() {
   padding: 1rem;
   font-family: sans-serif;
   text-align: center;
-  animation: dropDown 0.4s ease-out;
   transform-origin: top center;
+  /* animationは削除 */
+}
+
+.calendar-container.dropDown {
+  animation: dropDown 0.4s ease-out;
 }
 
 
@@ -950,7 +1089,13 @@ textarea {
   font-size: 0.85rem;
   cursor: pointer;
   border: 1px solid #ccc;
-  color: #111; /* ← 追加：黒文字に */
+  color: #111;
+
+  max-width: 120px;           /* ✅ 幅制限（お好みで調整） */
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  text-align: center;         /* ✅ 中央寄せ */
 }
 
 .template-tag:hover {
@@ -1083,6 +1228,17 @@ textarea {
   color: var(--yamato-primary) !important;
   border: 2px solid var(--yamato-primary);
 }
+
+
+.button-label {
+  display: inline-block;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+
 .time-input-row {
   display: flex;
   gap: 1rem;
@@ -1112,6 +1268,38 @@ textarea {
   width: 36px;
   height: 36px;
   font-size: 1.2rem;
+}
+
+.all-day-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.3rem;
+  margin: 1rem 0;
+}
+
+.all-day-toggle {
+  font-size: 0.95rem;
+  margin-left: 0.4rem;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: #111; /* 💡 デフォルトは黒 */
+}
+
+@media (prefers-color-scheme: dark) {
+  .all-day-toggle {
+    color: #f5f5f5; /* 🌙 ダークモードでは白 */
+  }
+}
+
+.all-day-toggle input[type="checkbox"] {
+  appearance: auto;
+  accent-color: #007aff;  /* ← macOSの青チェック */
+  width: 1rem;
+  height: 1rem;
+  margin: 0;
+  padding: 0;
 }
 
 </style>

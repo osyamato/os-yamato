@@ -5,8 +5,7 @@
       <!-- 🔷 ヘッダー -->
       <div class="chat-header">
 <h2 class="header-title">{{ t('chat.title') }}</h2>
-        <transition name="fade-in">
-          <div class="header-icons" v-if="isReady">
+ <div class="header-icons" v-if="isReady">
             <IconButton :color="iconColor" @click="openProfileModal">{{ myInitial }}</IconButton>
             <IconButton
               v-if="hasProfile"
@@ -18,53 +17,54 @@
               v-if="hasProfile"
               :color="iconColor"
               @click="openSearchModal"
-            >＋</IconButton>
+            >🔍</IconButton>
             <IconButton
               v-if="hasProfile"
               :color="iconColor"
               @click="openWindInbox"
             >🕊️</IconButton>
           </div>
-        </transition>
       </div>
 
       <!-- 🔷 チャットルーム一覧 -->
-      <transition name="fadeSlideIn">
-        <div class="room-list" v-if="isReady">
-          <div
-            v-for="room in sortedRooms"
-            :key="room.id"
-            class="room-card"
-            @click="goToRoom(room.id, getPartnerYamatoId(room))"
-          >
-            <p class="partner-name">
-              <span class="icon">{{ getExpiryIcon(room) }}</span>
-              <span class="name-text">
-                {{
-                  getPartnerDisplayName(room).length > 15
-                    ? getPartnerDisplayName(room).slice(0, 15) + '…'
-                    : getPartnerDisplayName(room)
-                }}
-              </span>
-              <span class="menu-dots" @click.stop="openOptions(room)">⋯</span>
-              <span class="mail-icon" @click.stop="openWindMessage(room)">✉️</span>
-            </p>
-            <p class="last-message">
-              <span v-if="hasUnread(room)" class="unread-dot inline"></span>
-              <span class="message-text">
-                {{
-                  room.lastMessage
-                    ? room.lastMessage.length > 15
-                      ? room.lastMessage.slice(0, 15) + '…'
-                      : room.lastMessage
-                    : ''
-                }}
-              </span>
-            </p>
-            <small class="last-time">{{ formatTime(room.lastTimestamp) }}</small>
-          </div>
-        </div>
-      </transition>
+<transition name="fadeSlideIn">
+  <div class="room-list" v-if="isReady">
+    <div
+      v-for="room in sortedRooms"
+      :key="room.id"
+      class="room-card"
+      @click="goToRoom(room.id, getPartnerYamatoId(room))"
+    >
+      <p class="partner-name">
+        <span class="icon">{{ getExpiryIcon(room) }}</span>
+        <span class="name-text">
+          {{
+            getPartnerDisplayName(room).length > 15
+              ? getPartnerDisplayName(room).slice(0, 15) + '…'
+              : getPartnerDisplayName(room)
+          }}
+        </span>
+        <span class="menu-dots" @click.stop="openOptions(room)">⋯</span>
+        <span class="mail-icon" @click.stop="openWindMessage(room)">✉️</span>
+      </p>
+      <p class="last-message">
+        <span v-if="hasUnread(room)" class="unread-dot inline"></span>
+        <span class="message-text">
+          {{
+            room.lastContentType === 'image'
+              ? t('chat.photo')  // ← ローカライズキーを使う場合
+              : room.lastMessage
+                ? room.lastMessage.length > 15
+                  ? room.lastMessage.slice(0, 15) + '…'
+                  : room.lastMessage
+                : ''
+          }}
+        </span>
+      </p>
+      <small class="last-time">{{ formatTime(room.lastTimestamp) }}</small>
+    </div>
+  </div>
+</transition>
     </div>
 
     <!-- 🔷 Yamato ID 検索モーダル -->
@@ -126,7 +126,6 @@
   </div>
 </template>
 
-
 <script setup>
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { API, graphqlOperation, Auth } from 'aws-amplify'
@@ -144,6 +143,8 @@ import ProfileSetupView from '@/views/ProfileSetupView.vue'
 import { updateChatRequest, createChatRoom } from '@/graphql/mutations'
 import '@/assets/variables.css'
 import { deleteChatRoom } from '@/graphql/mutations'
+import { getIsBack } from '@/router'
+
 
 import IconButton from '@/components/IconButton.vue'
 
@@ -153,6 +154,12 @@ const { t } = useI18n()
 
 const iconColor = ref('#274c77')
 const isReady = ref(false)
+
+const isBack = ref(null)
+
+onMounted(() => {
+  isBack.value = getIsBack()
+})
 
 onMounted(async () => {
   const user = await Auth.currentAuthenticatedUser()
@@ -1022,4 +1029,26 @@ button {
   }
 }
 
+.chat-room-list {
+  transform-origin: top center;
+}
+
+.chat-room-list.dropDown {
+  animation: dropDown 0.4s ease-out;
+}
+
+@keyframes dropDown {
+  0% {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 </style>
+
+
+

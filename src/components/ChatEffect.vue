@@ -92,6 +92,18 @@
         :style="randomConfettiStyle(n)"
       />
     </div>
+
+<!-- シャボン玉 -->
+<div v-if="effectType === 'bubble'" class="effect-container">
+  <div
+    v-for="n in 30"
+    :key="'bubble-' + n"
+    class="bubble"
+    :style="randomBubbleStyle()"
+  />
+</div>
+
+
   </Teleport>
 
 </template>
@@ -201,6 +213,26 @@ function playEffect(type) {
   }
 }
 
+function triggerBubble() {
+  effectType.value = 'bubble'
+  resetAfterDelay(6000)
+}
+
+function randomBubbleStyle() {
+  const size = 40 + Math.random() * 40
+  const left = Math.random() * 100
+  const delay = Math.random() * 2
+  const duration = 4 + Math.random() * 3
+
+  return {
+    width: `${size}px`,
+    height: `${size}px`,
+    left: `${left}%`,
+    animationDuration: `${duration}s`,
+    animationDelay: `${delay}s`
+  }
+}
+
 defineExpose({
   triggerRain,
   triggerSnow,
@@ -214,6 +246,7 @@ defineExpose({
   triggerSaturn,
   triggerConfetti,
   triggerStarry,
+　triggerBubble,
   playEffect
 })
 
@@ -693,6 +726,35 @@ animation-fill-mode: both;
   }
   100% {
     transform: translate(var(--dx), var(--dy));
+    opacity: 0;
+  }
+}
+
+.bubble {
+  position: absolute;
+  bottom: -50px;
+  width: 40px;
+  height: 40px;
+  background-image: url('/bubble.png');
+  background-size: cover;
+  background-repeat: no-repeat;
+  animation: bubble-float 12s ease-out forwards;
+  opacity: 0.7;
+  pointer-events: none;
+}
+@keyframes bubble-float {
+  0% {
+    transform: translateY(0) translateX(0) scale(0.9) rotate(0deg);
+    opacity: 0.8;
+  }
+  30% {
+    transform: translateY(-400px) translateX(10px) scale(1) rotate(90deg);
+  }
+  60% {
+    transform: translateY(-700px) translateX(-10px) scale(1.05) rotate(180deg);
+  }
+  100% {
+    transform: translateY(-1000px) translateX(20px) scale(1.1) rotate(360deg);
     opacity: 0;
   }
 }

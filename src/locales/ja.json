@@ -55,6 +55,8 @@
 "edit": "編集",
 "save": "保存",
 "close": "閉じる",
+"button.update": "更新",
+"button.back": "戻る",
 
 
  "searchByTag": "タグで検索",
@@ -132,7 +134,7 @@
 "template.labelPlaceholder": "タイトル (例: 日勤)",
   "calendar.confirmDeleteMonth": "この月の予定をすべて削除しますか？",
   "calendar.deletedCount": "{count} 件の予定を削除しました",
-
+"calendar.allDay": "終日",
 
 
 "chat.title": "メッセージ",
@@ -146,7 +148,7 @@
 "chat.confirmHideMessage": "このメッセージを雲にかくしますか？",
 "chat.hide": "かくす",
 "photo.saved": "写真を保存しました🎞️",
-
+"chat.photo": "写真...",
 
 
 "chat.searchTitle": "Yamato ID で相手を検索",
@@ -174,7 +176,7 @@
 
 "wind.inboxTitle": "届いた風の便り",
 "wind.receiveButton": "便りを受け取る",
-"wind.fromDisplayName": "{{name}} より",
+"wind.fromDisplayName": "{name} より",
 "wind.title": "風の便り",
 
 "wind.restoreButton": "そっと戻す",
@@ -200,7 +202,86 @@
 "blossom.requestButton": "リクエスト申請",
 
 "diary.title": "{year}年の日記",
-"diary.placeholder": "日記を書く…"
+"diary.placeholder": "日記を書く…",
+
+
+
+"about.title": "OS Yamato - ver.0",
+  "about.conceptTitle": " コンセプト",
+  "about.conceptText": "OS Yamato は「記録は触れられなければ風に還る」を思想とした、データを蓄積しすぎない、全く新しいOSです。",
+  "about.featuresTitle": "主な機能",
+  "about.feature.diary": "日記：花が咲くように記録が残す",
+  "about.feature.calendar": "カレンダー：テンプレートを使って便利に",
+  "about.feature.chat": "メッセージ：季節感のある優しいメッセージスタイル",
+  "about.feature.memo": "メモ・連絡先・風の便り：必要なことだけを軽やかに",
+  "about.feature.photo": "写真:写真を整理し、風になろう",
+  "about.contactTitle": "お問い合わせ",
+  "about.developer": "開発者",
+"about.language": "言語",
+"about.termsTitle": "利用規約とプライバシーポリシー",
+"about.termsText": "内容を確認する",
+"terms.title": "利用規約とプライバシーポリシー",
+"terms.body": "本サービスは個人の記録を大切にします。\n\nデータはサーバーに一時的に保存され、一定期間アクセスがなければ自動削除されます。個人情報の収集は最小限にとどめ、第三者に提供することはありません。",
+ "calendar.selectYearMonth": "年月を選択",
+  "calendar.year": "{year}年",
+  "calendar.month": "{month}月",
+  "calendar.goTo": "この月へ移動",
+  "calendar.cancel": "閉じる",
+
+
+ "auth.email": "メールアドレス",
+  "auth.password": "パスワード",
+  "auth.signin": "サインイン",
+  "auth.noAccount": "アカウントをお持ちでない方は",
+  "auth.registerHere": "こちら",
+  "about.linkText": "Yamatoについて（規約とポリシー）",
+  "auth.error": "サインインに失敗しました",
+  "auth.language": "言語",
+
+  "auth.register": "登録する",
+  "auth.confirm": "確認する",
+  "auth.confirmCode": "6桁の確認コード",
+  "auth.haveAccount": "アカウントをお持ちの方は",
+  "auth.signinHere": "こちら",
+  "auth.codeSent": "確認コードを送信しました",
+  "auth.success": "登録が完了しました！",
+
+"auth.userExists": "このメールアドレスはすでに登録されています。",
+  "auth.passwordInvalid": "パスワードの形式が正しくありません。",
+  "auth.passwordTooShort": "パスワードが短すぎます。8文字以上にしてください。",
+  "auth.codeSent": "確認コードをメールに送信しました。",
+  "auth.success": "登録が完了しました。サインインしてください。",
+  "auth.error": "登録に失敗しました。",
+  "auth.resendCode": "確認コードを再送信",
+  "auth.codeResent": "確認コードを再送信しました。",
+  "auth.confirmCode": "確認コード",
+  "auth.confirm": "認証する",
+  "auth.verifyTitle": "メールアドレス認証",
+  "auth.verifyInstruction": "登録時に送信された確認コードを入力してください。",
+  "auth.email": "メールアドレス",
+  "auth.haveAccount": "すでにアカウントをお持ちですか？",
+  "auth.signinHere": "こちらからサインイン",
+  "auth.forgotPassword": "パスワードをお忘れですか？",
+  "auth.userNotConfirmed": "このアカウントはまだ認証されていません。",
+  "auth.userNotFound": "ユーザーが見つかりません。",
+  "auth.invalidCode": "確認コードが無効です。",
+  "auth.resetPassword": "パスワードをリセットする",
+  "auth.newPassword": "新しいパスワード",
+  "auth.resetCodeSent": "パスワードリセット用のコードをメールに送信しました。",
+  "auth.resetSuccess": "パスワードをリセットしました。サインインしてください。",
+  "auth.backToSignIn": "サインイン画面に戻る",
+"auth.sendResetCode": "確認コードを送信する",
+"auth.resetPassword": "パスワードをリセット",
+"auth.newPassword": "新しいパスワード",
+"auth.passwordResetSuccess": "パスワードがリセットされました。再度サインインしてください。",
+"auth.emailRequired": "メールアドレスを入力してください。",
+"auth.backToSignIn": "サインインに戻る",
+"auth.forgotPasswordPrompt": "パスワードをお忘れですか？",
+"auth.forgotPassword": "パスワードをリセット"
+
+
+
+
 
 
 }

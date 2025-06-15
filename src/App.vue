@@ -63,5 +63,11 @@ body {
     color: #ddd;
   }
 }
+
+html, body, #app {
+  height: 100%;
+}
+
 </style> 
 
+  

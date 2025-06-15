@@ -58,7 +58,7 @@
 <YamatoUserSearchModal
   v-if="showYamatoSearchModal"
   :initialYamatoId="initialSearchId"
-  @close="showYamatoSearchModal.value = false"
+@close="showYamatoSearchModal = false"
 />
   </div>
 </template>
@@ -140,19 +140,36 @@ const addFlower = (id, lat, lng, blossomData) => {
   const latRad = THREE.MathUtils.degToRad(lat)
   const lngRad = THREE.MathUtils.degToRad(lng)
 
-  // Three.jsの地球では経度を -lng にする必要がある（反時計回り）
   const x = radius * Math.cos(latRad) * Math.cos(-lngRad)
   const y = radius * Math.sin(latRad)
   const z = radius * Math.cos(latRad) * Math.sin(-lngRad)
 
   const texture = new THREE.TextureLoader().load('/flowers.2.png')
-  const material = new THREE.MeshBasicMaterial({ map: texture, transparent: true, side: THREE.DoubleSide })
+
+  const material = new THREE.MeshBasicMaterial({
+    map: texture,
+    transparent: true,
+    side: THREE.DoubleSide,
+    depthWrite: false // ✅ 重なりの透過対策
+  })
+
   const flower = new THREE.Mesh(new THREE.PlaneGeometry(0.15, 0.15), material)
-  flower.position.set(x, y, z)
+
+  // ✅ 群生感を出すためのランダムオフセット
+  const offset = (Math.random() - 0.5) * 0.01
+  flower.position.set(x + offset, y + offset, z + offset)
+
+  // ✅ 透過順をランダムで調整
+  flower.renderOrder = Math.floor(Math.random() * 1000)
+
+  // ✅ カメラ方向に向ける
   flower.lookAt(new THREE.Vector3(0, 0, 0))
+
+  // ✅ 登録
   earth.add(flower)
   flowerMap.set(id, flower)
 
+  // ✅ クリック用のヒットボックスも同様に位置と向き調整
   const hitbox = new THREE.Mesh(
     new THREE.PlaneGeometry(0.3, 0.3),
     new THREE.MeshBasicMaterial({ visible: false })
@@ -160,6 +177,7 @@ const addFlower = (id, lat, lng, blossomData) => {
   hitbox.position.copy(flower.position)
   hitbox.quaternion.copy(flower.quaternion)
   hitbox.userData = { blossom: blossomData }
+
   earth.add(hitbox)
   flowerMap.set(id + '_hitbox', hitbox)
 }
@@ -241,8 +259,7 @@ onMounted(async () => {
     camera.position.z = 4
     controls.minDistance = 3
   }
-
-  try {
+  try {
     // ✅ Cognitoユーザー情報の取得
     const user = await Auth.currentAuthenticatedUser()
     const sub = user.attributes.sub
@@ -285,7 +302,7 @@ onMounted(async () => {
     renderer.setSize(width, height)
   })
 })
-
+ 
 const meteors = ref([])
 const bgStars = ref([])
 
