@@ -1,76 +1,116 @@
 <template>
   <div class="chat-room-list">
-    <!-- ✅ アニメーションを適用する内部ラッパー -->
-    <div class="chat-room-wrapper">
-      <!-- 🔷 ヘッダー -->
-      <div class="chat-header">
-<h2 class="header-title">{{ t('chat.title') }}</h2>
- <div class="header-icons" v-if="isReady">
-            <IconButton :color="iconColor" @click="openProfileModal">{{ myInitial }}</IconButton>
-            <IconButton
-              v-if="hasProfile"
-              :color="iconColor"
-              :class="{ blink: hasIncomingRequest }"
-              @click="handleRequestClick"
-            >📮</IconButton>
-            <IconButton
-              v-if="hasProfile"
-              :color="iconColor"
-              @click="openSearchModal"
-            >🔍</IconButton>
-            <IconButton
-              v-if="hasProfile"
-              :color="iconColor"
-              @click="openWindInbox"
-            >🕊️</IconButton>
-          </div>
+    <!-- 🔷 ヘッダー -->
+    <transition name="dropDown" v-if="shouldAnimate">
+      <div class="chat-header" v-if="isReady">
+        <h2 class="header-title">{{ t('chat.title') }}</h2>
+        <div class="header-icons">
+          <IconButton :color="iconColor" @click="openProfileModal">{{ myInitial }}</IconButton>
+          <IconButton v-if="hasProfile" :color="iconColor" :class="{ blink: hasIncomingRequest }" @click="handleRequestClick">📮</IconButton>
+          <IconButton v-if="hasProfile" :color="iconColor" @click="openSearchModal">🔍</IconButton>
+          <IconButton v-if="hasProfile" :color="iconColor" @click="openWindInbox">🕊️</IconButton>
+        </div>
       </div>
+    </transition>
 
-      <!-- 🔷 チャットルーム一覧 -->
-<transition name="fadeSlideIn">
-  <div class="room-list" v-if="isReady">
-    <div
-      v-for="room in sortedRooms"
-      :key="room.id"
-      class="room-card"
-      @click="goToRoom(room.id, getPartnerYamatoId(room))"
-    >
-      <p class="partner-name">
-        <span class="icon">{{ getExpiryIcon(room) }}</span>
-        <span class="name-text">
-          {{
-            getPartnerDisplayName(room).length > 15
-              ? getPartnerDisplayName(room).slice(0, 15) + '…'
-              : getPartnerDisplayName(room)
-          }}
-        </span>
-        <span class="menu-dots" @click.stop="openOptions(room)">⋯</span>
-        <span class="mail-icon" @click.stop="openWindMessage(room)">✉️</span>
-      </p>
-      <p class="last-message">
-        <span v-if="hasUnread(room)" class="unread-dot inline"></span>
-        <span class="message-text">
-          {{
-            room.lastContentType === 'image'
-              ? t('chat.photo')  // ← ローカライズキーを使う場合
-              : room.lastMessage
-                ? room.lastMessage.length > 15
-                  ? room.lastMessage.slice(0, 15) + '…'
+    <div class="chat-header" v-else-if="isReady">
+      <h2 class="header-title">{{ t('chat.title') }}</h2>
+      <div class="header-icons">
+        <IconButton :color="iconColor" @click="openProfileModal">{{ myInitial }}</IconButton>
+        <IconButton v-if="hasProfile" :color="iconColor" :class="{ blink: hasIncomingRequest }" @click="handleRequestClick">📮</IconButton>
+        <IconButton v-if="hasProfile" :color="iconColor" @click="openSearchModal">🔍</IconButton>
+        <IconButton v-if="hasProfile" :color="iconColor" @click="openWindInbox">🕊️</IconButton>
+      </div>
+    </div>
+
+    <!-- 🔷 チャットリスト -->
+    <transition name="dropDownList" v-if="shouldAnimate">
+      <div class="room-list" v-if="isReady">
+        <div
+          v-for="room in sortedRooms"
+          :key="room.id"
+          class="room-card"
+          @click="goToRoom(room.id, getPartnerYamatoId(room))"
+        >
+          <div class="partner-name">
+            <div class="left-group">
+              <span class="icon">{{ getExpiryIcon(room) }}</span>
+              <span class="name-text">
+                {{
+                  getPartnerDisplayName(room).length > 15
+                    ? getPartnerDisplayName(room).slice(0, 15) + '…'
+                    : getPartnerDisplayName(room)
+                }}
+              </span>
+            </div>
+            <div class="menu-group">
+              <span class="menu-dots" @click.stop="openOptions(room)">⋯</span>
+              <span class="mail-icon" @click.stop="openWindMessage(room)">✉️</span>
+            </div>
+          </div>
+          <p class="last-message">
+            <span v-if="hasUnread(room)" class="unread-dot inline"></span>
+            <span class="message-text">
+              {{
+                room.lastContentType === 'image'
+                  ? t('chat.photo')
                   : room.lastMessage
-                : ''
-          }}
-        </span>
-      </p>
-      <small class="last-time">{{ formatTime(room.lastTimestamp) }}</small>
-    </div>
-  </div>
-</transition>
+                    ? room.lastMessage.length > 15
+                      ? room.lastMessage.slice(0, 15) + '…'
+                      : room.lastMessage
+                    : ''
+              }}
+            </span>
+          </p>
+          <small class="last-time">{{ formatTime(room.lastTimestamp) }}</small>
+        </div>
+      </div>
+    </transition>
+
+    <!-- fallback list (非アニメーション) -->
+    <div class="room-list" v-else-if="isReady">
+      <div
+        v-for="room in sortedRooms"
+        :key="room.id"
+        class="room-card"
+        @click="goToRoom(room.id, getPartnerYamatoId(room))"
+      >
+        <div class="partner-name">
+          <div class="left-group">
+            <span class="icon">{{ getExpiryIcon(room) }}</span>
+            <span class="name-text">
+              {{
+                getPartnerDisplayName(room).length > 15
+                  ? getPartnerDisplayName(room).slice(0, 15) + '…'
+                  : getPartnerDisplayName(room)
+              }}
+            </span>
+          </div>
+          <div class="menu-group">
+            <span class="menu-dots" @click.stop="openOptions(room)">⋯</span>
+            <span class="mail-icon" @click.stop="openWindMessage(room)">✉️</span>
+          </div>
+        </div>
+        <p class="last-message">
+          <span v-if="hasUnread(room)" class="unread-dot inline"></span>
+          <span class="message-text">
+            {{
+              room.lastContentType === 'image'
+                ? t('chat.photo')
+                : room.lastMessage
+                  ? room.lastMessage.length > 15
+                    ? room.lastMessage.slice(0, 15) + '…'
+                    : room.lastMessage
+                  : ''
+            }}
+          </span>
+        </p>
+        <small class="last-time">{{ formatTime(room.lastTimestamp) }}</small>
+      </div>
     </div>
 
-    <!-- 🔷 Yamato ID 検索モーダル -->
+    <!-- 🔷 モーダル -->
     <YamatoUserSearchModal v-if="showModal" :onClose="() => showModal = false" />
-
-    <!-- 🔷 チャット申請モーダル -->
     <transition name="modal">
       <Modal
         v-if="showRequestModal"
@@ -79,20 +119,19 @@
         @close="() => showRequestModal = false"
       >
         <div>
-<h3 class="modal-title">{{ t('chat.newConversationRequest') }}</h3>
+          <h3 class="modal-title">{{ t('chat.newConversationRequest') }}</h3>
           <div v-for="req in requests" :key="req.id" class="request-block">
-<p><strong>{{ t('chat.requester') }}:</strong> {{ req.senderProfile?.displayName || t('chat.unknown') }}</p>
-<p><strong>{{ t('chat.message') }}:</strong> {{ req.message || t('chat.none') }}</p>
+            <p><strong>{{ t('chat.requester') }}:</strong> {{ req.senderProfile?.displayName || t('chat.unknown') }}</p>
+            <p><strong>{{ t('chat.message') }}:</strong> {{ req.message || t('chat.none') }}</p>
             <div class="button-row">
-<YamatoButton @click="accept(req)">{{ t('chat.accept') }}</YamatoButton>
-<YamatoButton type="danger" @click="reject(req)">{{ t('chat.reject') }}</YamatoButton>
+              <YamatoButton @click="accept(req)">{{ t('chat.accept') }}</YamatoButton>
+              <YamatoButton type="danger" @click="reject(req)">{{ t('chat.reject') }}</YamatoButton>
             </div>
           </div>
         </div>
       </Modal>
     </transition>
 
-    <!-- 🔷 削除確認モーダル -->
     <transition name="modal">
       <Modal
         v-if="showOptionsFor"
@@ -102,15 +141,14 @@
         @after-leave="scrollToTop"
       >
         <div>
-<p class="confirm-text">{{ t('chat.confirmHideMessage') }}</p>
-<div class="modal-actions">
-  <YamatoButton type="danger" @click="deleteRoom">{{ t('chat.hide') }}</YamatoButton>
-</div>
+          <p class="confirm-text">{{ t('chat.confirmHideMessage') }}</p>
+          <div class="modal-actions">
+            <YamatoButton type="danger" @click="deleteRoom">{{ t('chat.hide') }}</YamatoButton>
+          </div>
         </div>
       </Modal>
     </transition>
 
-    <!-- 🔷 プロフィールモーダル -->
     <Modal
       :visible="showProfileModal"
       customClass="compact"
@@ -126,38 +164,43 @@
   </div>
 </template>
 
+
 <script setup>
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { API, graphqlOperation, Auth } from 'aws-amplify'
-import { listChatRooms, getPublicProfile } from '@/graphql/queries'
-import { updateChatRoom } from '@/graphql/mutations'
+import { listChatRooms, getPublicProfile, listChatRequests } from '@/graphql/queries'
+import { updateChatRoom, updateChatRequest, createChatRoom, deleteChatRoom } from '@/graphql/mutations'
 import { onUpdateChatRoom } from '@/graphql/subscriptions'
-import { useRouter } from 'vue-router'
-import { listChatRequests } from '@/graphql/queries'
+import { useRoute, useRouter } from 'vue-router'
+import { getIsBack } from '@/router'
 
 import YamatoUserSearchModal from '@/components/YamatoUserSearchModal.vue'
 import YamatoButton from '@/components/YamatoButton.vue'
 import Modal from '@/components/Modal.vue'
 import ChatRequestModal from '@/components/ChatRequestModal.vue'
 import ProfileSetupView from '@/views/ProfileSetupView.vue'
-import { updateChatRequest, createChatRoom } from '@/graphql/mutations'
-import '@/assets/variables.css'
-import { deleteChatRoom } from '@/graphql/mutations'
-import { getIsBack } from '@/router'
-
-
 import IconButton from '@/components/IconButton.vue'
 
+import '@/assets/variables.css'
 import { useI18n } from 'vue-i18n'
-
 const { t } = useI18n()
 
+// 🔷 UI 状態
 const iconColor = ref('#274c77')
 const isReady = ref(false)
-
+const shouldAnimate = ref(false)
 const isBack = ref(null)
 
+const route = useRoute()
+const router = useRouter()
+
 onMounted(() => {
+  // ✅ from=home のときのみアニメーションフラグON
+  if (route.query.from === 'home') {
+    shouldAnimate.value = true
+    router.replace({ path: route.path }) // クエリを除去
+  }
+
   isBack.value = getIsBack()
 })
 
@@ -179,7 +222,6 @@ onMounted(async () => {
 
 
 // 状態
-const router = useRouter()
 const chatRooms = ref([])
 const partnerProfiles = ref({})
 const mySub = ref('')
@@ -192,6 +234,19 @@ const hasProfile = ref(false)
 const hasIncomingRequest = ref(false)
 const emit = defineEmits(['refresh'])
 const requests = ref([])
+
+function goTo(path) {
+  const current = router.currentRoute.value.name
+  const target = path.replace('/', '')
+
+  if (target === 'chat-rooms' || target === 'settings') {
+    router.push({ path: `/${target}`, query: { from: current } })
+  } else {
+    router.push(`/${target}`)
+  }
+}
+
+
 async function fetchRequests() {
   try {
     const user = await Auth.currentAuthenticatedUser()
@@ -390,11 +445,15 @@ onMounted(async () => {
       next: ({ value }) => {
         const updated = value.data.onUpdateChatRoom
 
-        // 🧼 自分が非表示にしているなら無視
         const isUser1 = updated.user1 === mySub.value
         const isUser2 = updated.user2 === mySub.value
+
+        // ✅ 自分が関係ないチャットルームは無視
+        if (!isUser1 && !isUser2) return
+
+        // ✅ 自分が非表示にしているチャットも無視
         if ((isUser1 && updated.deletedByUser1) || (isUser2 && updated.deletedByUser2)) {
-          return  // ✅ 自分が非表示にしたチャットは表示しない
+          return
         }
 
         const index = chatRooms.value.findIndex(r => r.id === updated.id)
@@ -402,10 +461,19 @@ onMounted(async () => {
         if (index !== -1) {
           chatRooms.value[index] = { ...chatRooms.value[index], ...updated }
         } else {
-          chatRooms.value.unshift(updated)
+          // ✅ user1/user2の組み合わせが既に存在しないかチェック
+          const exists = chatRooms.value.some(r =>
+            (r.user1 === updated.user1 && r.user2 === updated.user2) ||
+            (r.user1 === updated.user2 && r.user2 === updated.user1)
+          )
+          if (!exists) {
+            chatRooms.value.unshift(updated)
+          }
         }
 
-        chatRooms.value.sort((a, b) => new Date(b.lastTimestamp || 0) - new Date(a.lastTimestamp || 0))
+        chatRooms.value.sort(
+          (a, b) => new Date(b.lastTimestamp || 0) - new Date(a.lastTimestamp || 0)
+        )
       },
       error: err => console.warn('⚠️ onUpdateChatRoom 失敗:', err)
     })
@@ -414,6 +482,7 @@ onMounted(async () => {
     console.error('❌ 初期化失敗:', err)
   }
 })
+
 
 async function fetchChatRooms() {
   try {
@@ -592,252 +661,14 @@ defineExpose({ accept, reject })
 </script>
 
 
-<style>
 
+<style>
 .chat-room-list {
   padding: 2rem;
- font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
 }
 
-.header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-
-.title {
-  flex-grow: 1;
-  text-align: center;
-  font-size: 1.2rem;
-}
-
-button {
-  font-size: 1.5rem;
-  background: none;
-  border: none;
-  color: var(--yamato-primary);
-  cursor: pointer;
-}
-
-.empty-message {
-  margin-top: 2rem;
-  color: #888;
-  text-align: center;
-}
-
-.room-list {
-  margin-top: 1.5rem;
-}
-
-.room-list {
-  margin-top: 1.5rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center; /* ✅ 中央寄せ */
-}
-
-/* 📦 カード自体のレイアウトを固定 */
-.room-card {
-  width: 100%;
-  max-width: 330px;       /* ✅ 最大幅を固定 */
-  min-width: 300px;
-  margin-bottom: 1rem;
-  padding: 1rem;
-  border-bottom: 1px solid var(--yamato-border);
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: var(--yamato-shadow);
-}
-
-
-@media (prefers-color-scheme: dark) {
-  .room-card {
-    background: #444; /* ダークモード時はグレーに */
-  }
-}
-
-/* 🧍 名前とアイコンの行 */
-.partner-name {
-  display: flex;
-  align-items: center;
-  justify-content: space-between; /* ✅ 左右に分ける */
-  gap: 0.5rem;
-  font-size: 1.05rem;
-  font-weight: bold;
-  white-space: nowrap;
-  overflow: hidden;
-}
-
-/* 🧾 名前部分だけを省略対応に */
-.name-text {
-  max-width: 180px; /* 💡 好みに応じて調整可 */
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  display: inline-block;
-  vertical-align: middle;
-}
-
-/* 📧 メニューとメールアイコン */
-.menu-dots,
-.mail-icon {
-  flex-shrink: 0;
-  margin-left: 0.5rem;
-  font-size: 1.1rem;
-  color: #888;
-  cursor: pointer;
-}
-.mail-icon:hover,
-.menu-dots:hover {
-  color: #333;
-}
-
-.icon-stack {
-  display: inline-flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  margin-right: 0.5rem;
-  width: 1.5em;
-}
-
-.last-message {
-  display: flex;
-  align-items: center;
-  font-size: 0.95rem;
-  color: #bbb;
-  width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  word-break: break-all;
-}
-
-.message-text {
-  display: block;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  flex-grow: 1;
-  flex-shrink: 1;
-  flex-basis: 0;
-  min-width: 0;
-  max-width: 100%;
-}
-
-.unread-dot.inline {
-  flex-shrink: 0;
-  width: 12px;
-  height: 12px;
-  margin-right: 6px;
-  border-radius: 50%;
-  background-color: var(--yamato-primary);
-}
-
-.last-time {
-  font-size: 0.8rem;
-  color: #888;
-}
-
-.menu-dots {
-  margin-left: auto;
-  cursor: pointer;
-  font-size: 1.2rem;
-  color: #888;
-}
-
-.menu-dots:hover {
-  color: #333;
-}
-
-.modal-content {
-  padding: 1.5rem;
-  background: #fff;
-  border-radius: var(--yamato-radius);
-  text-align: center;
-}
-
-.modal-content button {
-  margin: 0.5rem auto;
-  display: block;
-  width: 100%;
-  max-width: 200px;
-}
-
-.confirm-text {
-  font-size: 0.95rem;
-  color: #999;
-  text-align: center;
-  margin-bottom: 1.2rem;
-}
-
-.modal-actions {
-  display: flex;
-  justify-content: center;
-  gap: 1rem;
-  margin-top: 1.5rem;
-}
-
-.modal-title {
-  font-size: 1.2rem;
-  margin-bottom: 1rem;
-  text-align: center;
-  color: #222222; /* より濃い黒に変更 */
-  opacity: 1 !important; /* 透明度を強制解除 */
-  filter: none !important; /* もしフィルターがかかっていたら解除 */
-  mix-blend-mode: normal !important; /* ブレンドモード解除 */
-}
-
-@media (prefers-color-scheme: dark) {
-  .modal-title {
-    color: white; /* ダークモード時は白に */
-  }
-}
-
-@media (prefers-color-scheme: dark) {
-  .header-button {
-    background-color: #333;
-    color: var(--yamato-text-light);
-  }
-}
-
-.circle-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background-color: var(--yamato-primary);
-  color: var(--yamato-text-light);
-  font-weight: bold;
-  font-size: 1rem;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-right: 0.5rem;
-}
-
-.blink {
-  animation: blink-animation 2.4s infinite;
-}
-
-@keyframes blink-animation {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.3; }
-}
-
-.header {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 1rem 0;
-  gap: 0.6rem;
-}
-
+/* ヘッダー */
 .chat-header {
   display: flex;
   flex-direction: column;
@@ -845,208 +676,222 @@ button {
   margin-bottom: 1.5rem;
 }
 
+.header-title {
+  font-size: 1.4rem;
+  font-weight: bold;
+  text-align: center;
+  color: black !important;
+}
+@media (prefers-color-scheme: dark) {
+  .header-title {
+    color: white !important;
+  }
+}
 
 .header-icons {
   display: flex;
   justify-content: center;
-  align-items: center;
   gap: 1.5rem;
-  margin-top: 1rem; /* ← ここで上にスペース追加 */
-}
-
-
-.modal-overlay {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(4px);
-  z-index: 1000;
-  overflow-y: auto;
-  padding: 2rem 1rem;
-  text-align: center;
-}
-
-
-.request-block {
-  margin: 1.5rem auto;
-  padding: 1rem;
-  background: none;
-  border: none;
-  color: inherit;
-  max-width: 500px;
-  font-size: 1.1rem;
-}
-
-.button-row {
-  display: flex;
-  justify-content: center;
-  gap: 1rem;
   margin-top: 1rem;
 }
 
-.request-card {
-  background: #ffffff;
-  color: #111111;
-  border-radius: var(--yamato-radius);
-  padding: 1.5rem;
-  max-width: 520px;
-  margin: auto;
-  box-shadow: var(--yamato-shadow);
-  border: 1px solid var(--yamato-border);
+/* チャットルーム一覧 */
+.room-list {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  .header-button {
-    background-color: var(--yamato-primary);
-    color: var(--yamato-text-light);
-  }
-}
-
-.request-block {
-  margin-bottom: 1.5rem;
-  text-align: left;
-}
-
-.modal-enter-active {
-  animation: dropDown 0.4s ease-out;
-}
-
-.modal-leave-active {
-  animation: flyUp 0.3s ease-in;
-}
-
-@keyframes dropDown {
-  0% {
-    transform: translateY(-40px);
-    opacity: 0;
-  }
-  100% {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-@keyframes flyUp {
-  0% {
-    transform: translateY(0);
-    opacity: 1;
-  }
-  100% {
-    transform: translateY(-40px);
-    opacity: 0;
-  }
-}
-.chat-room-wrapper {
-  animation: fadeSlideIn 0.5s ease-out;
-}
-
-@keyframes fadeSlideIn {
-  0% {
-    transform: translateY(-30px);
-    opacity: 0;
-  }
-  100% {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-.chat-room-wrapper {
-  animation: fadeSlideIn 0.5s ease-out;
-}
-
-@keyframes fadeSlideIn {
-  0% {
-    transform: translateY(-30px);
-    opacity: 0;
-  }
-  100% {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-/* ふわっと表示用 */
-.fade-in-enter-active {
-  transition: opacity 0.4s ease, transform 0.4s ease;
-}
-.fade-in-enter-from {
-  opacity: 0;
-  transform: translateY(-10px);
-}
-.fade-in-enter-to {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.mail-icon {
-  margin-left: 0.6rem; /* ⋯との間に少しスペース */
-  font-size: 1.0rem;
+/* チャットカード */
+.room-card {
+  width: 330px;
+  height: 90px;
+  overflow: hidden;
+  padding: 0.8rem 0.8rem 0.8rem 2.4rem;
+  background: white;
+  border-bottom: 1px solid #ccc;
+  border-radius: 8px;
+  box-shadow: var(--yamato-shadow, 0 2px 4px rgba(0, 0, 0, 0.05));
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  font-size: 0.9rem;
+  color: #000;
   cursor: pointer;
-  color: var(--yamato-primary);
+  box-sizing: border-box;
+  position: relative;
+  margin-bottom: 0.5rem;
 }
 
-.mail-icon:hover {
-  color: var(--yamato-primary-dark);
+@media (min-width: 768px) {
+  .room-card {
+    width: 400px;
+  }
 }
-
-.header-title {
-  font-size: 1.4rem;
-  font-weight: bold;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
-  color: black; /* デフォルトは黒（ライトモード用） */
-  text-align: center;
+@media (min-width: 1024px) {
+  .room-card {
+    width: 480px;
+  }
 }
-
 @media (prefers-color-scheme: dark) {
-  .header-title {
-    color: white; /* ダークモード時のみ白に上書き */
+  .room-card {
+    background: #444;
+    color: #fff;
+    border-bottom: 1px solid #666;
   }
 }
 
-.modal-inner-card {
-  background: #fff !important;
-  color: #222 !important;
-  opacity: 1 !important;
-  filter: none !important;
-  mix-blend-mode: normal !important;
+/* 相手名の行 */
+.partner-name {
+  display: flex;
+  align-items: center;
+  width: 100%;
 }
 
+/* 🌱と名前 */
+.left-group {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-grow: 1;
+}
+.name-text {
+  font-weight: bold;
+  max-width: 200px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* …と✉️ */
+.menu-group {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-left: auto; /* ✅ 右寄せ強制 */
+}
+.menu-dots,
+.mail-icon {
+  font-size: 1.1rem;
+  color: #888;
+  cursor: pointer;
+}
+.menu-dots:hover,
+.mail-icon:hover {
+  color: #333;
+}
+
+/* メッセージ */
+.last-message {
+  display: flex;
+  align-items: center;
+  font-size: 0.95rem;
+  color: #bbb;
+  overflow: hidden;
+}
+.message-text {
+  flex-grow: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.unread-dot.inline {
+  width: 12px;
+  height: 12px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background-color: var(--yamato-primary);
+}
+
+/* 時刻 */
+.last-time {
+  font-size: 0.8rem;
+  color: #888;
+}
+
+/* モーダルなど */
+.modal-title {
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+  text-align: center;
+  color: #222;
+}
+@media (prefers-color-scheme: dark) {
+  .modal-title {
+    color: white;
+  }
+}
 .compact {
   background: #fff;
-  color: #111; /* 💡 これでライトモード時に文字が黒くなる */
+  color: #111;
   padding: 1.2rem;
   max-width: 400px;
   border-radius: 14px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
 }
-
-/* ダークモード対応 */
 @media (prefers-color-scheme: dark) {
   .compact {
-    background-color: #2a2a2a;
+    background: #2a2a2a;
     color: #fff;
     box-shadow: 0 8px 24px rgba(255, 255, 255, 0.05);
   }
 }
 
-.chat-room-list {
-  transform-origin: top center;
-}
-
-.chat-room-list.dropDown {
+/* アニメーション */
+.modal-enter-active {
   animation: dropDown 0.4s ease-out;
 }
-
+.modal-leave-active {
+  animation: flyUp 0.3s ease-in;
+}
 @keyframes dropDown {
-  0% {
-    opacity: 0;
-    transform: translateY(-30px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
+  0% { transform: translateY(-40px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+@keyframes flyUp {
+  0% { transform: translateY(0); opacity: 1; }
+  100% { transform: translateY(-40px); opacity: 0; }
+}
+.fadeSlideIn-enter-active {
+  animation: fadeInUp 0.4s ease;
+}
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.dropDown-enter-active {
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+.dropDown-enter-from {
+  opacity: 0;
+  transform: translateY(-12px);
+}
+.dropDown-enter-to {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* モーダル確認 */
+.modal-actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 1.5rem;
+}
+.confirm-text {
+  font-size: 0.95rem;
+  text-align: center;
+  margin-bottom: 1.2rem;
+  width: 100%;
+  color: #222;
+}
+@media (prefers-color-scheme: dark) {
+  .confirm-text {
+    color: #fff;
   }
 }
+
 
 </style>
 
