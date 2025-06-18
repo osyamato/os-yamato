@@ -1,42 +1,43 @@
 <template>
-<div class="desktop" :style="wallpaperStyle">
-  <div class="icon-grid">
-    <button @click="goTo('settings')">
-      <img src="/images/setting.png" alt="設定" class="icon-image" />
-    </button>
+  <div class="desktop" :style="wallpaperStyle">
+    <div class="icon-grid">
+      <!-- 🎛 Settings → ホームから遷移したとわかるように -->
+      <button @click="goToSettingsFromHome">
+        <img src="/images/setting.png" alt="設定" class="icon-image" />
+      </button>
 
-    <button @click="goTo('memo')">
-      <img src="/memo.icon.png" alt="メモ" class="icon-image" />
-    </button>
+      <button @click="goTo('memo')">
+        <img src="/memo.icon.png" alt="メモ" class="icon-image" />
+      </button>
 
-    <button @click="goTo('weather')">
-      <img src="/weather.icon.png" alt="天気" class="icon-image" />
-    </button>
+      <button @click="goTo('weather')">
+        <img src="/weather.icon.png" alt="天気" class="icon-image" />
+      </button>
 
-    <button @click="goTo('calendar')">📅</button>
+      <button @click="goTo('calendar')">📅</button>
 
-    <button @click="goTo('diary')">
-      <img src="/diary.icon.png" alt="日記" class="icon-image" />
-    </button>
+      <button @click="goTo('diary')">
+        <img src="/diary.icon.png" alt="日記" class="icon-image" />
+      </button>
 
-    <button @click="goTo('contact')">
-      <img src="/contact.icon.png" alt="連絡先" class="icon-image" />
-    </button>
+      <button @click="goTo('contact')">
+        <img src="/contact.icon.png" alt="連絡先" class="icon-image" />
+      </button>
 
-    <button @click="goTo('chat-rooms')">
-      <img src="/messege.icon.png" alt="メッセージ" class="icon-image" />
-    </button>
+      <button @click="goToChatFromHome">
+        <img src="/messege.icon.png" alt="メッセージ" class="icon-image" />
+      </button>
 
-    <button @click="goTo('photo')">
-      <img src="/photo.icon.png" alt="写真" class="icon-image" />
-    </button>
+      <button @click="goTo('photo')">
+        <img src="/photo.icon.png" alt="写真" class="icon-image" />
+      </button>
 
-    <!-- 🌍 新しく追加：GlobeView -->
-    <button @click="goTo('globe')">
-      <img src="/earth.png" alt="地球" class="icon-image" />
-    </button>
+      <!-- 🌍 Globe -->
+      <button @click="goTo('globe')">
+        <img src="/earth.png" alt="地球" class="icon-image" />
+      </button>
+    </div>
   </div>
-</div>
 </template>
 
 <script setup>
@@ -47,7 +48,7 @@ import { Auth } from 'aws-amplify'
 const router = useRouter()
 const wallpaper = ref('')
 
-// 🔷 背景スタイルを切り替える computed
+// 🔷 背景スタイルの切り替え
 const wallpaperStyle = computed(() => {
   if (!wallpaper.value) return {}
 
@@ -68,25 +69,29 @@ const wallpaperStyle = computed(() => {
   }
 })
 
-// 🔹 画面遷移（チャットのみ ?from=home を追加）
+// 🔹 共通遷移（クエリなし）
 function goTo(path) {
-  if (path === 'chat-rooms') {
-    router.push({ path: `/${path}`, query: { from: 'home' } })
-  } else {
-    router.push(`/${path}`)
-  }
+  router.push(`/${path}`)
+}
+
+// ✅ settings にだけ ?from=home を付与
+function goToSettingsFromHome() {
+  router.push({ path: '/settings', query: { from: 'home' } })
+}
+
+// ✅ chat-rooms にも ?from=home を付与
+function goToChatFromHome() {
+  router.push({ path: '/chat-rooms', query: { from: 'home' } })
 }
 
 onMounted(async () => {
   try {
-    // 🔒 未ログインならサインイン画面へリダイレクト
     await Auth.currentAuthenticatedUser()
   } catch {
     router.push('/signin')
     return
   }
 
-  // ✅ 認証済み → 壁紙取得を続行
   try {
     const user = await Auth.currentAuthenticatedUser()
     wallpaper.value = user.attributes['custom:wallpaper'] || ''
@@ -140,7 +145,7 @@ button:hover {
 .icon-image {
   width: 100%;
   height: 100%;
-  object-fit: cover; /* ✅ 枠にぴったり収まる */
-  border-radius: 16px; /* ✅ 枠の角と同じに */
+  object-fit: cover;
+  border-radius: 16px;
 }
 </style>

@@ -1,5 +1,5 @@
 <template>
-  <div class="settings">
+<div :class="['settings', { dropDown: shouldAnimate }]">
     <h2>{{ t('title') }}</h2>
 
     <!-- 🇾有 言語選択 -->
@@ -55,7 +55,7 @@
 <!-- 🌿 Yamatoについてリンク -->
 <div class="account-row" @click="goToAbout">
   <span class="account-text">{{ t('about') }}</span>
-  <IconButton :color="selectedColor" size="medium" @click="goToAbout">→</IconButton>
+  <IconButton :color="selectedColor" size="medium" @click="goToAbout"> > </IconButton>
 </div>
 
 
@@ -63,7 +63,7 @@
 
     <div class="account-row" @click="goToAccount">
       <span class="account-text">{{ t('account') }}</span>
-      <IconButton :color="selectedColor" size="medium" @click="goToAccount">→</IconButton>
+      <IconButton :color="selectedColor" size="medium" @click="goToAccount"> > </IconButton>
     </div>
   </div>
 </template>
@@ -75,6 +75,8 @@ import { Auth } from 'aws-amplify'
 import { useI18n } from 'vue-i18n'
 import YamatoButton from '@/components/YamatoButton.vue'
 import IconButton from '@/components/IconButton.vue'
+import { useRoute } from 'vue-router' 
+import { nextTick } from 'vue'
 
 const { t, locale } = useI18n()
 const router = useRouter()
@@ -82,6 +84,10 @@ const selectedLanguage = ref('')
 const selectedWallpaper = ref('')
 const selectedColor = ref('')
 const buttonKey = ref(0)
+
+
+const route = useRoute()               // ✅ 追加
+const shouldAnimate = ref(false) 
 
 const availableColors = [
   '#274c77', '#f7a3b3', '#fef3a3', '#c2f2d0',
@@ -95,6 +101,15 @@ onMounted(async () => {
   selectedColor.value = user.attributes['custom:iconColor'] || '#274c77'
   document.body.setAttribute('data-bg', selectedWallpaper.value || '')
   locale.value = selectedLanguage.value
+
+  // ✅ アニメーションを一度だけ発火し、クエリを消す
+  if (route.query.from === 'home') {
+    await nextTick()
+    shouldAnimate.value = true
+
+    // 🔻 クエリを消してURLをクリーンに（履歴はそのまま）
+    router.replace({ path: route.path })
+  }
 })
 
 watch(selectedWallpaper, (val) => {
@@ -232,9 +247,6 @@ function goToAbout() {
 }
 
 .settings {
-  animation: dropDown 0.6s ease-out;
-  opacity: 0;
-  animation-fill-mode: forwards;
   padding-top: 2rem;
 }
 
@@ -290,6 +302,12 @@ function goToAbout() {
   margin-bottom: 1.5rem;
 }
 
+
+
+/* 👇 アニメーションは dropDown クラスがついたときだけ */
+.settings.dropDown {
+  animation: dropDown 0.6s ease-out forwards;
+}
 
 </style>
 

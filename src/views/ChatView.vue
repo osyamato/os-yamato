@@ -436,15 +436,16 @@ const content = (newMessage.value || '').trim()
 
   try {
     await API.graphql(graphqlOperation(createMessage, { input }))
-    await API.graphql(graphqlOperation(updateChatRoom, {
-      input: {
-        id: roomId.value,
-        lastMessage: content,
-        lastTimestamp: now.toISOString(),
-        lastSenderId: mySub.value,
-        expiresAt
-      }
-    }))
+await API.graphql(graphqlOperation(updateChatRoom, {
+  input: {
+    id: roomId.value,
+    lastMessage: content,
+    lastContentType: 'text', // ✅ ← これを追加！
+    lastTimestamp: now.toISOString(),
+    lastSenderId: mySub.value,
+    expiresAt
+  }
+}))
     newMessage.value = ''
     await nextTick()
     if (textareaRef.value) textareaRef.value.style.height = 'auto'
