@@ -519,6 +519,40 @@ export const listBlossoms = /* GraphQL */ `
     }
   }
 `;
+export const getBestRecord = /* GraphQL */ `
+  query GetBestRecord($id: ID!) {
+    getBestRecord(id: $id) {
+      id
+      gameType
+      bestTimeSec
+      createdAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;
+export const listBestRecords = /* GraphQL */ `
+  query ListBestRecords(
+    $filter: ModelBestRecordFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    listBestRecords(filter: $filter, limit: $limit, nextToken: $nextToken) {
+      items {
+        id
+        gameType
+        bestTimeSec
+        createdAt
+        updatedAt
+        owner
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
 export const getPublicProfile = /* GraphQL */ `
   query GetPublicProfile($id: ID!) {
     getPublicProfile(id: $id) {

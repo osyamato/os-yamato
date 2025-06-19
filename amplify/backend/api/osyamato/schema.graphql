@@ -206,5 +206,17 @@ type Blossom @model @auth(rules: [
   country: String
   region: String
   createdAt: AWSDateTime!
+
 }
+
+type BestRecord @model @auth(rules: [{ allow: owner }]) {
+  id: ID!
+  gameType: String!     # "flower-match" など
+  bestTimeSec: Int!     # 記録（秒）
+  createdAt: AWSDateTime
+  updatedAt: AWSDateTime
+}
+
+
+
 

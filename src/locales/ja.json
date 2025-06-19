@@ -277,7 +277,26 @@
 "auth.emailRequired": "メールアドレスを入力してください。",
 "auth.backToSignIn": "サインインに戻る",
 "auth.forgotPasswordPrompt": "パスワードをお忘れですか？",
-"auth.forgotPassword": "パスワードをリセット"
+"auth.forgotPassword": "パスワードをリセット",
+
+  "about.premiumTitle": "Yamato プレミアムについて",
+  "about.premiumLink": "内容を確認する",
+
+ "calendar.month.1": "1月",
+  "calendar.month.2": "2月",
+  "calendar.month.3": "3月",
+  "calendar.month.4": "4月",
+  "calendar.month.5": "5月",
+  "calendar.month.6": "6月",
+  "calendar.month.7": "7月",
+  "calendar.month.8": "8月",
+  "calendar.month.9": "9月",
+  "calendar.month.10": "10月",
+  "calendar.month.11": "11月",
+  "calendar.month.12": "12月",
+
+"game.bestTimeTitle": "ベストタイム",
+  "game.noRecords": "まだ記録がありません"
 
 
 

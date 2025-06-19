@@ -14,7 +14,12 @@
         <img src="/weather.icon.png" alt="天気" class="icon-image" />
       </button>
 
-      <button @click="goTo('calendar')">📅</button>
+      <!-- ✅ 📅 をカスタムカレンダー画像に変更 -->
+<button @click="goTo('calendar')" class="calendar-button">
+  <img src="/calendar.png" alt="カレンダー" class="icon-image" />
+  <span class="calendar-date">{{ currentDay }}</span>
+  <span class="calendar-month">{{ currentMonthName }}</span>
+</button>
 
       <button @click="goTo('diary')">
         <img src="/diary.icon.png" alt="日記" class="icon-image" />
@@ -36,6 +41,9 @@
       <button @click="goTo('globe')">
         <img src="/earth.png" alt="地球" class="icon-image" />
       </button>
+<button @click="goTo('flower-match')">🌸</button>
+
+
     </div>
   </div>
 </template>
@@ -44,9 +52,17 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { Auth } from 'aws-amplify'
+import { useI18n } from 'vue-i18n' // ✅ ローカライズ
 
 const router = useRouter()
 const wallpaper = ref('')
+
+const { t } = useI18n()
+const today = new Date()
+
+// 📅 月と日（動的に変化）
+const currentDay = computed(() => today.getDate())
+const currentMonthName = computed(() => t(`calendar.month.${today.getMonth() + 1}`))
 
 // 🔷 背景スタイルの切り替え
 const wallpaperStyle = computed(() => {
@@ -69,21 +85,21 @@ const wallpaperStyle = computed(() => {
   }
 })
 
-// 🔹 共通遷移（クエリなし）
+// 🔹 共通ページ遷移
 function goTo(path) {
   router.push(`/${path}`)
 }
 
-// ✅ settings にだけ ?from=home を付与
+// ✅ 設定・チャットにだけクエリ付与
 function goToSettingsFromHome() {
   router.push({ path: '/settings', query: { from: 'home' } })
 }
 
-// ✅ chat-rooms にも ?from=home を付与
 function goToChatFromHome() {
   router.push({ path: '/chat-rooms', query: { from: 'home' } })
 }
 
+// 🔐 認証確認と背景取得
 onMounted(async () => {
   try {
     await Auth.currentAuthenticatedUser()
@@ -128,7 +144,7 @@ button {
   padding: 0;
   font-size: 2rem;
   border-radius: 1rem;
-  background: #dcd8d4;
+  background: #fff; /* ← ここを白に */
   display: flex;
   justify-content: center;
   align-items: center;
@@ -148,4 +164,37 @@ button:hover {
   object-fit: cover;
   border-radius: 16px;
 }
+
+.calendar-button {
+  position: relative;
+}
+
+/* 📅 日付の数字 */
+.calendar-date {
+  position: absolute;
+  top: 60%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 1.7rem;
+  font-weight: bold;
+  color: #333;
+  background: none;
+  pointer-events: none;
+  line-height: 1;
+}
+
+/* 📅 月（日本語 or 英語） */
+.calendar-month {
+  position: absolute;
+  top: 24%; /* 🔽 赤帯部分想定 */
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: white;
+  background: none;
+  pointer-events: none;
+  text-shadow: 0 0 3px rgba(0, 0, 0, 0.4); /* 読みやすく */
+}
+
 </style>

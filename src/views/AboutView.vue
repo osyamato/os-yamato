@@ -41,6 +41,16 @@
       </p>
     </section>
 
+  <section>
+      <h3>{{ $t('about.premiumTitle') }}</h3>
+      <p>
+        <a href="#" @click.prevent="showPremium = true">
+          {{ $t('about.premiumLink') }}
+        </a>
+      </p>
+    </section>
+
+
     <section>
       <h3>{{ $t('about.contactTitle') }}</h3>
       <p>{{ $t('about.developer') }}: 倉岡剛　Tsuyoshi Kuraoka</p>
@@ -56,6 +66,9 @@
     <!-- ✅ 利用規約モーダル -->
 <TermsModal :visible="showTerms" @close="showTerms = false" />
 
+ <PremiumModal :visible="showPremium" @close="showPremium = false" />
+
+
   </div>
 </template>
 
@@ -64,7 +77,12 @@
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import TermsModal from '@/components/TermsModal.vue'
+import PremiumModal from '@/components/PremiumModal.vue'
+const showPremium = ref(false)
+
+
 const showTerms = ref(false)
+
 
 const { locale } = useI18n()
 const currentLang = ref(locale.value)
