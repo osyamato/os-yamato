@@ -700,6 +700,54 @@ export const onDeleteBlossom = /* GraphQL */ `
     }
   }
 `;
+export const onCreateBestRecord = /* GraphQL */ `
+  subscription OnCreateBestRecord(
+    $filter: ModelSubscriptionBestRecordFilterInput
+    $owner: String
+  ) {
+    onCreateBestRecord(filter: $filter, owner: $owner) {
+      id
+      gameType
+      bestTimeSec
+      createdAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;
+export const onUpdateBestRecord = /* GraphQL */ `
+  subscription OnUpdateBestRecord(
+    $filter: ModelSubscriptionBestRecordFilterInput
+    $owner: String
+  ) {
+    onUpdateBestRecord(filter: $filter, owner: $owner) {
+      id
+      gameType
+      bestTimeSec
+      createdAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;
+export const onDeleteBestRecord = /* GraphQL */ `
+  subscription OnDeleteBestRecord(
+    $filter: ModelSubscriptionBestRecordFilterInput
+    $owner: String
+  ) {
+    onDeleteBestRecord(filter: $filter, owner: $owner) {
+      id
+      gameType
+      bestTimeSec
+      createdAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;
 export const onCreatePublicProfile = /* GraphQL */ `
   subscription OnCreatePublicProfile(
     $filter: ModelSubscriptionPublicProfileFilterInput

@@ -365,9 +365,28 @@ async function handleFileUpload(event) {
   isLoading.value = true
 
   try {
-    for (const file of files) {
-      await uploadSinglePhoto(file)
+    const user = await Auth.currentAuthenticatedUser()
+    const subscription = user.attributes['custom:subscription'] || 'free'
+
+    const maxUploads = subscription === 'paid' ? 30 : 1
+    const todayUploadCount = await getTodayUploadCount()
+    const remaining = maxUploads - todayUploadCount
+
+    if (remaining <= 0) {
+      alert(`本日はすでに${maxUploads}枚アップロード済みです。`)
+      return
     }
+
+    const uploadCount = Math.min(remaining, files.length)
+
+    for (let i = 0; i < uploadCount; i++) {
+      await uploadSinglePhoto(files[i])
+    }
+
+    if (files.length > uploadCount) {
+      alert(`本日は ${remaining} 枚までアップロード可能でした。`)
+    }
+
     await fetchPhotos()
   } catch (e) {
     console.error('❌ アップロード中エラー:', e)
@@ -375,6 +394,17 @@ async function handleFileUpload(event) {
   } finally {
     isLoading.value = false
   }
+}
+
+async function getTodayUploadCount() {
+  const result = await API.graphql(graphqlOperation(listPhotos))
+  const items = result.data.listPhotos.items
+
+  const today = new Date().toISOString().slice(0, 10) // YYYY-MM-DD
+
+  return items.filter(photo =>
+    (photo.createdAt || '').startsWith(today)
+  ).length
 }
 
 async function uploadSinglePhoto(file) {

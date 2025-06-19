@@ -286,11 +286,27 @@
 "auth.emailRequired": "Please enter your email address.",
 "auth.backToSignIn": "Back to Sign In",
 "auth.forgotPasswordPrompt": "Forgot your password?",
-"auth.forgotPassword": "Reset password"
+"auth.forgotPassword": "Reset password",
 
 
+  "about.premiumTitle": "About Yamato Premium",
+  "about.premiumLink": "View details",
 
+ "calendar.month.1": "JAN",
+  "calendar.month.2": "FEB",
+  "calendar.month.3": "MAR",
+  "calendar.month.4": "APR",
+  "calendar.month.5": "MAY",
+  "calendar.month.6": "JUN",
+  "calendar.month.7": "JUL",
+  "calendar.month.8": "AUG",
+  "calendar.month.9": "SEP",
+  "calendar.month.10": "OCT",
+  "calendar.month.11": "NOV",
+  "calendar.month.12": "DEC",
 
+  "game.bestTimeTitle": "Best Time",
+  "game.noRecords": "No records yet"
 
 
 }

@@ -4,7 +4,7 @@ import { schema } from './schema';
 
 
 
-const { Memo, Diary, Schedule, Contact, ChatRoom, Message, Reaction, PublicProfile, ChatRequest, Photo, ScheduleTemplate, WindMessage, Blossom } = initSchema(schema);
+const { Memo, Diary, Schedule, Contact, ChatRoom, Message, Reaction, PublicProfile, ChatRequest, Photo, ScheduleTemplate, WindMessage, Blossom, BestRecord } = initSchema(schema);
 
 export {
   Memo,
@@ -19,5 +19,6 @@ export {
   Photo,
   ScheduleTemplate,
   WindMessage,
-  Blossom
+  Blossom,
+  BestRecord
 };

@@ -509,3 +509,31 @@ export declare type Blossom = LazyLoading extends LazyLoadingDisabled ? EagerBlo
 export declare const Blossom: (new (init: ModelInit<Blossom>) => Blossom) & {
   copyOf(source: Blossom, mutator: (draft: MutableModel<Blossom>) => MutableModel<Blossom> | void): Blossom;
 }
+
+type EagerBestRecord = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<BestRecord, 'id'>;
+  };
+  readonly id: string;
+  readonly gameType: string;
+  readonly bestTimeSec: number;
+  readonly createdAt?: string | null;
+  readonly updatedAt?: string | null;
+}
+
+type LazyBestRecord = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<BestRecord, 'id'>;
+  };
+  readonly id: string;
+  readonly gameType: string;
+  readonly bestTimeSec: number;
+  readonly createdAt?: string | null;
+  readonly updatedAt?: string | null;
+}
+
+export declare type BestRecord = LazyLoading extends LazyLoadingDisabled ? EagerBestRecord : LazyBestRecord
+
+export declare const BestRecord: (new (init: ModelInit<BestRecord>) => BestRecord) & {
+  copyOf(source: BestRecord, mutator: (draft: MutableModel<BestRecord>) => MutableModel<BestRecord> | void): BestRecord;
+}

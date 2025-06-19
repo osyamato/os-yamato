@@ -26,6 +26,8 @@ import TimeView from '../views/TimeView.vue'
 import AboutView from '../views/AboutView.vue'
 import VerifyEmailView from '../views/VerifyEmailView.vue' // ✅ 新規追加
 import ForgotPasswordView from '../views/ForgotPasswordView.vue'
+import FlowerMatchGameView from '../views/FlowerMatchGameView.vue'
+
 
 const routes = [
   { path: '/', redirect: '/signin' },
@@ -64,7 +66,8 @@ const routes = [
 
   // ✅ メール認証View
   { path: '/verify-email', name: 'verify-email', component: VerifyEmailView },
-  { path: '/forgot-password', name: 'forgot-password', component: ForgotPasswordView } 
+  { path: '/forgot-password', name: 'forgot-password', component: ForgotPasswordView } ,
+  { path: '/flower-match', name: 'flower-match', component: FlowerMatchGameView }
 
 ]
 

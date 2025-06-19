@@ -790,3 +790,51 @@ export const deleteBlossom = /* GraphQL */ `
     }
   }
 `;
+export const createBestRecord = /* GraphQL */ `
+  mutation CreateBestRecord(
+    $input: CreateBestRecordInput!
+    $condition: ModelBestRecordConditionInput
+  ) {
+    createBestRecord(input: $input, condition: $condition) {
+      id
+      gameType
+      bestTimeSec
+      createdAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;
+export const updateBestRecord = /* GraphQL */ `
+  mutation UpdateBestRecord(
+    $input: UpdateBestRecordInput!
+    $condition: ModelBestRecordConditionInput
+  ) {
+    updateBestRecord(input: $input, condition: $condition) {
+      id
+      gameType
+      bestTimeSec
+      createdAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;
+export const deleteBestRecord = /* GraphQL */ `
+  mutation DeleteBestRecord(
+    $input: DeleteBestRecordInput!
+    $condition: ModelBestRecordConditionInput
+  ) {
+    deleteBestRecord(input: $input, condition: $condition) {
+      id
+      gameType
+      bestTimeSec
+      createdAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;
