@@ -553,6 +553,46 @@ export const listBestRecords = /* GraphQL */ `
     }
   }
 `;
+export const getVideo = /* GraphQL */ `
+  query GetVideo($id: ID!) {
+    getVideo(id: $id) {
+      id
+      owner
+      fileName
+      thumbnailFileName
+      videoTakenAt
+      isFavorite
+      lastOpenedAt
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const listVideos = /* GraphQL */ `
+  query ListVideos(
+    $filter: ModelVideoFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    listVideos(filter: $filter, limit: $limit, nextToken: $nextToken) {
+      items {
+        id
+        owner
+        fileName
+        thumbnailFileName
+        videoTakenAt
+        isFavorite
+        lastOpenedAt
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
 export const getPublicProfile = /* GraphQL */ `
   query GetPublicProfile($id: ID!) {
     getPublicProfile(id: $id) {

@@ -45,6 +45,10 @@
   <img src="/game.png" alt="花あわせゲーム" class="icon-image" />
 </button>
 
+<button @click="goTo('video')">
+  <span style="font-size: 2.2rem;">🎥</span>
+</button>
+
 
     </div>
   </div>

@@ -537,3 +537,39 @@ export declare type BestRecord = LazyLoading extends LazyLoadingDisabled ? Eager
 export declare const BestRecord: (new (init: ModelInit<BestRecord>) => BestRecord) & {
   copyOf(source: BestRecord, mutator: (draft: MutableModel<BestRecord>) => MutableModel<BestRecord> | void): BestRecord;
 }
+
+type EagerVideo = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<Video, 'id'>;
+  };
+  readonly id: string;
+  readonly owner: string;
+  readonly fileName: string;
+  readonly thumbnailFileName: string;
+  readonly videoTakenAt?: string | null;
+  readonly isFavorite?: boolean | null;
+  readonly lastOpenedAt?: string | null;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+}
+
+type LazyVideo = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<Video, 'id'>;
+  };
+  readonly id: string;
+  readonly owner: string;
+  readonly fileName: string;
+  readonly thumbnailFileName: string;
+  readonly videoTakenAt?: string | null;
+  readonly isFavorite?: boolean | null;
+  readonly lastOpenedAt?: string | null;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+}
+
+export declare type Video = LazyLoading extends LazyLoadingDisabled ? EagerVideo : LazyVideo
+
+export declare const Video: (new (init: ModelInit<Video>) => Video) & {
+  copyOf(source: Video, mutator: (draft: MutableModel<Video>) => MutableModel<Video> | void): Video;
+}

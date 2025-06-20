@@ -27,6 +27,7 @@ import AboutView from '../views/AboutView.vue'
 import VerifyEmailView from '../views/VerifyEmailView.vue' // ✅ 新規追加
 import ForgotPasswordView from '../views/ForgotPasswordView.vue'
 import FlowerMatchGameView from '../views/FlowerMatchGameView.vue'
+import VideoView from '../views/VideoView.vue' // ✅ 動画ビューのインポート
 
 
 const routes = [
@@ -67,7 +68,8 @@ const routes = [
   // ✅ メール認証View
   { path: '/verify-email', name: 'verify-email', component: VerifyEmailView },
   { path: '/forgot-password', name: 'forgot-password', component: ForgotPasswordView } ,
-  { path: '/flower-match', name: 'flower-match', component: FlowerMatchGameView }
+  { path: '/flower-match', name: 'flower-match', component: FlowerMatchGameView },
+{ path: '/video', name: 'video', component: VideoView }
 
 ]
 

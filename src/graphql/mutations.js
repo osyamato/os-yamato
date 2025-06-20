@@ -838,3 +838,60 @@ export const deleteBestRecord = /* GraphQL */ `
     }
   }
 `;
+export const createVideo = /* GraphQL */ `
+  mutation CreateVideo(
+    $input: CreateVideoInput!
+    $condition: ModelVideoConditionInput
+  ) {
+    createVideo(input: $input, condition: $condition) {
+      id
+      owner
+      fileName
+      thumbnailFileName
+      videoTakenAt
+      isFavorite
+      lastOpenedAt
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const updateVideo = /* GraphQL */ `
+  mutation UpdateVideo(
+    $input: UpdateVideoInput!
+    $condition: ModelVideoConditionInput
+  ) {
+    updateVideo(input: $input, condition: $condition) {
+      id
+      owner
+      fileName
+      thumbnailFileName
+      videoTakenAt
+      isFavorite
+      lastOpenedAt
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const deleteVideo = /* GraphQL */ `
+  mutation DeleteVideo(
+    $input: DeleteVideoInput!
+    $condition: ModelVideoConditionInput
+  ) {
+    deleteVideo(input: $input, condition: $condition) {
+      id
+      owner
+      fileName
+      thumbnailFileName
+      videoTakenAt
+      isFavorite
+      lastOpenedAt
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
