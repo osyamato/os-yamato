@@ -41,7 +41,9 @@
       <button @click="goTo('globe')">
         <img src="/earth.png" alt="地球" class="icon-image" />
       </button>
-<button @click="goTo('flower-match')">🌸</button>
+<button @click="goTo('flower-match')">
+  <img src="/game.png" alt="花あわせゲーム" class="icon-image" />
+</button>
 
 
     </div>

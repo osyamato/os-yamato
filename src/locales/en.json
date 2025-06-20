@@ -113,7 +113,7 @@
   "weekday.5": "Fri",
   "weekday.6": "Sat",
  "confirm.delete": "Are you sure you want to delete this?",
-  "photo.title": "Photo...",
+  "photo.title": "Photo",
 
   "label.save": "Save",
   "label.delete": "Delete",
@@ -180,7 +180,7 @@
 "wind.placeholder": "Write your thoughts here...",
 "wind.sendButton": "Send with the wind 🕊️",
 "photo.saved": "Photo saved 🎞️",
-"chat.photo": "Photo",
+"chat.photo": "Photo...",
 
 "wind.inboxTitle": "Messages Carried by the Wind",
 "wind.receiveButton": "Receive the message",
@@ -306,7 +306,7 @@
   "calendar.month.12": "DEC",
 
   "game.bestTimeTitle": "Best Time",
-  "game.noRecords": "No records yet"
-
+  "game.noRecords": "No records yet",
+"game.loading": "Loading..."
 
 }
