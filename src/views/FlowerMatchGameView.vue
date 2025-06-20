@@ -3,18 +3,10 @@
     <!-- 🕰️ タイマー＆操作アイコン -->
     <div class="game-header">
       <div class="icon-group">
-        <div
-          class="icon-button"
-          :style="{ backgroundColor: iconColor }"
-          @click="handleClockClick"
-        >
+        <div class="icon-button" :style="{ backgroundColor: iconColor }" @click="handleClockClick">
           🕰️
         </div>
-        <div
-          class="icon-button"
-          :style="{ backgroundColor: iconColor }"
-          @click="restartGame"
-        >
+        <div class="icon-button" :style="{ backgroundColor: iconColor }" @click="restartGame">
           ↻
         </div>
       </div>
@@ -27,10 +19,8 @@
         v-for="(card, index) in shuffledCards"
         :key="index"
         class="card"
-        :class="{
-          flipped: card.flipped || card.matched,
-          transitioning: card.transitioning
-        }"
+        :class="{ flipped: card.flipped || card.matched }"
+        :style="{ opacity: card.opacity }"
         @click="flipCard(index)"
       >
         <div class="card-inner">
@@ -46,11 +36,17 @@
 <ModalContent :visible="showBestModal" @close="showBestModal = false">
   <template #default>
     <h3>{{ $t('game.bestTimeTitle') }}</h3>
-    <ol v-if="bestTimes.length">
-      <li v-for="record in bestTimes" :key="record.id">
-        ⏱️ {{ formatTime(record.bestTimeSec) }}
+    <div v-if="loadingBestScores">{{ $t('game.loading') }}</div>
+    <ul v-else-if="bestTimes.length">
+      <li
+        v-for="(record, i) in bestTimes"
+        :key="record.id"
+        class="best-time-item"
+      >
+        <span class="medal">{{ ['🥇', '🥈', '🥉'][i] || '🎖️' }}</span>
+        <span class="time">{{ formatTime(record.bestTimeSec) }}</span>
       </li>
-    </ol>
+    </ul>
     <p v-else>{{ $t('game.noRecords') }}</p>
   </template>
 </ModalContent>
@@ -58,7 +54,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onBeforeUnmount, nextTick } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { Auth, API, graphqlOperation } from 'aws-amplify'
 import ModalContent from '@/components/Modal.vue'
 import { createBestRecord, deleteBestRecord } from '@/graphql/mutations'
@@ -70,34 +66,26 @@ const { t } = useI18n()
 const showBestModal = ref(false)
 const bestTimes = ref([])
 const showConfetti = ref(false)
+const loadingBestScores = ref(false)
+
+async function fetchBestScores() {
+  loadingBestScores.value = true
+  const res = await API.graphql(graphqlOperation(listBestRecords))
+  const items = res.data?.listBestRecords?.items || []
+  bestTimes.value = items.filter(i => i?.gameType === 'flower-match').sort((a, b) => a.bestTimeSec - b.bestTimeSec).slice(0, 3)
+  loadingBestScores.value = false
+}
 
 async function handleClockClick() {
   showBestModal.value = true
   await fetchBestScores()
 }
 
-async function fetchBestScores() {
-  const res = await API.graphql(graphqlOperation(listBestRecords))
-  const items = res.data?.listBestRecords?.items || []
-  bestTimes.value = items
-    .filter(i => i?.gameType === 'flower-match')
-    .sort((a, b) => a.bestTimeSec - b.bestTimeSec)
-    .slice(0, 3)
-}
-
 const basePaths = Array.from({ length: 12 }, (_, i) => `/dialy.${i + 1}.png`)
-const cardPool = basePaths.flatMap(img => [
-  { img, flipped: false, matched: false, transitioning: false },
-  { img, flipped: false, matched: false, transitioning: false }
-])
-const shuffledCards = ref(shuffle([...cardPool]))
+const baseCardPool = basePaths.flatMap(img => [{ img }, { img }])
+const shuffledCards = ref([])
+const isResetting = ref(false)
 
-function launchConfetti() {
-  showConfetti.value = false
-  void nextTick(() => {
-    showConfetti.value = true
-  })
-}
 
 function shuffle(array) {
   return array.sort(() => Math.random() - 0.5)
@@ -139,29 +127,49 @@ function flipCard(index) {
   }
 }
 
-function restartGame() {
+async function restartGame() {
   if (timer.value) clearInterval(timer.value)
   time.value = 0
   gameStarted.value = false
   flippedIndices.value = []
+  showConfetti.value = false
+  isResetting.value = true
 
+  // 🌸 1. すべてのカードを裏返す
   for (const card of shuffledCards.value) {
     card.flipped = false
-    card.matched = false
-    card.transitioning = true
   }
 
-  setTimeout(() => {
-    shuffledCards.value = shuffle([...cardPool]).map(c => ({
-      ...c,
-      flipped: false,
-      matched: false,
-      transitioning: true
-    }))
-    setTimeout(() => {
-      for (const card of shuffledCards.value) card.transitioning = false
-    }, 300)
-  }, 100)
+  console.log('→ flipped を false にする')
+  await nextTick()
+  await new Promise(resolve => setTimeout(resolve, 500)) // 回転を視覚的に待つ
+
+  // 🌸 2. フェードアウト（opacity = 0）
+  for (const card of shuffledCards.value) {
+    card.opacity = 0
+  }
+  console.log('→ opacity を 0 にする')
+  await nextTick()
+  await new Promise(resolve => setTimeout(resolve, 500)) // フェードアウト視覚確認
+
+  // 🌸 3. カード更新
+  shuffledCards.value = shuffle([...baseCardPool]).map(c => ({
+    ...c,
+    flipped: false,
+    matched: false,
+    opacity: 0
+  }))
+  console.log('→ 新カード生成（opacity 0）')
+  await nextTick()
+  await new Promise(resolve => setTimeout(resolve, 100)) // DOM生成待ち
+
+  // 🌸 4. フェードイン
+  for (const card of shuffledCards.value) {
+    card.opacity = 1
+  }
+  console.log('→ opacity を 1 に戻す')
+
+  isResetting.value = false
 }
 
 const gameCompleted = computed(() => shuffledCards.value.every(c => c.matched))
@@ -171,31 +179,23 @@ watch(gameCompleted, async done => {
   if (done && timer.value) {
     clearInterval(timer.value)
     timer.value = null
-    launchConfetti()
+    showConfetti.value = true
     setTimeout(() => showConfetti.value = false, 3000)
 
     if (bestTimeSec.value === null || time.value < bestTimeSec.value) {
       bestTimeSec.value = time.value
-
       await API.graphql(graphqlOperation(createBestRecord, {
-        input: {
-          gameType: 'flower-match',
-          bestTimeSec: time.value
-        }
+        input: { gameType: 'flower-match', bestTimeSec: time.value }
       }))
-
       await cleanUpOldRecords()
     }
   }
 })
 
-
 async function cleanUpOldRecords() {
   const res = await API.graphql(graphqlOperation(listBestRecords))
   const items = res.data?.listBestRecords?.items || []
-  const sorted = items
-    .filter(i => i?.gameType === 'flower-match')
-    .sort((a, b) => a.bestTimeSec - b.bestTimeSec)
+  const sorted = items.filter(i => i?.gameType === 'flower-match').sort((a, b) => a.bestTimeSec - b.bestTimeSec)
   const toDelete = sorted.slice(3)
   for (const item of toDelete) {
     await API.graphql(graphqlOperation(deleteBestRecord, { input: { id: item.id } }))
@@ -219,19 +219,28 @@ onBeforeUnmount(() => {
 })
 
 const iconColor = ref('#666')
-Auth.currentAuthenticatedUser()
-  .then(user => {
-    iconColor.value = user.attributes['custom:iconColor'] || '#666'
-  })
-  .catch(() => {})
+Auth.currentAuthenticatedUser().then(user => {
+  iconColor.value = user.attributes['custom:iconColor'] || '#666'
+}).catch(() => {})
+
+
+onMounted(() => {
+  shuffledCards.value = shuffle([...baseCardPool]).map(c => ({
+    ...c,
+    flipped: false,
+    matched: false,
+    opacity: 1
+  }))
+})
+
 </script>
 
 <style>
 .game-view {
   padding: 2rem;
   text-align: center;
+  animation: dropDown 0.6s ease-out;
 }
-
 
 .game-header {
   display: flex;
@@ -242,7 +251,7 @@ Auth.currentAuthenticatedUser()
 
 .icon-group {
   display: flex;
-  gap: 0.5rem;
+  gap: 1rem;
   margin-bottom: 0.3rem;
 }
 
@@ -263,8 +272,18 @@ Auth.currentAuthenticatedUser()
 
 .timer-text {
   font-size: 1rem;
-  color: #444;
   font-weight: 600;
+  transition: color 0.3s ease;
+}
+
+/* ライトモード時（デフォルト） */
+html:not(.dark) .timer-text {
+  color: #444;
+}
+
+/* ダークモード時 */
+html.dark .timer-text {
+  color: #fff;
 }
 
 .card-grid {
@@ -272,6 +291,7 @@ Auth.currentAuthenticatedUser()
   gap: 0.5rem;
   justify-content: center;
   grid-template-columns: repeat(6, 70px);
+  position: relative;
 }
 
 @media (max-width: 768px) {
@@ -285,14 +305,30 @@ Auth.currentAuthenticatedUser()
   aspect-ratio: 1 / 1;
   perspective: 800px;
   cursor: pointer;
+  transition: opacity 0.5s ease, transform 0.5s ease;
+
+  /* 💡 ユーザー操作時の視覚変化を無効化 */
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+.card:active {
+  box-shadow: none;
+  outline: none;
+  transform: none;
 }
 
 .card-inner {
   width: 100%;
   height: 100%;
-  transition: transform 0.5s;
-  transform-style: preserve-3d;
   position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.5s ease;
+  will-change: transform;
+}
+
+.card-inner:active {
+  transform: none;
 }
 
 .card.flipped .card-inner,
@@ -307,6 +343,9 @@ Auth.currentAuthenticatedUser()
   height: 100%;
   backface-visibility: hidden;
   border-radius: 12px;
+
+  /* 🌸 枠線カラー */
+  border: 3px solid #274c77;
 }
 
 .card-front {
@@ -326,15 +365,46 @@ Auth.currentAuthenticatedUser()
   height: 100%;
   object-fit: contain;
   border-radius: 12px;
+  transition: opacity 0.3s ease;
 }
 
-.completion-message {
-  margin-top: 1.5rem;
+ul {
+  list-style: none;
+  padding-left: 0;
+  text-align: center;
+}
+
+.best-time-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
   font-size: 1.2rem;
-  font-weight: bold;
+  margin: 0.2rem 0;
+}
+
+.medal {
+  width: 1.5em;
+  text-align: right;
+}
+
+.time {
+  min-width: 3em;
+  text-align: left;
 }
 
 
+@keyframes dropDown {
+  0% {
+    transform: translateY(-40px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
 
 </style>
+
 

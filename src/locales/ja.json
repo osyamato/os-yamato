@@ -78,7 +78,7 @@
   "contactForm.note": "メモ",
 
 "confirm.delete": "本当に削除しますか？",
-"photo.title": "写真",
+"photo.title1": "写真",
 "confirm.deleteSingle": "この写真を削除しますか？",
 "confirm.deleteMultiple": "選択した写真をすべて削除しますか？",
 "confirm.noSelection": "写真が選択されていません",
@@ -296,8 +296,8 @@
   "calendar.month.12": "12月",
 
 "game.bestTimeTitle": "ベストタイム",
-  "game.noRecords": "まだ記録がありません"
-
+  "game.noRecords": "まだ記録がありません",
+"game.loading": "読み込み中..."
 
 
 
