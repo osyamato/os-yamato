@@ -21,11 +21,11 @@
     </div>
 
     <!-- 上部ツールバー -->
-    <div class="globe-toolbar" :class="{ 'no-user-color': showStars }">
-      <button class="toolbar-button" @click="toggleStars">🪐</button>
-<button class="toolbar-button" @click="openSearchModal">🔍</button>
-      <button class="toolbar-button" @click="openRegisterModal">🌸</button>
-    </div>
+<div class="globe-toolbar animate-drop" :class="{ 'no-user-color': showStars }">
+  <button class="toolbar-button" @click="toggleStars">🪐</button>
+  <button class="toolbar-button" @click="openSearchModal">🔍</button>
+  <button class="toolbar-button" @click="openRegisterModal">🌸</button>
+</div>
 
     <!-- 地球描画 -->
     <div ref="globeContainer" class="globe-canvas"></div>
@@ -434,11 +434,26 @@ function handleProfileRequest(yamatoId) {
   position: absolute;
   top: 1rem;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translate(-50%, -40px); /* ← 初期位置：中央かつ上 */
   display: flex;
   gap: 1rem;
-  animation: dropDown 0.5s ease;
   z-index: 10;
+  opacity: 0;
+}
+
+.globe-toolbar.animate-drop {
+  animation: dropIn 0.5s ease forwards;
+}
+
+@keyframes dropIn {
+  0% {
+    transform: translate(-50%, -40px); /* ← アニメ開始位置 */
+    opacity: 0;
+  }
+  100% {
+    transform: translate(-50%, 0);     /* ← アニメ終了位置：中央にそのまま落ちる */
+    opacity: 1;
+  }
 }
 
 .toolbar-button {
@@ -449,10 +464,11 @@ function handleProfileRequest(yamatoId) {
   font-size: 18px;
   background-color: var(--userColor, #a8dadc);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  transition: background-color 0.3s ease;
 }
 
 .globe-canvas {
@@ -462,16 +478,6 @@ function handleProfileRequest(yamatoId) {
   position: relative;
 }
 
-@keyframes dropDown {
-  0% {
-    transform: translateY(-40px) translateX(-50%);
-    opacity: 0;
-  }
-  100% {
-    transform: translateY(0) translateX(-50%);
-    opacity: 1;
-  }
-}
 
 .shooting-stars {
   position: absolute;

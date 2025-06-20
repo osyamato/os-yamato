@@ -229,7 +229,7 @@
 "about.termsText": "View the details",
 
 "terms.title": "Terms of Use and Privacy Policy",
-"terms.body": "This service values your personal records.\n\nData is temporarily stored on our server and will be deleted automatically if inactive for a certain period. We minimize the collection of personal information and never share it with third parties.",
+"terms.body": "OS Yamato is guided by the philosophy that \"records, if untouched, return to the wind.\"\n\nYour data is temporarily stored on our servers, but if there is no access for a certain period (currently 365 days for memos, contacts, messages, photos, etc.), it will be automatically deleted.\n\nWhile we strive to provide the best possible service, unexpected system failures or disruptions may result in data loss. We strongly recommend that users back up important information on their own.\n\nUsers are responsible for managing their own data. By using OS Yamato, you agree to these terms and our data policy.",
 
   "calendar.selectYearMonth": "Select Year and Month",
   "calendar.year": "{year}",
