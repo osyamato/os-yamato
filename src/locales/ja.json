@@ -86,6 +86,12 @@
  "confirm.noSelection": "写真が選択されていません",
 "message.chatPhotoMemory": "誰かと交わした記憶は、静かに残るフィルムのように",
 
+
+"confirm.deleteMultipleVideos": "選択した動画をすべて削除しますか？",
+"confirm.deleteSingleVideo": "この動画を削除しますか？",
+"video.title": "動画",
+
+
 "month.0": "1月",
 "month.1": "2月",
 "month.2": "3月",

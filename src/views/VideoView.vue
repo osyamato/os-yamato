@@ -1,14 +1,30 @@
 <template>
+
+<div class="video-view drop-animation">
+
   <div class="view-wrapper">
-    <h2 class="header-title">動画</h2>
+<h2 class="header-title">{{ t('video.title') }}</h2>
 
     <!-- 🎛️ ヘッダー操作ボタン -->
     <div class="header-actions">
       <div class="header-button-row">
         <IconButton :color="iconColor" @click="triggerFileInput">＋</IconButton>
-        <IconButton :color="iconColor">♡</IconButton>
-        <IconButton :color="iconColor">☑️</IconButton>
-        <IconButton :color="iconColor">🥀</IconButton>
+<IconButton
+  :color="showFavoritesOnly ? '#fff' : iconColor"
+  :class="{ 'favorite-filter': true, active: showFavoritesOnly }"
+  @click="toggleFavoritesFilter"
+>
+  ♡
+</IconButton>
+<IconButton :color="isSelectionMode ? '#fff' : iconColor" @click="toggleSelectionMode">☑️</IconButton>
+
+<IconButton
+  :color="showWiltedOnly ? '#fff' : iconColor"
+  :class="{ 'wilted-filter': true, active: showWiltedOnly }"
+  @click="toggleWiltedFilter"
+>
+  🥀
+</IconButton>
       </div>
       <div v-if="(isLoading || isDeleting) && iconStage" class="upload-life-cycle">
         <div :class="iconStage">{{ lifeIcon }}</div>
@@ -17,50 +33,77 @@
 
     <input ref="fileInput" type="file" accept="video/*" @change="handleFileSelect" hidden />
 
-<div class="media-grid">
-  <div
-    v-for="video in videoList"
-    :key="video.id"
-    class="media-item"
-    @click="openModal(video)"
+<div v-if="isSelectionMode" class="bulk-toolbar">
+ <IconButton
+    :color="iconColor"
+    @click="downloadSelectedVideos"
   >
-    <div class="thumbnail-wrapper">
-      <img :src="video.thumbnailUrl" class="thumbnail" />
-      <div class="duration-overlay" v-if="video.duration">
-        {{ formatDuration(video.duration) }}
-      </div>
-      <!-- ↓ このハートを削除 -->
-      <!--
-      <span
-        class="favorite-icon"
-        :class="{ active: video.isFavorite }"
-        @click.stop="toggleFavorite(video)"
-      >
-        ♡
-      </span>
-      -->
+    ↓
+  </IconButton>
+
+  <!-- 削除 -->
+  <IconButton
+    :color="iconColor"
+    @click="promptDeleteSelectedVideos"
+  >
+    🗑️
+  </IconButton>
+</div>
+
+
+<p v-if="showWiltedOnly" class="wilted-message">
+  {{ t('message.memoryFlower') }}
+</p>
+
+<div class="media-grid">
+<div
+  v-for="video in filteredVideos"
+  :key="video.id"
+  class="media-item"
+  :class="{ selected: selectedIds.includes(video.id) }"
+  @click="isSelectionMode ? toggleSelected(video.id) : openModal(video)"
+>
+  <!-- ✅ 左上チェック -->
+  <div
+    v-if="isSelectionMode"
+    class="custom-checkbox"
+    :class="{ checked: selectedIds.includes(video.id) }"
+  />
+  <div class="thumbnail-wrapper">
+    <img :src="video.thumbnailUrl" class="thumbnail" />
+    <div class="duration-overlay" v-if="video.duration">
+      {{ formatDuration(video.duration) }}
     </div>
-    <div class="date-label" v-if="video.videoTakenAt || video.createdAt">
-      {{ formatDate(video) }}
-    </div>
+    <div v-if="isWithered(video)" class="withered-badge">🥀</div>
   </div>
+  <div class="date-label" v-if="video.videoTakenAt || video.createdAt">
+    {{ formatDate(video) }}
+  </div>
+</div>
 </div>
 
     <!-- 🌙 動画モーダル -->
     <div v-if="selectedVideo" class="modal-overlay" @click.self="closeModal">
-      <div class="modal-card">
-        <!-- 🎛️ 動画上にツールバー -->
-        <div class="modal-toolbar">
-          <span
-            class="toolbar-icon"
-            :class="{ active: selectedVideo?.isFavorite }"
-            @click.stop="toggleFavorite(selectedVideo)"
-          >♡</span>
-          <span
-            class="toolbar-icon"
-            @click.stop="promptDeleteVideo(selectedVideo)"
-          >🗑️</span>
-        </div>
+<div class="modal-toolbar">
+  <!-- ❤️ お気に入り -->
+<span
+  class="toolbar-icon"
+  @click.stop="downloadVideo"
+>↓</span>
+
+<!-- ❤️ お気に入り -->
+<span
+  class="toolbar-icon"
+  :class="{ active: selectedVideo?.isFavorite }"
+  @click.stop="toggleFavorite(selectedVideo)"
+>♡</span>
+
+<!-- 🗑️ 削除 -->
+<span
+  class="toolbar-icon"
+  @click.stop="promptDeleteVideo(selectedVideo)"
+>🗑️</span>
+</div>
 
         <!-- 🎥 再生動画 -->
         <div class="video-wrapper">
@@ -76,14 +119,16 @@
     </div>
 
     <!-- ✅ 削除確認 -->
-    <ConfirmDialog
-      v-if="showConfirm"
-      :visible="showConfirm"
-      :message="confirmMessage"
-      @confirm="handleConfirmedDelete"
-      @cancel="cancelDelete"
-    />
-  </div>
+<ConfirmDialog
+  v-if="showConfirm"
+  :visible="showConfirm"
+  :message="confirmMessage"
+  @confirm="handleConfirmedDelete"
+  @cancel="cancelDelete">
+</ConfirmDialog>
+
+</div>
+
 </template>
 
 <script setup>
@@ -115,6 +160,64 @@ const lifeIcon = computed(() => icons[iconIndex.value])
 const iconColor = ref('#274c77')
 const fileInput = ref(null)
 
+const isUploading = ref(false)
+const isFetching = ref(false)
+const isDownloading = ref(false)
+
+
+const showWiltedOnly = ref(false) 
+
+
+const showFavoritesOnly = ref(false)
+
+
+const isSelectionMode = ref(false)
+const selectedIds = ref([])
+
+
+
+function toggleFavoritesFilter() {
+  showFavoritesOnly.value = !showFavoritesOnly.value
+  fetchVideos(showFavoritesOnly.value)
+}
+
+function toggleWiltedFilter() {
+  showWiltedOnly.value = !showWiltedOnly.value
+}
+
+function toggleSelectionMode() {
+  isSelectionMode.value = !isSelectionMode.value
+  selectedIds.value = []
+}
+
+function toggleSelected(id) {
+  const index = selectedIds.value.indexOf(id)
+  if (index === -1) {
+    selectedIds.value.push(id)
+  } else {
+    selectedIds.value.splice(index, 1)
+  }
+}
+
+const filteredVideos = computed(() => {
+  let list = videoList.value
+  if (showFavoritesOnly.value) {
+    list = list.filter(video => video.isFavorite)
+  }
+  if (showWiltedOnly.value) {
+    const threshold = Date.now() - 330 * 24 * 60 * 60 * 1000
+    list = list.filter(video => new Date(video.lastOpenedAt || video.createdAt) < threshold)
+  }
+  return list
+})
+
+function isWithered(video) {
+  const days = 330
+  const thresholdDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000)
+  const lastViewed = new Date(video.lastOpenedAt || video.createdAt)
+  return lastViewed < thresholdDate
+}
+
 
 function triggerFileInput() {
   fileInput.value?.click()
@@ -128,7 +231,7 @@ onMounted(async () => {
     console.error('🎨 アイコン色の取得に失敗:', e)
   }
 
-  fetchVideos()
+  await fetchVideos({ skipAnimation: true })  // ← アニメーションなしで最初の読み込み
 })
 
 async function handleFileSelect(event) {
@@ -139,7 +242,9 @@ async function handleFileSelect(event) {
   const fileName = `${Date.now()}-${file.name}`
   const thumbFileName = `thumb-${fileName.replace(/\.[^/.]+$/, '')}.jpg`
 
+  isUploading.value = true   // 🌱 アップロード中フラグ ON
   isLoading.value = true
+
   try {
     const user = await Auth.currentAuthenticatedUser()
     const owner = user.attributes.sub
@@ -172,12 +277,16 @@ async function handleFileSelect(event) {
     console.error('🎥 動画アップロード失敗:', err)
     alert('アップロードに失敗しました。')
   } finally {
+    isUploading.value = false  // 🌱 アップロード中フラグ OFF
     isLoading.value = false
   }
 }
 
-async function fetchVideos() {
-  isLoading.value = true
+
+async function fetchVideos({ skipAnimation = false } = {}) {
+  isFetching.value = true
+  if (!skipAnimation) isUploading.value = true
+
   try {
     const result = await API.graphql(graphqlOperation(listVideos))
     const items = result.data.listVideos.items
@@ -193,15 +302,34 @@ async function fetchVideos() {
       (a, b) => new Date(b.videoTakenAt || b.createdAt) - new Date(a.videoTakenAt || a.createdAt)
     )
   } finally {
-    isLoading.value = false
+    isFetching.value = false
+    if (!skipAnimation) isUploading.value = false
   }
 }
 
 function openModal(video) {
   selectedVideo.value = video
+
+  // 🎥 動画URLを取得
   Storage.get(video.fileName, { level: 'protected' }).then(url => {
     selectedVideoUrl.value = url
   })
+
+  // 🕒 最終閲覧日時を更新
+  const now = new Date().toISOString()
+  const input = {
+    id: video.id,
+    lastOpenedAt: now
+  }
+
+  API.graphql(graphqlOperation(updateVideo, { input }))
+    .then(() => {
+      console.log(`🕒 lastOpenedAt を更新しました: ${video.id}`)
+      video.lastOpenedAt = now  // 🥀を即座に消すためローカルも更新
+    })
+    .catch(err => {
+      console.error('🕒 lastOpenedAt 更新失敗:', err)
+    })
 }
 
 function closeModal() {
@@ -218,6 +346,13 @@ function toggleFavorite(video) {
   API.graphql(graphqlOperation(updateVideo, { input })).catch((err) => {
     console.error('❤️ お気に入り更新失敗:', err);
   });
+}
+
+function promptDeleteSelectedVideos() {
+  if (selectedIds.value.length === 0) return
+  confirmMessage.value = t('confirm.deleteMultipleVideos')
+  pendingDeleteVideos.value = videoList.value.filter(v => selectedIds.value.includes(v.id))
+  showConfirm.value = true
 }
 
 function promptDeleteVideo(video) {
@@ -268,9 +403,11 @@ function formatDate(video) {
 }
 
 let interval = null
-watch([isLoading, isDeleting], ([loading, deleting]) => {
+
+watch([isUploading, isDeleting, isDownloading], ([uploading, deleting, downloading]) => {
   clearInterval(interval)
-  if (loading || deleting) {
+
+  if (uploading || deleting || downloading) {
     iconIndex.value = 0
     iconStage.value = 'fade-in'
     interval = setInterval(() => {
@@ -284,11 +421,73 @@ watch([isLoading, isDeleting], ([loading, deleting]) => {
     iconStage.value = ''
   }
 })
+
+async function downloadVideo() {
+  if (!selectedVideo.value) return
+
+  try {
+    const url = await Storage.get(selectedVideo.value.fileName, {
+      level: 'protected',
+      download: true  // バイナリ取得
+    })
+
+    // BlobからURL生成
+    const blobUrl = window.URL.createObjectURL(url.Body)
+
+    // ダウンロード用リンク作成
+    const link = document.createElement('a')
+    link.href = blobUrl
+    link.download = selectedVideo.value.fileName
+    link.click()
+
+    // クリーンアップ
+    window.URL.revokeObjectURL(blobUrl)
+  } catch (err) {
+    console.error('⬇️ ダウンロード失敗:', err)
+    alert('動画のダウンロードに失敗しました。')
+  }
+}
+
+async function downloadSelectedVideos() {
+  if (selectedIds.value.length === 0) return
+
+  isDownloading.value = true
+
+  try {
+    for (const id of selectedIds.value) {
+      const video = videoList.value.find(v => v.id === id)
+      if (!video) continue
+
+      const result = await Storage.get(video.fileName, {
+        level: 'protected',
+        download: true
+      })
+      const blobUrl = window.URL.createObjectURL(result.Body)
+      const link = document.createElement('a')
+      link.href = blobUrl
+      link.download = video.fileName
+      link.click()
+      window.URL.revokeObjectURL(blobUrl)
+    }
+  } catch (err) {
+    console.error('⬇️ 複数ダウンロード失敗:', err)
+    alert('ダウンロードに失敗しました。')
+  } finally {
+    isDownloading.value = false
+  }
+}
+
 </script>
 
 
 
 <style scoped>
+
+.video-view {
+  padding: 2rem;
+  text-align: center;
+}
+
 .view-wrapper {
   display: flex;
   flex-direction: column;
@@ -313,6 +512,8 @@ watch([isLoading, isDeleting], ([loading, deleting]) => {
   align-items: center;
   width: 100%;
   max-width: 160px;
+
+  position: relative; /* ← ✅ これを追加 */
 }
 
 .thumbnail-wrapper {
@@ -468,5 +669,108 @@ watch([isLoading, isDeleting], ([loading, deleting]) => {
   justify-content: center;
   align-items: center;
 }
+.favorite-filter.active {
+  background-color: #fff;
+  color: #f66; /* お好みでハートの色も赤っぽく */
+}
+
+.withered-badge {
+  position: absolute;
+  top: 6px;        /* ← bottom → top に変更 */
+  left: 6px;       /* ← right → left に変更 */
+  background: rgba(200, 200, 200, 0.8); /* グレーの円形背景 */
+  color: #a00;     /* 枯れた赤色 */
+  border-radius: 50%;
+  width: 1.6rem;
+  height: 1.6rem;
+  font-size: 1.1rem;
+  line-height: 1.6rem;
+  text-align: center;
+  pointer-events: none;
+}
+
+.wilted-message {
+  margin: 0.5rem 0 1rem;
+  font-size: 0.95rem;
+  color: #888;
+  font-style: italic;
+  text-align: center;
+  animation: driftFade 3s ease-out forwards;
+  opacity: 0;
+}
+
+@keyframes driftFade {
+  0% {
+    transform: translateY(-10px);
+    opacity: 0;
+  }
+  30% {
+    transform: translateY(0px);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(0px);
+    opacity: 1;
+  }
+}
+
+.drop-animation {
+  animation: dropIn 0.5s ease-out;
+}
+
+@keyframes dropIn {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.media-item.selected {
+  border: 2px solid #274c77; /* Yamatoブルー（他のアイコンと統一） */
+  border-radius: 12px;
+  box-shadow: 0 0 6px rgba(39, 76, 119, 0.4);
+  transition: border 0.2s ease, box-shadow 0.2s ease;
+}
+
+.select-badge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  font-size: 1.4rem;
+}
+
+.bulk-toolbar {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  padding: 1rem;
+}
+
+.custom-checkbox {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  background: white;
+  z-index: 10;
+  transition: all 0.2s ease;
+  border: 1.5px solid #000; /* 黒線の枠を追加 */
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.1); /* 軽く立体感を加える */
+}
+
+.custom-checkbox.checked {
+  background: #007aff; /* 青 */
+  background-image: url('data:image/svg+xml;utf8,<svg fill="white" viewBox="0 0 24 24" width="20" height="20" xmlns="http://www.w3.org/2000/svg"><path d="M9 16.2l-3.5-3.6L4 14l5 5 10-10-1.5-1.5z"/></svg>');
+  background-size: 16px;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
 </style>
 
