@@ -46,7 +46,7 @@
 </button>
 
 <button @click="goTo('video')">
-  <span style="font-size: 2.2rem;">🎥</span>
+  <img src="/video.png" alt="動画一覧" class="icon-image" />
 </button>
 
 
