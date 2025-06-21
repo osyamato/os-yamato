@@ -4,81 +4,117 @@
 
     <!-- 🎛️ ヘッダー操作ボタン -->
     <div class="header-actions">
-      <IconButton :color="iconColor" @click="triggerFileInput">＋</IconButton>
-      <IconButton :color="iconColor">♡</IconButton>
-      <IconButton :color="iconColor">☑️</IconButton>
-      <IconButton :color="iconColor">🥀</IconButton>
-    </div>
-
-    <!-- 📁 非表示ファイル入力 -->
-    <input
-      ref="fileInput"
-      type="file"
-      accept="video/*"
-      @change="handleFileSelect"
-      hidden
-    />
-
-    <!-- 🔄 読み込み中 -->
-    <div v-if="isLoading" class="loading">読み込み中...</div>
-
-    <!-- 🎞️ 動画一覧 -->
-    <div class="media-grid">
-      <div
-        v-for="video in videoList"
-        :key="video.id"
-        class="media-item"
-        @click="openModal(video)"
-      >
-        <img :src="video.thumbnailUrl" class="thumbnail" />
-        <div class="duration-overlay">{{ formatDuration(video.duration) }}</div>
-        <span class="favorite-icon" :class="{ active: video.isFavorite }" @click.stop="toggleFavorite(video)">♡</span>
+      <div class="header-button-row">
+        <IconButton :color="iconColor" @click="triggerFileInput">＋</IconButton>
+        <IconButton :color="iconColor">♡</IconButton>
+        <IconButton :color="iconColor">☑️</IconButton>
+        <IconButton :color="iconColor">🥀</IconButton>
+      </div>
+      <div v-if="(isLoading || isDeleting) && iconStage" class="upload-life-cycle">
+        <div :class="iconStage">{{ lifeIcon }}</div>
       </div>
     </div>
 
-    <!-- 🎬 モーダル再生 -->
+    <input ref="fileInput" type="file" accept="video/*" @change="handleFileSelect" hidden />
+
+<div class="media-grid">
+  <div
+    v-for="video in videoList"
+    :key="video.id"
+    class="media-item"
+    @click="openModal(video)"
+  >
+    <div class="thumbnail-wrapper">
+      <img :src="video.thumbnailUrl" class="thumbnail" />
+      <div class="duration-overlay" v-if="video.duration">
+        {{ formatDuration(video.duration) }}
+      </div>
+      <!-- ↓ このハートを削除 -->
+      <!--
+      <span
+        class="favorite-icon"
+        :class="{ active: video.isFavorite }"
+        @click.stop="toggleFavorite(video)"
+      >
+        ♡
+      </span>
+      -->
+    </div>
+    <div class="date-label" v-if="video.videoTakenAt || video.createdAt">
+      {{ formatDate(video) }}
+    </div>
+  </div>
+</div>
+
+    <!-- 🌙 動画モーダル -->
     <div v-if="selectedVideo" class="modal-overlay" @click.self="closeModal">
       <div class="modal-card">
-        <video
-          :src="selectedVideoUrl"
-          controls
-          autoplay
-          playsinline
-          class="video-player"
-        ></video>
-        <button class="delete-button" @click="confirmDelete(selectedVideo)">削除</button>
+        <!-- 🎛️ 動画上にツールバー -->
+        <div class="modal-toolbar">
+          <span
+            class="toolbar-icon"
+            :class="{ active: selectedVideo?.isFavorite }"
+            @click.stop="toggleFavorite(selectedVideo)"
+          >♡</span>
+          <span
+            class="toolbar-icon"
+            @click.stop="promptDeleteVideo(selectedVideo)"
+          >🗑️</span>
+        </div>
+
+        <!-- 🎥 再生動画 -->
+        <div class="video-wrapper">
+          <video
+            :src="selectedVideoUrl"
+            controls
+            autoplay
+            playsinline
+            class="video-player"
+          ></video>
+        </div>
       </div>
     </div>
 
-    <!-- 🗑️ 確認ダイアログ -->
+    <!-- ✅ 削除確認 -->
     <ConfirmDialog
       v-if="showConfirm"
-      :message="'この動画を削除しますか？'"
-      @confirm="deleteVideo"
-      @cancel="showConfirm = false"
+      :visible="showConfirm"
+      :message="confirmMessage"
+      @confirm="handleConfirmedDelete"
+      @cancel="cancelDelete"
     />
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
+
+import { ref, onMounted, computed, watch } from 'vue'
 import { Storage, API, graphqlOperation, Auth } from 'aws-amplify'
 import { listVideos } from '@/graphql/queries'
-import { updateVideo, deleteVideo as deleteVideoMutation } from '@/graphql/mutations'
+import { createVideo, updateVideo, deleteVideo as deleteVideoMutation } from '@/graphql/mutations'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import IconButton from '@/components/IconButton.vue'
-import { createVideo } from '@/graphql/mutations'
-
 
 const videoList = ref([])
-const isLoading = ref(false)
 const selectedVideo = ref(null)
 const selectedVideoUrl = ref('')
 const showConfirm = ref(false)
+const confirmMessage = ref('')
+const pendingDeleteVideos = ref([])
 
-const iconColor = ref('#274c77') // 💡 初期色
+const isLoading = ref(false)
+const isDeleting = ref(false)
 
+const iconStage = ref('fade-in')
+const iconIndex = ref(0)
+const icons = ['🌱', '🌷', '🥀']
+const lifeIcon = computed(() => icons[iconIndex.value])
+
+const iconColor = ref('#274c77')
 const fileInput = ref(null)
+
 
 function triggerFileInput() {
   fileInput.value?.click()
@@ -103,22 +139,21 @@ async function handleFileSelect(event) {
   const fileName = `${Date.now()}-${file.name}`
   const thumbFileName = `thumb-${fileName.replace(/\.[^/.]+$/, '')}.jpg`
 
+  isLoading.value = true
   try {
     const user = await Auth.currentAuthenticatedUser()
     const owner = user.attributes.sub
 
-    // ✅ 動画の保存
     await Storage.put(fileName, file, {
       contentType: file.type,
       level: 'protected'
     })
 
-    // ✅ 動画からサムネイルを生成
-    const thumbnailBlob = await generateThumbnail(file)
+    const placeholderResponse = await fetch('/video.png')
+    const placeholderBlob = await placeholderResponse.blob()
 
-    // ✅ サムネイルをS3にアップロード
-    await Storage.put(thumbFileName, thumbnailBlob, {
-      contentType: 'image/jpeg',
+    await Storage.put(thumbFileName, placeholderBlob, {
+      contentType: 'image/png',
       level: 'protected'
     })
 
@@ -136,41 +171,9 @@ async function handleFileSelect(event) {
   } catch (err) {
     console.error('🎥 動画アップロード失敗:', err)
     alert('アップロードに失敗しました。')
+  } finally {
+    isLoading.value = false
   }
-}
-
-async function generateThumbnail(file) {
-  return new Promise((resolve, reject) => {
-    const video = document.createElement('video')
-    video.src = URL.createObjectURL(file)
-    video.muted = true
-    video.playsInline = true
-    video.preload = 'auto'
-
-    video.addEventListener('loadeddata', () => {
-      video.currentTime = 0.1
-    })
-
-    video.addEventListener('seeked', () => {
-      const canvas = document.createElement('canvas')
-      canvas.width = video.videoWidth
-      canvas.height = video.videoHeight
-      const ctx = canvas.getContext('2d')
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
-
-      canvas.toBlob(blob => {
-        if (blob) {
-          resolve(blob)
-        } else {
-          reject(new Error('サムネイル生成に失敗しました'))
-        }
-      }, 'image/jpeg', 0.8)
-    })
-
-    video.addEventListener('error', (e) => {
-      reject(new Error('動画の読み込みに失敗しました'))
-    })
-  })
 }
 
 async function fetchVideos() {
@@ -207,22 +210,47 @@ function closeModal() {
 }
 
 function toggleFavorite(video) {
-  const input = { id: video.id, isFavorite: !video.isFavorite }
-  API.graphql(graphqlOperation(updateVideo, { input }))
-    .then(() => fetchVideos())
+  // まずローカルで即反映（見た目用）
+  video.isFavorite = !video.isFavorite;
+
+  // サーバーにも保存（非同期）
+  const input = { id: video.id, isFavorite: video.isFavorite };
+  API.graphql(graphqlOperation(updateVideo, { input })).catch((err) => {
+    console.error('❤️ お気に入り更新失敗:', err);
+  });
 }
 
-function confirmDelete(video) {
-  selectedVideo.value = video
+function promptDeleteVideo(video) {
+  confirmMessage.value = t('confirm.deleteSingle')
+  pendingDeleteVideos.value = [video]
   showConfirm.value = true
 }
 
-async function deleteVideo() {
-  const id = selectedVideo.value.id
-  await API.graphql(graphqlOperation(deleteVideoMutation, { input: { id } }))
-  selectedVideo.value = null
+async function handleConfirmedDelete() {
+  console.log('✅ handleConfirmedDelete 実行開始')
+  isDeleting.value = true
+  try {
+    for (const video of pendingDeleteVideos.value) {
+      console.log('📦 削除ファイル:', video.fileName)
+      await Storage.remove(video.fileName, { level: 'protected' })
+      await Storage.remove(video.thumbnailFileName, { level: 'protected' })
+      await API.graphql(graphqlOperation(deleteVideoMutation, { input: { id: video.id } }))
+      console.log('✅ DynamoDB 削除完了:', video.id)
+    }
+    showConfirm.value = false
+    selectedVideo.value = null
+    await fetchVideos()
+  } catch (e) {
+    console.error('❌ 削除失敗:', e)
+    alert('削除に失敗しました')
+  } finally {
+    isDeleting.value = false
+  }
+}
+
+function cancelDelete() {
   showConfirm.value = false
-  fetchVideos()
+  pendingDeleteVideos.value = []
 }
 
 function formatDuration(seconds) {
@@ -231,20 +259,66 @@ function formatDuration(seconds) {
   const sec = String(seconds % 60).padStart(2, '0')
   return `${min}:${sec}`
 }
+
+function formatDate(video) {
+  const iso = video.videoTakenAt || video.createdAt
+  if (!iso) return ''
+  const date = new Date(iso)
+  return `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')}`
+}
+
+let interval = null
+watch([isLoading, isDeleting], ([loading, deleting]) => {
+  clearInterval(interval)
+  if (loading || deleting) {
+    iconIndex.value = 0
+    iconStage.value = 'fade-in'
+    interval = setInterval(() => {
+      iconStage.value = 'fade-out'
+      setTimeout(() => {
+        iconIndex.value = (iconIndex.value + 1) % icons.length
+        iconStage.value = 'fade-in'
+      }, 300)
+    }, 1000)
+  } else {
+    iconStage.value = ''
+  }
+})
 </script>
 
+
+
 <style scoped>
-.media-grid {
+.view-wrapper {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
+}
+
+.media-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* スマホ基準：3列 */
   gap: 1rem;
+  justify-items: center;
+}
+
+@media (min-width: 768px) {
+  .media-grid {
+    grid-template-columns: repeat(6, 1fr); /* PC基準：6列 */
+  }
 }
 
 .media-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 160px;
+}
+
+.thumbnail-wrapper {
   position: relative;
   width: 120px;
   height: 120px;
-  cursor: pointer;
 }
 
 .thumbnail {
@@ -276,22 +350,35 @@ function formatDuration(seconds) {
   color: #f66;
 }
 
+.date-label {
+  margin-top: 4px;
+  font-size: 0.75rem;
+  color: #ccc;
+}
+
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.5);
+  background: rgba(0, 0, 0, 0.91);
   display: flex;
   justify-content: center;
   align-items: center;
+  z-index: 1500;
 }
 
 .modal-card {
-  background: white;
+  position: relative;
+  background: #333; /* ← 常に濃いグレーに（明度調整可） */
+  color: #eee;       /* テキストが読めるように白っぽく */
   border-radius: 12px;
   padding: 1rem;
   max-width: 90vw;
   max-height: 80vh;
-  overflow: auto;
+  overflow: visible; /* ← ツールバーが隠れないように */
+}
+
+.video-wrapper {
+  padding-top: 3.5rem; /* ← ツールバー分の余白を確保 */
 }
 
 .video-player {
@@ -302,11 +389,84 @@ function formatDuration(seconds) {
 
 .header-actions {
   display: flex;
-  justify-content: flex-end;
-  gap: 1rem;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
   padding: 1rem;
 }
 
-</style>
+.header-button-row {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
 
+.upload-life-cycle {
+  font-size: 1.6rem;
+  transition: opacity 0.3s ease;
+  text-align: center;
+  height: 2rem;
+}
+
+.upload-life-cycle > div {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  transform-origin: center;
+}
+
+.fade-in {
+  opacity: 1;
+}
+.fade-out {
+  opacity: 0;
+}
+
+.modal-toolbar {
+  position: absolute;
+  top: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 1.2rem;
+  z-index: 2000;
+  /* background: none; ← 削除 or コメントアウト */
+  padding: 0;           /* ← 内側余白なし */
+  border-radius: 0;     /* ← 枠も不要 */
+}
+
+.toolbar-icon {
+  font-size: 1.2rem;
+  padding: 0.4rem;
+  cursor: pointer;
+  color: #888; /* ← 明るめのグレーでライトモードでも見やすく */
+  transition: transform 0.2s ease, color 0.2s ease;
+  line-height: 1;
+}
+
+.toolbar-icon.active {
+  color: #f6a4a4; /* お気に入り状態で淡い赤に */
+}
+
+@media (prefers-color-scheme: dark) {
+  .modal-card {
+    background: #222;
+    color: #eee;
+  }
+  .toolbar-icon {
+    color: #eee;
+  }
+  .toolbar-icon.active {
+    color: #f88;
+  }
+}
+
+.confirm-dialog {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  z-index: 3000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+</style>
 
