@@ -16,6 +16,17 @@
       />
     </div>
 
+<div class="mode-options">
+  <div class="mode-option" @click="mode = 'short'">
+    <div class="checkbox" :class="{ selected: mode === 'short' }">✔︎</div>
+    <span>{{ t('wind.nearFuture') }}</span>
+  </div>
+  <div class="mode-option" @click="mode = 'long'">
+    <div class="checkbox" :class="{ selected: mode === 'long' }">✔︎</div>
+    <span>{{ t('wind.farFuture') }}</span>
+  </div>
+</div>
+
 <YamatoButton size="large" @click="sendMessage" :disabled="!isMessageValid">
   {{ t('wind.sendButton') }}
 </YamatoButton>
@@ -38,17 +49,19 @@ import YamatoButton from '@/components/YamatoButton.vue'
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 
-
 const route = useRoute()
 const router = useRouter()
 
 const toUserId = route.query.toUserId
-const toDisplayName = route.query.toDisplayName // ✅ 追加でニックネーム取得
+const toDisplayName = route.query.toDisplayName
 
 const message = ref('')
-const recipientName = ref(toDisplayName || '')  // ✅ デフォルトで設定
+const recipientName = ref(toDisplayName || '')
 const sent = ref(false)
-const recipientLoaded = ref(true)  // ✅ GraphQL読み込みが不要なら true 固定
+const recipientLoaded = ref(true)
+
+// ✅ モード切替用
+const mode = ref('short') // 'short'（1〜2ヶ月） or 'long'（3〜6ヶ月）
 
 onMounted(async () => {
   if (!toUserId) return
@@ -58,12 +71,14 @@ onMounted(async () => {
   } catch (e) {
     console.warn('⚠️ 宛先プロフィール取得失敗:', e)
   } finally {
-    recipientLoaded.value = true  // ✅ 表示許可をここで与える
+    recipientLoaded.value = true
   }
 })
 
 function getRandomFutureDate() {
-  const days = Math.floor(Math.random() * 90) + 90
+  const base = mode.value === 'short' ? 30 : 90
+  const range = mode.value === 'short' ? 30 : 90
+  const days = Math.floor(Math.random() * range) + base
   return new Date(Date.now() + days * 86400000)
 }
 
@@ -77,7 +92,7 @@ async function sendMessage() {
     const fromDisplayName = profileRes.data.getPublicProfile?.displayName || '匿名'
 
     const delivery = getRandomFutureDate()
-    const ttl = Math.floor(delivery.getTime() / 1000 + 365 * 24 * 60 * 60) // TTLとして1年後（UNIX秒）
+    const ttl = Math.floor(delivery.getTime() / 1000 + 365 * 24 * 60 * 60)
 
     const input = {
       fromUserId,
@@ -86,7 +101,7 @@ async function sendMessage() {
       content: message.value,
       deliveryDate: delivery.toISOString(),
       isOpened: false,
-      ttl // ✅ 正しいフィールド名に修正
+      ttl
     }
 
     await API.graphql(graphqlOperation(createWindMessage, { input }))
@@ -101,7 +116,6 @@ const MAX_LENGTH = 1000
 const isMessageValid = computed(() => {
   return message.value.trim().length > 0 && message.value.length <= MAX_LENGTH
 })
-
 </script>
 
 <style scoped>
@@ -237,6 +251,47 @@ background: linear-gradient(to top, #e0f2ff, #b3e5fc);
 }
 .textarea:invalid {
   border-color: red;
+}
+
+.mode-options {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin-bottom: 1.5rem;
+  font-family: var(--yamato-font-body);
+}
+
+.mode-option {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  gap: 0.6rem;
+  font-size: 1rem;
+  opacity: 0.8;
+  transition: opacity 0.2s;
+}
+
+.mode-option:hover {
+  opacity: 1;
+}
+
+.checkbox {
+  width: 20px;
+  height: 20px;
+  border: 1.5px solid #888;
+  border-radius: 4px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 0.9rem;
+  color: transparent;
+  transition: all 0.2s ease;
+}
+
+.checkbox.selected {
+  background-color: #3a78d2;
+  color: white;
+  border-color: #3a78d2;
 }
 
 

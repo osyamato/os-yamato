@@ -395,14 +395,36 @@ export const schema = {
                     "name": "user1",
                     "isArray": false,
                     "type": "String",
-                    "isRequired": true,
+                    "isRequired": false,
                     "attributes": []
                 },
                 "user2": {
                     "name": "user2",
                     "isArray": false,
                     "type": "String",
-                    "isRequired": true,
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "memberSubs": {
+                    "name": "memberSubs",
+                    "isArray": true,
+                    "type": "String",
+                    "isRequired": false,
+                    "attributes": [],
+                    "isArrayNullable": true
+                },
+                "isGroup": {
+                    "name": "isGroup",
+                    "isArray": false,
+                    "type": "Boolean",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "groupName": {
+                    "name": "groupName",
+                    "isArray": false,
+                    "type": "String",
+                    "isRequired": false,
                     "attributes": []
                 },
                 "lastMessage": {
@@ -556,14 +578,14 @@ export const schema = {
                     "name": "receiverSub",
                     "isArray": false,
                     "type": "String",
-                    "isRequired": true,
+                    "isRequired": false,
                     "attributes": []
                 },
                 "receiverYamatoId": {
                     "name": "receiverYamatoId",
                     "isArray": false,
                     "type": "String",
-                    "isRequired": true,
+                    "isRequired": false,
                     "attributes": []
                 },
                 "content": {
@@ -911,6 +933,20 @@ export const schema = {
                     "name": "ttl",
                     "isArray": false,
                     "type": "AWSTimestamp",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "isGroup": {
+                    "name": "isGroup",
+                    "isArray": false,
+                    "type": "Boolean",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "provisionalRoomId": {
+                    "name": "provisionalRoomId",
+                    "isArray": false,
+                    "type": "ID",
                     "isRequired": false,
                     "attributes": []
                 },
@@ -1574,5 +1610,5 @@ export const schema = {
     "enums": {},
     "nonModels": {},
     "codegenVersion": "3.4.4",
-    "version": "70e6e0968fa927d7b3cd04e66c3d757e"
+    "version": "3fd1742c71db357f1032299a31a6d27e"
 };

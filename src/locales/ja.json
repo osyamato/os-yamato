@@ -184,6 +184,10 @@
 "wind.receiveButton": "便りを受け取る",
 "wind.fromDisplayName": "{name} より",
 "wind.title": "風の便り",
+"wind.nearFuture": "近い未来",
+"wind.farFuture": "遠い未来",
+
+
 
 "wind.restoreButton": "そっと戻す",
 "wind.cloudListTitle": "雲の中メッセージリスト",

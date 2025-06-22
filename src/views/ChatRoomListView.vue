@@ -8,7 +8,9 @@
           <IconButton :color="iconColor" @click="openProfileModal">{{ myInitial }}</IconButton>
           <IconButton v-if="hasProfile" :color="iconColor" :class="{ blink: hasIncomingRequest }" @click="handleRequestClick">📮</IconButton>
           <IconButton v-if="hasProfile" :color="iconColor" @click="openSearchModal">🔍</IconButton>
-          <IconButton v-if="hasProfile" :color="iconColor" @click="openWindInbox">🕊️</IconButton>
+<IconButton v-if="hasProfile" :color="iconColor" @click="openSentWindMessages">
+  🕊️
+</IconButton>
         </div>
       </div>
     </transition>
@@ -19,7 +21,7 @@
         <IconButton :color="iconColor" @click="openProfileModal">{{ myInitial }}</IconButton>
         <IconButton v-if="hasProfile" :color="iconColor" :class="{ blink: hasIncomingRequest }" @click="handleRequestClick">📮</IconButton>
         <IconButton v-if="hasProfile" :color="iconColor" @click="openSearchModal">🔍</IconButton>
-        <IconButton v-if="hasProfile" :color="iconColor" @click="openWindInbox">🕊️</IconButton>
+<IconButton v-if="hasProfile" :color="iconColor" @click="openSentWindMessages">🕊️</IconButton>
       </div>
     </div>
 
@@ -193,6 +195,10 @@ const isBack = ref(null)
 
 const route = useRoute()
 const router = useRouter()
+
+const openSentWindMessages = () => {
+  router.push('/sent-wind-messages') // ✅ これが正しいルート
+}
 
 onMounted(() => {
   // ✅ from=home のときのみアニメーションフラグON

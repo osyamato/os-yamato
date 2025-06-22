@@ -238,6 +238,9 @@ export const createChatRoom = /* GraphQL */ `
       id
       user1
       user2
+      memberSubs
+      isGroup
+      groupName
       lastMessage
       lastContentType
       lastTimestamp
@@ -263,6 +266,9 @@ export const updateChatRoom = /* GraphQL */ `
       id
       user1
       user2
+      memberSubs
+      isGroup
+      groupName
       lastMessage
       lastContentType
       lastTimestamp
@@ -288,6 +294,9 @@ export const deleteChatRoom = /* GraphQL */ `
       id
       user1
       user2
+      memberSubs
+      isGroup
+      groupName
       lastMessage
       lastContentType
       lastTimestamp
@@ -497,6 +506,8 @@ export const createChatRequest = /* GraphQL */ `
       message
       createdAt
       ttl
+      isGroup
+      provisionalRoomId
       updatedAt
       __typename
     }
@@ -515,6 +526,8 @@ export const updateChatRequest = /* GraphQL */ `
       message
       createdAt
       ttl
+      isGroup
+      provisionalRoomId
       updatedAt
       __typename
     }
@@ -533,6 +546,8 @@ export const deleteChatRequest = /* GraphQL */ `
       message
       createdAt
       ttl
+      isGroup
+      provisionalRoomId
       updatedAt
       __typename
     }

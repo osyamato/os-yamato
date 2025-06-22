@@ -167,6 +167,9 @@ export const getChatRoom = /* GraphQL */ `
       id
       user1
       user2
+      memberSubs
+      isGroup
+      groupName
       lastMessage
       lastContentType
       lastTimestamp
@@ -194,6 +197,9 @@ export const listChatRooms = /* GraphQL */ `
         id
         user1
         user2
+        memberSubs
+        isGroup
+        groupName
         lastMessage
         lastContentType
         lastTimestamp
@@ -311,6 +317,8 @@ export const getChatRequest = /* GraphQL */ `
       message
       createdAt
       ttl
+      isGroup
+      provisionalRoomId
       updatedAt
       __typename
     }
@@ -331,6 +339,8 @@ export const listChatRequests = /* GraphQL */ `
         message
         createdAt
         ttl
+        isGroup
+        provisionalRoomId
         updatedAt
         __typename
       }
