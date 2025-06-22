@@ -154,8 +154,11 @@ type EagerChatRoom = {
     readOnlyFields: 'createdAt' | 'updatedAt';
   };
   readonly id: string;
-  readonly user1: string;
-  readonly user2: string;
+  readonly user1?: string | null;
+  readonly user2?: string | null;
+  readonly memberSubs?: (string | null)[] | null;
+  readonly isGroup?: boolean | null;
+  readonly groupName?: string | null;
   readonly lastMessage?: string | null;
   readonly lastContentType?: string | null;
   readonly lastTimestamp?: string | null;
@@ -175,8 +178,11 @@ type LazyChatRoom = {
     readOnlyFields: 'createdAt' | 'updatedAt';
   };
   readonly id: string;
-  readonly user1: string;
-  readonly user2: string;
+  readonly user1?: string | null;
+  readonly user2?: string | null;
+  readonly memberSubs?: (string | null)[] | null;
+  readonly isGroup?: boolean | null;
+  readonly groupName?: string | null;
   readonly lastMessage?: string | null;
   readonly lastContentType?: string | null;
   readonly lastTimestamp?: string | null;
@@ -205,8 +211,8 @@ type EagerMessage = {
   readonly roomId: string;
   readonly senderSub: string;
   readonly senderYamatoId: string;
-  readonly receiverSub: string;
-  readonly receiverYamatoId: string;
+  readonly receiverSub?: string | null;
+  readonly receiverYamatoId?: string | null;
   readonly content: string;
   readonly contentType?: string | null;
   readonly imageKey?: string | null;
@@ -226,8 +232,8 @@ type LazyMessage = {
   readonly roomId: string;
   readonly senderSub: string;
   readonly senderYamatoId: string;
-  readonly receiverSub: string;
-  readonly receiverYamatoId: string;
+  readonly receiverSub?: string | null;
+  readonly receiverYamatoId?: string | null;
   readonly content: string;
   readonly contentType?: string | null;
   readonly imageKey?: string | null;
@@ -324,6 +330,8 @@ type EagerChatRequest = {
   readonly message?: string | null;
   readonly createdAt: string;
   readonly ttl?: number | null;
+  readonly isGroup?: boolean | null;
+  readonly provisionalRoomId?: string | null;
   readonly updatedAt?: string | null;
 }
 
@@ -339,6 +347,8 @@ type LazyChatRequest = {
   readonly message?: string | null;
   readonly createdAt: string;
   readonly ttl?: number | null;
+  readonly isGroup?: boolean | null;
+  readonly provisionalRoomId?: string | null;
   readonly updatedAt?: string | null;
 }
 

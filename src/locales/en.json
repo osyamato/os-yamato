@@ -191,6 +191,8 @@
 "wind.fromDisplayName": "From {name}",
 
 "wind.title": "Wind Message",
+"wind.nearFuture": "Near Future",
+"wind.farFuture": "Distant Future",
 
 "wind.cloudListTitle": "Messages Hidden in the Cloud",
 "wind.restoreButton": "Gently Restore",
