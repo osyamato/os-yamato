@@ -36,18 +36,19 @@
 
     <!-- ✅ openedMessages を ul 内で描画 -->
 <ul class="wind-list">
-  <li
-    v-for="msg in filteredOpenedMessages"
-    :key="msg.id"
-    class="wind-list-item"
-    @click="openModal(msg)"
-  >
-    <span class="recipient-label">
-      <span v-if="isWilting(msg)">🥀</span>
-      From:
-    </span>
-    <span class="name">{{ msg.fromDisplayName }}</span>
-  </li>
+<li
+  v-for="msg in filteredOpenedMessages"
+  :key="msg.id"
+  class="wind-list-item"
+  @click="openModal(msg)"
+  :data-dummy="msg.id === 'yamato-default'"
+>
+  <span class="recipient-label">
+    <span v-if="isWilting(msg) && msg.id !== 'yamato-default'">🥀</span>
+    From:
+  </span>
+  <span class="name">{{ msg.fromDisplayName }}</span>
+</li>
 </ul>
 
     <!-- 🆕 受信直後の開封メッセージ（名前だけ） -->
@@ -71,7 +72,13 @@
     @click.self="selectedMessage = null"
   >
     <div class="letter-card">
-      <button class="delete-button" @click="promptDeleteMessage(selectedMessage.id)">⋯</button>
+<button
+  class="delete-button"
+  @click="promptDeleteMessage(selectedMessage.id)"
+  v-if="selectedMessage?.id !== 'yamato-default'"
+>
+  ⋯
+</button>
       <button class="favorite-button" @click="toggleFavorite(selectedMessage)">
         <span :class="{ 'favorited': selectedMessage?.favoriteByReceiver }">♡</span>
       </button>
@@ -131,10 +138,23 @@ const showModal = ref(false)
 const showConfirm = ref(false)
 const confirmMessage = ref('')
 const pendingDeleteId = ref(null)
+
 function promptDeleteMessage(id) {
-  confirmMessage.value = 'この便りを削除しますか？'
+  if (id === 'yamato-default') return // ← ガードを追加
+  confirmMessage.value = t('wind.confirmDelete')
   pendingDeleteId.value = id
   showConfirm.value = true
+}
+
+
+const dummyMessage = {
+  id: 'yamato-default',
+  fromDisplayName: 'OS Yamato',
+  content: t('wind.defaultMessage'),
+  deliveryDate: new Date().toISOString(),
+  isOpened: true,
+  favoriteByReceiver: false,
+  ttl: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 365
 }
 
 async function handleConfirmedDelete() {
@@ -312,12 +332,19 @@ function toggleFavoriteFilter() {
   showFavoritesOnly.value = !showFavoritesOnly.value
 }
 
-const filteredOpenedMessages = computed(() =>
-  openedMessages.value.filter(msg => {
+const filteredOpenedMessages = computed(() => {
+  const base = openedMessages.value.filter(msg => {
     if (showFavoritesOnly.value && !msg.favoriteByReceiver) return false
     return true
   })
-)
+
+  const noMessages =
+    unopenedMessages.value.length === 0 &&
+    base.length === 0 &&
+    !showFavoritesOnly.value
+
+  return noMessages ? [dummyMessage] : base
+})
 
 </script>
 
@@ -675,6 +702,12 @@ button.favorited {
 }
 button.favorited .heart-icon {
   color: #e77474 !important;
+}
+
+.wind-list-item[data-dummy="true"] {
+  opacity: 0.85;
+  font-style: italic;
+  background-color: #fefdf8;
 }
 
 </style>
