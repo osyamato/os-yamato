@@ -49,6 +49,10 @@
   <img src="/video.png" alt="動画一覧" class="icon-image" />
 </button>
 
+<button @click="goTo('wind-inbox')">
+  <img src="/WindMessage2.png" alt="風の便り" class="icon-image" />
+</button>
+
 
     </div>
   </div>
