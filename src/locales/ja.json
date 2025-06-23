@@ -180,12 +180,13 @@
 "wind.placeholder": "ここに想いを綴ってください…",
 "wind.sendButton": "風に預ける🕊️",
 
-"wind.inboxTitle": "届いた風の便り",
-"wind.receiveButton": "便りを受け取る",
+"wind.inboxTitle": "届いた風のたより",
+"wind.receiveButton": "たよりを受け取る",
 "wind.fromDisplayName": "{name} より",
-"wind.title": "風の便り",
+"wind.title": "風のたより",
 "wind.nearFuture": "近い未来",
 "wind.farFuture": "遠い未来",
+"wind.to": "{name} 宛",
 
 
 
@@ -307,7 +308,19 @@
 
 "game.bestTimeTitle": "ベストタイム",
   "game.noRecords": "まだ記録がありません",
-"game.loading": "読み込み中..."
+"game.loading": "読み込み中...",
+
+"wind.sentTitle": "送信した風のたより",
+"wind.title": "風のたより",
+"wind.fromDisplayName": "{name} より",
+"wind.deliveryHint": "{season} に届く",
+"wind.season.spring": "春",
+"wind.season.summer": "夏",
+"wind.season.autumn": "秋",
+"wind.season.winter": "冬",
+"wind.confirmDelete": "この手紙を削除しますか？",
+"wind.cancelNotice": "風のたよりを送信して一週間以内なら取り消すことができます。"
+
 
 
 

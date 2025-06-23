@@ -197,6 +197,7 @@ type WindMessage
   fromUserId: String!
   fromDisplayName: String!
   toUserId: String!
+  toDisplayName: String  # ✅ オプショナルに変更！
 
   content: String!
   deliveryDate: AWSDateTime!
@@ -204,7 +205,7 @@ type WindMessage
   openedAt: AWSDateTime
 
   deletedByReceiver: Boolean @default(value: "false")
-  favoriteByReceiver: Boolean @default(value: "false") # ✅ ハート機能
+  favoriteByReceiver: Boolean @default(value: "false")
   ttl: AWSTimestamp
   createdAt: AWSDateTime
 }

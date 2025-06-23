@@ -439,6 +439,7 @@ type EagerWindMessage = {
   readonly fromUserId: string;
   readonly fromDisplayName: string;
   readonly toUserId: string;
+  readonly toDisplayName?: string | null;
   readonly content: string;
   readonly deliveryDate: string;
   readonly isOpened: boolean;
@@ -459,6 +460,7 @@ type LazyWindMessage = {
   readonly fromUserId: string;
   readonly fromDisplayName: string;
   readonly toUserId: string;
+  readonly toDisplayName?: string | null;
   readonly content: string;
   readonly deliveryDate: string;
   readonly isOpened: boolean;

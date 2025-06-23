@@ -440,6 +440,7 @@ export const getWindMessage = /* GraphQL */ `
       fromUserId
       fromDisplayName
       toUserId
+      toDisplayName
       content
       deliveryDate
       isOpened
@@ -465,6 +466,7 @@ export const listWindMessages = /* GraphQL */ `
         fromUserId
         fromDisplayName
         toUserId
+        toDisplayName
         content
         deliveryDate
         isOpened

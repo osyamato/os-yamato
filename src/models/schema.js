@@ -1214,6 +1214,13 @@ export const schema = {
                     "isRequired": true,
                     "attributes": []
                 },
+                "toDisplayName": {
+                    "name": "toDisplayName",
+                    "isArray": false,
+                    "type": "String",
+                    "isRequired": false,
+                    "attributes": []
+                },
                 "content": {
                     "name": "content",
                     "isArray": false,
@@ -1610,5 +1617,5 @@ export const schema = {
     "enums": {},
     "nonModels": {},
     "codegenVersion": "3.4.4",
-    "version": "3fd1742c71db357f1032299a31a6d27e"
+    "version": "7029b643aef97bdb049637f6ec064315"
 };
