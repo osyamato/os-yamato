@@ -587,6 +587,7 @@ export const onCreateWindMessage = /* GraphQL */ `
       fromUserId
       fromDisplayName
       toUserId
+      toDisplayName
       content
       deliveryDate
       isOpened
@@ -610,6 +611,7 @@ export const onUpdateWindMessage = /* GraphQL */ `
       fromUserId
       fromDisplayName
       toUserId
+      toDisplayName
       content
       deliveryDate
       isOpened
@@ -633,6 +635,7 @@ export const onDeleteWindMessage = /* GraphQL */ `
       fromUserId
       fromDisplayName
       toUserId
+      toDisplayName
       content
       deliveryDate
       isOpened

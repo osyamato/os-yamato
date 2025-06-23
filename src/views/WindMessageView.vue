@@ -94,15 +94,16 @@ async function sendMessage() {
     const delivery = getRandomFutureDate()
     const ttl = Math.floor(delivery.getTime() / 1000 + 365 * 24 * 60 * 60)
 
-    const input = {
-      fromUserId,
-      fromDisplayName,
-      toUserId,
-      content: message.value,
-      deliveryDate: delivery.toISOString(),
-      isOpened: false,
-      ttl
-    }
+const input = {
+  fromUserId,
+  fromDisplayName,
+  toUserId,
+  toDisplayName: recipientName.value, // 🆕 追加
+  content: message.value,
+  deliveryDate: delivery.toISOString(),
+  isOpened: false,
+  ttl
+}
 
     await API.graphql(graphqlOperation(createWindMessage, { input }))
     sent.value = true

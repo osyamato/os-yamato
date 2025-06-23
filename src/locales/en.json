@@ -196,6 +196,9 @@
 
 "wind.cloudListTitle": "Messages Hidden in the Cloud",
 "wind.restoreButton": "Gently Restore",
+"wind.to": "To: {name}",
+
+
 
 "blossom.title": "Let Your Flower Bloom",
 "blossom.nicknamePlaceholder": "Nickname (required)",
@@ -313,6 +316,19 @@
 
   "game.bestTimeTitle": "Best Time",
   "game.noRecords": "No records yet",
-"game.loading": "Loading..."
+"game.loading": "Loading...",
+
+"wind.sentTitle": "Sent Wind Messages",
+"wind.title": "Wind Message",
+"wind.fromDisplayName": "From {name}",
+"wind.deliveryHint": "{season} arrival",
+"wind.season.spring": "Spring",
+"wind.season.summer": "Summer",
+"wind.season.autumn": "Autumn",
+"wind.season.winter": "Winter",
+"wind.confirmDelete": "Delete this message?",
+"wind.cancelNotice": "You can cancel a Wind Message within one week of sending."
+
+
 
 }

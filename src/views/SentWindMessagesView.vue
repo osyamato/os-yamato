@@ -1,6 +1,7 @@
 <template>
   <div class="wind-view">
     <h2 class="view-title">{{ t('wind.sentTitle') }}</h2>
+    <p class="view-subtitle">{{ t('wind.cancelNotice') }}</p>
 
     <!-- 📜 送信済み手紙リスト -->
     <ul class="wind-list">
@@ -10,11 +11,9 @@
         class="wind-list-item"
         @click="openModal(msg)"
       >
-        <span class="recipient-label">
-          <span v-if="isWilting(msg)">🥀</span>
-          To:
-        </span>
-        <span class="name">{{ msg.toUserId }}</span>
+<span class="recipient-label">
+  {{ t('wind.to', { name: msg.toDisplayName || msg.toUserId }) }}
+</span>
       </li>
     </ul>
 
@@ -25,17 +24,20 @@
         class="letter-overlay"
         @click.self="selectedMessage = null"
       >
-        <div class="letter-card">
-          <button class="delete-button" @click="promptDeleteMessage(selectedMessage.id)">⋯</button>
-          <button class="favorite-button" @click="toggleFavorite(selectedMessage)">
-            <span :class="{ favorited: selectedMessage?.favoriteByReceiver }">♡</span>
-          </button>
+<div class="letter-card">
+  <!-- 🗑️ 削除ボタン（右上に絶対配置） -->
+  <div class="icon-wrapper">
+<IconButton :color="iconColor" size="small" @click="handleDelete">
+  🗑️
+</IconButton>
+  </div>
+
           <h3 class="letter-title">{{ t('wind.title') }}</h3>
           <div class="letter-content">
             <p class="letter-body">{{ selectedMessage.content }}</p>
             <div class="signature">
               {{ t('wind.fromDisplayName', { name: selectedMessage.fromDisplayName }) }}<br />
-              {{ formatDate(selectedMessage.deliveryDate) }}
+              {{ formatDeliveryHint(selectedMessage.deliveryDate) }}
             </div>
           </div>
         </div>
@@ -58,7 +60,12 @@ import { API, Auth, graphqlOperation } from 'aws-amplify'
 import { listWindMessages } from '@/graphql/queries'
 import { deleteWindMessage } from '@/graphql/mutations'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
+import IconButton from '@/components/IconButton.vue'
 import { useI18n } from 'vue-i18n'
+
+// ✅ Cognito属性からカラーを取得（useUserColor の代替）
+const iconColor = ref('#274c77')
+
 const { t } = useI18n()
 
 const messages = ref([])
@@ -70,6 +77,10 @@ const messageToDeleteId = ref(null)
 onMounted(async () => {
   const user = await Auth.currentAuthenticatedUser()
   const sub = user.attributes.sub
+
+  // ✅ カスタムカラーを反映（メモや連絡先と同様）
+  const userColor = user.attributes['custom:iconColor']
+  if (userColor) iconColor.value = userColor
 
   const res = await API.graphql(
     graphqlOperation(listWindMessages, {
@@ -84,7 +95,9 @@ onMounted(async () => {
 })
 
 const filteredOpenedMessages = computed(() =>
-  messages.value.filter((msg) => !msg.deletedByReceiver)
+  messages.value
+    .filter((msg) => !msg.deletedByReceiver)
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)) // 新しい順
 )
 
 const openModal = (msg) => {
@@ -117,8 +130,10 @@ const handleConfirmedDelete = async () => {
   }
 }
 
-const toggleFavorite = (msg) => {
-  msg.favoriteByReceiver = !msg.favoriteByReceiver
+const handleDelete = () => {
+  if (selectedMessage.value?.id) {
+    promptDeleteMessage(selectedMessage.value.id)
+  }
 }
 
 const isWilting = (msg) => {
@@ -127,19 +142,42 @@ const isWilting = (msg) => {
   return daysPassed >= 6.5
 }
 
-const formatDate = (dateStr) => {
+function getSeasonKey(month) {
+  if ([12, 1, 2].includes(month)) return 'wind.season.winter'
+  if ([3, 4, 5].includes(month)) return 'wind.season.spring'
+  if ([6, 7, 8].includes(month)) return 'wind.season.summer'
+  if ([9, 10, 11].includes(month)) return 'wind.season.autumn'
+}
+
+function formatDeliveryHint(dateStr) {
   const date = new Date(dateStr)
-  return `${date.getFullYear()}.${date.getMonth() + 1}.${date.getDate()}`
+  const seasonKey = getSeasonKey(date.getMonth() + 1)
+  return t('wind.deliveryHint', { season: t(seasonKey) })
 }
 </script>
 
 <style scoped>
+@keyframes dropDown {
+  0% {
+    transform: translateY(-40px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
 .wind-view {
   text-align: center;
   padding: 1.5rem;
+  animation: dropDown 0.5s ease-out;
 }
 .view-title {
-  font-size: 1.5rem;
+  font-size: 1.4rem;
+  font-weight: bold;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  margin-top: 1.5rem;
   margin-bottom: 1rem;
 }
 .wind-list-item {
@@ -198,12 +236,46 @@ const formatDate = (dateStr) => {
   top: 1rem;
   right: 1rem;
 }
-.favorite-button {
+
+.view-subtitle {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 1rem;
+}
+
+.icon-wrapper {
+  position: absolute;
   top: 1rem;
-  left: 1rem;
+  right: 1rem;
+  z-index: 10;
 }
-.favorited {
-  color: hotpink;
+
+/* スタイル追加（scoped内） */
+.delete-icon {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background-color: var(--icon-bg, #274c77);
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  padding: 0.4rem;
+  color: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  transition: transform 0.15s ease;
 }
+.delete-icon:hover {
+  transform: scale(1.1);
+}
+
+.icon-button.small {
+  font-size: 1.1rem;
+  width: 2.2rem;
+  height: 2.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
 </style>
 
