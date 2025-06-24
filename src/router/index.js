@@ -29,6 +29,7 @@ import ForgotPasswordView from '../views/ForgotPasswordView.vue'
 import FlowerMatchGameView from '../views/FlowerMatchGameView.vue'
 import VideoView from '../views/VideoView.vue' // ✅ 動画ビューのインポート
 import SentWindMessagesView from '../views/SentWindMessagesView.vue' 
+import TimeView2 from '../views/TimeView2.vue'
 
 
 const routes = [
@@ -71,7 +72,9 @@ const routes = [
   { path: '/forgot-password', name: 'forgot-password', component: ForgotPasswordView } ,
   { path: '/flower-match', name: 'flower-match', component: FlowerMatchGameView },
 { path: '/video', name: 'video', component: VideoView },
-  { path: '/sent-wind-messages', name: 'sent-wind-messages', component: SentWindMessagesView }
+  { path: '/sent-wind-messages', name: 'sent-wind-messages', component: SentWindMessagesView },
+{ path: '/time2', name: 'time2', component: TimeView2 }
+
 ]
 
 const router = createRouter({
