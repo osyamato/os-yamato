@@ -1,36 +1,45 @@
-# os-yamato
+# OS Yamato 🌸
 
-This template should help get you started developing with Vue 3 in Vite.
+> A gentle operating system where data blooms, fades, and returns to the wind.
 
-## Recommended IDE Setup
 
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+---
 
-## Customize configuration
+## 🌿 Philosophy
 
-See [Vite Configuration Reference](https://vite.dev/config/).
+We believe that digital memories, like real ones, shouldn't last forever by default.  
+**OS Yamato** introduces a mindful approach: notes, photos, messages —  
+if left untouched, they will gently fade and disappear after one year.
 
-## Project Setup
+- No hoarding.  
+- No clutter.  
+- Just meaningful moments.
 
-```sh
+---
+
+## 🖼️ How It Works
+
+- Each data object (note, photo, contact...) includes a `lastOpenedAt` timestamp.
+- If it hasn't been opened for **330 days**, the UI shows a 🥀 icon.
+- If unopened for **365 days**, it is **automatically deleted** from storage.
+
+
+---
+
+## ⚙️ Tech Stack
+
+- 🖥️ **Frontend**: Vue 3 + Vite  
+- ☁️ **Backend**: AWS Amplify (Cognito / AppSync / DynamoDB / S3)  
+- 🧠 **Data Lifecycle**: TTL-based expiration logic with visual feedback  
+- 🌍 **Hosting**: Amplify Hosting + Global CDN  
+- 💡 **Design Ethos**: Inspired by impermanence and wabi-sabi aesthetics
+
+---
+
+## 🚀 Getting Started (for Developers)
+
+```bash
+git clone https://github.com/YOUR_USERNAME/os-yamato.git
+cd os-yamato
 npm install
-```
-
-### Compile and Hot-Reload for Development
-
-```sh
 npm run dev
-```
-
-### Compile and Minify for Production
-
-```sh
-npm run build
-```
-
-### Lint with [ESLint](https://eslint.org/)
-
-```sh
-npm run lint
-```
-# os-yamato
