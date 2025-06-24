@@ -53,6 +53,10 @@
   <img src="/WindMessage2.png" alt="風の便り" class="icon-image" />
 </button>
 
+<button @click="goTo('time2')">
+  🕰️
+</button>
+
 
     </div>
   </div>
