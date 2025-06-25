@@ -1,37 +1,68 @@
 <template>
-  <div class="time-container">
+<div class="time-container" @click="spawnPetals($event)">
     <div class="time-inner" :class="{ night: isNight }">
-      <div class="clock">{{ currentTime }}</div>
+      <!-- 🕰️ 時計 -->
+      <div class="clock-box">
+        <div class="icon-button" :style="{ backgroundColor: iconColor }" @click.stop="handleIconClick">🕰️</div>
+        <div class="clock-text">{{ currentTime }}</div>
+      </div>
 
-      <!-- 木枝表示 -->
+      <!-- 🌸 木枝 -->
       <img src="/sakura.branch.png" class="branch" :class="{ night: isNight }" />
 
-      <!-- 花びら群 -->
+      <!-- 🌸 秒ごとに落ちる花びら -->
       <div class="petal-wrapper" :key="loopKey">
         <template v-for="(position, groupIndex) in petalPositions" :key="groupIndex">
-<img
+          <img
             v-for="i in 5"
             :key="`${groupIndex}-${i}`"
             :src="isNight ? '/sakura.time.night1.png' : '/sakura.time.png'"
             class="petal"
             :class="[
-              fadedCount > groupIndex * 5 + (i - 1) ? ['faded', fallClasses[groupIndex * 5 + (i - 1)]] : ''
+              fadedCount > groupIndex * 5 + (i - 1)
+                ? ['faded', fallClasses[groupIndex * 5 + (i - 1)]]
+                : ''
             ]"
             :style="getPetalStyle(position.x, position.y, i)"
           />
-          <img
-            src="/sakura.time1.png"
-            class="flower-core"
-            :style="getCoreStyle(position.x, position.y, groupIndex)"
-          />
+          <img src="/sakura.time1.png" class="flower-core" :style="getCoreStyle(position.x, position.y, groupIndex)" />
         </template>
+      </div>
+
+      <!-- 🌸 クリックで舞う花びら -->
+      <div
+        v-for="petal in petalOverlays"
+        :key="petal.id"
+        class="petal-float"
+        :style="{ left: `${petal.x}px`, top: `${petal.y}px` }"
+      >
+        <img
+          v-for="i in 1"
+          :key="i"
+          :src="isNight ? '/sakura.time.night1.png' : '/sakura.time.png'"
+          class="float-petal"
+          :style="{ animationDelay: `${i * 0.1}s` }"
+        />
       </div>
     </div>
   </div>
 </template>
 
+
 <script setup>
 import { ref, onMounted } from 'vue'
+import { Auth } from 'aws-amplify'
+
+const iconColor = ref('#888')
+Auth.currentAuthenticatedUser()
+  .then(user => {
+    iconColor.value = user.attributes['custom:iconColor'] || '#888'
+  })
+  .catch(() => {})
+
+function handleIconClick() {
+  console.log('🕰️ Clock icon clicked — animation selector (future)')
+}
 
 const TOTAL_PETALS = 60
 const fadedCount = ref(0)
@@ -41,13 +72,17 @@ const currentTime = ref('')
 const triggeredMinute = ref('')
 let fallInterval = null
 const isNight = ref(false)
+const showSeconds = ref(true)
 
 function updateClock() {
   const now = new Date()
   const hh = String(now.getHours()).padStart(2, '0')
   const mm = String(now.getMinutes()).padStart(2, '0')
   const ss = String(now.getSeconds()).padStart(2, '0')
-  currentTime.value = `${hh}:${mm}:${ss}`
+
+  currentTime.value = showSeconds.value
+    ? `${hh}:${mm}:${ss}`
+    : `${hh}:${mm}`
 
   const hour = now.getHours()
   isNight.value = hour >= 18 || hour < 6
@@ -67,11 +102,9 @@ function regenerateFallClasses() {
 }
 
 function startLoop() {
-  if (fallInterval) {
-    clearInterval(fallInterval)
-    fallInterval = null
-  }
+  if (fallInterval) clearInterval(fallInterval)
 
+  showSeconds.value = false  // ← 秒を隠す
   fadedCount.value = 0
   regenerateFallClasses()
   loopKey.value++
@@ -85,6 +118,7 @@ function startLoop() {
     }
   }, 1000)
 }
+
 
 onMounted(() => {
   updateClock()
@@ -125,7 +159,41 @@ const coreConfigs = [
   { dx: 10, dy: 18, angle: 44 }, { dx: 11, dy: 12, angle: 43 },
   { dx: 8,  dy: 18, angle: 10 }, { dx: 11, dy: 9,  angle: 140 }
 ]
+
+const petalOverlays = ref([])
+
+function spawnPetals(event) {
+  const inner = event.currentTarget.querySelector('.time-inner')
+  if (!inner) return
+
+  const rect = inner.getBoundingClientRect()
+  const x = event.clientX - rect.left
+  const y = event.clientY - rect.top
+  const id = Date.now() + Math.random()
+
+  console.log('📍 spawnPetals', x, y)
+
+  petalOverlays.value.push({ id, x, y })
+
+  setTimeout(() => {
+    petalOverlays.value = petalOverlays.value.filter(p => p.id !== id)
+  }, 3000)
+}
+
+
+function getFloatStyle(p) {
+  return {
+    position: 'absolute',
+    left: `${p.x}px`,
+    top: `${p.y}px`,
+    pointerEvents: 'none',
+    zIndex: 5,
+  }
+}
+
+
 </script>
+
 
 <style scoped>
 .time-container {
@@ -143,7 +211,7 @@ const coreConfigs = [
   position: relative;
   width: 390px;
   height: 844px;
-  background: linear-gradient(to bottom, #cfefff, #f9fcff);
+background: linear-gradient(to bottom, #87cefa, #e6f7ff, #f9fcff);
   overflow: hidden;
   transition: background 0.5s ease;
 }
@@ -222,30 +290,35 @@ const coreConfigs = [
 .fall4 { animation-name: fall4; }
 .fall5 { animation-name: fall5; }
 
+
 @keyframes fall1 {
   0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
   80% { opacity: 1; }
-  100% { transform: translate(20px, 500px) rotate(160deg); opacity: 0; }
+  100% { transform: translate(320px, 420px) rotate(360deg); opacity: 0; }
 }
+
 @keyframes fall2 {
   0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
   80% { opacity: 1; }
-  100% { transform: translate(-30px, 480px) rotate(-240deg); opacity: 0; }
+  100% { transform: translate(350px, 440px) rotate(420deg); opacity: 0; }
 }
+
 @keyframes fall3 {
   0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
   80% { opacity: 1; }
-  100% { transform: translate(15px, 550px) rotate(200deg); opacity: 0; }
+  100% { transform: translate(300px, 400px) rotate(390deg); opacity: 0; }
 }
+
 @keyframes fall4 {
   0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
   80% { opacity: 1; }
-  100% { transform: translate(-20px, 530px) rotate(220deg); opacity: 0; }
+  100% { transform: translate(340px, 430px) rotate(450deg); opacity: 0; }
 }
+
 @keyframes fall5 {
   0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
   80% { opacity: 1; }
-  100% { transform: translate(10px, 580px) rotate(-180deg); opacity: 0; }
+  100% { transform: translate(360px, 410px) rotate(400deg); opacity: 0; }
 }
 
 .flower-core {
@@ -259,19 +332,75 @@ const coreConfigs = [
   transition: opacity 0.6s ease;
 }
 
-.clock {
+.clock-box {
   position: absolute;
-  top: 24px;
+  top: 40px;
   left: 50%;
   transform: translateX(-50%);
-  font-size: 2.2rem;
-  font-family: 'Courier New', monospace;
-  background: rgba(255, 255, 255, 0.8);
-  color: #222;
-  padding: 6px 14px;
-  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
   z-index: 10;
 }
-</style>
 
+.icon-button {
+  font-size: 1.4rem;
+  color: white;
+  background-color: #888;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+
+.clock-text {
+  font-size: 2.2rem;
+  font-family: 'Courier New', monospace;
+  padding: 6px 14px;
+  border-radius: 12px;
+  color: #000; /* 昼は黒文字 */
+  background: none !important; /* 背景なし */
+  transition: color 0.5s ease;
+}
+
+.time-inner.night .clock-text {
+  color: #ddf; /* 夜は青白文字 */
+}
+
+
+.petal-float {
+  position: absolute;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.float-petal {
+  width: 28px;
+  height: 28px;
+  position: absolute;
+  animation: floatAway 2.8s ease-out forwards;
+}
+
+@keyframes floatAway {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+    opacity: 1;
+  }
+  60% {
+    transform: translate(120px, 40px) rotate(180deg);
+    opacity: 0.7;
+  }
+  100% {
+    transform: translate(200px, 80px) rotate(270deg);
+    opacity: 0;
+  }
+}
+
+
+</style>
+ 
 
