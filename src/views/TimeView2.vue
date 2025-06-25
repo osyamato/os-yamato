@@ -1,3 +1,4 @@
+
 <template>
 <div class="time-container" @click="spawnPetals($event)">
     <div class="time-inner" :class="{ night: isNight }">
@@ -7,7 +8,8 @@
         <div class="clock-text">{{ currentTime }}</div>
       </div>
 
-      <!-- 🌸 木枝 -->
+
+
       <img src="/sakura.branch.png" class="branch" :class="{ night: isNight }" />
 
       <!-- 🌸 秒ごとに落ちる花びら -->
@@ -28,6 +30,16 @@
           <img src="/sakura.time1.png" class="flower-core" :style="getCoreStyle(position.x, position.y, groupIndex)" />
         </template>
       </div>
+
+<!-- 🍃 葉っぱのアニメーション -->
+<div
+  v-for="leaf in leafOverlays"
+  :key="leaf.id"
+  class="leaf-float"
+  :style="{ left: `${leaf.x}px`, top: `${leaf.y}px` }"
+>
+  <img src="/leaf.png" class="leaf-image" />
+</div>
 
       <!-- 🌸 クリックで舞う花びら -->
       <div
@@ -101,29 +113,14 @@ function regenerateFallClasses() {
   })
 }
 
-function startLoop() {
-  if (fallInterval) clearInterval(fallInterval)
-
-  showSeconds.value = false  // ← 秒を隠す
-  fadedCount.value = 0
-  regenerateFallClasses()
-  loopKey.value++
-  fadedCount.value++
-
-  fallInterval = setInterval(() => {
-    fadedCount.value++
-    if (fadedCount.value >= TOTAL_PETALS) {
-      clearInterval(fallInterval)
-      fallInterval = null
-    }
-  }, 1000)
-}
-
 
 onMounted(() => {
   updateClock()
   setInterval(updateClock, 1000)
 })
+
+
+
 
 const petalPositions = [
   { x: 50, y: 445 }, { x: 140, y: 488 }, { x: 200, y: 345 },
@@ -191,8 +188,58 @@ function getFloatStyle(p) {
   }
 }
 
+const leafOverlays = ref([])
+
+function spawnLeaves() {
+  const count = Math.floor(Math.random() * 3) + 1
+
+  for (let i = 0; i < count; i++) {
+    const delay = i * 200 + Math.random() * 300
+
+    setTimeout(() => {
+      const id = Date.now() + Math.random()
+const x = Math.random() * 360 + 20  // 横幅 20〜380px
+const y = Math.random() * 600 + 40  // 高さ 40〜760px（やや余裕を持たせる）
+      leafOverlays.value.push({ id, x, y })
+
+      setTimeout(() => {
+        leafOverlays.value = leafOverlays.value.filter(l => l.id !== id)
+      }, 4000)
+    }, delay)
+  }
+}
+
+function startLoop() {
+  if (fallInterval) clearInterval(fallInterval)
+
+  showSeconds.value = false
+  fadedCount.value = 0
+  regenerateFallClasses()
+  loopKey.value++
+  fadedCount.value++
+
+
+
+  fallInterval = setInterval(() => {
+    fadedCount.value++
+
+    // 🌿 5枚ごとに 50% の確率で舞わせる
+    if (fadedCount.value % 5 === 0 && fadedCount.value < TOTAL_PETALS) {
+      if (Math.random() < 0.8) {
+        spawnLeaves()
+      }
+    }
+
+    if (fadedCount.value >= TOTAL_PETALS) {
+      clearInterval(fallInterval)
+      fallInterval = null
+    }
+  }, 1000)
+}
+
 
 </script>
+
 
 
 <style scoped>
@@ -280,7 +327,7 @@ background: linear-gradient(to bottom, #87cefa, #e6f7ff, #f9fcff);
 
 .petal.faded {
   opacity: 0;
-  animation-duration: 5s;
+  animation-duration: 12s;
   animation-fill-mode: forwards;
 }
 
@@ -293,32 +340,27 @@ background: linear-gradient(to bottom, #87cefa, #e6f7ff, #f9fcff);
 
 @keyframes fall1 {
   0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
-  80% { opacity: 1; }
-  100% { transform: translate(320px, 420px) rotate(360deg); opacity: 0; }
+  100% { transform: translate(280px, 600px) rotate(480deg); opacity: 0; }
 }
 
 @keyframes fall2 {
   0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
-  80% { opacity: 1; }
-  100% { transform: translate(350px, 440px) rotate(420deg); opacity: 0; }
+  100% { transform: translate(200px, 520px) rotate(360deg); opacity: 0; }
 }
 
 @keyframes fall3 {
   0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
-  80% { opacity: 1; }
-  100% { transform: translate(300px, 400px) rotate(390deg); opacity: 0; }
+  100% { transform: translate(340px, 580px) rotate(720deg); opacity: 0; }
 }
 
 @keyframes fall4 {
   0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
-  80% { opacity: 1; }
-  100% { transform: translate(340px, 430px) rotate(450deg); opacity: 0; }
+  100% { transform: translate(150px, 480px) rotate(300deg); opacity: 0; }
 }
 
 @keyframes fall5 {
   0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
-  80% { opacity: 1; }
-  100% { transform: translate(360px, 410px) rotate(400deg); opacity: 0; }
+  100% { transform: translate(400px, 550px) rotate(540deg); opacity: 0; }
 }
 
 .flower-core {
@@ -368,7 +410,12 @@ background: linear-gradient(to bottom, #87cefa, #e6f7ff, #f9fcff);
 }
 
 .time-inner.night .clock-text {
-  color: #ddf; /* 夜は青白文字 */
+  color: #ddf;
+  text-shadow:
+    0 0 4px #aaf,
+    0 0 8px #88f,
+    0 0 12px #55f;
+  transition: color 0.5s ease, text-shadow 1s ease;
 }
 
 
@@ -391,16 +438,47 @@ background: linear-gradient(to bottom, #87cefa, #e6f7ff, #f9fcff);
     opacity: 1;
   }
   60% {
-    transform: translate(120px, 40px) rotate(180deg);
+    transform: translate(80px, 80px) rotate(180deg);
     opacity: 0.7;
   }
   100% {
-    transform: translate(200px, 80px) rotate(270deg);
+    transform: translate(120px, 160px) rotate(270deg);
+    opacity: 0;
+  }
+}
+
+.leaf-float {
+  position: absolute;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.leaf-image {
+  width: 25px;
+  height: 25px;
+  position: absolute;
+  animation: leafFloat 3s ease-out forwards;
+  opacity: 0;
+}
+
+@keyframes leafFloat {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.8;
+  }
+  80% {
+    opacity: 0.7;
+  }
+  100% {
+    transform: translate(200px, 120px) rotate(360deg);
     opacity: 0;
   }
 }
 
 
+
 </style>
- 
 
