@@ -229,12 +229,22 @@ function startLoop() {
   fadedCount.value = 0
   regenerateFallClasses()
   loopKey.value++
-  fadedCount.value++
 
- setTimeout(() => {
+  // 🌸 再出現フェード演出
+  setTimeout(() => {
+    const petals = document.querySelectorAll('.petal')
+    petals.forEach(el => el.classList.add('reappear'))
+    setTimeout(() => {
+      petals.forEach(el => el.classList.remove('reappear'))
+    }, 1500)
+  }, 10) // DOM更新直後に実行するため slight delay
+
+  // 🕊️ 鳥も30秒後に表示
+  setTimeout(() => {
     maybeShowBird()
   }, 30000)
 
+  // 🌸 花びらを落とす処理
   fallInterval = setInterval(() => {
     fadedCount.value++
 
@@ -355,6 +365,10 @@ background: linear-gradient(to bottom, #87cefa, #e6f7ff, #f9fcff);
   transform-origin: 60% 110%;
   opacity: 1;
   transition: opacity 0.6s ease;
+}
+
+.petal.reappear {
+  opacity: 1 !important;
 }
 
 
