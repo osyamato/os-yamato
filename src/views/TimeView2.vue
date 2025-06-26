@@ -1,7 +1,7 @@
 
 <template>
 <div class="time-container" @click="spawnPetals($event)">
-    <div class="time-inner" :class="{ night: isNight }">
+<div class="time-inner" :class="{ night: isNight, sunset: isSunset }">
       <!-- 🕰️ 時計 -->
       <div class="clock-box">
         <div class="icon-button" :style="{ backgroundColor: iconColor }" @click.stop="handleIconClick">🕰️</div>
@@ -56,6 +56,14 @@
           :style="{ animationDelay: `${i * 0.1}s` }"
         />
       </div>
+<transition name="fade">
+  <img
+    v-if="birdVisible"
+    :src="birdType === 'sparrow' ? '/sparrow.png' : '/owl.png'"
+    :class="['branch-bird', { animated: birdType === 'sparrow', 'is-owl': birdType === 'owl' }]"
+  />
+</transition>
+
     </div>
   </div>
 </template>
@@ -84,6 +92,9 @@ const currentTime = ref('')
 const triggeredMinute = ref('')
 let fallInterval = null
 const isNight = ref(false)
+
+const isSunset = ref(false)
+
 const showSeconds = ref(true)
 
 function updateClock() {
@@ -98,6 +109,7 @@ function updateClock() {
 
   const hour = now.getHours()
   isNight.value = hour >= 18 || hour < 6
+  isSunset.value = hour === 17  // 🌇 夕方フラグを追加
 
   const minuteKey = `${hh}:${mm}`
   if (ss === '00' && triggeredMinute.value !== minuteKey) {
@@ -105,6 +117,7 @@ function updateClock() {
     startLoop()
   }
 }
+
 
 function regenerateFallClasses() {
   fallClasses.value = Array.from({ length: TOTAL_PETALS }, () => {
@@ -218,12 +231,13 @@ function startLoop() {
   loopKey.value++
   fadedCount.value++
 
-
+ setTimeout(() => {
+    maybeShowBird()
+  }, 30000)
 
   fallInterval = setInterval(() => {
     fadedCount.value++
 
-    // 🌿 5枚ごとに 50% の確率で舞わせる
     if (fadedCount.value % 5 === 0 && fadedCount.value < TOTAL_PETALS) {
       if (Math.random() < 0.8) {
         spawnLeaves()
@@ -235,6 +249,20 @@ function startLoop() {
       fallInterval = null
     }
   }, 1000)
+}
+
+const showBird = ref(false)
+const birdVisible = ref(false)
+const birdType = ref('') // 'sparrow' または 'owl'
+
+function maybeShowBird() {
+  const hour = new Date().getHours()
+  birdType.value = (hour >= 6 && hour < 18) ? 'sparrow' : 'owl'
+  birdVisible.value = true
+
+  setTimeout(() => {
+    birdVisible.value = false
+  }, 8000) // 3秒後にフェードアウト
 }
 
 
@@ -260,6 +288,11 @@ function startLoop() {
   height: 844px;
 background: linear-gradient(to bottom, #87cefa, #e6f7ff, #f9fcff);
   overflow: hidden;
+  transition: background 0.5s ease;
+}
+
+.time-inner.sunset {
+  background: linear-gradient(to bottom, #ffd6d6, #ffece6, #fff8f4);
   transition: background 0.5s ease;
 }
 
@@ -401,12 +434,9 @@ background: linear-gradient(to bottom, #87cefa, #e6f7ff, #f9fcff);
 
 .clock-text {
   font-size: 2.2rem;
-  font-family: 'Courier New', monospace;
-  padding: 6px 14px;
-  border-radius: 12px;
-  color: #000; /* 昼は黒文字 */
-  background: none !important; /* 背景なし */
-  transition: color 0.5s ease;
+font-family: 'Noto Serif JP', serif;
+  color: #345;
+  background: none;
 }
 
 .time-inner.night .clock-text {
@@ -478,6 +508,34 @@ background: linear-gradient(to bottom, #87cefa, #e6f7ff, #f9fcff);
   }
 }
 
+.branch-bird {
+  position: absolute;
+  top: 330px;
+  left: 180px;
+  width: 38px;
+  opacity: 0;
+  z-index: 4;
+}
+
+.branch-bird.is-owl {
+  width: 60px;
+}
+
+.branch-bird.animated {
+  animation: birdFade 8s ease-in-out forwards;
+}
+
+@keyframes birdFade {
+  0%   { opacity: 0; transform: translateY(0) scale(0.9) rotate(0deg); }
+  10%  { opacity: 1; transform: translateY(-4px) scale(1) rotate(-5deg); }
+  20%  { transform: translateY(0) scale(1) rotate(5deg); }
+  30%  { transform: translateY(-3px) scale(1) rotate(-5deg); }
+  40%  { transform: translateY(0) scale(1) rotate(0deg); }
+  50%  { transform: translateY(-2px) scale(1); }
+  60%  { transform: translateY(0) scale(1); }
+  90%  { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(0) scale(0.95); }
+}
 
 
 </style>
