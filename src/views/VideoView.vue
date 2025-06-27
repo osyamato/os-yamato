@@ -234,6 +234,50 @@ onMounted(async () => {
   await fetchVideos({ skipAnimation: true })  // ← アニメーションなしで最初の読み込み
 })
 
+
+const generateThumbnail = (file) => {
+  return new Promise((resolve, reject) => {
+    const video = document.createElement('video')
+    video.setAttribute('muted', true)
+    video.setAttribute('playsinline', true)
+    video.setAttribute('autoplay', true)
+    video.preload = 'metadata'
+
+    const objectUrl = URL.createObjectURL(file)
+    video.src = objectUrl
+
+    video.onloadedmetadata = async () => {
+      try {
+        await video.play()
+      } catch (_) {}
+      video.currentTime = 1
+    }
+
+    video.onseeked = () => {
+      const canvas = document.createElement('canvas')
+      canvas.width = 320
+      canvas.height = (video.videoHeight / video.videoWidth) * 320
+
+      const ctx = canvas.getContext('2d')
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+
+      canvas.toBlob((blob) => {
+        if (blob) {
+          resolve(blob)
+        } else {
+          reject(new Error('サムネイル生成失敗'))
+        }
+        URL.revokeObjectURL(objectUrl)
+      }, 'image/jpeg', 0.8)
+    }
+
+    video.onerror = () => {
+      reject(new Error('動画読み込み失敗'))
+    }
+  })
+}
+
+
 async function handleFileSelect(event) {
   const files = event.target.files
   if (!files || files.length === 0) return
@@ -242,7 +286,7 @@ async function handleFileSelect(event) {
   const fileName = `${Date.now()}-${file.name}`
   const thumbFileName = `thumb-${fileName.replace(/\.[^/.]+$/, '')}.jpg`
 
-  isUploading.value = true   // 🌱 アップロード中フラグ ON
+  isUploading.value = true
   isLoading.value = true
 
   try {
@@ -254,11 +298,11 @@ async function handleFileSelect(event) {
       level: 'protected'
     })
 
-    const placeholderResponse = await fetch('/video.png')
-    const placeholderBlob = await placeholderResponse.blob()
+    // ✅ フロントエンドで動画からサムネイル生成
+    const thumbnailBlob = await generateThumbnail(file)
 
-    await Storage.put(thumbFileName, placeholderBlob, {
-      contentType: 'image/png',
+    await Storage.put(thumbFileName, thumbnailBlob, {
+      contentType: 'image/jpeg',
       level: 'protected'
     })
 
@@ -277,7 +321,7 @@ async function handleFileSelect(event) {
     console.error('🎥 動画アップロード失敗:', err)
     alert('アップロードに失敗しました。')
   } finally {
-    isUploading.value = false  // 🌱 アップロード中フラグ OFF
+    isUploading.value = false
     isLoading.value = false
   }
 }
