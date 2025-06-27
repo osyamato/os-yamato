@@ -5,7 +5,7 @@
 > Even the quietest message can carry the weight of a season.
 
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/f2c89d5f-f3c7-4f5a-818a-e8c3a40f4d9d" width="300" />
+  <img src="https://github.com/user-attachments/assets/f2c89d5f-f3c7-4f5a-818a-e8c3a40f4d9d" width="220" />
 </p>
 
 ---
