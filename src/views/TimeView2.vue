@@ -60,7 +60,13 @@
   <img
     v-if="birdVisible"
     :src="birdType === 'sparrow' ? '/sparrow.png' : '/owl.png'"
-    :class="['branch-bird', { animated: birdType === 'sparrow', 'is-owl': birdType === 'owl' }]"
+    :class="[
+      'branch-bird',
+      {
+        animated: birdType === 'sparrow', // 🐦スズメだけアニメ
+        'is-owl': birdType === 'owl'
+      }
+    ]"
   />
 </transition>
 
@@ -529,12 +535,17 @@ font-family: 'Noto Serif JP', serif;
   width: 38px;
   opacity: 0;
   z-index: 4;
+  transition: opacity 1.2s ease;
 }
 
+/* 🦉フクロウ専用：位置を少し上に＆サイズ調整、アニメーションなし */
 .branch-bird.is-owl {
   width: 60px;
+  top: 310px;   /* ← ✨少し上へ（20px上げ）*/
+  left: 170px;  /* ← 必要に応じて微調整可能 */
 }
 
+/* 🐦スズメのみアニメーション */
 .branch-bird.animated {
   animation: birdFade 8s ease-in-out forwards;
 }
@@ -551,6 +562,18 @@ font-family: 'Noto Serif JP', serif;
   100% { opacity: 0; transform: translateY(0) scale(0.95); }
 }
 
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 1.2s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+.fade-enter-to,
+.fade-leave-from {
+  opacity: 1;
+}
 
 </style>
 

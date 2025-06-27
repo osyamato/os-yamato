@@ -67,20 +67,20 @@
       <!-- 🔽 入力欄 -->
       <div class="input-area">
 <button type="button" @click="openPhotoPicker" class="circle-button">🖼</button>
-        <textarea
-          ref="textareaRef"
-          v-model="newMessage"
-          placeholder="メッセージを入力..."
-          rows="1"
-          class="message-input"
-          @input="autoResize"
-          @compositionstart="isComposing = true"
-          @compositionend="isComposing = false"
-        ></textarea>
+<textarea
+  ref="textareaRef"
+  v-model="newMessage"
+  placeholder="メッセージを入力..."
+  rows="1"
+  class="message-input"
+  @input="autoResize"
+  @compositionstart="handleCompositionStart"
+  @compositionend="handleCompositionEnd"
+></textarea>
 <button
   type="button"
-  :disabled="!newMessage.trim() || isComposing"
-  :class="['circle-button', { disabled: isComposing }]"
+  :disabled="!newMessage.trim() || (isComposing && isJapaneseInput)"
+  :class="['circle-button', { disabled: isComposing && isJapaneseInput }]"
   @mousedown.prevent
   @click="sendMessage"
 >
@@ -172,6 +172,20 @@ const receiverYamatoId = ref('')
 const receiverSub = ref('')
 const showPhotoPicker = ref(false)
 const isMobile = ref(false)
+
+
+const isJapaneseInput = ref(false)
+
+const handleCompositionStart = (e) => {
+  isComposing.value = true
+  isJapaneseInput.value = /[ぁ-んァ-ン]/.test(e.data || '')
+}
+
+const handleCompositionEnd = () => {
+  isComposing.value = false
+  isJapaneseInput.value = false
+}
+
 
 const route = useRoute()
 let subscription = null
@@ -297,10 +311,22 @@ function maybePlayEffect(content) {
       return true
     }
   }
-  const seasonalMap = {
-    '雨': 'rain', '雪': 'snow', '晴れ': 'sunny', '風': 'wind',
-    '春': 'spring', '桜': 'spring', '秋': 'autumn', '冬': 'snow'
-  }
+const seasonalMap = {
+  // ☔️ 雨・雪など
+  '雨': 'rain', 'rain': 'rain',
+  '雪': 'snow', 'snow': 'snow',
+
+  // 🌤️ 晴れ・風
+  '晴れ': 'sunny', 'sunny': 'sunny',
+  '風': 'wind', 'wind': 'wind',
+
+  // 🌸 季節系
+  '春': 'spring', 'spring': 'spring',
+  '桜': 'spring', 'cherry blossom': 'spring',
+
+  '秋': 'autumn', 'fall': 'autumn', 'autumn': 'autumn',
+  '冬': 'snow', 'winter': 'snow',
+}
   for (const word in seasonalMap) {
     if (shouldTriggerEffect(content, word)) {
       chatEffect.value.playEffect(seasonalMap[word])
