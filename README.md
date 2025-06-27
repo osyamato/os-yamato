@@ -1,9 +1,12 @@
 # OS Yamato 🌸
 
 > A gentle operating system where data blooms, fades, and returns to the wind.
+>
+> Even the quietest message can carry the weight of a season.
 
-![ScreenRecording_06-27-0007 09-11-01_1](https://github.com/user-attachments/assets/f2c89d5f-f3c7-4f5a-818a-e8c3a40f4d9d)
-
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/f2c89d5f-f3c7-4f5a-818a-e8c3a40f4d9d" width="300" />
+</p>
 
 ---
 
