@@ -3,6 +3,8 @@
 > A gentle operating system where data blooms, fades, and returns to the wind.
 
 
+![Uploading ScreenRecording_06-27-0007 09-11-01_1.gif…]()
+
 ---
 
 ## 🌿 Philosophy
