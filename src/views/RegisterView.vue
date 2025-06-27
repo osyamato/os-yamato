@@ -8,19 +8,20 @@
 
       <div class="form-box">
         <!-- ✅ 規約リンク -->
-        <div class="policy-links">
-          <a href="#" @click.prevent="showTerms = true" class="policy-link">
-            規約とポリシーを確認
-          </a>
-        </div>
+<!-- ✅ 規約とポリシーリンク -->
+<div class="policy-links">
+  <a href="#" @click.prevent="showTerms = true" class="policy-link">
+    {{ $t('auth.viewTerms') }}
+  </a>
+</div>
 
-        <!-- ✅ 同意チェック -->
-        <div class="terms-check">
-          <label>
-            <input type="checkbox" v-model="agreed" />
-            利用規約とプライバシーポリシーに同意します
-          </label>
-        </div>
+<!-- ✅ 同意チェック -->
+<div class="terms-check">
+  <label>
+    <input type="checkbox" v-model="agreed" />
+    {{ $t('auth.agreeToTerms') }}
+  </label>
+</div>
 
         <div v-if="step === 'form'" class="input-group">
           <input

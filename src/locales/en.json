@@ -329,7 +329,11 @@
 "wind.season.autumn": "Autumn",
 "wind.season.winter": "Winter",
 "wind.confirmDelete": "Delete this message?",
-"wind.cancelNotice": "You can cancel a Wind Message within one week of sending."
+"wind.cancelNotice": "You can cancel a Wind Message within one week of sending.",
+
+"auth.viewTerms": "View Terms and Privacy Policy",
+"auth.agreeToTerms": "I agree to the Terms of Service and Privacy Policy",
+"auth.mustAgree": "You must agree to the terms to proceed."
 
 
 
