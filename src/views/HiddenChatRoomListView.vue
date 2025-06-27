@@ -1,6 +1,6 @@
 <template>
   <div class="chat-room-list">
-<h2 class="header-title">{{ t('wind.cloudListTitle') }}</h2>
+    <h2 class="header-title">{{ t('wind.cloudListTitle') }}</h2>
 
     <div class="room-list">
       <div
@@ -18,13 +18,13 @@
 
         <small class="last-time">{{ formatTime(room.lastTimestamp) }}</small>
 
-<div class="reopen-button-wrapper">
-<YamatoButton @click="restoreRoom(room)">
-  {{ t('wind.restoreButton') }}
-</YamatoButton>
-</div>
- </div>   
- </div>
+        <div class="reopen-button-wrapper">
+          <YamatoButton @click="restoreRoom(room)">
+            {{ t('wind.restoreButton') }}
+          </YamatoButton>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -35,9 +35,8 @@ import { listChatRooms, getPublicProfile } from '@/graphql/queries'
 import { updateChatRoom } from '@/graphql/mutations'
 import YamatoButton from '@/components/YamatoButton.vue'
 import { useI18n } from 'vue-i18n'
+
 const { t } = useI18n()
-
-
 const mySub = ref('')
 const chatRooms = ref([])
 const partnerProfiles = ref({})
@@ -71,7 +70,6 @@ async function fetchHiddenChatRooms() {
 
     chatRooms.value = hiddenRooms
 
-    // プロフィール取得
     for (const room of hiddenRooms) {
       const partnerId = room.user1 === mySub.value ? room.user2 : room.user1
       if (!partnerProfiles.value[partnerId]) {
@@ -122,44 +120,13 @@ const sortedRooms = computed(() => {
 </script>
 
 <style scoped>
-.header-title {
-  font-size: 1.4rem;
-  text-align: center;
-  margin-bottom: 1rem;
-}
-.room-card {
-  padding: 1rem;
-  border-bottom: 1px solid #ccc;
-  cursor: pointer;
-}
-.partner-name {
-  font-weight: bold;
-  font-size: 1.1rem;
-}
-.last-message {
-  font-size: 0.95rem;
-  color: #888;
-}
-.last-time {
-  font-size: 0.8rem;
-  color: #aaa;
-}
-.button-row {
-  margin-top: 0.5rem;
-  display: flex;
-  justify-content: flex-end;
-}
-.reopen-button-wrapper {
-  display: flex;
-  justify-content: center;
-  margin-top: 1rem; /* 任意で余白 */
-}
 .chat-room-list {
   animation: dropDown 0.5s ease-out;
   max-width: 600px;
   margin: 0 auto;
   padding: 2rem;
 }
+
 @keyframes dropDown {
   0% {
     transform: translateY(-40px);
@@ -171,6 +138,62 @@ const sortedRooms = computed(() => {
   }
 }
 
+.header-title {
+  font-size: 1.4rem;
+  text-align: center;
+  margin-bottom: 1rem;
+  color: var(--text-color);
+}
 
+.room-card {
+  position: relative;
+  padding: 1rem 1rem 6.5rem; /* 🔽 ボタン分の余白 */
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  background-color: var(--card-bg);
+  color: var(--text-color);
+  backdrop-filter: blur(4px);
+}
+
+.partner-name {
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+.last-message {
+  font-size: 0.95rem;
+  color: var(--subtext-color);
+}
+
+.last-time {
+  font-size: 0.8rem;
+  color: var(--subtext-color);
+}
+
+.reopen-button-wrapper {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+}
 </style>
+
+<!-- 🌙 Light / Dark モードに合わせて切替（グローバルCSSまたはApp.vue） -->
+<style>
+:root {
+  --card-bg: #ffffff;
+  --text-color: #000000;
+  --subtext-color: #555;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --card-bg: rgba(255, 255, 255, 0.05);
+    --text-color: #ffffff;
+    --subtext-color: #aaa;
+  }
+}
+</style>
+
 
