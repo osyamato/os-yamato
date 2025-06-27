@@ -2,8 +2,8 @@
 
 > A gentle operating system where data blooms, fades, and returns to the wind.
 
+![ScreenRecording_06-27-0007 09-11-01_1](https://github.com/user-attachments/assets/f2c89d5f-f3c7-4f5a-818a-e8c3a40f4d9d)
 
-![Uploading ScreenRecording_06-27-0007 09-11-01_1.gif…]()
 
 ---
 
