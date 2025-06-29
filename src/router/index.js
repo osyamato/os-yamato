@@ -30,6 +30,7 @@ import FlowerMatchGameView from '../views/FlowerMatchGameView.vue'
 import VideoView from '../views/VideoView.vue' // ✅ 動画ビューのインポート
 import SentWindMessagesView from '../views/SentWindMessagesView.vue' 
 import TimeView2 from '../views/TimeView2.vue'
+import IconGuideView from '@/views/IconGuideView.vue'
 
 
 const routes = [
@@ -73,7 +74,8 @@ const routes = [
   { path: '/flower-match', name: 'flower-match', component: FlowerMatchGameView },
 { path: '/video', name: 'video', component: VideoView },
   { path: '/sent-wind-messages', name: 'sent-wind-messages', component: SentWindMessagesView },
-{ path: '/time2', name: 'time2', component: TimeView2 }
+{ path: '/time2', name: 'time2', component: TimeView2 },
+{ path: '/icon-guide', name: 'IconGuide', component: IconGuideView }
 
 ]
 
