@@ -2,8 +2,8 @@
   <div class="min-h-screen flex items-center justify-center bg-black px-4">
     <div class="w-full max-w-md text-center">
       <!-- タイトル -->
-      <h1 class="text-4xl font-semibold text-white mb-16">
-        Hello, <span class="text-[#274c77]">OS Yamato</span>
+      <h1 class="text-4xl font-semibold mb-16">
+        <span class="text-[#274c77]">Hello,</span> <span class="text-white">OS Yamato</span>
       </h1>
 
       <!-- フォーム本体 -->
@@ -106,5 +106,3 @@ button {
   -webkit-text-size-adjust: 100%;
 }
 </style>
-
-

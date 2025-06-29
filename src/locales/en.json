@@ -240,7 +240,7 @@
 "about.termsText": "View the details",
 
 "terms.title": "Terms of Use and Privacy Policy",
-"terms.body": "OS Yamato is founded on the philosophy that \"a record, if left untouched, returns to the wind.\"\n\nAll data is temporarily stored in the cloud, but it will be automatically deleted if not accessed for a certain period (currently, 365 days without viewing). This retention period may be changed without prior notice.\n\nYour records will bloom, ride the wind, and eventually fade away.\nWe invite you to enjoy their impermanence—freely and peacefully.\n\n■ Important Notes for Use\n・This service does not guarantee the permanent preservation of your data.\n・Data exceeding the retention period will be automatically deleted and cannot be recovered.\n・We are not responsible for any data loss caused by access issues, communication errors, or user mistakes.\n・Please back up important records yourself if necessary.\n・Personal information is used solely for authentication and service delivery, and will not be shared with third parties (except as required by law).\n\nTo use this service, you must review and agree to the terms above.\nThese terms may be updated in the future due to service improvements or legal requirements.\nThe latest version of the terms can always be viewed in the Settings screen.\n\nThis service is provided by an individual developer. For inquiries, please contact us via the \"Contact\" section in the Settings screen.",
+"terms.body": "OS Yamato is based on the philosophy that \"a record, if left untouched, returns to the wind.\"\n\nAll data is temporarily stored in the cloud, but it will be automatically deleted if not accessed for a certain period (currently 365 days without viewing). This retention period may change without prior notice.\n\nYour records will bloom, ride the wind, and eventually fade away.\nWe invite you to enjoy their impermanence — freely and peacefully.\n\n■ Important Notes\n・This service does not guarantee permanent preservation of your data.\n・Data that has exceeded the retention period will be automatically deleted and cannot be recovered.\n・We are not responsible for data loss caused by access issues, communication errors, or user mistakes.\n・We do not take any responsibility for damages resulting from unauthorized access (such as account hijacking). You are responsible for setting a strong password and changing it regularly.\n・Please back up important records yourself if necessary.\n・Your personal information will be used solely for authentication and service provision purposes, and will not be shared with third parties (except as required by law).\n\nTo use this service, you must review and agree to these terms.\nThese terms may be updated in the future due to service improvements or legal requirements.\nThe latest version of the terms can always be viewed in the Settings screen.\n\nThis service is provided by an individual developer. For inquiries, please contact us through the \"Contact\" section in the Settings screen.",
 
   "calendar.selectYearMonth": "Select Year and Month",
   "calendar.year": "{year}",
@@ -298,6 +298,9 @@
 "auth.backToSignIn": "Back to Sign In",
 "auth.forgotPasswordPrompt": "Forgot your password?",
 "auth.forgotPassword": "Reset password",
+ "auth.passwordConfirm": "Confirm Password",
+  "auth.passwordMismatch": "Passwords do not match",
+
 
 
   "about.premiumTitle": "About Yamato Premium",
