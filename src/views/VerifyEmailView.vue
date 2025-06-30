@@ -1,44 +1,54 @@
 <template>
   <div class="verify-wrapper">
-    <h1 class="title">
+    <h1 class="title" v-if="!confirmed">
       <span class="brand">OS Yamato</span>
     </h1>
 
-    <p class="instruction">{{ $t('auth.userNotConfirmed') }}</p>
+    <template v-if="!confirmed">
+      <p class="instruction">{{ $t('auth.userNotConfirmed') }}</p>
 
-    <input
-      v-model="email"
-      type="email"
-      :placeholder="$t('auth.email')"
-      class="input"
-    />
+      <input
+        v-model="email"
+        type="email"
+        :placeholder="$t('auth.email')"
+        class="input"
+      />
 
-    <input
-      v-model="code"
-      type="text"
-      :placeholder="$t('auth.confirmCode')"
-      class="input"
-    />
+      <input
+        v-model="code"
+        type="text"
+        :placeholder="$t('auth.confirmCode')"
+        class="input"
+      />
 
-    <button @click="handleConfirm" class="submit">
-      {{ $t('auth.confirm') }}
-    </button>
+      <button @click="handleConfirm" class="submit">
+        {{ $t('auth.confirm') }}
+      </button>
 
-    <p class="link-text">
-      <a @click.prevent="resendCode" class="link">
-        {{ $t('auth.resendCode') }}
-      </a>
-      /
-      <router-link to="/forgot-password" class="link">
-        {{ $t('auth.forgotPassword') }}
-      </router-link>
-    </p>
+      <p class="link-text">
+        <a @click.prevent="resendCode" class="link">
+          {{ $t('auth.resendCode') }}
+        </a>
+        /
+        <router-link to="/forgot-password" class="link">
+          {{ $t('auth.forgotPassword') }}
+        </router-link>
+      </p>
 
-    <p v-if="message" class="message">{{ message }}</p>
+      <p v-if="message" class="message">{{ message }}</p>
+    </template>
+
+    <template v-else>
+<p class="center-message">
+  {{ t('auth.verifiedTitle') }}<br>
+  {{ t('auth.verifiedSubtitle') }}
+</p>
+    </template>
   </div>
 </template>
 
 <script setup>
+
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Auth } from 'aws-amplify'
@@ -51,10 +61,11 @@ const router = useRouter()
 const email = ref('')
 const code = ref('')
 const message = ref('')
+const confirmed = ref(false)
 
 onMounted(() => {
   if (route.query.email) {
-    email.value = route.query.email
+    email.value = decodeURIComponent(route.query.email)
   }
 })
 
@@ -62,8 +73,12 @@ const handleConfirm = async () => {
   try {
     message.value = ''
     await Auth.confirmSignUp(email.value, code.value)
-    message.value = t('auth.success')
-    router.push('/signin')
+    confirmed.value = true
+
+    // 5秒後にサインインへ
+    setTimeout(() => {
+      router.push('/signin')
+    }, 5000)
   } catch (error) {
     message.value = `${t('auth.error')}: ${error.message}`
   }
@@ -78,9 +93,11 @@ const resendCode = async () => {
     message.value = `${t('auth.error')}: ${error.message}`
   }
 }
+
 </script>
 
 <style scoped>
+
 .verify-wrapper {
   min-height: 100vh;
   display: flex;
@@ -89,13 +106,13 @@ const resendCode = async () => {
   align-items: center;
   padding: 2rem;
   color: inherit;
+  text-align: center;
 }
 
 .title {
   font-size: 2rem;
   font-weight: 600;
   margin-bottom: 1rem;
-  text-align: center;
   color: inherit;
 }
 
@@ -105,7 +122,6 @@ const resendCode = async () => {
 
 .instruction {
   margin-bottom: 1rem;
-  text-align: center;
 }
 
 .input {
@@ -138,7 +154,6 @@ const resendCode = async () => {
 .link-text {
   font-size: 0.95rem;
   margin-top: 1rem;
-  text-align: center;
 }
 
 .link {
@@ -150,8 +165,23 @@ const resendCode = async () => {
 .message {
   margin-top: 1rem;
   color: #d33;
-  text-align: center;
   font-size: 0.9rem;
 }
+
+.center-message {
+  font-size: 1.1rem;
+  color: #274c77;
+  animation: fadeInOut 5s forwards;
+  white-space: pre-line;
+}
+
+@keyframes fadeInOut {
+  0% { opacity: 0; }
+  20% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+
 </style>
 

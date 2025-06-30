@@ -58,11 +58,6 @@
   <IconButton :color="selectedColor" size="medium" @click="goToAbout"> > </IconButton>
 </div>
 
-<div class="account-row" @click="goToIconGuide">
-  <span class="account-text">Icon Guide</span>
-  <IconButton :color="selectedColor" size="medium" @click="goToIconGuide"> > </IconButton>
-</div>
-
 
     <!-- 👤 アカウントリンク -->
 
@@ -147,9 +142,6 @@ function goToAbout() {
   router.push('/about')
 }
 
-function goToIconGuide() {
-  router.push('/icon-guide')
-}
 
 </script>
 

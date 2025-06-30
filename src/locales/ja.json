@@ -264,6 +264,17 @@
   "auth.signinHere": "こちら",
   "auth.codeSent": "確認コードを送信しました",
   "auth.success": "登録が完了しました！",
+"auth.verifiedTitle": "認証完了しました。",
+"auth.verifiedSubtitle": "OS Yamatoで素敵な時間をお過ごしください。",
+"auth.resetDoneTitle": "リセット完了しました。",
+"auth.resetDoneSubtitle": "OS Yamatoで素敵な時間をお過ごしください。",
+"auth.resetDoneTitle": "リセット完了しました。",
+"auth.resetDoneSubtitle": "OS Yamatoで素敵な時間をお過ごしください。",
+"auth.confirmNewPassword": "新しいパスワード（確認）",
+"auth.registerDoneTitle": "登録完了しました。",
+"auth.registerDoneSubtitle": "OS Yamatoで素敵な時間をお過ごしください。",
+
+
 
 "auth.userExists": "このメールアドレスはすでに登録されています。",
   "auth.passwordInvalid": "パスワードの形式が正しくありません。",
@@ -330,9 +341,34 @@
 "wind.season.autumn": "秋",
 "wind.season.winter": "冬",
 "wind.confirmDelete": "この手紙を削除しますか？",
-"wind.cancelNotice": "風のたよりを送信して一週間以内なら取り消すことができます。"
+"wind.cancelNotice": "風のたよりを送信して一週間以内なら取り消すことができます。",
 
-
+"account.title": "アカウント",
+  "account.signOut": "サインアウト",
+  "account.subscription": "Yamato サブスクリプション",
+  "account.delete": "アカウント削除",
+  "account.confirmSignOut": "本当にサインアウトしますか？",
+  "account.premium": "Yamato プレミアム",
+  "account.currentPlan": "現在のプラン:",
+  "account.aboutPremium": "Yamatoプレミアムについて",
+  "account.upgrade": "アップグレード",
+  "account.downgrade": "ダウングレード",
+  "account.deleteAccount": "アカウント削除",
+  "account.confirmDelete": "この操作は取り消せません。本当に削除しますか？",
+  "account.fullDelete": "完全に削除",
+  "account.upgradeSuccess": "有料プランに変更されました",
+  "account.upgradeFailed": "アップグレードに失敗しました",
+  "account.downgradeSuccess": "無料プランに戻しました",
+  "account.downgradeFailed": "ダウングレードに失敗しました",
+  "account.deleteFailed": "アカウント削除に失敗しました。",
+  "account.paid": "有料",
+  "account.free": "無料",
+  "common.cancel": "キャンセル",
+  "common.termsAndPrivacy": "利用規約およびプライバシーポリシー",
+"account.deleteNotice": "一度削除すると、すべてのデータを取り戻すことはできません。",
+"account.deleteAgree": "上記内容を理解し、同意します",
+"account.premiumPreparing": "現在、準備中です。",
+"account.resetPassword": "パスワードリセット"
 
 
 
