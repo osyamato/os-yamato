@@ -54,11 +54,11 @@
 </button>
 
 <button @click="goTo('time2')">
-  🕰️
+  <img src="/clock.png" alt="時計" class="icon-image" />
 </button>
 
 <button @click="goToIconGuide">
-  <img src="/icon1.png" alt="ヒント" class="icon-image" />
+  <img src="/icon.2.png" alt="ヒント" class="icon-image" />
 </button>
 
 
