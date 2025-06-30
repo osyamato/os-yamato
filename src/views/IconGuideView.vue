@@ -1,7 +1,17 @@
 <template>
   <div :class="['icon-guide', { dropDown: shouldAnimate }]">
-    <h2>OS Yamatoのヒント</h2>
-    <p class="guide-subtitle">ホーム画面にWebサイトのアイコンを追加すると、快適に利用できます。</p>
+<h2>OS Yamatoのヒント</h2>
+
+<p class="guide-access">
+  どのデバイスからもOS Yamatoにアクセスできます。<br>
+  https://hanaco875.com
+</p>
+
+<p class="guide-subtitle">
+  スマートフォンでは、ホーム画面にWebサイトのアイコンを追加すると、アプリのように快適に利用できます。<br>
+  共有マークや「︙」などからホーム画面に追加しご利用ください。
+</p>
+
     <hr class="subtitle-divider" />
     <p class="guide-instruction">アイコンを押して機能を確認してください。</p>
 
@@ -53,24 +63,25 @@ const statusIcons = [
   },
   {
     emoji: '🥀',
-    description: '風に還る準備をしています。\n風に還りそうなデータをまとめて確認できます。\n（365日経過するとデータが消えます）'
+    description: '風に還る準備。\n風に還りそうなデータをまとめて確認できます。\n（365日経過するとデータが消えます）'
   },
 ]
 
 const otherIcons = [
-  { emoji: '🏷️', description: 'カレンダーのテンプレートを登録して、予定作成を簡単に。' },
   { emoji: '＋', description: '新規メモや写真などを追加します。' },
+  { emoji: '↓', description: '写真やメモなどをOS Yamatoから端末にダウンロードします。' },
+  { emoji: '♡', description: 'お気に入り追加。お気に入り一覧をまとめて確認できます。' },
+  { emoji: '...', description: 'ブロックや削除などの追加操作メニュー。' },
+  { emoji: '🏷️', description: 'カレンダーのテンプレートを登録して、予定作成を簡単に。' },
   { emoji: '🗑️', description: 'データを消去します。' },
   { emoji: '☑️', description: '複数項目を選択できます。' },
-  { emoji: '↓', description: '写真やメモなどをローカルにダウンロードします。' },
-  { emoji: '♡', description: 'お気に入り追加。お気に入り一覧をまとめて確認できます。' },
   { emoji: '🔍', description: 'メッセージ相手やメモ、連絡先などを検索します。' },
   { emoji: '✉️', description: '相手に風のたよりを送ります。' },
   { emoji: '🕊️', description: '風のたよりのメッセージの編集画面です。' },
-  { emoji: '📮', description: '相手にメッセージのやり取りを申請します。' },
-  { emoji: '☁️', description: 'メッセージ相手をブロックします。' },
-  { emoji: '...', description: 'ブロックや削除などの追加操作メニュー。' },
+  { emoji: '📮', description: '受信したメッセージリクエスト。' },
+  { emoji: '☁️', description: 'ブロックした相手一覧。' },
   { emoji: '🎞️', description: 'メッセージ送受信の写真を保存します。' },
+  { emoji: '👤', description: 'YamatoID やニックネームを登録。いつでも変更できます。' },
 ]
 
 function toggleDescription(emoji) {
@@ -200,6 +211,22 @@ h2 {
     opacity: 1;
   }
 }
+
+.guide-access {
+  text-align: center;
+  font-size: 0.9rem;
+  color: #555;
+  margin-top: -0.5rem;
+  margin-bottom: 0.5rem;
+  word-break: break-all; /* URLが長い場合に折返し */
+}
+
+@media (prefers-color-scheme: dark) {
+  .guide-access {
+    color: #ccc;
+  }
+}
+
 </style>
 
 

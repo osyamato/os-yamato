@@ -56,19 +56,11 @@
           :style="{ animationDelay: `${i * 0.1}s` }"
         />
       </div>
-<transition name="fade">
-  <img
-    v-if="birdVisible"
-    :src="birdType === 'sparrow' ? '/sparrow.png' : '/owl.png'"
-    :class="[
-      'branch-bird',
-      {
-        animated: birdType === 'sparrow', // 🐦スズメだけアニメ
-        'is-owl': birdType === 'owl'
-      }
-    ]"
-  />
-</transition>
+<img
+  v-if="birdVisible"
+  :src="birdType === 'sparrow' ? '/sparrow.png' : '/owl.png'"
+  :class="['branch-bird', { animated: birdType === 'sparrow', 'is-owl': birdType === 'owl' }]"
+/>
 
     </div>
   </div>
@@ -276,9 +268,9 @@ function maybeShowBird() {
   birdType.value = (hour >= 6 && hour < 18) ? 'sparrow' : 'owl'
   birdVisible.value = true
 
-  setTimeout(() => {
-    birdVisible.value = false
-  }, 8000) // 3秒後にフェードアウト
+setTimeout(() => {
+  birdVisible.value = false
+}, 10000) 
 }
 
 
@@ -535,17 +527,23 @@ font-family: 'Noto Serif JP', serif;
   width: 38px;
   opacity: 0;
   z-index: 4;
-  transition: opacity 1.2s ease;
+  /* transition: opacity 1.2s ease; ← 削除 */
 }
 
-/* 🦉フクロウ専用：位置を少し上に＆サイズ調整、アニメーションなし */
 .branch-bird.is-owl {
   width: 60px;
-  top: 310px;   /* ← ✨少し上へ（20px上げ）*/
-  left: 170px;  /* ← 必要に応じて微調整可能 */
+  top: 290px;
+  left: 170px;
+  animation: owlFade 10s ease-in-out forwards; /* 例: 15秒に統一 */
 }
 
-/* 🐦スズメのみアニメーション */
+@keyframes owlFade {
+  0%   { opacity: 0; }
+  30%  { opacity: 1; }
+  70%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+
 .branch-bird.animated {
   animation: birdFade 8s ease-in-out forwards;
 }

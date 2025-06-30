@@ -1,11 +1,11 @@
 <template>
   <div class="register-wrapper">
     <div class="form-container">
-      <h1 class="title">
+      <h1 class="title" v-if="!resetCompleted">
         <span class="brand">OS Yamato</span>
       </h1>
 
-      <div class="form-box">
+      <div class="form-box" v-if="!resetCompleted">
         <div v-if="step === 'request'" class="input-group">
           <input
             v-model="email"
@@ -31,6 +31,12 @@
             :placeholder="$t('auth.newPassword')"
             class="input"
           />
+          <input
+            v-model="confirmPassword"
+            type="password"
+            :placeholder="$t('auth.confirmNewPassword')"
+            class="input"
+          />
           <button @click="confirmReset" class="submit">
             {{ $t('auth.resetPassword') }}
           </button>
@@ -44,6 +50,11 @@
           </router-link>
         </p>
       </div>
+
+      <p v-else class="center-message">
+        {{ t('auth.resetDoneTitle') }}<br>
+        {{ t('auth.resetDoneSubtitle') }}
+      </p>
     </div>
   </div>
 </template>
@@ -60,16 +71,21 @@ const router = useRouter()
 const email = ref('')
 const code = ref('')
 const newPassword = ref('')
+const confirmPassword = ref('')
 const message = ref('')
 const step = ref('request')
+const resetCompleted = ref(false)
 
 const requestReset = async () => {
   if (!email.value) {
     message.value = t('auth.emailRequired')
     return
   }
+
+  const safeEmail = email.value.trim()
+
   try {
-    await Auth.forgotPassword(email.value)
+    await Auth.forgotPassword(safeEmail)
     step.value = 'confirm'
     message.value = t('auth.codeSent')
   } catch (error) {
@@ -77,9 +93,11 @@ const requestReset = async () => {
       error.message.includes('no registered/verified') ||
       error.code === 'InvalidParameterException'
     ) {
-      // 未認証の可能性がある → 認証画面に遷移
       message.value = t('auth.userNotConfirmed')
-      router.push('/verify-email')
+      router.push({
+        path: '/verify-email',
+        query: { email: encodeURIComponent(safeEmail) }
+      })
     } else {
       message.value = `${t('auth.error')}: ${error.message}`
     }
@@ -87,9 +105,19 @@ const requestReset = async () => {
 }
 
 const confirmReset = async () => {
+  if (newPassword.value !== confirmPassword.value) {
+    message.value = t('auth.passwordsDoNotMatch')
+    return
+  }
+
   try {
     await Auth.forgotPasswordSubmit(email.value, code.value, newPassword.value)
-    message.value = t('auth.passwordResetSuccess')
+    resetCompleted.value = true
+
+    // 5秒後にサインインへ
+    setTimeout(() => {
+      router.push('/signin')
+    }, 5000)
   } catch (error) {
     message.value = `${t('auth.error')}: ${error.message}`
   }
@@ -104,11 +132,6 @@ const confirmReset = async () => {
   align-items: center;
   padding: 2rem;
   color: inherit;
-}
-
-.form-container {
-  width: 100%;
-  max-width: 420px;
   text-align: center;
 }
 
@@ -173,5 +196,20 @@ const confirmReset = async () => {
   color: #274c77;
   text-decoration: underline;
 }
+
+.center-message {
+  font-size: 1.1rem;
+  color: #274c77;
+  animation: fadeInOut 5s forwards;
+  white-space: pre-line;
+}
+
+@keyframes fadeInOut {
+  0% { opacity: 0; }
+  20% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { opacity: 0; }
+}
 </style>
+
 
