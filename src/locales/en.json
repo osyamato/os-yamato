@@ -379,7 +379,35 @@
 "account.deleteNotice": "Once deleted, all your data cannot be recovered.",
 "account.deleteAgree": "I understand and agree to the above content.",
 "account.premiumPreparing": "Currently under preparation.",
-"account.resetPassword": "Reset Password"
+"account.resetPassword": "Reset Password",
+
+"iconGuide.title": "OS Yamato Hints",
+"iconGuide.access": "Access OS Yamato from any device.\nhttps://hanaco875.com",
+"iconGuide.subtitle": "On smartphones, adding the website icon to your home screen allows you to use it like an app.\nUse the share icon or '︙' to add it.",
+"iconGuide.instruction": "Tap an icon to see its function.",
+"iconGuide.statusSprout": "The moment life is born.\nA quiet, small beginning that starts to sprout.",
+"iconGuide.statusBloom": "Your record grows and blooms.\nIt will flourish even more as you engage with it.",
+"iconGuide.statusWither": "Preparing to return to the wind.\nYou can check data that is about to fade.\n(Data will be deleted after 365 days)",
+"iconGuide.plus": "Add new memos or photos.",
+"iconGuide.download": "Download photos or memos from OS Yamato to your device.",
+"iconGuide.favorite": "Add to favorites. You can review your favorite items together.",
+"iconGuide.more": "Additional operations like block or delete.",
+"iconGuide.template": "Register calendar templates to create plans easily.",
+"iconGuide.delete": "Delete data.",
+"iconGuide.multiSelect": "Select multiple items.",
+"iconGuide.search": "Search for contacts, memos, or message partners.",
+"iconGuide.sendWind": "Send a Wind Message to a partner.",
+"iconGuide.editWind": "Edit Wind Message screen.",
+"iconGuide.request": "Message requests you have received.",
+"iconGuide.blockList": "List of blocked partners.",
+"iconGuide.savePhoto": "Save photos from message exchanges.",
+"iconGuide.profile": "Register or edit your YamatoID and nickname anytime.",
+"iconGuide.upload": "Upload text, vCards, and more.",
+
+
+  "weather.title": "Weather",
+  "weather.text": "Connecting with Hanaco Weather is under preparation. Please use the iOS app.",
+  "weather.appLink": "☀️hanaco Weather App here☀️"
 
 
 

@@ -1,19 +1,21 @@
 <template>
   <div :class="['icon-guide', { dropDown: shouldAnimate }]">
-<h2>OS Yamatoのヒント</h2>
+    <h2>{{ $t('iconGuide.title') }}</h2>
 
-<p class="guide-access">
-  どのデバイスからもOS Yamatoにアクセスできます。<br>
-  https://hanaco875.com
-</p>
+    <p class="guide-access">
+      {{ $t('iconGuide.access') }}
+    </p>
 
-<p class="guide-subtitle">
-  スマートフォンでは、ホーム画面にWebサイトのアイコンを追加すると、アプリのように快適に利用できます。<br>
-  共有マークや「︙」などからホーム画面に追加しご利用ください。
-</p>
+    <p class="guide-subtitle">
+      {{ $t('iconGuide.subtitle') }}
+    </p>
+
+<div class="guide-icon-wrapper">
+  <img src="/icons/icon-192x192.png" alt="OS Yamato Icon" class="guide-icon" />
+</div>
 
     <hr class="subtitle-divider" />
-    <p class="guide-instruction">アイコンを押して機能を確認してください。</p>
+    <p class="guide-instruction">{{ $t('iconGuide.instruction') }}</p>
 
     <!-- 成長ステータス -->
     <div class="icon-flex-grid">
@@ -48,40 +50,44 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { nextTick } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 const shouldAnimate = ref(false)
 const activeEmoji = ref(null)
 
+const { t } = useI18n()
+
 const statusIcons = [
   {
     emoji: '🌱',
-    description: '命を宿した瞬間。\n静かに芽吹きはじめる、小さなはじまり。'
+    description: t('iconGuide.statusSprout')
   },
   {
     emoji: '🌷',
-    description: '記録が育ち、花開くとき。\n触れることでさらに咲き誇ります。'
+    description: t('iconGuide.statusBloom')
   },
   {
     emoji: '🥀',
-    description: '風に還る準備。\n風に還りそうなデータをまとめて確認できます。\n（365日経過するとデータが消えます）'
+    description: t('iconGuide.statusWither')
   },
 ]
 
 const otherIcons = [
-  { emoji: '＋', description: '新規メモや写真などを追加します。' },
-  { emoji: '↓', description: '写真やメモなどをOS Yamatoから端末にダウンロードします。' },
-  { emoji: '♡', description: 'お気に入り追加。お気に入り一覧をまとめて確認できます。' },
-  { emoji: '...', description: 'ブロックや削除などの追加操作メニュー。' },
-  { emoji: '🏷️', description: 'カレンダーのテンプレートを登録して、予定作成を簡単に。' },
-  { emoji: '🗑️', description: 'データを消去します。' },
-  { emoji: '☑️', description: '複数項目を選択できます。' },
-  { emoji: '🔍', description: 'メッセージ相手やメモ、連絡先などを検索します。' },
-  { emoji: '✉️', description: '相手に風のたよりを送ります。' },
-  { emoji: '🕊️', description: '風のたよりのメッセージの編集画面です。' },
-  { emoji: '📮', description: '受信したメッセージリクエスト。' },
-  { emoji: '☁️', description: 'ブロックした相手一覧。' },
-  { emoji: '🎞️', description: 'メッセージ送受信の写真を保存します。' },
-  { emoji: '👤', description: 'YamatoID やニックネームを登録。いつでも変更できます。' },
+  { emoji: '＋', description: t('iconGuide.plus') },
+  { emoji: '↓', description: t('iconGuide.download') },
+  { emoji: '♡', description: t('iconGuide.favorite') },
+  { emoji: '...', description: t('iconGuide.more') },
+  { emoji: '🏷️', description: t('iconGuide.template') },
+  { emoji: '🗑️', description: t('iconGuide.delete') },
+  { emoji: '☑️', description: t('iconGuide.multiSelect') },
+  { emoji: '🔍', description: t('iconGuide.search') },
+  { emoji: '✉️', description: t('iconGuide.sendWind') },
+  { emoji: '🕊️', description: t('iconGuide.editWind') },
+  { emoji: '📮', description: t('iconGuide.request') },
+  { emoji: '☁️', description: t('iconGuide.blockList') },
+  { emoji: '🎞️', description: t('iconGuide.savePhoto') },
+  { emoji: '👤', description: t('iconGuide.profile') },
+  { emoji: '📎', description: t('iconGuide.upload') }, // ✅ ← 追加
 ]
 
 function toggleDescription(emoji) {
@@ -93,6 +99,7 @@ onMounted(async () => {
   await nextTick()
   shouldAnimate.value = true
 })
+
 </script>
 
 <style scoped>
@@ -173,6 +180,7 @@ h2 {
   color: #555;
   margin-top: -0.5rem; /* ✅ 少しだけ上詰め調整 */
   margin-bottom: 0.5rem;
+ white-space: pre-wrap; 
 }
 
 .subtitle-divider {
@@ -217,14 +225,27 @@ h2 {
   font-size: 0.9rem;
   color: #555;
   margin-top: -0.5rem;
-  margin-bottom: 0.5rem;
+  margin-bottom: 1.5rem;
   word-break: break-all; /* URLが長い場合に折返し */
-}
+ white-space: pre-wrap; 
+ }
 
 @media (prefers-color-scheme: dark) {
   .guide-access {
     color: #ccc;
   }
+}
+
+.guide-icon-wrapper {
+  display: flex;
+  justify-content: center;
+  margin: 1rem 0;
+}
+
+.guide-icon {
+  width: 70px; /* ✅ サイズ調整自由 */
+  height: 70px;
+  border-radius: 50%; /* 丸くする */
 }
 
 </style>
