@@ -2,11 +2,11 @@
   <div class="register-wrapper">
     <div class="form-container">
       <!-- タイトル -->
-      <h1 class="title">
+      <h1 class="title" v-if="!completed">
         <span class="brand">OS Yamato</span>
       </h1>
 
-      <div class="form-box">
+      <div class="form-box" v-if="!completed">
         <!-- ✅ 規約リンク -->
         <div class="policy-links">
           <a href="#" @click.prevent="showTerms = true" class="policy-link">
@@ -64,7 +64,6 @@
             {{ $t('auth.confirm') }}
           </button>
 
-          <!-- 🔁 再送リンク -->
           <p class="resend-link">
             <a @click.prevent="resendCode" class="link">
               {{ $t('auth.resendCode') }}
@@ -84,6 +83,11 @@
           <router-link to="/forgot-password" class="link">{{ $t('auth.forgotPassword') }}</router-link>
         </p>
       </div>
+
+      <p v-else class="center-message">
+        {{ t('auth.registerDoneTitle') }}<br>
+        {{ t('auth.registerDoneSubtitle') }}
+      </p>
     </div>
 
     <!-- ✅ 規約モーダル -->
@@ -105,6 +109,7 @@ import TermsModal from '@/components/TermsModal.vue'
 
 const showTerms = ref(false)
 const agreed = ref(false)
+const completed = ref(false)
 
 const { t } = useI18n()
 const router = useRouter()
@@ -116,12 +121,10 @@ const code = ref('')
 const message = ref('')
 const step = ref('form')
 
-// ✅ パスワード一致判定
 const passwordsMatch = computed(() => {
   return password.value && confirmPassword.value && password.value === confirmPassword.value
 })
 
-// ✅ 新規登録
 const handleSignUp = async () => {
   if (!agreed.value || !passwordsMatch.value) {
     message.value = t('auth.passwordMismatch')
@@ -169,18 +172,23 @@ const handleSignUp = async () => {
   }
 }
 
-// ✅ 確認コード入力処理
 const handleConfirm = async () => {
   try {
     message.value = ''
     await Auth.confirmSignUp(email.value, code.value)
-    message.value = t('auth.success')
+
+    // 🎉 成功時アニメーション表示
+    completed.value = true
+
+    // 5秒後にサインインへ
+    setTimeout(() => {
+      router.push('/signin')
+    }, 5000)
   } catch (error) {
     message.value = `${t('auth.error')}: ${error.message || ''}`
   }
 }
 
-// ✅ 認証コード再送
 const resendCode = async () => {
   try {
     await Auth.resendSignUp(email.value)
@@ -189,6 +197,7 @@ const resendCode = async () => {
     message.value = `${t('auth.error')}: ${err.message}`
   }
 }
+
 </script>
 
 <style scoped>
@@ -310,6 +319,21 @@ const resendCode = async () => {
     color: #ccc;
   }
 }
+
+.center-message {
+  font-size: 1.1rem;
+  color: #274c77;
+  animation: fadeInOut 5s forwards;
+  white-space: pre-line;
+}
+
+@keyframes fadeInOut {
+  0% { opacity: 0; }
+  20% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
 </style>
 
 

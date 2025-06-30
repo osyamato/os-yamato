@@ -54,7 +54,11 @@
 </button>
 
 <button @click="goTo('time2')">
-  🕰️
+  <img src="/clock.png" alt="時計" class="icon-image" />
+</button>
+
+<button @click="goToIconGuide">
+  <img src="/icon.2.png" alt="ヒント" class="icon-image" />
 </button>
 
 
@@ -111,6 +115,10 @@ function goToSettingsFromHome() {
 
 function goToChatFromHome() {
   router.push({ path: '/chat-rooms', query: { from: 'home' } })
+}
+
+function goToIconGuide() {
+  router.push({ path: '/icon-guide', query: { from: 'home' } })
 }
 
 // 🔐 認証確認と背景取得
