@@ -3,23 +3,39 @@
     <div class="photo-panel-overlay">
       <div class="photo-panel-card">
         <!-- ヘッダー -->
-        <div class="panel-header">
-          <button class="close-button" @click="$emit('close')">✕</button>
-          <button
-            class="favorite-toggle-button"
-            @click="showFavoritesOnly = !showFavoritesOnly"
-            :class="{ active: showFavoritesOnly }"
-          >
-            ♡
-          </button>
-<button
-  class="send-button"
-  :disabled="!hasSelection"
-  @click="sendPhoto"
->
-  ⇧
-</button>
-        </div>
+<div class="panel-header">
+  <!-- 左側ボタン -->
+  <div class="left-buttons">
+    <button class="close-button" @click="$emit('close')">✕</button>
+    <button
+      class="favorite-toggle-button"
+      @click="showFavoritesOnly = !showFavoritesOnly"
+      :class="{ active: showFavoritesOnly }"
+    >
+      ♡
+    </button>
+  </div>
+
+  <!-- 🌱 → 🌷 → 🥀 -->
+  <div class="center-status">
+    <div v-if="isUploading" class="upload-animation">
+      <span v-if="currentStage === 1" class="emoji">🌱</span>
+      <span v-if="currentStage === 2" class="emoji">🌷</span>
+      <span v-if="currentStage === 3" class="emoji">🥀</span>
+    </div>
+  </div>
+
+  <!-- 右側ボタン -->
+  <div class="right-buttons">
+    <button
+      class="send-button"
+      :disabled="!hasSelection || isUploading"
+      @click="sendPhoto"
+    >
+      ⇧
+    </button>
+  </div>
+</div>
 
         <!-- スクロール対象エリア -->
         <div class="photo-scroll-area">
@@ -56,6 +72,10 @@ const showFavoritesOnly = ref(false)
 
 const emit = defineEmits(['send', 'close'])
 
+const isUploading = ref(false)
+const currentStage = ref(1)
+
+
 const hasSelection = computed(() => selectedPhoto.value !== null)
 
 const filteredPhotos = computed(() => {
@@ -73,9 +93,18 @@ async function sendPhoto() {
     const photo = selectedPhoto.value
     if (!photo) return
 
+    isUploading.value = true
+    currentStage.value = 1
+
+    // 🌱 → 🌷 → 🥀 ステージ進行
+    setTimeout(() => currentStage.value = 2, 1000)
+    setTimeout(() => currentStage.value = 3, 2000)
+
     const timestamp = Date.now()
     const baseName = photo.fileName.replace(/^.*[\\/]/, '')
-    const thumbBase = photo.thumbnailFileName.replace(/^.*[\\/]/, '')
+    let thumbBase = photo.thumbnailFileName.replace(/^.*[\\/]/, '')
+    thumbBase = thumbBase.replace(/^thumb_/, '')
+
     const imageKey = `chat/${timestamp}_${baseName}`
     const thumbnailKey = `chat/thumb_${timestamp}_${thumbBase}`
 
@@ -109,9 +138,12 @@ async function sendPhoto() {
       isTemporary: true
     })
 
+    isUploading.value = false
     emit('close')
+    console.log('✅ 写真コピー＆送信完了')
   } catch (err) {
     console.error('❌ 写真送信処理に失敗:', err)
+    isUploading.value = false
   }
 }
 
@@ -160,9 +192,24 @@ onMounted(async () => {
 .panel-header {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   padding: 0.6rem 1rem 0.4rem;
   border-bottom: 1px solid #ddd;
   background: white;
+}
+
+.left-buttons,
+.right-buttons {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.center-status {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .close-button,
@@ -175,7 +222,6 @@ onMounted(async () => {
 }
 
 .favorite-toggle-button {
-  margin-left: 0.8rem;
   color: #aaa;
   transition: color 0.2s ease;
 }
@@ -185,7 +231,6 @@ onMounted(async () => {
 }
 
 .send-button {
-  margin-left: auto;
   color: #274c77;
   transition: transform 0.2s ease;
 }
@@ -230,9 +275,15 @@ onMounted(async () => {
   border: 3px solid #274c77;
   box-shadow: 0 0 6px rgba(39, 76, 119, 0.5);
 }
+
 .send-button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.upload-animation .emoji {
+  font-size: 1.4rem;
+  transition: opacity 0.5s ease;
 }
 
 
@@ -246,4 +297,7 @@ onMounted(async () => {
     color: white;
   }
 }
+
+
 </style>
+
