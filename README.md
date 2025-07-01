@@ -81,7 +81,6 @@ We’re so happy you’re here.
 
 💻 For Developers
 
-git clone https://github.com/YOUR_USERNAME/os-yamato.git
 cd os-yamato
 npm install
 npm run dev
