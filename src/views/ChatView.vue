@@ -295,17 +295,20 @@ watch(() => groupedMessages.value, async () => {
 })
 
 function maybePlayEffect(content) {
-  if (!chatEffect.value) return false
+  if (!chatEffect.value) {
+    console.log('🚨 chatEffect is not ready')
+    return false
+  }
 
   // 固定正規表現で特殊エフェクト
-const specialPatterns = [
-  { pattern: /(i love you|愛している|愛してる)/i, effect: 'moon' },
-  { pattern: /(金閣寺|三島由紀夫|愛国|林ゆかり|倉岡剛)/, effect: 'mishima' },
-  { pattern: /(プラネタリウム|planetarium|space|宇宙|土星|saturn)/i, effect: 'saturn' },
-  { pattern: /(おめでとう|お祝い|祝|congratulations|congrats|celebrate)/i, effect: 'confetti' },
-  { pattern: /(星空|モンゴル|星|夜空|stars|starry sky|night sky|mongolia)/i, effect: 'starry' },
-  { pattern: /(シャボン玉|泡|bubble|bubbles|soap bubble)/i, effect: 'bubble' }
-]
+  const specialPatterns = [
+    { pattern: /(i love you|愛している|愛してる)/i, effect: 'moon' },
+    { pattern: /(金閣寺|三島由紀夫|愛国|林ゆかり|倉岡剛)/, effect: 'mishima' },
+    { pattern: /(プラネタリウム|planetarium|space|宇宙|土星|saturn)/i, effect: 'saturn' },
+    { pattern: /(おめでとう|お祝い|祝|congratulations|congrats|celebrate)/i, effect: 'confetti' },
+    { pattern: /(星空|モンゴル|星|夜空|stars|starry sky|night sky|mongolia)/i, effect: 'starry' },
+    { pattern: /(シャボン玉|泡|bubble|bubbles|soap bubble)/i, effect: 'bubble' }
+  ]
 
   const seasonalPatterns = [
     { pattern: /(雨|rain)/i, effect: 'rain' },
@@ -321,6 +324,7 @@ const specialPatterns = [
   // 特殊パターン優先
   for (const { pattern, effect } of specialPatterns) {
     if (pattern.test(content)) {
+      console.log('🎇 Special pattern matched:', effect)
       chatEffect.value.playEffect(effect)
       hideKeyboard()
       return true
@@ -330,6 +334,7 @@ const specialPatterns = [
   // 季節パターン
   for (const { pattern, effect } of seasonalPatterns) {
     if (pattern.test(content)) {
+      console.log('🍃 Seasonal pattern matched:', effect)
       chatEffect.value.playEffect(effect)
       hideKeyboard()
       return true
@@ -338,11 +343,13 @@ const specialPatterns = [
 
   // 夏だけ特殊呼び出し
   if (/夏|summer/i.test(content)) {
+    console.log('☀️ Summer pattern matched: triggerSummer')
     chatEffect.value.triggerSummer()
     hideKeyboard()
     return true
   }
 
+  console.log('❌ No effect matched')
   return false
 }
 
