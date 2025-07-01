@@ -56,17 +56,23 @@
       </p>
     </section>
 
-    <section>
-      <h3>{{ $t('about.contactTitle') }}</h3>
-      <p>{{ $t('about.developer') }}: 倉岡剛 Tsuyoshi Kuraoka</p>
-      <p>Email: support-weather@hanaco875.com</p>
-      <p>
-        GitHub:
-        <a href="https://github.com/osyamato/os-yamato" target="_blank">
-          osyamato/os-yamato
-        </a>
-      </p>
-    </section>
+<section>
+  <h3>{{ $t('about.contactTitle') }}</h3>
+  <p>{{ $t('about.developer') }}: OS Yamato (Japan)</p>
+  <p>Email: support-weather@hanaco875.com</p>
+  <p>
+    GitHub:
+    <a href="https://github.com/osyamato/os-yamato" target="_blank">
+      osyamato/os-yamato
+    </a>
+  </p>
+  <p>
+    X (Twitter):
+    <a href="https://x.com/Yamato_OS" target="_blank">
+      @Yamato_OS
+    </a>
+  </p>
+</section>
 
     <!-- ✅ モーダル -->
     <TermsModal :visible="showTerms" @close="showTerms = false" />
