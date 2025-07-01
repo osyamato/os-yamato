@@ -90,6 +90,8 @@
 "confirm.deleteMultipleVideos": "選択した動画をすべて削除しますか？",
 "confirm.deleteSingleVideo": "この動画を削除しますか？",
 "video.title": "動画",
+"video.limitAlert": "⚠️ 1分以上の動画はアップロードできません。",
+"video.uploadError": "アップロードに失敗しました。",
 
 
 "month.0": "1月",
@@ -396,7 +398,10 @@
   "weather.appLink": "☀️ 花子天気アプリはこちら☀️",
 "iconGuide.upload": "テキストやvCardなどをアップロードします。",
 
-"blossom.noProfileCannotRequest": "メッセージアプリからプロフィールを登録すると、YamatoIDでメッセージ申請可能になります。"
+"blossom.noProfileCannotRequest": "メッセージアプリからプロフィールを登録すると、YamatoIDでメッセージ申請可能になります。",
+"account.subscription": "Yamato プレミアム",
+"account.premiumPreparing": "現在、準備中です。"
+
 
 
 

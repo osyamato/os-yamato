@@ -4,7 +4,9 @@
 
     <!-- 🇾有 言語選択 -->
     <div class="setting-group">
-      <label for="language">{{ t('languageLabel') }}</label>
+<label for="language">
+  {{ t('languageLabel') }} 🌐
+</label>
       <select v-model="selectedLanguage" id="language">
         <option disabled value="">{{ t('selectLanguage') }}</option>
         <option value="ja">{{ t('japanese') }}</option>
@@ -41,11 +43,6 @@
       </select>
     </div>
 
-    <!-- 🌄 壁紙プレビュー -->
-    <div v-if="selectedWallpaper && !selectedWallpaper.startsWith('color.')">
-      <p>{{ t('preview') }}</p>
-      <img :src="`/${selectedWallpaper}`" class="preview" alt="Preview" />
-    </div>
 
     <!-- 💾 保存ボタン -->
     <div class="button-container">

@@ -1,6 +1,7 @@
 <template>
   <div class="account-view">
-    <h2 class="header-title">{{ $t('account.title') }}</h2>
+<h2 class="header-title">{{ $t('account.title') }}</h2>
+<p class="user-email">{{ userEmail }}</p>
 
     <!-- サインアウト -->
     <div class="account-item">
@@ -108,6 +109,7 @@ const showTermsModal = ref(false)
 
 const router = useRouter()
 const { t } = useI18n()
+const userEmail = ref('')
 
 const selectedColor = ref('#274c77')
 const subscriptionStatus = ref('loading')
@@ -121,6 +123,7 @@ onMounted(async () => {
   const user = await Auth.currentAuthenticatedUser()
   selectedColor.value = user.attributes['custom:iconColor'] || '#274c77'
   subscriptionStatus.value = user.attributes['custom:subscription'] || 'free'
+  userEmail.value = user.attributes.email || ''
 })
 
 const subscriptionStatusDisplay = computed(() =>
@@ -280,6 +283,19 @@ function goToResetPassword() {
 }
 .terms-check input {
   margin-right: 0.4rem;
+}
+
+.user-email {
+  font-size: 0.9rem;
+  color: #555;
+  margin-top: -0.5rem;
+  margin-bottom: 1rem;
+  word-break: break-all;
+}
+@media (prefers-color-scheme: dark) {
+  .user-email {
+    color: #ccc;
+  }
 }
 
 
