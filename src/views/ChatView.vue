@@ -296,51 +296,56 @@ watch(() => groupedMessages.value, async () => {
 
 function maybePlayEffect(content) {
   if (!chatEffect.value) return false
-  const effects = [
-    { pattern: new RegExp(`(i love you|愛している|愛してる)(?![一-龯])`, 'i'), effect: 'moon' },
-    { pattern: new RegExp(`(金閣寺|三島由紀夫|愛国|林ゆかり|倉岡剛)(?![一-龯])`), effect: 'mishima' },
-    { pattern: new RegExp(`(プラネタリウム|宇宙|土星)(?![一-龯])`), effect: 'saturn' },
-    { pattern: new RegExp(`(おめでとう|お祝い|祝|congratulations)(?![一-龯])`, 'i'), effect: 'confetti' },
-    { pattern: new RegExp(`(星空|モンゴル|星|夜空)(?![一-龯])`, 'u'), effect: 'starry' },
-    { pattern: new RegExp(`(シャボン玉|泡|bubble)(?![一-龯])`, 'i'), effect: 'bubble' } 
+
+  // 固定正規表現で特殊エフェクト
+const specialPatterns = [
+  { pattern: /(i love you|愛している|愛してる)/i, effect: 'moon' },
+  { pattern: /(金閣寺|三島由紀夫|愛国|林ゆかり|倉岡剛)/, effect: 'mishima' },
+  { pattern: /(プラネタリウム|planetarium|space|宇宙|土星|saturn)/i, effect: 'saturn' },
+  { pattern: /(おめでとう|お祝い|祝|congratulations|congrats|celebrate)/i, effect: 'confetti' },
+  { pattern: /(星空|モンゴル|星|夜空|stars|starry sky|night sky|mongolia)/i, effect: 'starry' },
+  { pattern: /(シャボン玉|泡|bubble|bubbles|soap bubble)/i, effect: 'bubble' }
+]
+
+  const seasonalPatterns = [
+    { pattern: /(雨|rain)/i, effect: 'rain' },
+    { pattern: /(雪|snow)/i, effect: 'snow' },
+    { pattern: /(晴れ|sunny)/i, effect: 'sunny' },
+    { pattern: /(風|wind)/i, effect: 'wind' },
+    { pattern: /(春|spring)/i, effect: 'spring' },
+    { pattern: /(桜|cherry blossom)/i, effect: 'spring' },
+    { pattern: /(秋|fall|autumn)/i, effect: 'autumn' },
+    { pattern: /(冬|winter)/i, effect: 'snow' }
   ]
-  for (const { pattern, effect } of effects) {
+
+  // 特殊パターン優先
+  for (const { pattern, effect } of specialPatterns) {
     if (pattern.test(content)) {
       chatEffect.value.playEffect(effect)
       hideKeyboard()
       return true
     }
   }
-const seasonalMap = {
-  // ☔️ 雨・雪など
-  '雨': 'rain', 'rain': 'rain',
-  '雪': 'snow', 'snow': 'snow',
 
-  // 🌤️ 晴れ・風
-  '晴れ': 'sunny', 'sunny': 'sunny',
-  '風': 'wind', 'wind': 'wind',
-
-  // 🌸 季節系
-  '春': 'spring', 'spring': 'spring',
-  '桜': 'spring', 'cherry blossom': 'spring',
-
-  '秋': 'autumn', 'fall': 'autumn', 'autumn': 'autumn',
-  '冬': 'snow', 'winter': 'snow',
-}
-  for (const word in seasonalMap) {
-    if (shouldTriggerEffect(content, word)) {
-      chatEffect.value.playEffect(seasonalMap[word])
+  // 季節パターン
+  for (const { pattern, effect } of seasonalPatterns) {
+    if (pattern.test(content)) {
+      chatEffect.value.playEffect(effect)
       hideKeyboard()
       return true
     }
   }
-  if (shouldTriggerEffect(content, '夏')) {
+
+  // 夏だけ特殊呼び出し
+  if (/夏|summer/i.test(content)) {
     chatEffect.value.triggerSummer()
     hideKeyboard()
     return true
   }
+
   return false
 }
+
 
 watch(messages, () => {
   const lastMsg = messages.value[messages.value.length - 1]

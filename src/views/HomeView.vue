@@ -1,70 +1,81 @@
 <template>
   <div class="desktop" :style="wallpaperStyle">
     <div class="icon-grid">
-      <!-- 🎛 Settings → ホームから遷移したとわかるように -->
-      <button @click="goToSettingsFromHome">
-        <img src="/images/setting.png" alt="設定" class="icon-image" />
+      <!-- ✅ カレンダー -->
+      <button @click="goTo('calendar')" class="calendar-button">
+        <img src="/calendar.png" alt="カレンダー" class="icon-image" />
+        <span class="calendar-date">{{ currentDay }}</span>
+        <span class="calendar-month">{{ currentMonthName }}</span>
       </button>
 
+      <!-- ✅ メモ -->
       <button @click="goTo('memo')">
         <img src="/memo.icon.png" alt="メモ" class="icon-image" />
       </button>
 
-      <button @click="goTo('weather')">
-        <img src="/weather.icon.png" alt="天気" class="icon-image" />
-      </button>
-
-      <!-- ✅ 📅 をカスタムカレンダー画像に変更 -->
-<button @click="goTo('calendar')" class="calendar-button">
-  <img src="/calendar.png" alt="カレンダー" class="icon-image" />
-  <span class="calendar-date">{{ currentDay }}</span>
-  <span class="calendar-month">{{ currentMonthName }}</span>
-</button>
-
-      <button @click="goTo('diary')">
-        <img src="/diary.icon.png" alt="日記" class="icon-image" />
-      </button>
-
+      <!-- ✅ 連絡先 -->
       <button @click="goTo('contact')">
         <img src="/contact.icon.png" alt="連絡先" class="icon-image" />
       </button>
 
-      <button @click="goToChatFromHome">
-        <img src="/messege.icon.png" alt="メッセージ" class="icon-image" />
+      <!-- ✅ 日記 -->
+      <button @click="goTo('diary')">
+        <img src="/diary.icon.png" alt="日記" class="icon-image" />
       </button>
 
+      <!-- ✅ 写真 -->
       <button @click="goTo('photo')">
         <img src="/photo.icon.png" alt="写真" class="icon-image" />
       </button>
 
-      <!-- 🌍 Globe -->
+      <!-- ✅ 動画 -->
+      <button @click="goTo('video')">
+        <img src="/video.png" alt="動画一覧" class="icon-image" />
+      </button>
+
+      <!-- ✅ メッセージ -->
+      <button @click="goToChatFromHome">
+        <img src="/messege.icon.png" alt="メッセージ" class="icon-image" />
+      </button>
+
+      <!-- ✅ 風のたより -->
+      <button @click="goTo('wind-inbox')">
+        <img src="/WindMessage2.png" alt="風の便り" class="icon-image" />
+      </button>
+
+      <!-- ✅ Globe -->
       <button @click="goTo('globe')">
         <img src="/earth.png" alt="地球" class="icon-image" />
       </button>
-<button @click="goTo('flower-match')">
-  <img src="/game.png" alt="花あわせゲーム" class="icon-image" />
-</button>
 
-<button @click="goTo('video')">
-  <img src="/video.png" alt="動画一覧" class="icon-image" />
-</button>
+      <!-- ✅ ゲーム -->
+      <button @click="goTo('flower-match')">
+        <img src="/game.png" alt="花あわせゲーム" class="icon-image" />
+      </button>
 
-<button @click="goTo('wind-inbox')">
-  <img src="/WindMessage2.png" alt="風の便り" class="icon-image" />
-</button>
+      <!-- ✅ 時計 -->
+      <button @click="goTo('time2')">
+        <img src="/clock.png" alt="時計" class="icon-image" />
+      </button>
 
-<button @click="goTo('time2')">
-  <img src="/clock.png" alt="時計" class="icon-image" />
-</button>
+      <!-- ✅ 天気 -->
+      <button @click="goTo('weather')">
+        <img src="/weather.icon.png" alt="天気" class="icon-image" />
+      </button>
 
-<button @click="goToIconGuide">
-  <img src="/icon.2.png" alt="ヒント" class="icon-image" />
-</button>
+      <!-- ✅ ヒント -->
+      <button @click="goToIconGuide">
+        <img src="/icon.2.png" alt="ヒント" class="icon-image" />
+      </button>
 
-
+      <!-- 🎛 設定 (最後に) -->
+      <button @click="goToSettingsFromHome">
+        <img src="/images/setting.png" alt="設定" class="icon-image" />
+      </button>
     </div>
   </div>
 </template>
+
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'

@@ -394,7 +394,9 @@
  "weather.title": "天気",
   "weather.text": "花子天気との接続を準備中です。iOSアプリをご利用ください。",
   "weather.appLink": "☀️ 花子天気アプリはこちら☀️",
-"iconGuide.upload": "テキストやvCardなどをアップロードします。"
+"iconGuide.upload": "テキストやvCardなどをアップロードします。",
+
+"blossom.noProfileCannotRequest": "メッセージアプリからプロフィールを登録すると、YamatoIDでメッセージ申請可能になります。"
 
 
 

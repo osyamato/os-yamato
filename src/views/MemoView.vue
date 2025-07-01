@@ -795,7 +795,7 @@ textarea {
   min-height: 260px;      /* 最低高さ（短文でも見やすい） */
   max-height: 400px;      /* 最大高さ（長文でも伸びすぎない） */
   height: auto;           /* 高さは中身に応じて伸縮 */
-  font-size: 1rem;
+font-size: 16px; 
   border: 1px solid #ccc;
   border-radius: 8px;
   resize: vertical;       /* ユーザーが手動で調整可能 */
@@ -876,7 +876,7 @@ textarea {
 .add-tag-input input {
   flex: 1;
   padding: 0.5rem;
-  font-size: 1rem;
+  font-size: 16px; 
   border: 1px solid #ccc;
   border-radius: 6px;
 }
