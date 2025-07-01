@@ -51,9 +51,10 @@
   v-if="showProfileModal"
   :visible="showProfileModal"
   :profile="selectedProfile"
+  :hasOwnProfile="hasProfile"
   @back="handleProfileBack"
   @request="handleProfileRequest"
-/>
+></ProfileModal>
 
 <YamatoUserSearchModal
   v-if="showYamatoSearchModal"
@@ -413,6 +414,20 @@ function handleProfileRequest(yamatoId) {
     showYamatoSearchModal.value = true
   })
 }
+
+const hasProfile = ref(false)
+
+onMounted(async () => {
+  try {
+    const user = await Auth.currentAuthenticatedUser()
+    const sub = user.attributes.sub
+    const res = await API.graphql(graphqlOperation(getPublicProfile, { id: sub }))
+    hasProfile.value = !!res.data.getPublicProfile
+  } catch (e) {
+    console.error('❌ 自分のプロフィール取得失敗', e)
+    hasProfile.value = false
+  }
+})
 
 </script>
 

@@ -2,17 +2,12 @@
   <div :class="['icon-guide', { dropDown: shouldAnimate }]">
     <h2>{{ $t('iconGuide.title') }}</h2>
 
-    <p class="guide-access">
-      {{ $t('iconGuide.access') }}
-    </p>
+    <p class="guide-access">{{ $t('iconGuide.access') }}</p>
+    <p class="guide-subtitle">{{ $t('iconGuide.subtitle') }}</p>
 
-    <p class="guide-subtitle">
-      {{ $t('iconGuide.subtitle') }}
-    </p>
-
-<div class="guide-icon-wrapper">
-  <img src="/icons/icon-192x192.png" alt="OS Yamato Icon" class="guide-icon" />
-</div>
+    <div class="guide-icon-wrapper">
+      <img src="/icons/icon-192x192.png" alt="OS Yamato Icon" class="guide-icon" />
+    </div>
 
     <hr class="subtitle-divider" />
     <p class="guide-instruction">{{ $t('iconGuide.instruction') }}</p>
@@ -21,13 +16,16 @@
     <div class="icon-flex-grid">
       <div v-for="item in statusIcons" :key="item.emoji" class="icon-container">
         <div
-          class="icon-box icon-circle"
+          class="icon-box icon-circle tooltip-wrapper"
           :class="{ active: activeEmoji === item.emoji }"
-          @click="toggleDescription(item.emoji)"
+          @click="toggleTooltip(item.emoji, $event)"
+          @mouseleave="hideTooltip"
         >
           <span class="icon">{{ item.emoji }}</span>
+          <span v-if="activeEmoji === item.emoji" class="tooltip-text" :style="tooltipStyle">
+            {{ item.description }}
+          </span>
         </div>
-        <p v-if="activeEmoji === item.emoji" class="desc-text">{{ item.description }}</p>
       </div>
     </div>
 
@@ -35,41 +33,35 @@
     <div class="icon-flex-grid">
       <div v-for="item in otherIcons" :key="item.emoji" class="icon-container">
         <div
-          class="icon-box icon-circle"
+          class="icon-box icon-circle tooltip-wrapper"
           :class="{ active: activeEmoji === item.emoji }"
-          @click="toggleDescription(item.emoji)"
+          @click="toggleTooltip(item.emoji, $event)"
+          @mouseleave="hideTooltip"
         >
           <span class="icon">{{ item.emoji }}</span>
+          <span v-if="activeEmoji === item.emoji" class="tooltip-text" :style="tooltipStyle">
+            {{ item.description }}
+          </span>
         </div>
-        <p v-if="activeEmoji === item.emoji" class="desc-text">{{ item.description }}</p>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { nextTick } from 'vue'
+import { ref, onMounted, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 const shouldAnimate = ref(false)
 const activeEmoji = ref(null)
+const tooltipStyle = ref({})
 
 const { t } = useI18n()
 
 const statusIcons = [
-  {
-    emoji: '🌱',
-    description: t('iconGuide.statusSprout')
-  },
-  {
-    emoji: '🌷',
-    description: t('iconGuide.statusBloom')
-  },
-  {
-    emoji: '🥀',
-    description: t('iconGuide.statusWither')
-  },
+  { emoji: '🌱', description: t('iconGuide.statusSprout') },
+  { emoji: '🌷', description: t('iconGuide.statusBloom') },
+  { emoji: '🥀', description: t('iconGuide.statusWither') }
 ]
 
 const otherIcons = [
@@ -87,11 +79,33 @@ const otherIcons = [
   { emoji: '☁️', description: t('iconGuide.blockList') },
   { emoji: '🎞️', description: t('iconGuide.savePhoto') },
   { emoji: '👤', description: t('iconGuide.profile') },
-  { emoji: '📎', description: t('iconGuide.upload') }, // ✅ ← 追加
+  { emoji: '📎', description: t('iconGuide.upload') }
 ]
 
-function toggleDescription(emoji) {
-  activeEmoji.value = activeEmoji.value === emoji ? null : emoji
+function toggleTooltip(emoji, event) {
+  if (activeEmoji.value === emoji) {
+    activeEmoji.value = null
+    return
+  }
+  activeEmoji.value = emoji
+
+  // 位置調整
+  const rect = event.currentTarget.getBoundingClientRect()
+  const screenWidth = window.innerWidth
+
+  // 左右マージン 8px 確保
+  let left = '50%'
+  if (rect.left < 40) {
+    left = 'calc(50% + 20px)' // 左に寄りすぎ防止
+  } else if (rect.right > screenWidth - 40) {
+    left = 'calc(50% - 20px)' // 右に寄りすぎ防止
+  }
+
+  tooltipStyle.value = { left }
+}
+
+function hideTooltip() {
+  activeEmoji.value = null
 }
 
 onMounted(async () => {
@@ -99,10 +113,11 @@ onMounted(async () => {
   await nextTick()
   shouldAnimate.value = true
 })
-
 </script>
 
 <style scoped>
+
+
 .icon-guide {
   padding: 2rem 1rem;
 }
@@ -111,7 +126,7 @@ h2 {
   text-align: center;
   font-size: 1.4rem;
   font-weight: bold;
-  margin-bottom: 1.2rem; /* ✅ タイトル下に少し隙間追加 */
+  margin-bottom: 1.2rem;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -130,14 +145,14 @@ h2 {
 
 .icon-container {
   display: flex;
-  flex-direction: column;
-  align-items: center;
+  justify-content: center;
 }
 
 .icon-box {
   width: 48px;
   height: 48px;
   font-size: 1.6rem;
+  position: relative;
 }
 
 .icon-circle {
@@ -159,28 +174,40 @@ h2 {
   color: #fff;
 }
 
-.desc-text {
+.tooltip-text {
+  visibility: visible;
+  background-color: #333;
+  color: #fff;
   text-align: center;
+  border-radius: 6px;
+  padding: 5px 8px;
+  position: absolute;
+  z-index: 1;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 0.95;
+  font-size: 0.75rem;
   white-space: pre-wrap;
+  width: max-content;
+  max-width: 160px;
+}
+
+.guide-subtitle,
+.guide-access,
+.guide-instruction {
+  text-align: center;
   font-size: 0.9rem;
   color: #555;
-  margin-top: 0.5rem;
-  max-width: 120px;
+  white-space: pre-wrap;
 }
 
 @media (prefers-color-scheme: dark) {
-  .desc-text {
+  .guide-subtitle,
+  .guide-access,
+  .guide-instruction {
     color: #ccc;
   }
-}
-
-.guide-subtitle {
-  text-align: center;
-  font-size: 0.9rem;
-  color: #555;
-  margin-top: -0.5rem; /* ✅ 少しだけ上詰め調整 */
-  margin-bottom: 0.5rem;
- white-space: pre-wrap; 
 }
 
 .subtitle-divider {
@@ -190,21 +217,18 @@ h2 {
   width: 60%;
 }
 
-.guide-instruction {
-  text-align: center;
-  font-size: 0.9rem;
-  color: #555;
-  margin-bottom: 1.5rem;
+.guide-icon-wrapper {
+  display: flex;
+  justify-content: center;
+  margin: 1rem 0;
 }
 
-@media (prefers-color-scheme: dark) {
-  .guide-subtitle,
-  .guide-instruction {
-    color: #ccc;
-  }
+.guide-icon {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
 }
 
-/* ✅ dropDown アニメーション */
 .icon-guide.dropDown {
   animation: dropDown 0.6s ease-out forwards;
 }
@@ -220,34 +244,4 @@ h2 {
   }
 }
 
-.guide-access {
-  text-align: center;
-  font-size: 0.9rem;
-  color: #555;
-  margin-top: -0.5rem;
-  margin-bottom: 1.5rem;
-  word-break: break-all; /* URLが長い場合に折返し */
- white-space: pre-wrap; 
- }
-
-@media (prefers-color-scheme: dark) {
-  .guide-access {
-    color: #ccc;
-  }
-}
-
-.guide-icon-wrapper {
-  display: flex;
-  justify-content: center;
-  margin: 1rem 0;
-}
-
-.guide-icon {
-  width: 70px; /* ✅ サイズ調整自由 */
-  height: 70px;
-  border-radius: 50%; /* 丸くする */
-}
-
 </style>
-
-

@@ -2,25 +2,25 @@
   <transition name="fade-modal">
     <div v-if="visible" class="modal-overlay" @click.self="emit('back')">
       <div class="profile-modal">
-<h2 class="modal-title">{{ t('blossom.profileTitle') }}</h2>
+        <h2 class="modal-title">{{ t('blossom.profileTitle') }}</h2>
 
         <div v-if="profile.nickname" class="profile-section">
-<label>{{ t('blossom.nickname') }}</label>
+          <label>{{ t('blossom.nickname') }}</label>
           <p class="profile-text">{{ profile.nickname }}</p>
         </div>
 
         <div v-if="profile.comment" class="profile-section">
-<label>{{ t('blossom.comment') }}</label>
+          <label>{{ t('blossom.comment') }}</label>
           <p class="profile-text">{{ profile.comment }}</p>
         </div>
 
         <div v-if="profile.country" class="profile-section">
-<label>{{ t('blossom.country') }}</label>
+          <label>{{ t('blossom.country') }}</label>
           <p class="profile-text">{{ emojiCountry(profile.country) }}</p>
         </div>
 
         <div v-if="profile.hobby" class="profile-section">
-<label>{{ t('blossom.hobby') }}</label>
+          <label>{{ t('blossom.hobby') }}</label>
           <p class="profile-text">{{ emojiHobby(profile.hobby) }}</p>
         </div>
 
@@ -28,19 +28,22 @@
           <label>Yamato ID</label>
           <p class="profile-text">{{ profile.yamatoId }}</p>
         </div>
-<div class="button-row">
-<YamatoButton
-  v-if="profile.yamatoId"
-  type="primary"
-  @click="emit('request', profile.yamatoId)"
->
-  📮 {{ t('blossom.requestButton') }}
-</YamatoButton>
-</div>
-
 
         <div class="button-row">
-<YamatoButton @click="emit('back')">{{ t('close') }}</YamatoButton>
+          <YamatoButton
+            v-if="canRequest"
+            type="primary"
+            @click="emit('request', profile.yamatoId)"
+          >
+            📮 {{ t('blossom.requestButton') }}
+          </YamatoButton>
+          <p v-else class="disabled-text">
+            {{ t('blossom.noProfileCannotRequest') }}
+          </p>
+        </div>
+
+        <div class="button-row">
+          <YamatoButton @click="emit('back')">{{ t('close') }}</YamatoButton>
         </div>
       </div>
     </div>
@@ -50,15 +53,27 @@
 <script setup>
 import YamatoButton from '@/components/YamatoButton.vue'
 import { useI18n } from 'vue-i18n'
-const { t } = useI18n()
+import { computed } from 'vue'
 
+const { t } = useI18n()
 
 const props = defineProps({
   visible: Boolean,
-  profile: Object
+  profile: Object,
+  hasOwnProfile: Boolean // ✅ 自分がプロフィール登録済みかどうか
 })
 
 const emit = defineEmits(['back', 'request'])
+
+// ✅ 相手のプロフィールが整っているか
+const hasTargetProfile = computed(() => {
+  return props.profile && (props.profile.nickname || props.profile.comment)
+})
+
+// ✅ 自分と相手の両方がプロフィール条件を満たしているか
+const canRequest = computed(() => {
+  return hasTargetProfile.value && props.hasOwnProfile
+})
 
 function emojiCountry(code) {
   return {
@@ -160,6 +175,13 @@ function emojiHobby(code) {
 .button-row {
   text-align: center;
   margin-top: 1.5rem;
+}
+
+.disabled-text {
+  font-size: 0.85rem;
+  color: #888;
+  text-align: center;
+  margin-top: 1rem;
 }
 
 @keyframes scaleFadeIn {

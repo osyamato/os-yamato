@@ -326,10 +326,12 @@ function startEdit() {
 function resetForm() {
   editName.value = ''
   editFurigana.value = ''
-  editPhone.value = ''
-  editEmail.value = ''
   editNote.value = ''
   editYamatoId.value = ''
+  
+  // 🔥 配列の要素を完全クリア
+  editPhones.value.splice(0, editPhones.value.length, '')
+  editEmails.value.splice(0, editEmails.value.length, '')
 }
 
 // --- 保存（新規 or 更新）---

@@ -28,11 +28,15 @@
     </div>
 
     <!-- 📬 開封ボタン -->
-    <div class="receive-button-area">
-<YamatoButton v-if="unopenedMessages.length > 0" @click="receiveMessages">
-  📬 {{ t('wind.receiveButton') }}
-</YamatoButton>
-    </div>
+<div class="receive-button-area">
+  <button
+    v-if="unopenedMessages.length > 0"
+    class="custom-receive-button"
+    @click="receiveMessages"
+  >
+    📬 {{ t('wind.receiveButton') }}
+  </button>
+</div>
 
     <!-- ✅ openedMessages を ul 内で描画 -->
 <ul class="wind-list">
@@ -709,6 +713,37 @@ button.favorited .heart-icon {
   font-style: italic;
   background-color: #fefdf8;
 }
+
+.custom-receive-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 240px;
+  padding: 0.8rem 1.2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #222; /* テキストを濃いめに */
+  background-color: #fdfaf3; /* 淡い白 */
+  border: 1.5px solid #e0dcc8;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.2s;
+  white-space: normal;
+  word-break: keep-all;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+.custom-receive-button:hover {
+  background-color: #f7f3eb; /* 少し暗めに */
+  transform: translateY(-1px);
+}
+
+.custom-receive-button:active {
+  background-color: #eee9de; /* 押したときさらに暗め */
+  transform: translateY(0);
+}
+
 
 </style>
   

@@ -407,7 +407,9 @@
 
   "weather.title": "Weather",
   "weather.text": "Connecting with Hanaco Weather is under preparation. Please use the iOS app.",
-  "weather.appLink": "☀️hanaco Weather App here☀️"
+  "weather.appLink": "☀️hanaco Weather App here☀️",
+
+"blossom.noProfileCannotRequest": "If you register your profile through a messaging app, you will be able to send messages using your YamatoID."
 
 
 
