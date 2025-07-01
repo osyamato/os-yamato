@@ -196,6 +196,10 @@ button:hover {
   height: 100%;
   object-fit: cover;
   border-radius: 16px;
+
+  /* 追加 👇 */
+  will-change: opacity, transform;
+  transition: opacity 0.2s ease-in-out;
 }
 
 .calendar-button {

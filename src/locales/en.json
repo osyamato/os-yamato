@@ -201,6 +201,10 @@
 "wind.confirmDelete": "Do you want to delete this message?",
 
 
+"video.limitAlert": "⚠️ Videos longer than 1 minute cannot be uploaded.",
+"video.uploadError": "Failed to upload video.",
+
+
 
 "blossom.title": "Let Your Flower Bloom",
 "blossom.nicknamePlaceholder": "Nickname (required)",
@@ -409,7 +413,10 @@
   "weather.text": "Connecting with Hanaco Weather is under preparation. Please use the iOS app.",
   "weather.appLink": "☀️hanaco Weather App here☀️",
 
-"blossom.noProfileCannotRequest": "If you register your profile through a messaging app, you will be able to send messages using your YamatoID."
+"blossom.noProfileCannotRequest": "If you register your profile through a messaging app, you will be able to send messages using your YamatoID.",
+"account.subscription": "Yamato Premium",
+"account.premiumPreparing": "Currently under preparation."
+
 
 
 

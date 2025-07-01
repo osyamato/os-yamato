@@ -283,6 +283,32 @@ async function handleFileSelect(event) {
   if (!files || files.length === 0) return
 
   const file = files[0]
+
+  // 動画の長さを取得する
+  const video = document.createElement('video')
+  video.preload = 'metadata'
+  video.src = URL.createObjectURL(file)
+
+  await new Promise((resolve) => {
+    video.onloadedmetadata = () => {
+      URL.revokeObjectURL(video.src)
+
+      // 動画の長さを確認
+      if (video.duration > 60) { // ← 1分 (60秒)
+        alert(t('video.limitAlert')) // ✅ ローカライズ対応
+        resolve(false)
+        return
+      }
+      resolve(true)
+    }
+  })
+
+  // 動画が許可されない場合は終了
+  if (video.duration > 60) {
+    return
+  }
+
+  // 🔽 ここから既存のアップロード処理
   const fileName = `${Date.now()}-${file.name}`
   const thumbFileName = `thumb-${fileName.replace(/\.[^/.]+$/, '')}.jpg`
 
@@ -298,7 +324,6 @@ async function handleFileSelect(event) {
       level: 'protected'
     })
 
-    // ✅ フロントエンドで動画からサムネイル生成
     const thumbnailBlob = await generateThumbnail(file)
 
     await Storage.put(thumbFileName, thumbnailBlob, {
@@ -319,7 +344,7 @@ async function handleFileSelect(event) {
     await fetchVideos()
   } catch (err) {
     console.error('🎥 動画アップロード失敗:', err)
-    alert('アップロードに失敗しました。')
+    alert(t('video.uploadError'))
   } finally {
     isUploading.value = false
     isLoading.value = false
@@ -562,8 +587,15 @@ async function downloadSelectedVideos() {
 
 .thumbnail-wrapper {
   position: relative;
-  width: 120px;
-  height: 120px;
+  width: 90px;
+  height: 90px;
+}
+
+@media (min-width: 768px) {
+  .thumbnail-wrapper {
+    width: 100px;
+    height: 100px;
+  }
 }
 
 .thumbnail {
