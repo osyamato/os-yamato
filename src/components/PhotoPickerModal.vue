@@ -56,35 +56,32 @@ function selectPhoto(photo) {
   selectedPhoto.value = photo
 }
 
-async function sendSelectedPhoto() {
-  if (!selectedPhoto.value) return
-
+async function sendPhoto() {
   try {
-    const { fileName, thumbnailFileName } = selectedPhoto.value
+    const photo = selectedPhoto.value
+    if (!photo) return
 
-    if (!fileName || !thumbnailFileName) {
-      console.warn('⚠️ fileName or thumbnailFileName が未定義です:', selectedPhoto.value)
-      return
-    }
+    // パネルを即閉じる
+    emit('close')
 
-    // 🆔 一意なキー名（アップロード用）
     const timestamp = Date.now()
-    const baseName = fileName.replace(/^.*[\\/]/, '')
-    const thumbBase = thumbnailFileName.replace(/^.*[\\/]/, '')
+    const baseName = photo.fileName.replace(/^.*[\\/]/, '')
+    const thumbBase = photo.thumbnailFileName.replace(/^.*[\\/]/, '')
     const imageKey = `chat/${timestamp}_${baseName}`
     const thumbnailKey = `chat/thumb_${timestamp}_${thumbBase}`
 
-    // 🟡 まず protected から fetch
+    // ファイルを取得
     const [fullUrl, thumbUrl] = await Promise.all([
-      Storage.get(fileName, { level: 'protected' }),
-      Storage.get(thumbnailFileName, { level: 'protected' })
+      Storage.get(photo.fileName, { level: 'protected' }),
+      Storage.get(photo.thumbnailFileName, { level: 'protected' })
     ])
+
     const [fullBlob, thumbBlob] = await Promise.all([
       fetch(fullUrl).then(res => res.blob()),
       fetch(thumbUrl).then(res => res.blob())
     ])
 
-    // ✅ public にアップロード
+    // public にコピー
     await Promise.all([
       Storage.put(imageKey, fullBlob, {
         level: 'public',
@@ -96,24 +93,26 @@ async function sendSelectedPhoto() {
       })
     ])
 
-    // 🔓 public URL を取得（再確認不要なら省略も可）
+    // コピー完了後に URL 取得
     const thumbPreviewUrl = await Storage.get(thumbnailKey, { level: 'public' })
 
-    // ✅ ChatView に通知（アップロード後なので確実）
+    // ✅ 完了後に send イベント
     emit('send', {
       imageKey,
       thumbnailKey,
       previewUrl: thumbPreviewUrl,
       fileName,
       thumbnailFileName,
-      isTemporary: true
+      isTemporary: false
     })
 
-    emit('close')
+    console.log('✅ 写真コピー完了')
   } catch (err) {
-    console.error('❌ 写真の送信に失敗:', err)
+    console.error('❌ 写真送信処理に失敗:', err)
   }
 }
+
+
 
 onMounted(async () => {
   try {
