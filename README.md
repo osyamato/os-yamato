@@ -1,5 +1,7 @@
 OS Yamato 🌸
 
+Visit: https://hanaco875.com
+
 A gentle operating system where data blooms, fades, and returns to the wind.
 Even the quietest message can carry the weight of a season.
 
@@ -57,11 +59,15 @@ Notes, photos, and messages gently fade if left untouched — and disappear afte
 ⸻
 
 🌐 Try OS Yamato
-	•	Visit: hanaco875.com
-	•	Code: GitHub - osyamato
-	•	Join discussions: GitHub Discussions
+
+Visit: https://hanaco875.com
+
+Code: GitHub - osyamato
+
+Join discussions: GitHub Discussions
 
 You can also try using our test accounts (details in note and X posts).
+
 
 ⸻
 
