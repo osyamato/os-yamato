@@ -3,10 +3,9 @@
 <div class="time-container" @click="spawnPetals($event)">
 <div class="time-inner" :class="{ night: isNight, sunset: isSunset }">
       <!-- 🕰️ 時計 -->
-      <div class="clock-box">
-        <div class="icon-button" :style="{ backgroundColor: iconColor }" @click.stop="handleIconClick">🕰️</div>
-        <div class="clock-text">{{ currentTime }}</div>
-      </div>
+<div class="clock-box">
+  <div class="clock-text">{{ currentTime }}</div>
+</div>
 
 
 
@@ -421,7 +420,7 @@ background: linear-gradient(to bottom, #87cefa, #e6f7ff, #f9fcff);
 
 .clock-box {
   position: absolute;
-  top: 40px;
+  top: 100px; /* ← ここを調整！ */
   left: 50%;
   transform: translateX(-50%);
   display: flex;
@@ -431,18 +430,6 @@ background: linear-gradient(to bottom, #87cefa, #e6f7ff, #f9fcff);
   z-index: 10;
 }
 
-.icon-button {
-  font-size: 1.4rem;
-  color: white;
-  background-color: #888;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-}
 
 .clock-text {
   font-size: 2.2rem;
