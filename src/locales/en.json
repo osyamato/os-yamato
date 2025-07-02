@@ -1,4 +1,8 @@
 {
+"common.cancel": "Cancel",
+  "common.delete": "Delete",
+
+
   "title": "Settings",
   "languageLabel": "Select Language:",
   "selectLanguage": "-- Please choose a language --",

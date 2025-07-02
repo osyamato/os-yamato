@@ -1,4 +1,8 @@
 {
+  "common.cancel": "キャンセル",
+  "common.delete": "削除",
+
+
  "title": "設定",
   "languageLabel": "言語を選択:",
   "selectLanguage": "-- 言語を選んでください --",
