@@ -115,7 +115,6 @@
 <script setup>
 import { ref, computed, onMounted, watchEffect, watch, nextTick, onBeforeUnmount } from 'vue'
 import { API, graphqlOperation, Auth, Storage } from 'aws-amplify'
-import { listMessages, publicProfileByYamatoId } from '@/graphql/queries'
 import { updateChatRoom, createMessage } from '@/graphql/mutations'
 import { onCreateMessage } from '@/graphql/subscriptions'
 import { useRoute } from 'vue-router'
@@ -123,6 +122,7 @@ import ChatEffect from '@/components/ChatEffect.vue'
 import PhotoPickerModal from '@/components/PhotoPickerModal.vue'
 import PhotoPickerPanel from '@/components/PhotoPickerPanel.vue'
 import ImagePreviewModal from '@/components/ImagePreviewModal.vue'
+import { listMessages, publicProfileByYamatoId } from '@/graphql/queries'
 
 const showImageModal = ref(false)
 const previewImageUrl = ref('')
@@ -371,7 +371,6 @@ const imageCount = computed(() =>
     .filter(msg => msg?.contentType === 'image').length
 )
 
-// ✅ onMounted
 onMounted(async () => {
   await nextTick()
   scrollToBottom()
@@ -405,21 +404,25 @@ onMounted(async () => {
   partnerDisplayName.value = partner.displayName || '相手'
   receiverSub.value = partner.id
 
+  // ✅ メッセージ取得
   await fetchMessages()
-  loadedImageCount.value = 0
 
+  // ✅ 必ずメッセージ取得後にサブスク開始
+  subscribeToNewMessages()
+
+  // （以下オプション）
+  loadedImageCount.value = 0
   await nextTick()
 
   if (imageCount.value === 0) {
     scrollToBottom(true)
   }
-
-  subscribeToNewMessages()
 })
 
 onBeforeUnmount(() => {
   if (subscription) subscription.unsubscribe()
 })
+
 
 async function fetchMessages() {
   try {
@@ -432,26 +435,31 @@ async function fetchMessages() {
       .filter(msg => msg)
       .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
 
+    console.log('🐾 [DEBUG] DynamoDB raw items:', items)
+
     const enriched = await Promise.all(items.map(async msg => {
       if (msg.contentType === 'image' && msg.imageKey) {
         try {
           const url = await Storage.get(msg.thumbnailKey || msg.imageKey, { level: 'public' })
           return { ...msg, imageUrl: url }
         } catch (e) {
-          console.warn('⚠️ 画像の取得に失敗:', e)
+          console.warn('⚠️ 画像取得失敗:', e)
           return msg
         }
       }
       return msg
     }))
 
+    console.log('✅ [DEBUG] Enriched messages to set:', enriched)
     messages.value = enriched
+
     await nextTick()
     scrollToBottom()
   } catch (err) {
     console.error('❌ メッセージ取得エラー:', JSON.stringify(err, null, 2))
   }
 }
+
 
 async function sendMessage() {
   if (isComposing.value) return
@@ -530,7 +538,7 @@ function subscribeToNewMessages() {
           }
         }
 
-        // ✅ すでに同じ imageKey の仮メッセージがあるか確認（isTemporary: true）
+        // ✅ 仮メッセージ（isTemporary: true）置き換えロジック
         const existingIndex = messages.value.findIndex(
           m => m.imageKey === newMsg.imageKey && m.isTemporary
         )
@@ -539,21 +547,25 @@ function subscribeToNewMessages() {
           // ✅ 仮メッセージを正式メッセージで置き換える
           messages.value.splice(existingIndex, 1, enrichedMsg)
         } else {
-          // ✅ 通常の追加
-          messages.value.push(enrichedMsg)
+          // ✅ id 重複チェック
+          const exists = messages.value.findIndex(m => m.id === newMsg.id) !== -1
+          if (!exists) {
+            messages.value.push(enrichedMsg)
+          }
         }
 
         if (enrichedMsg.senderSub !== mySub.value) {
           maybePlayEffect(enrichedMsg.content)
         }
 
-await nextTick()
-setTimeout(() => scrollToBottom(), 0)
+        await nextTick()
+        setTimeout(() => scrollToBottom(), 0)
       }
     },
     error: (err) => console.error('❌ サブスクリプションエラー:', err)
   })
 }
+
 
 function groupMessagesByDate(messages) {
   const grouped = []
