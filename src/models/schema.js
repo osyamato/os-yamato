@@ -665,6 +665,16 @@ export const schema = {
                     }
                 },
                 {
+                    "type": "key",
+                    "properties": {
+                        "name": "byRoomId",
+                        "fields": [
+                            "roomId"
+                        ],
+                        "queryField": "messagesByRoomId"
+                    }
+                },
+                {
                     "type": "auth",
                     "properties": {
                         "rules": [
