@@ -204,8 +204,13 @@ async function handlePhotoSelect(photoOrPhotos) {
   const photos = Array.isArray(photoOrPhotos) ? photoOrPhotos : [photoOrPhotos]
 
   for (const photo of photos) {
+    console.log('📥 受信 photo:', photo)
+
+    // ✅ ここで previewUrl と thumbPreviewUrl を正しく拾う
+    const preview = photo.previewUrl || photo.thumbPreviewUrl || ''
+
     if (!photo || !photo.imageKey || !photo.thumbnailKey) {
-      console.warn('⚠️ 不正なphotoオブジェクト:', photo)
+      console.warn('⚠️ 不正な photo オブジェクト:', photo)
       continue
     }
 
@@ -224,21 +229,20 @@ async function handlePhotoSelect(photoOrPhotos) {
       imageKey: photo.imageKey,
       thumbnailKey: photo.thumbnailKey,
       timestamp: now.toISOString(),
-      imageUrl: photo.previewUrl || '', // 👈 最初は preview
+      imageUrl: preview,
       isTemporary: true,
     }
+
+    console.log('✅ 仮メッセージ追加:', tempMessage)
 
     messages.value.push(tempMessage)
 
     try {
       await sendImageMessage(photo.imageKey, photo.thumbnailKey)
 
-      // ⚠️ tryGetUrlで正式URL取得して仮メッセージ更新
       const finalUrl = await tryGetUrl(photo.thumbnailKey)
       const msg = messages.value.find(m => m.id === tempId)
       if (msg && finalUrl) msg.imageUrl = finalUrl
-
-      // 🎯 サブスクで正式メッセージが来たら temp は削除される
     } catch (e) {
       console.error('❌ 画像送信エラー:', e)
     }
@@ -246,6 +250,7 @@ async function handlePhotoSelect(photoOrPhotos) {
 
   showPhotoPicker.value = false
 }
+
 
 async function sendImageMessage(imageKey, thumbnailKey) {
   const now = new Date()
@@ -266,14 +271,12 @@ async function sendImageMessage(imageKey, thumbnailKey) {
   }
 
   try {
-    // ① メッセージ送信
     await API.graphql(graphqlOperation(createMessage, { input }))
 
-    // ② ChatRoom を更新（❗️これがなかった）
     await API.graphql(graphqlOperation(updateChatRoom, {
       input: {
         id: roomId.value,
-        lastMessage: '', // または "📷 写真"
+        lastMessage: '📷 Photo',
         lastContentType: 'image',
         lastSenderId: mySub.value,
         lastTimestamp: now.toISOString()

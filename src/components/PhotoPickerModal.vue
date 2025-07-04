@@ -1,7 +1,7 @@
 <template>
   <div class="photo-modal-overlay" @click.self="$emit('close')">
     <div class="photo-modal-card">
-      <!-- ♡ & ⇧ -->
+      <!-- ヘッダー -->
       <div class="modal-header">
         <button
           class="favorite-toggle-button"
@@ -10,9 +10,7 @@
         >
           ♡
         </button>
-
-<!-- 📷 送信ボタン -->
-<button class="send-button" @click="sendSelectedPhoto">⇧</button>
+        <button class="send-button" @click="sendPhoto">⇧</button>
       </div>
 
       <div class="photo-grid">
@@ -61,16 +59,12 @@ async function sendPhoto() {
     const photo = selectedPhoto.value
     if (!photo) return
 
-    // パネルを即閉じる
-    emit('close')
-
     const timestamp = Date.now()
-    const baseName = photo.fileName.replace(/^.*[\\/]/, '')
-    const thumbBase = photo.thumbnailFileName.replace(/^.*[\\/]/, '')
+    const baseName = photo.fileName.split('/').pop()
+    const thumbBase = photo.thumbnailFileName.split('/').pop()
     const imageKey = `chat/${timestamp}_${baseName}`
     const thumbnailKey = `chat/thumb_${timestamp}_${thumbBase}`
 
-    // ファイルを取得
     const [fullUrl, thumbUrl] = await Promise.all([
       Storage.get(photo.fileName, { level: 'protected' }),
       Storage.get(photo.thumbnailFileName, { level: 'protected' })
@@ -81,38 +75,36 @@ async function sendPhoto() {
       fetch(thumbUrl).then(res => res.blob())
     ])
 
-    // public にコピー
-    await Promise.all([
-      Storage.put(imageKey, fullBlob, {
-        level: 'public',
-        contentType: fullBlob.type
-      }),
-      Storage.put(thumbnailKey, thumbBlob, {
-        level: 'public',
-        contentType: thumbBlob.type
-      })
-    ])
+    await Storage.put(imageKey, fullBlob, {
+      level: 'public',
+      contentType: fullBlob.type
+    })
+    await Storage.put(thumbnailKey, thumbBlob, {
+      level: 'public',
+      contentType: thumbBlob.type
+    })
 
-    // コピー完了後に URL 取得
     const thumbPreviewUrl = await Storage.get(thumbnailKey, { level: 'public' })
 
-    // ✅ 完了後に send イベント
+    console.log('✅ emit 送信前:', { imageKey, thumbnailKey, previewUrl: thumbPreviewUrl })
+
+    // ✅ 修正：先に send emit
     emit('send', {
       imageKey,
       thumbnailKey,
       previewUrl: thumbPreviewUrl,
-      fileName,
-      thumbnailFileName,
+      fileName: photo.fileName,
+      thumbnailFileName: photo.thumbnailFileName,
       isTemporary: false
     })
 
-    console.log('✅ 写真コピー完了')
+    emit('close')
+
+    console.log('✅ 写真送信処理完了')
   } catch (err) {
     console.error('❌ 写真送信処理に失敗:', err)
   }
 }
-
-
 
 onMounted(async () => {
   try {
@@ -164,7 +156,6 @@ onMounted(async () => {
   padding: 0.2rem 0.2rem 0.4rem;
 }
 
-/* ♡ ボタン */
 .favorite-toggle-button {
   background: none;
   border: none;
@@ -176,6 +167,20 @@ onMounted(async () => {
 
 .favorite-toggle-button.active {
   color: #ff4d6d;
+}
+
+.send-button {
+  background: none;
+  border: none;
+  font-size: 1.4rem;
+  cursor: pointer;
+  color: #555;
+  margin-left: auto;
+  padding: 0 0.4rem;
+  transition: color 0.2s ease;
+}
+.send-button:hover {
+  color: #007aff;
 }
 
 .photo-grid {
@@ -198,6 +203,10 @@ onMounted(async () => {
   box-shadow: 0 0 6px rgba(0, 0, 0, 0.15);
 }
 
+.photo-item.selected {
+  outline: 2px solid #007aff;
+}
+
 .thumbnail {
   width: 100%;
   max-width: 68px;
@@ -206,29 +215,11 @@ onMounted(async () => {
   border-radius: 12px;
 }
 
-/* ダークモード */
 @media (prefers-color-scheme: dark) {
   .photo-modal-card {
     background: #2c2c2e;
   }
 }
-.send-button {
-  background: none;
-  border: none;
-  font-size: 1.4rem;
-  cursor: pointer;
-  color: #555;
-  margin-left: auto;
-  padding: 0 0.4rem;
-  transition: color 0.2s ease;
-}
-.send-button:hover {
-  color: #007aff;
-}
-
-.photo-item.selected {
-  outline: 2px solid #007aff;
-}
-
-
 </style>
+
+

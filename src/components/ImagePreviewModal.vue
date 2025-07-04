@@ -2,12 +2,20 @@
   <transition name="fade-modal">
     <div v-if="visible" class="modal-overlay" @click.self="close">
       <div class="modal-inner-card">
-        <!-- ⬇️ 保存ボタン（画像読み込み後に表示） -->
-        <IconButton
-          class="save-icon"
-          v-if="imageLoaded"
-          @click.stop="saveToYamatoPhotos"
-        >🎞️</IconButton>
+        <!-- 保存ボタン + アニメーションを一緒にラップ -->
+        <div class="save-wrapper" v-if="imageLoaded">
+          <span v-if="isSaving" :class="iconStage" class="life-icon">
+            {{ lifeIcon }}
+          </span>
+          <IconButton
+            class="save-icon"
+            :class="{ disabled: isSaving }"
+            @click.stop="saveToYamatoPhotos"
+            :disabled="isSaving"
+          >
+            🎞️
+          </IconButton>
+        </div>
 
         <img
           :src="imageUrl"
@@ -21,21 +29,27 @@
 </template>
 
 <script setup>
-import { Storage, API, graphqlOperation } from 'aws-amplify'
+import { Storage, API, graphqlOperation, Auth } from 'aws-amplify'
 import { createPhoto } from '@/graphql/mutations'
 import IconButton from '@/components/IconButton.vue'
-import { Auth } from 'aws-amplify' 
-import { ref } from 'vue'
-
+import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
+
 const { t } = useI18n()
 
 const imageLoaded = ref(false)
+const isSaving = ref(false)
 
+const iconStage = ref('fade-in')
+const iconIndex = ref(0)
+const icons = ['🌱', '🌷', '🥀']
+const lifeIcon = computed(() => icons[iconIndex.value])
+
+let interval = null
 
 const props = defineProps({
-  imageUrl: String,     // fallback 表示用
-  imageKey: String,     // 保存に使う Storage キー
+  imageUrl: String,
+  imageKey: String,
   visible: Boolean,
 })
 
@@ -44,7 +58,7 @@ function close() {
   emit('close')
 }
 
-// 🔧 Blob → サムネイルを生成する関数
+// Blob → サムネイル生成
 function generateThumbnailFromBlob(blob) {
   return new Promise((resolve, reject) => {
     const img = new Image()
@@ -75,8 +89,22 @@ function generateThumbnailFromBlob(blob) {
   })
 }
 
-
 async function saveToYamatoPhotos() {
+  if (isSaving.value) return
+
+  isSaving.value = true
+  iconIndex.value = 0
+  iconStage.value = 'fade-in'
+
+  // 🌱 🌷 🥀 アニメーション開始
+  interval = setInterval(() => {
+    iconStage.value = 'fade-out'
+    setTimeout(() => {
+      iconIndex.value = (iconIndex.value + 1) % icons.length
+      iconStage.value = 'fade-in'
+    }, 300)
+  }, 1000)
+
   try {
     if (!props.imageKey) {
       alert('画像キーが指定されていません')
@@ -87,9 +115,6 @@ async function saveToYamatoPhotos() {
     const fileName = `chat/${timestamp}-from-chat.jpg`
     const thumbnailFileName = `chat/${timestamp}-thumb.jpg`
 
-    console.log('🪵 imageKey:', props.imageKey)
-
-    // ✅ S3 から Blob を取得
     const res = await Storage.get(props.imageKey, {
       level: 'public',
       download: true,
@@ -97,26 +122,21 @@ async function saveToYamatoPhotos() {
     const originalBlob = res.Body
     const contentType = originalBlob.type || 'image/jpeg'
 
-    // 🔽 サムネイル生成
     const thumbBlob = await generateThumbnailFromBlob(originalBlob)
 
-    // 🔽 オリジナル保存
     await Storage.put(fileName, originalBlob, {
       contentType,
       level: 'protected',
     })
 
-    // 🔽 サムネイル保存
     await Storage.put(thumbnailFileName, thumbBlob, {
       contentType: 'image/jpeg',
       level: 'protected',
     })
 
-    // ✅ Cognito から owner を取得
     const user = await Auth.currentAuthenticatedUser()
     const owner = user.attributes.sub
 
-    // 🔽 DB 登録
     const now = new Date().toISOString()
     const input = {
       fileName,
@@ -124,33 +144,20 @@ async function saveToYamatoPhotos() {
       photoTakenAt: now,
       lastOpenedAt: now,
       isFavorite: false,
-      owner, // ← 🔑 これが必須
+      owner,
     }
 
-    console.log('🪵 createPhoto input:', input)
-
-    const result = await API.graphql(graphqlOperation(createPhoto, { input }))
-    console.log('✅ Photo 登録完了:', result)
-
-alert(t('photo.saved'))
+    await API.graphql(graphqlOperation(createPhoto, { input }))
+    alert(t('photo.saved'))
   } catch (e) {
     console.error('❌ 保存失敗', e)
-
-    if (e?.errors) {
-      console.error('❌ GraphQL エラー:', e.errors.map(err => err.message).join('\n'))
-    } else if (e?.response) {
-      console.error('❌ Axios レスポンスエラー:', {
-        status: e.response.status,
-        data: e.response.data,
-      })
-    } else {
-      console.error('❌ 予期しないエラー:', e)
-    }
-
     alert('保存に失敗しました')
+  } finally {
+    isSaving.value = false
+    clearInterval(interval)
+    iconStage.value = ''
   }
 }
-
 </script>
 
 <style scoped>
@@ -174,12 +181,26 @@ alert(t('photo.saved'))
   position: relative;
 }
 
-.save-icon {
+.save-wrapper {
   position: absolute;
   top: 1rem;
   right: 1rem;
+  display: flex;
+  align-items: center;
+}
+
+.save-icon {
   font-size: 1.6rem;
-  z-index: 10;
+}
+
+.save-icon.disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.life-icon {
+  font-size: 1.4rem;
+  margin-right: 0.4rem;
 }
 
 .full-image {
@@ -189,7 +210,6 @@ alert(t('photo.saved'))
   display: block;
 }
 
-/* 📱 スマホでは少し小さめに表示 */
 @media (max-width: 600px) {
   .full-image {
     max-width: 90vw;
@@ -197,4 +217,15 @@ alert(t('photo.saved'))
   }
 }
 
+.fade-in {
+  opacity: 1;
+  transition: opacity 0.3s;
+}
+
+.fade-out {
+  opacity: 0;
+  transition: opacity 0.3s;
+}
 </style>
+
+
