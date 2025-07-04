@@ -1,4 +1,5 @@
 {
-    "Version": 5,
-    "ElasticsearchWarning": true
+  "Version": 2,
+  "TransformerVersion": 2,
+  "ElasticsearchWarning": true
 }

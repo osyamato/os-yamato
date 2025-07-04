@@ -1,28 +1,28 @@
 <template>
   <div class="season-container">
-    <!-- 上部の時間 -->
+    <!-- 上部の時計 -->
     <div class="clock-text">{{ currentTime }}</div>
 
-    <!-- 中央の待機中テキスト -->
+    <!-- 待機中メッセージ -->
     <div v-if="waiting" class="waiting-text">四季待機中…</div>
 
-    <!-- ▼ 画像のフェード切り替え -->
-    <transition-group name="fade" tag="div" class="image-wrapper">
+    <!-- 画像のフェード切り替え -->
+    <transition-group name="fade" tag="div" class="image-wrapper" v-if="!waiting">
       <img
         v-for="(img, index) in images"
-        v-show="currentIndex === index && !waiting"
+        v-show="currentIndex === index"
         :key="img"
         :src="img"
         class="season-image"
       />
     </transition-group>
 
-    <!-- 雪の結晶 -->
+    <!-- 雪の結晶（冬のみ） -->
     <div v-for="flake in snowflakes" :key="flake.id" class="snowflake" :style="flake.style">
       <img src="/snowflake2.png" class="flake-image" />
     </div>
 
-    <!-- 雪だるま -->
+    <!-- 雪だるま（冬のみ） -->
     <img
       v-for="man in snowmen"
       :key="man.id"
@@ -110,7 +110,7 @@ function startSnowfall() {
 function startSnowmen() {
   snowmen.value = []
 
-  // 1回目（0秒後に表示）
+  // 1回目
   setTimeout(() => {
     const snowman1 = createSnowman()
     snowmen.value.push(snowman1)
@@ -120,7 +120,7 @@ function startSnowmen() {
     }, 5000)
   }, 0)
 
-  // 2回目（5秒後に表示）
+  // 2回目
   setTimeout(() => {
     const snowman2 = createSnowman()
     snowmen.value.push(snowman2)
@@ -195,7 +195,7 @@ onMounted(() => {
 .season-image {
   position: absolute;
   width: 390px;
-  height: 844px;
+  height: 740px;
   object-fit: cover;
   top: 0;
   left: 0;
@@ -233,7 +233,7 @@ onMounted(() => {
   z-index: 14;
 }
 
-/* 結晶の落下アニメーション */
+/* 雪のアニメーション */
 @keyframes fall {
   0% {
     transform: translateY(0);
@@ -248,7 +248,7 @@ onMounted(() => {
   }
 }
 
-/* 雪だるまの幻想的フェードイン・アウト */
+/* 雪だるまフェード */
 @keyframes fadeSnowman {
   0% {
     opacity: 0;
