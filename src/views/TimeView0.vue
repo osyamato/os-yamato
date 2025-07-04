@@ -9,8 +9,8 @@
       <!-- ▼ 時計ボタン直下に表示 -->
       <transition name="fade">
         <div v-if="panelVisible" class="switch-panel-top">
-          <button @click="switchClock(0)">季節時計 (TimeView2)</button>
-          <button @click="switchClock(1)">新しい時計 (TimeView3)</button>
+          <button @click="switchClock(0)">侘び寂び</button>
+          <button disabled class="disabled-button">新しい時計 (準備中)</button>
         </div>
       </transition>
     </div>
@@ -59,13 +59,13 @@ function switchClock(index) {
 
 .switch-panel-top {
   margin-top: 8px;
-  background: rgba(255, 255, 255, 0.95);
-  border: 1px solid #ddd;
+  background: rgba(100, 100, 100, 0.95); /* ← ここを灰色に */
+  border: 1px solid #888;                /* 枠も少し濃いグレーに */
   border-radius: 8px;
   padding: 0.5rem;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .switch-panel-top button {
@@ -78,8 +78,15 @@ function switchClock(index) {
   cursor: pointer;
 }
 
-.switch-panel-top button:hover {
+.switch-panel-top button:hover:enabled {
   background: #ddd;
+}
+
+/* ▼ disabled ボタン用スタイル */
+.disabled-button {
+  background: #f0f0f0;
+  color: #aaa;
+  cursor: not-allowed;
 }
 
 .fade-enter-active,
@@ -95,5 +102,4 @@ function switchClock(index) {
   opacity: 1;
 }
 </style>
-
 

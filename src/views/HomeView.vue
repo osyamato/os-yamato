@@ -186,10 +186,6 @@ button {
   transition: transform 0.2s, box-shadow 0.2s;
 }
 
-button:hover {
-  transform: scale(1.05);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
 
 .icon-image {
   width: 100%;
@@ -200,6 +196,12 @@ button:hover {
   /* 追加 👇 */
   will-change: opacity, transform;
   transition: opacity 0.2s ease-in-out;
+}
+
+
+button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .calendar-button {
