@@ -665,16 +665,6 @@ export const schema = {
                     }
                 },
                 {
-                    "type": "key",
-                    "properties": {
-                        "name": "byRoomId",
-                        "fields": [
-                            "roomId"
-                        ],
-                        "queryField": "messagesByRoomId"
-                    }
-                },
-                {
                     "type": "auth",
                     "properties": {
                         "rules": [
@@ -865,12 +855,6 @@ export const schema = {
                     "type": "auth",
                     "properties": {
                         "rules": [
-                            {
-                                "allow": "public",
-                                "operations": [
-                                    "read"
-                                ]
-                            },
                             {
                                 "provider": "userPools",
                                 "ownerField": "owner",

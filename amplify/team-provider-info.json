@@ -15,11 +15,32 @@
       "auth": {
         "osyamatoddd28512": {}
       },
-      "api": {
-        "osyamato": {}
+      "storage": {
+        "photoStorage": {}
+      }
+    }
+  },
+  "devnew": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-osyamato-devnew-8704f-authRole",
+      "UnauthRoleArn": "arn:aws:iam::495599735325:role/amplify-osyamato-devnew-8704f-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::495599735325:role/amplify-osyamato-devnew-8704f-authRole",
+      "Region": "ap-northeast-1",
+      "DeploymentBucketName": "amplify-osyamato-devnew-8704f-deployment",
+      "UnauthRoleName": "amplify-osyamato-devnew-8704f-unauthRole",
+      "StackName": "amplify-osyamato-devnew-8704f",
+      "StackId": "arn:aws:cloudformation:ap-northeast-1:495599735325:stack/amplify-osyamato-devnew-8704f/b85dd6d0-57da-11f0-871e-069e128096ff",
+      "AmplifyAppId": "dvocczdb288bo"
+    },
+    "categories": {
+      "auth": {
+        "osyamatoddd28512": {}
       },
       "storage": {
         "photoStorage": {}
+      },
+      "api": {
+        "osyamato": {}
       }
     }
   }
