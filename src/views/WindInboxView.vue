@@ -748,5 +748,3 @@ button.favorited .heart-icon {
 </style>
   
  
-
- 
