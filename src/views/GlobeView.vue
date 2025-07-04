@@ -76,6 +76,8 @@ import { createBlossom, updateBlossom } from '@/graphql/mutations'
 import { listBlossoms } from '@/graphql/queries'
 import YamatoUserSearchModal from '@/components/YamatoUserSearchModal.vue'
 import { getRandomLocationForCountry } from '@/utils/countryLocations' 
+import { getPublicProfile } from '@/graphql/queries'
+
 
 const allBlossoms = ref([])
 const showRegisterModal = ref(false)
@@ -272,7 +274,6 @@ onMounted(async () => {
     const result = await API.graphql(graphqlOperation(listBlossoms))
     const blossoms = result.data.listBlossoms.items
 
-    console.log('🌸 allBlossoms:', blossoms)
 
     allBlossoms.value = blossoms
     clearAllFlowers()
@@ -388,7 +389,6 @@ function handleSearchClose() {
 }
 
 function handleSearchResult(blossom) {
-  console.log('🔍 選ばれたユーザー:', blossom)
   selectedProfile.value = blossom
   showSearchModal.value = false
   setTimeout(() => {

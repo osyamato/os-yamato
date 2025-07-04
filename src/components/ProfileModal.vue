@@ -14,14 +14,19 @@
           <p class="profile-text">{{ profile.comment }}</p>
         </div>
 
-        <div v-if="profile.country" class="profile-section">
-          <label>{{ t('blossom.country') }}</label>
-          <p class="profile-text">{{ emojiCountry(profile.country) }}</p>
-        </div>
-
-        <div v-if="profile.hobby" class="profile-section">
-          <label>{{ t('blossom.hobby') }}</label>
-          <p class="profile-text">{{ emojiHobby(profile.hobby) }}</p>
+        <!-- ✅ 国と趣味を横並びにまとめる -->
+        <div
+          v-if="profile.country || profile.hobby"
+          class="profile-row-combined"
+        >
+          <div v-if="profile.country" class="profile-section half">
+            <label>{{ t('blossom.country') }}</label>
+            <p class="profile-text">{{ emojiCountry(profile.country) }}</p>
+          </div>
+          <div v-if="profile.hobby" class="profile-section half">
+            <label>{{ t('blossom.hobby') }}</label>
+            <p class="profile-text">{{ emojiHobby(profile.hobby) }}</p>
+          </div>
         </div>
 
         <div v-if="profile.yamatoId" class="profile-section">
@@ -29,17 +34,13 @@
           <p class="profile-text">{{ profile.yamatoId }}</p>
         </div>
 
-        <div class="button-row">
+        <div class="button-row" v-if="canRequest">
           <YamatoButton
-            v-if="canRequest"
             type="primary"
             @click="emit('request', profile.yamatoId)"
           >
             📮 {{ t('blossom.requestButton') }}
           </YamatoButton>
-          <p v-else class="disabled-text">
-            {{ t('blossom.noProfileCannotRequest') }}
-          </p>
         </div>
 
         <div class="button-row">
@@ -60,19 +61,17 @@ const { t } = useI18n()
 const props = defineProps({
   visible: Boolean,
   profile: Object,
-  hasOwnProfile: Boolean // ✅ 自分がプロフィール登録済みかどうか
+  hasOwnProfile: Boolean
 })
 
 const emit = defineEmits(['back', 'request'])
 
-// ✅ 相手のプロフィールが整っているか
-const hasTargetProfile = computed(() => {
-  return props.profile && (props.profile.nickname || props.profile.comment)
-})
-
-// ✅ 自分と相手の両方がプロフィール条件を満たしているか
 const canRequest = computed(() => {
-  return hasTargetProfile.value && props.hasOwnProfile
+  return (
+    props.profile &&
+    !!props.profile.yamatoId &&
+    props.hasOwnProfile
+  )
 })
 
 function emojiCountry(code) {
@@ -140,6 +139,8 @@ function emojiHobby(code) {
   border-radius: 1rem;
   max-width: 360px;
   width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
   box-shadow: 0 8px 24px rgba(255, 255, 255, 0.1);
   animation: scaleFadeIn 0.3s ease;
 }
@@ -153,35 +154,44 @@ function emojiHobby(code) {
 }
 
 .profile-section {
-  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.6rem;
 }
 
 .profile-section label {
+  flex-shrink: 0;
   font-weight: bold;
-  display: block;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   color: #ccc;
-  margin-bottom: 0.2rem;
+  margin-bottom: 0;
 }
 
 .profile-text {
+  flex: 1;
   background: #2a2a2a;
-  padding: 0.6rem;
+  padding: 0.4rem 0.6rem;
   border-radius: 0.5rem;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   color: #f5f5f5;
+  margin-left: 0.5rem;
 }
 
-.button-row {
-  text-align: center;
-  margin-top: 1.5rem;
+.profile-row-combined {
+  display: flex;
+  gap: 0.6rem;
+  margin-bottom: 0.6rem;
 }
 
-.disabled-text {
-  font-size: 0.85rem;
-  color: #888;
-  text-align: center;
-  margin-top: 1rem;
+.profile-section.half {
+  flex: 1;
+}
+
+.button-row button {
+  min-width: 180px !important;
+  white-space: nowrap !important;
+  padding: 0.5rem 1rem !important;
 }
 
 @keyframes scaleFadeIn {
@@ -195,4 +205,5 @@ function emojiHobby(code) {
   }
 }
 </style>
+
 
