@@ -32,7 +32,8 @@ import SentWindMessagesView from '../views/SentWindMessagesView.vue'
 import TimeView2 from '../views/TimeView2.vue'
 import IconGuideView from '@/views/IconGuideView.vue'
 import WeatherView from '@/views/WeatherView.vue' 
-
+import TimeView0 from '../views/TimeView0.vue' 
+import TimeView3 from '../views/TimeView3.vue'
 
 const routes = [
   { path: '/', redirect: '/signin' },
@@ -77,7 +78,9 @@ const routes = [
   { path: '/sent-wind-messages', name: 'sent-wind-messages', component: SentWindMessagesView },
 { path: '/time2', name: 'time2', component: TimeView2 },
 { path: '/icon-guide', name: 'IconGuide', component: IconGuideView },
-  { path: '/weather', name: 'weather', component: WeatherView }
+  { path: '/weather', name: 'weather', component: WeatherView },
+  { path: '/time0', name: 'time0', component: TimeView0 },
+{ path: '/time3', name: 'time3', component: TimeView3 }
 
 ]
 

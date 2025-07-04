@@ -54,9 +54,9 @@
       </button>
 
       <!-- ✅ 時計 -->
-      <button @click="goTo('time2')">
-        <img src="/clock.png" alt="時計" class="icon-image" />
-      </button>
+<button @click="goTo('time0')">
+  <img src="/clock.png" alt="時計" class="icon-image" />
+</button>
 
       <!-- ✅ 天気 -->
       <button @click="goTo('weather')">

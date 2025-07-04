@@ -856,12 +856,6 @@ export const schema = {
                     "properties": {
                         "rules": [
                             {
-                                "allow": "public",
-                                "operations": [
-                                    "read"
-                                ]
-                            },
-                            {
                                 "provider": "userPools",
                                 "ownerField": "owner",
                                 "allow": "owner",

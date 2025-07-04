@@ -1,10 +1,10 @@
 <template>
   <div class="confirm-overlay" v-if="visible">
     <div class="confirm-box">
-      <p class="confirm-message">{{ message }}</p>
+      <p class="confirm-message">{{ t(message) }}</p>
       <div class="button-row">
-        <YamatoButton @click="cancel">キャンセル</YamatoButton>
-        <YamatoButton type="danger" @click="confirm">削除</YamatoButton>
+        <YamatoButton @click="cancel">{{ t('common.cancel') }}</YamatoButton>
+        <YamatoButton type="danger" @click="confirm">{{ t('common.delete') }}</YamatoButton>
       </div>
     </div>
   </div>
@@ -12,11 +12,15 @@
 
 <script setup>
 import YamatoButton from './YamatoButton.vue'
+import { useI18n } from 'vue-i18n'
+
 defineProps({
   visible: Boolean,
   message: String
 })
 const emit = defineEmits(['confirm', 'cancel'])
+
+const { t } = useI18n()
 
 function confirm() {
   emit('confirm')
