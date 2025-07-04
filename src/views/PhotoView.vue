@@ -365,26 +365,32 @@ async function handleFileUpload(event) {
   isLoading.value = true
 
   try {
-    const user = await Auth.currentAuthenticatedUser()
-    const subscription = user.attributes['custom:subscription'] || 'free'
+    // ★ 制限ロジックを削除
+    // const user = await Auth.currentAuthenticatedUser()
+    // const subscription = user.attributes['custom:subscription'] || 'free'
 
-    const maxUploads = subscription === 'paid' ? 30 : 1
-    const todayUploadCount = await getTodayUploadCount()
-    const remaining = maxUploads - todayUploadCount
+    // const maxUploads = subscription === 'paid' ? 30 : 1
+    // const todayUploadCount = await getTodayUploadCount()
+    // const remaining = maxUploads - todayUploadCount
 
-    if (remaining <= 0) {
-      alert(`本日はすでに${maxUploads}枚アップロード済みです。`)
-      return
-    }
+    // if (remaining <= 0) {
+    //   alert(`本日はすでに${maxUploads}枚アップロード済みです。`)
+    //   return
+    // }
 
-    const uploadCount = Math.min(remaining, files.length)
+    // const uploadCount = Math.min(remaining, files.length)
 
-    for (let i = 0; i < uploadCount; i++) {
+    // for (let i = 0; i < uploadCount; i++) {
+    //   await uploadSinglePhoto(files[i])
+    // }
+
+    // if (files.length > uploadCount) {
+    //   alert(`本日は ${remaining} 枚までアップロード可能でした。`)
+    // }
+
+    // ★ 制限なしですべてアップロード
+    for (let i = 0; i < files.length; i++) {
       await uploadSinglePhoto(files[i])
-    }
-
-    if (files.length > uploadCount) {
-      alert(`本日は ${remaining} 枚までアップロード可能でした。`)
     }
 
     await fetchPhotos()
