@@ -5,10 +5,11 @@
       <div v-for="n in 50" :key="'rain-' + n" class="raindrop" :style="randomRainStyle()" />
     </div>
 
-    <!-- 雪 -->
-    <div v-if="effectType === 'snow'" class="effect-container">
-      <div v-for="n in 50" :key="'snow-' + n" class="snowflake" :style="randomSnowStyle()" />
-    </div>
+<!-- 雪 -->
+<div v-if="effectType === 'snow'" class="effect-container">
+  <div class="snow-overlay"></div> <!-- ← 追加！ -->
+  <div v-for="n in 50" :key="'snow-' + n" class="snowflake" :style="randomSnowStyle()" />
+</div>
 
     <!-- 晴れ -->
     <div v-if="effectType === 'sunny'" class="effect-container">
@@ -433,12 +434,11 @@ const pastelColors = ['#e63946', '#f1c40f', '#2ecc71', '#3498db', '#9b59b6', '#e
 .effect-container {
   position: fixed;
   top: 0;
-  left: 0;  /* これで確実に画面の左端からスタート */
-  width: 100vw;  /* ← 画面全体に広げる */
+  left: 0;
+  width: 100vw;
   height: 100vh;
   pointer-events: none;
   z-index: 999;
-  transform: none !important;  /* ← 念のため中央寄せ解除 */
 }
 
 .raindrop {
@@ -473,39 +473,22 @@ const pastelColors = ['#e63946', '#f1c40f', '#2ecc71', '#3498db', '#9b59b6', '#e
   z-index: 6;
 }
 
-.moon {
-  background-image: url('/moon.png.1.png');
-  z-index: 1;
-}
-
-.mishima-image {
-  background-image: url('/mishima.1.png');
-}
-
-.saturn-image {
-  background-image: url('/saturn.1.png');
-}
+.moon { background-image: url('/moon.png.1.png'); }
+.mishima-image { background-image: url('/mishima.1.png'); }
+.saturn-image { background-image: url('/saturn.1.png'); }
 
 .moon-overlay,
 .mishima-overlay,
 .saturn-overlay {
   position: absolute;
-  inset: 0;
-  background-color: rgba(0, 0, 0, 0.6);
+  top: -10%;
+  left: 0;
+  width: 100%;
+  height: 120%;
+  background-color: rgba(0, 0, 0, 0.8);
   animation: fadeOut 6s ease-out forwards;
   z-index: 0;
-}
-
-.snowflake {
-  position: absolute;
-  top: -20px;
-  background: white;
-  border-radius: 50%;
-  border: 1px solid rgba(0, 0, 0, 0.2);
-  box-shadow: 0 0 4px rgba(0, 0, 0, 0.25), 0 0 10px rgba(0, 0, 0, 0.1);
-  animation-name: snowfall;
-  animation-timing-function: linear;
-  animation-fill-mode: forwards;
+  will-change: opacity;
 }
 
 .sunbeam {
@@ -529,6 +512,97 @@ const pastelColors = ['#e63946', '#f1c40f', '#2ecc71', '#3498db', '#9b59b6', '#e
   position: absolute;
   animation: sakura-pop ease-out forwards;
 }
+
+.autumn-leaf {
+  position: absolute;
+  animation: autumn-pop ease-out forwards;
+}
+
+.confetti {
+  position: absolute;
+  animation: confetti-pop ease-out forwards;
+  border-radius: 2px;
+}
+
+.swallow-curve {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 64px;
+  height: 64px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(-50%);
+  animation: swallow-straight-flight 2.8s ease-in-out forwards;
+  z-index: 10;
+}
+
+.starry-bg {
+  background: radial-gradient(ellipse at bottom, #000 0%, #000 100%);
+}
+
+.star {
+  position: absolute;
+  background: white;
+  border-radius: 50%;
+  opacity: 0.8;
+  animation: twinkle 2s infinite ease-in-out;
+}
+
+.meteor {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: white;
+  border-radius: 50%;
+  animation: meteor-move 1.6s ease-out forwards;
+  opacity: 0;
+}
+
+.bubble {
+  position: absolute;
+  bottom: -50px;
+  width: 40px;
+  height: 40px;
+  background-image: url('/bubble.png');
+  background-size: cover;
+  background-repeat: no-repeat;
+  animation: bubble-float 12s ease-out forwards;
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+/* ✅ 雪の結晶 PNG 用 統一スタイル */
+.snowflake {
+  position: absolute;
+  top: -20px;
+  background-image: url('/snowflake6.png'); /* ← PNG 結晶パス */
+  background-size: 40px 40px;
+  background-repeat: no-repeat;
+  background-position: center;
+  animation-name: snowfall;
+  animation-timing-function: ease-in-out;
+  animation-fill-mode: both;
+  width: 40px;
+  height: 40px;
+}
+
+.snow-overlay {
+  position: absolute;
+  top: -10%;
+  left: 0;
+  width: 100%;
+  height: 120%;
+  background-color: rgba(0, 0, 0, 0.7); /* ← 濃さは自由に調整 */
+  animation: fadeOut 8s ease-out forwards;
+  z-index: 0;
+  will-change: opacity;
+}
+
+
 </style>
 
 <style>
@@ -539,28 +613,13 @@ const pastelColors = ['#e63946', '#f1c40f', '#2ecc71', '#3498db', '#9b59b6', '#e
 
 @keyframes snowfall {
   0% {
-    transform: translateY(0) translateX(0) rotate(0deg);
+    transform: translateY(0) rotate(0deg);
     opacity: 1;
   }
-  50% {
-    transform: translateY(50vh) translateX(5px) rotate(180deg);
-    opacity: 0.8;
-  }
   100% {
-    transform: translateY(100vh) translateX(0px) rotate(360deg);
+    transform: translateY(100vh) rotate(360deg);
     opacity: 0;
   }
-}
-.snowflake {
-  position: absolute;
-  top: -10px;
-  background: white;
-  border-radius: 50%;
-  border: 1px solid rgba(0, 0, 0, 0.2);
-  box-shadow: 0 0 4px rgba(0, 0, 0, 0.25);
-  animation-name: snowfall;
-  animation-timing-function: ease-in-out;
-animation-fill-mode: both; 
 }
 
 @keyframes sunnyFade {
@@ -584,71 +643,25 @@ animation-fill-mode: both;
 }
 
 @keyframes autumn-pop {
-  0% {
-    transform: translate(0, 0) rotate(0deg);
-    opacity: 0;
-  }
-  20% {
-    transform: translate(var(--dx), var(--dy)) rotate(90deg);
-    opacity: 1;
-  }
-  50% {
-    transform: translate(calc(var(--dx) * 1.2), calc(var(--dy) * 1.2)) rotate(180deg);
-    opacity: 0.9;
-  }
-  80% {
-    transform: translate(calc(var(--dx) * 1.4), calc(var(--dy) * 1.4)) rotate(270deg);
-    opacity: 0.4;
-  }
-  90% {
-    opacity: 0.2;
-  }
-  100% {
-    transform: translate(calc(var(--dx) * 1.6), calc(var(--dy) * 1.6)) rotate(360deg);
-    opacity: 0;
-  }
+  0% { transform: translate(0, 0) rotate(0deg); opacity: 0; }
+  20% { transform: translate(var(--dx), var(--dy)) rotate(90deg); opacity: 1; }
+  50% { transform: translate(calc(var(--dx) * 1.2), calc(var(--dy) * 1.2)) rotate(180deg); opacity: 0.9; }
+  80% { transform: translate(calc(var(--dx) * 1.4), calc(var(--dy) * 1.4)) rotate(270deg); opacity: 0.4; }
+  90% { opacity: 0.2; }
+  100% { transform: translate(calc(var(--dx) * 1.6), calc(var(--dy) * 1.6)) rotate(360deg); opacity: 0; }
 }
 
 @keyframes moonRise {
-  0% {
-    transform: translateX(-50%) translateY(100px);
-    opacity: 0;
-  }
-  40% {
-    opacity: 1;
-  }
-  100% {
-    transform: translateX(-50%) translateY(-80px);
-    opacity: 0;
-  }
+  0% { transform: translateX(-50%) translateY(100px); opacity: 0; }
+  40% { opacity: 1; }
+  100% { transform: translateX(-50%) translateY(-80px); opacity: 0; }
 }
 
 @keyframes fadeOut {
-  0%   { opacity: 0; }
-  20%  { opacity: 1; }
-  80%  { opacity: 1; }
-  100% { opacity: 0; }
-}
-
-@keyframes fade-in {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-
-.swallow-curve {
-  position: absolute;
-  top: 50%;
-  left: 0;
-  width: 64px;
-  height: 64px;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  pointer-events: none;
-  opacity: 0;
-  transform: translateY(-50%);
-  animation: swallow-straight-flight 2.8s ease-in-out forwards;
-  z-index: 10;
+  0% { opacity: 0; }    /* 最初は透明 */
+  20% { opacity: 1; }   /* 20% の時点で完全に見えるようになる */
+  80% { opacity: 1; }   /* 80% までずっと見えている */
+  100% { opacity: 0; }  /* 最後に再び消える */
 }
 
 @keyframes swallow-straight-flight {
@@ -658,38 +671,9 @@ animation-fill-mode: both;
   100% { transform: translate(100vw, -50%) scale(1); opacity: 0; }
 }
 
-.autumn-leaf {
-  position: absolute;
-  animation: autumn-pop ease-out forwards;
-}
-
-.confetti {
-  position: absolute;
-  animation: confetti-pop ease-out forwards;
-  border-radius: 2px;
-}
 @keyframes confetti-burst {
-  0% {
-    transform: translate(0, 0) scale(1) rotate(0deg);
-    opacity: 1;
-  }
-  100% {
-    transform: translate(var(--dx), var(--dy)) scale(1.2) rotate(720deg);
-    opacity: 0;
-  }
-}
-
-
-.starry-bg {
-  background: radial-gradient(ellipse at bottom, #000 0%, #000 100%);
-}
-
-.star {
-  position: absolute;
-  background: white;
-  border-radius: 50%;
-  opacity: 0.8;
-  animation: twinkle 2s infinite ease-in-out;
+  0% { transform: translate(0, 0) scale(1) rotate(0deg); opacity: 1; }
+  100% { transform: translate(var(--dx), var(--dy)) scale(1.2) rotate(720deg); opacity: 0; }
 }
 
 @keyframes twinkle {
@@ -697,66 +681,18 @@ animation-fill-mode: both;
   50% { opacity: 1; }
 }
 
-.meteor {
-  position: absolute;
-  width: 6px;
-  height: 6px;
-  background: white;
-  border-radius: 50%;
-  animation: meteor-move 1.6s ease-out forwards;
-  opacity: 0;
-}
-@keyframes meteor-fade-move {
-  0%   { transform: translate(0, 0); opacity: 0; }
-  20%  { opacity: 1; }
-  80%  { opacity: 1; }
+@keyframes meteor-move {
+  0% { transform: translate(0, 0); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
   100% { transform: translate(var(--dx), var(--dy)); opacity: 0; }
 }
 
-@keyframes meteor-move {
-  0% {
-    transform: translate(0, 0);
-    opacity: 0;
-  }
-  10% {
-    opacity: 1;
-  }
-  90% {
-    opacity: 1;
-  }
-  100% {
-    transform: translate(var(--dx), var(--dy));
-    opacity: 0;
-  }
-}
-
-.bubble {
-  position: absolute;
-  bottom: -50px;
-  width: 40px;
-  height: 40px;
-  background-image: url('/bubble.png');
-  background-size: cover;
-  background-repeat: no-repeat;
-  animation: bubble-float 12s ease-out forwards;
-  opacity: 0.7;
-  pointer-events: none;
-}
 @keyframes bubble-float {
-  0% {
-    transform: translateY(0) translateX(0) scale(0.9) rotate(0deg);
-    opacity: 0.8;
-  }
-  30% {
-    transform: translateY(-400px) translateX(10px) scale(1) rotate(90deg);
-  }
-  60% {
-    transform: translateY(-700px) translateX(-10px) scale(1.05) rotate(180deg);
-  }
-  100% {
-    transform: translateY(-1000px) translateX(20px) scale(1.1) rotate(360deg);
-    opacity: 0;
-  }
+  0% { transform: translateY(0) translateX(0) scale(0.9) rotate(0deg); opacity: 0.8; }
+  30% { transform: translateY(-400px) translateX(10px) scale(1) rotate(90deg); }
+  60% { transform: translateY(-700px) translateX(-10px) scale(1.05) rotate(180deg); }
+  100% { transform: translateY(-1000px) translateX(20px) scale(1.1) rotate(360deg); opacity: 0; }
 }
-
 </style>
+
