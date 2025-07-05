@@ -1,12 +1,12 @@
 <template>
   <div class="season-container">
-    <!-- 上部の時計 -->
+    <!-- 時計 -->
     <div class="clock-text">{{ currentTime }}</div>
 
     <!-- 待機中メッセージ -->
     <div v-if="waiting" class="waiting-text">四季待機中…</div>
 
-    <!-- 画像のフェード切り替え -->
+    <!-- 画像 -->
     <transition-group name="fade" tag="div" class="image-wrapper" appear v-if="!waiting">
       <img
         v-for="(img, idx) in images"
@@ -17,19 +17,40 @@
       />
     </transition-group>
 
-    <!-- 雪の結晶 -->
+    <!-- 🌸 春の桜 -->
+    <div
+      v-for="petal in sakuraOverlays"
+      :key="petal.id"
+      class="sakura-flower"
+      :style="{ left: `${petal.x}px`, top: `${petal.y}px` }"
+    >
+      <img src="/sakura.time.png" class="sakura-img" />
+    </div>
+
+    <!-- 🍂 秋の葉 -->
+    <div
+      v-for="leaf in leafOverlays"
+      :key="leaf.id"
+      class="autumn-leaf"
+      :style="{ left: `${leaf.x}px`, top: `${leaf.y}px`, animationDuration: `${leaf.duration}s` }"
+    >
+      <img :src="leaf.src" class="autumn-leaf-img" />
+    </div>
+
+    <!-- ❄️ 雪 -->
     <div v-for="flake in snowflakes" :key="flake.id" class="snowflake" :style="flake.style">
       <img src="/snowflake6.png" class="flake-image" />
     </div>
 
-    <!-- 雪だるま -->
-    <img
-      v-for="man in snowmen"
-      :key="man.id"
-      src="/snowman.png"
-      class="snowman"
-      :style="man.style"
-    />
+    <!-- ☃️ 雪だるま -->
+    <transition name="fadeSnowman" mode="out-in">
+      <img
+        v-if="showSnowman"
+        src="/snowman.png"
+        class="snowman"
+        :style="{ left: `${snowmanX}px`, top: `${snowmanY}px`, width: `${snowmanSize}px` }"
+      />
+    </transition>
   </div>
 </template>
 
@@ -47,8 +68,14 @@ const currentIndex = ref(0)
 const currentTime = ref('')
 const waiting = ref(true)
 
+const sakuraOverlays = ref([])
+const leafOverlays = ref([])
 const snowflakes = ref([])
-const snowmen = ref([])
+
+const showSnowman = ref(false)
+const snowmanX = ref(0)
+const snowmanY = ref(0)
+const snowmanSize = ref(40)
 
 function updateClock() {
   const now = new Date()
@@ -77,21 +104,84 @@ function startImageLoop() {
 }
 
 function updateSeason() {
+  const isSpring = currentIndex.value === 0
+  const isAutumn = currentIndex.value === 2
   const isWinter = currentIndex.value === 3
+
+  // 🌸 春
+  if (isSpring) {
+    startSakura()
+  } else {
+    sakuraOverlays.value = []
+  }
+
+  // 🍂 秋
+  if (isAutumn) {
+    startLeaves()
+  } else {
+    leafOverlays.value = []
+  }
+
+  // ❄️ 冬
   if (isWinter) {
     startSnowfall()
-    startSnowmen()
+    startSnowman()
   } else {
     snowflakes.value = []
-    snowmen.value = []
+    showSnowman.value = false
   }
 }
 
+// 🌸 桜
+function startSakura() {
+  sakuraOverlays.value = []
+
+  const interval = setInterval(() => {
+    const id = Date.now() + Math.random()
+    const x = Math.random() * 320 + 20
+    const y = Math.random() * 600 + 50
+
+    sakuraOverlays.value.push({ id, x, y })
+
+    setTimeout(() => {
+      sakuraOverlays.value = sakuraOverlays.value.filter(p => p.id !== id)
+    }, 3000)
+  }, 500)
+
+  setTimeout(() => {
+    clearInterval(interval)
+  }, 15000)
+}
+
+// 🍂 秋の葉
+function startLeaves() {
+  leafOverlays.value = []
+
+  const interval = setInterval(() => {
+    const id = Date.now() + Math.random()
+    const x = Math.random() * 350
+    const y = Math.random() * 650
+    const duration = Math.random() * 2 + 2.5
+    const src = Math.random() < 0.5 ? '/autumn1.png' : '/autumn2.png'
+
+    leafOverlays.value.push({ id, x, y, duration, src })
+
+    setTimeout(() => {
+      leafOverlays.value = leafOverlays.value.filter(l => l.id !== id)
+    }, duration * 1000)
+  }, 500)
+
+  setTimeout(() => {
+    clearInterval(interval)
+  }, 15000)
+}
+
+// ❄️ 雪
 function startSnowfall() {
   snowflakes.value = []
-  const totalFlakes = 20
-  for (let i = 0; i < totalFlakes; i++) {
-    const id = Date.now() + i
+
+  const interval = setInterval(() => {
+    const id = Date.now() + Math.random()
     const size = Math.random() * 30 + 30
     const x = Math.random() * 360
     const duration = Math.random() * 10 + 10
@@ -100,40 +190,32 @@ function startSnowfall() {
       id,
       style: {
         left: `${x}px`,
-        animation: `fall ${duration}s linear infinite`,
+        animation: `fall ${duration}s linear forwards`,
         width: `${size}px`
       }
     })
-  }
-}
 
-function startSnowmen() {
-  snowmen.value = []
-
-  // 1回目のみ
-  const snowman1 = createSnowman()
-  snowmen.value.push(snowman1)
+    setTimeout(() => {
+      snowflakes.value = snowflakes.value.filter(f => f.id !== id)
+    }, duration * 1000)
+  }, 500)
 
   setTimeout(() => {
-    snowmen.value = snowmen.value.filter(m => m.id !== snowman1.id)
-  }, 10000)
+    clearInterval(interval)
+  }, 15000)
 }
 
-function createSnowman() {
-  const id = Date.now() + Math.random()
-  const size = Math.random() * 20 + 30
-  const x = Math.random() * 300
-  const y = Math.random() * 100 + 500
+// ☃️ 雪だるま
+function startSnowman() {
+  snowmanX.value = Math.random() * 300
+  snowmanY.value = Math.random() * 500 + 100
+  snowmanSize.value = Math.random() * 20 + 30
 
-  return {
-    id,
-    style: {
-      left: `${x}px`,
-      top: `${y}px`,
-      width: `${size}px`,
-      animation: `fadeSnowman 10s ease-in-out both`
-    }
-  }
+  showSnowman.value = true
+
+  setTimeout(() => {
+    showSnowman.value = false
+  }, 10000)
 }
 
 onMounted(() => {
@@ -204,53 +286,84 @@ onMounted(() => {
   opacity: 1;
 }
 
+/* 🌸 桜 */
+.sakura-flower {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  pointer-events: none;
+  z-index: 15;
+}
+
+.sakura-img {
+  width: 28px;
+  height: 28px;
+  animation: sakuraPop 3s ease-out forwards;
+  opacity: 1;
+}
+
+@keyframes sakuraPop {
+  0% { transform: scale(0.5); opacity: 1; }
+  50% { transform: scale(1.2); opacity: 0.8; }
+  100% { transform: scale(1.8); opacity: 0; }
+}
+
+/* 🍂 秋の葉 */
+.autumn-leaf {
+  position: absolute;
+  animation: leafFloat ease-out forwards;
+  pointer-events: none;
+  z-index: 15;
+}
+
+.autumn-leaf-img {
+  width: 28px;
+  height: 28px;
+}
+
+@keyframes leafFloat {
+  0% { transform: scale(0.5) rotate(0deg); opacity: 0; }
+  30% { opacity: 0.8; }
+  100% { transform: scale(1.4) rotate(360deg); opacity: 0; }
+}
+
+/* ❄️ 雪 */
 .snowflake {
   position: absolute;
   top: -40px;
   z-index: 12;
-  background: none !important;
-  border: none !important;
-  box-shadow: none !important;
 }
 
 .flake-image {
   display: block;
   width: 100%;
   height: auto;
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-  filter: none !important;
-  image-rendering: pixelated !important;
-  opacity: 1;
   pointer-events: none;
 }
 
+@keyframes fall {
+  0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+  70% { opacity: 1; }
+  100% { transform: translateY(1080px) rotate(720deg); opacity: 0; }
+}
+
+/* ☃️ 雪だるま */
 .snowman {
   position: absolute;
   z-index: 14;
 }
 
-@keyframes fall {
-  0% {
-    transform: translateY(0);
-    opacity: 1;
-  }
-  70% {
-    opacity: 1;
-  }
-  100% {
-    transform: translateY(900px);
-    opacity: 0;
-  }
+.fadeSnowman-enter-active,
+.fadeSnowman-leave-active {
+  transition: opacity 4s ease;
 }
-
-@keyframes fadeSnowman {
-  0%   { opacity: 0; }
-  40%  { opacity: 0.6; }
-  60%  { opacity: 0.6; }
-  100% { opacity: 0; }
+.fadeSnowman-enter-from,
+.fadeSnowman-leave-to {
+  opacity: 0;
+}
+.fadeSnowman-enter-to,
+.fadeSnowman-leave-from {
+  opacity: 0.6;
 }
 </style>
-
 
