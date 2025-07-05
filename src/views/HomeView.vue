@@ -34,11 +34,12 @@
       </button>
 
       <!-- ✅ メッセージ -->
-      <button @click="goToChatFromHome">
+      <button @click="goToChatFromHome" class="chat-button">
         <img src="/messege.icon.png" alt="メッセージ" class="icon-image" />
+<span v-if="hasUnread" class="notification-dot">🌱</span>
       </button>
 
-      <!-- ✅ 風のたより -->
+      <!-- ✅ 風の便り -->
       <button @click="goTo('wind-inbox')">
         <img src="/WindMessage2.png" alt="風の便り" class="icon-image" />
       </button>
@@ -54,9 +55,9 @@
       </button>
 
       <!-- ✅ 時計 -->
-<button @click="goTo('time0')">
-  <img src="/clock.png" alt="時計" class="icon-image" />
-</button>
+      <button @click="goTo('time0')">
+        <img src="/clock.png" alt="時計" class="icon-image" />
+      </button>
 
       <!-- ✅ 天気 -->
       <button @click="goTo('weather')">
@@ -68,7 +69,7 @@
         <img src="/icon.2.png" alt="ヒント" class="icon-image" />
       </button>
 
-      <!-- 🎛 設定 (最後に) -->
+      <!-- 🎛 設定 -->
       <button @click="goToSettingsFromHome">
         <img src="/images/setting.png" alt="設定" class="icon-image" />
       </button>
@@ -76,24 +77,24 @@
   </div>
 </template>
 
-
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { Auth } from 'aws-amplify'
-import { useI18n } from 'vue-i18n' // ✅ ローカライズ
+import { Auth, API, graphqlOperation } from 'aws-amplify'
+import { onCreateMessage } from '@/graphql/subscriptions'
+import { useI18n } from 'vue-i18n'
 
 const router = useRouter()
 const wallpaper = ref('')
+const hasUnread = ref(false)
+const subscription = ref(null)
 
 const { t } = useI18n()
 const today = new Date()
 
-// 📅 月と日（動的に変化）
 const currentDay = computed(() => today.getDate())
 const currentMonthName = computed(() => t(`calendar.month.${today.getMonth() + 1}`))
 
-// 🔷 背景スタイルの切り替え
 const wallpaperStyle = computed(() => {
   if (!wallpaper.value) return {}
 
@@ -114,25 +115,23 @@ const wallpaperStyle = computed(() => {
   }
 })
 
-// 🔹 共通ページ遷移
 function goTo(path) {
   router.push(`/${path}`)
 }
 
-// ✅ 設定・チャットにだけクエリ付与
 function goToSettingsFromHome() {
   router.push({ path: '/settings', query: { from: 'home' } })
-}
-
-function goToChatFromHome() {
-  router.push({ path: '/chat-rooms', query: { from: 'home' } })
 }
 
 function goToIconGuide() {
   router.push({ path: '/icon-guide', query: { from: 'home' } })
 }
 
-// 🔐 認証確認と背景取得
+function goToChatFromHome() {
+  hasUnread.value = false // ✅ 開いたときに消す
+  router.push({ path: '/chat-rooms', query: { from: 'home' } })
+}
+
 onMounted(async () => {
   try {
     await Auth.currentAuthenticatedUser()
@@ -147,6 +146,17 @@ onMounted(async () => {
   } catch (error) {
     console.error('❌ 背景画像の取得失敗:', error)
   }
+
+  // ✅ 新着メッセージ検知サブスク
+  subscription.value = API.graphql(graphqlOperation(onCreateMessage)).subscribe({
+    next: ({ value }) => {
+      const newMsg = value?.data?.onCreateMessage
+      if (newMsg && newMsg.roomId) {
+        hasUnread.value = true
+      }
+    },
+    error: (err) => console.error('❌ メッセージサブスクリプションエラー:', err)
+  })
 })
 </script>
 
@@ -177,27 +187,24 @@ button {
   padding: 0;
   font-size: 2rem;
   border-radius: 1rem;
-  background: #fff; /* ← ここを白に */
+  background: #fff;
   display: flex;
   justify-content: center;
   align-items: center;
   border: none;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
   transition: transform 0.2s, box-shadow 0.2s;
+  position: relative;
 }
-
 
 .icon-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
   border-radius: 16px;
-
-  /* 追加 👇 */
   will-change: opacity, transform;
   transition: opacity 0.2s ease-in-out;
 }
-
 
 button:hover {
   transform: scale(1.05);
@@ -208,7 +215,6 @@ button:hover {
   position: relative;
 }
 
-/* 📅 日付の数字 */
 .calendar-date {
   position: absolute;
   top: 60%;
@@ -222,10 +228,9 @@ button:hover {
   line-height: 1;
 }
 
-/* 📅 月（日本語 or 英語） */
 .calendar-month {
   position: absolute;
-  top: 24%; /* 🔽 赤帯部分想定 */
+  top: 24%;
   left: 50%;
   transform: translate(-50%, -50%);
   font-size: 0.7rem;
@@ -233,7 +238,22 @@ button:hover {
   color: white;
   background: none;
   pointer-events: none;
-  text-shadow: 0 0 3px rgba(0, 0, 0, 0.4); /* 読みやすく */
+  text-shadow: 0 0 3px rgba(0, 0, 0, 0.4);
 }
 
+.notification-dot {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 20px; /* ✅ 固定幅 */
+  height: 20px; /* ✅ 固定高さ */
+  background-color: #ff0000; /* 濃い赤 */
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white; /* 🌱の色 */
+  font-size: 14px;
+  line-height: 1;
+}
 </style>
