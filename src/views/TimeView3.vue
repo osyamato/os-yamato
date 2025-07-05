@@ -7,22 +7,22 @@
     <div v-if="waiting" class="waiting-text">四季待機中…</div>
 
     <!-- 画像のフェード切り替え -->
-    <transition-group name="fade" tag="div" class="image-wrapper" v-if="!waiting">
+    <transition-group name="fade" tag="div" class="image-wrapper" appear v-if="!waiting">
       <img
-        v-for="(img, index) in images"
-        v-show="currentIndex === index"
+        v-for="(img, idx) in images"
+        v-show="currentIndex === idx"
         :key="img"
         :src="img"
         class="season-image"
       />
     </transition-group>
 
-    <!-- 雪の結晶（冬のみ） -->
+    <!-- 雪の結晶 -->
     <div v-for="flake in snowflakes" :key="flake.id" class="snowflake" :style="flake.style">
-      <img src="/snowflake2.png" class="flake-image" />
+      <img src="/snowflake6.png" class="flake-image" />
     </div>
 
-    <!-- 雪だるま（冬のみ） -->
+    <!-- 雪だるま -->
     <img
       v-for="man in snowmen"
       :key="man.id"
@@ -92,8 +92,8 @@ function startSnowfall() {
   const totalFlakes = 20
   for (let i = 0; i < totalFlakes; i++) {
     const id = Date.now() + i
-    const size = Math.random() * 20 + 20
-    const x = Math.random() * 390
+    const size = Math.random() * 30 + 30
+    const x = Math.random() * 360
     const duration = Math.random() * 10 + 10
 
     snowflakes.value.push({
@@ -110,32 +110,20 @@ function startSnowfall() {
 function startSnowmen() {
   snowmen.value = []
 
-  // 1回目
+  // 1回目のみ
+  const snowman1 = createSnowman()
+  snowmen.value.push(snowman1)
+
   setTimeout(() => {
-    const snowman1 = createSnowman()
-    snowmen.value.push(snowman1)
-
-    setTimeout(() => {
-      snowmen.value = snowmen.value.filter(m => m.id !== snowman1.id)
-    }, 5000)
-  }, 0)
-
-  // 2回目
-  setTimeout(() => {
-    const snowman2 = createSnowman()
-    snowmen.value.push(snowman2)
-
-    setTimeout(() => {
-      snowmen.value = snowmen.value.filter(m => m.id !== snowman2.id)
-    }, 5000)
-  }, 5000)
+    snowmen.value = snowmen.value.filter(m => m.id !== snowman1.id)
+  }, 10000)
 }
 
 function createSnowman() {
   const id = Date.now() + Math.random()
   const size = Math.random() * 20 + 30
   const x = Math.random() * 300
-  const y = Math.random() * 100 + 640
+  const y = Math.random() * 100 + 500
 
   return {
     id,
@@ -143,7 +131,7 @@ function createSnowman() {
       left: `${x}px`,
       top: `${y}px`,
       width: `${size}px`,
-      animation: `fadeSnowman 5s ease forwards`
+      animation: `fadeSnowman 10s ease-in-out both`
     }
   }
 }
@@ -220,12 +208,22 @@ onMounted(() => {
   position: absolute;
   top: -40px;
   z-index: 12;
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
 .flake-image {
+  display: block;
   width: 100%;
   height: auto;
-  opacity: 0.9;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+  image-rendering: pixelated !important;
+  opacity: 1;
+  pointer-events: none;
 }
 
 .snowman {
@@ -233,14 +231,13 @@ onMounted(() => {
   z-index: 14;
 }
 
-/* 雪のアニメーション */
 @keyframes fall {
   0% {
     transform: translateY(0);
-    opacity: 0.8;
+    opacity: 1;
   }
   70% {
-    opacity: 0.9;
+    opacity: 1;
   }
   100% {
     transform: translateY(900px);
@@ -248,20 +245,12 @@ onMounted(() => {
   }
 }
 
-/* 雪だるまフェード */
 @keyframes fadeSnowman {
-  0% {
-    opacity: 0;
-  }
-  30% {
-    opacity: 0.6;
-  }
-  50% {
-    opacity: 0.6;
-  }
-  100% {
-    opacity: 0;
-  }
+  0%   { opacity: 0; }
+  40%  { opacity: 0.6; }
+  60%  { opacity: 0.6; }
+  100% { opacity: 0; }
 }
 </style>
+
 
