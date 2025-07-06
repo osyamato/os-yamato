@@ -36,7 +36,7 @@
       <!-- ✅ メッセージ -->
       <button @click="goToChatFromHome" class="chat-button">
         <img src="/messege.icon.png" alt="メッセージ" class="icon-image" />
-<span v-if="hasUnread" class="notification-dot">🌱</span>
+        <span v-if="notificationStore.hasUnread" class="notification-dot">🌱</span>
       </button>
 
       <!-- ✅ 風の便り -->
@@ -78,15 +78,17 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { Auth, API, graphqlOperation } from 'aws-amplify'
 import { onCreateMessage } from '@/graphql/subscriptions'
 import { useI18n } from 'vue-i18n'
+import { useNotificationStore } from '@/stores/notificationStore'
 
+const notificationStore = useNotificationStore()
 const router = useRouter()
+const route = useRoute()
 const wallpaper = ref('')
-const hasUnread = ref(false)
 const subscription = ref(null)
 
 const { t } = useI18n()
@@ -128,7 +130,7 @@ function goToIconGuide() {
 }
 
 function goToChatFromHome() {
-  hasUnread.value = false // ✅ 開いたときに消す
+  notificationStore.clearUnread()
   router.push({ path: '/chat-rooms', query: { from: 'home' } })
 }
 
@@ -147,17 +149,38 @@ onMounted(async () => {
     console.error('❌ 背景画像の取得失敗:', error)
   }
 
-  // ✅ 新着メッセージ検知サブスク
   subscription.value = API.graphql(graphqlOperation(onCreateMessage)).subscribe({
     next: ({ value }) => {
       const newMsg = value?.data?.onCreateMessage
       if (newMsg && newMsg.roomId) {
-        hasUnread.value = true
+        const currentRoute = router.currentRoute.value
+
+        const isInChatRoom = currentRoute.name === 'chat'
+        const isChatRoomList = currentRoute.name === 'chat-rooms'
+        const currentChatRoomId = currentRoute.params.roomId
+
+        if (
+          (isInChatRoom && currentChatRoomId === newMsg.roomId) ||
+          isChatRoomList
+        ) {
+          // ✅ 現在チャットルームを開いている、またはチャットルーム一覧画面なら通知マークを付けない
+          return
+        }
+
+        notificationStore.setUnread(true)
       }
     },
     error: (err) => console.error('❌ メッセージサブスクリプションエラー:', err)
   })
 })
+
+onUnmounted(() => {
+  if (subscription.value) {
+    subscription.value.unsubscribe()
+    subscription.value = null
+  }
+})
+
 </script>
 
 <style scoped>
@@ -245,14 +268,14 @@ button:hover {
   position: absolute;
   top: -8px;
   right: -8px;
-  width: 20px; /* ✅ 固定幅 */
-  height: 20px; /* ✅ 固定高さ */
-  background-color: #ff0000; /* 濃い赤 */
+  width: 20px;
+  height: 20px;
+  background-color: #ff0000;
   border-radius: 50%;
   display: flex;
   justify-content: center;
   align-items: center;
-  color: white; /* 🌱の色 */
+  color: white;
   font-size: 14px;
   line-height: 1;
 }

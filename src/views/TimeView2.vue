@@ -17,7 +17,7 @@
           <img
             v-for="i in 5"
             :key="`${groupIndex}-${i}`"
-            :src="isNight ? '/sakura.time.night1.png' : '/sakura.time.png'"
+            :src="isNight ? '/sakura.time.night1.png' : '/sakura.time10.png'"
             class="petal"
             :class="[
               fadedCount > groupIndex * 5 + (i - 1)
