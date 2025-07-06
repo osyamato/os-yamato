@@ -250,11 +250,11 @@ onMounted(() => {
 <style scoped>
 /* 各スタイル（省略せず記述） */
 
-.season-container { width: 390px; height: 740px; position: relative; overflow: hidden; }
+.season-container { width: 390px; height: 840px; position: relative; overflow: hidden; }
 .clock-text { position: absolute; top: 40px; left: 50%; transform: translateX(-50%); font-size: 2.2rem; font-family: 'Noto Serif JP', serif; color: #fff; text-shadow: 0 0 6px rgba(0, 0, 0, 0.7); z-index: 10; }
 .waiting-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 1.4rem; color: #fff; text-shadow: 0 0 5px rgba(0, 0, 0, 0.7); font-family: 'Noto Serif JP', serif; z-index: 10; }
 .image-wrapper { width: 100%; height: 100%; position: relative; }
-.season-image { position: absolute; width: 390px; height: 740px; object-fit: cover; top: 0; left: 0; opacity: 1; transition: opacity 5s ease; }
+.season-image { position: absolute; width: 390px; height: 840px; object-fit: cover; top: 0; left: 0; opacity: 1; transition: opacity 5s ease; }
 .fade-enter-active, .fade-leave-active { transition: opacity 5s ease; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
 .fade-enter-to, .fade-leave-from { opacity: 1; }
