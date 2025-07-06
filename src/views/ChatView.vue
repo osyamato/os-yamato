@@ -132,6 +132,28 @@ const previewImageKey = ref('')
 
 const loadedImageCount = ref(0)
 
+
+const messagesByRoomIdQuery = /* GraphQL */ `
+  query MessagesByRoomId($roomId: ID!, $sortDirection: ModelSortDirection, $limit: Int) {
+    messagesByRoomId(roomId: $roomId, sortDirection: $sortDirection, limit: $limit) {
+      items {
+        id
+        roomId
+        senderSub
+        senderYamatoId
+        receiverSub
+        receiverYamatoId
+        content
+        contentType
+        imageKey
+        thumbnailKey
+        timestamp
+        createdAt
+      }
+    }
+  }
+`
+
 function onImageLoad() {
   loadedImageCount.value++
 
@@ -429,35 +451,41 @@ onBeforeUnmount(() => {
 
 async function fetchMessages() {
   try {
-    const res = await API.graphql(graphqlOperation(listMessages, {
-      filter: { roomId: { eq: roomId.value } },
-      limit: 100
+    if (subscription) {
+      subscription.unsubscribe()
+      subscription = null
+    }
+
+    const res = await API.graphql(graphqlOperation(messagesByRoomIdQuery, {
+      roomId: roomId.value,
+      sortDirection: "DESC",
+      limit: 30
     }))
 
-    const items = res.data.listMessages.items
+    const items = res.data.messagesByRoomId.items || []
+
+    const sorted = items
       .filter(msg => msg)
       .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
 
-    console.log('🐾 [DEBUG] DynamoDB raw items:', items)
-
-    const enriched = await Promise.all(items.map(async msg => {
+    const enriched = await Promise.all(sorted.map(async msg => {
       if (msg.contentType === 'image' && msg.imageKey) {
         try {
           const url = await Storage.get(msg.thumbnailKey || msg.imageKey, { level: 'public' })
           return { ...msg, imageUrl: url }
-        } catch (e) {
-          console.warn('⚠️ 画像取得失敗:', e)
+        } catch {
           return msg
         }
       }
       return msg
     }))
 
-    console.log('✅ [DEBUG] Enriched messages to set:', enriched)
     messages.value = enriched
-
     await nextTick()
     scrollToBottom()
+
+    subscribeToNewMessages()
+
   } catch (err) {
     console.error('❌ メッセージ取得エラー:', JSON.stringify(err, null, 2))
   }
@@ -787,7 +815,7 @@ button.disabled {
 
 .message-row.mine {
   justify-content: flex-end;
-  text-align: right; /* 💡 吹き出し内のテキストを右寄せ */
+  /* text-align: right; ← ⭐️ これを削除する */
 }
 
 .message {
@@ -800,10 +828,10 @@ button.disabled {
   word-break: break-word;
   white-space: pre-wrap;
   line-height: 1.5;
+  text-align: left; /* ⭐️ これを追加する */
 
-  /* 💡 全デバイスで横に広がりすぎないように制限 */
   max-width: 80vw;
-  max-width: min(80vw, 520px); /* 💡 スマホでは80%、PCでは最大520px */
+  max-width: min(80vw, 520px);
 }
 
 .message.mine {

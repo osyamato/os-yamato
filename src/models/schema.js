@@ -651,17 +651,17 @@ export const schema = {
             "attributes": [
                 {
                     "type": "model",
+                    "properties": {}
+                },
+                {
+                    "type": "key",
                     "properties": {
-                        "timestamps": {
-                            "createdAt": "createdAt",
-                            "updatedAt": null
-                        },
-                        "subscriptions": {
-                            "level": "public",
-                            "onCreate": [
-                                "onCreateMessage"
-                            ]
-                        }
+                        "name": "byRoom",
+                        "queryField": "messagesByRoomId",
+                        "fields": [
+                            "roomId",
+                            "timestamp"
+                        ]
                     }
                 },
                 {
