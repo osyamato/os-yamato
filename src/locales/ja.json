@@ -404,7 +404,12 @@
 
 "blossom.noProfileCannotRequest": "メッセージアプリからプロフィールを登録すると、YamatoIDでメッセージ申請可能になります。",
 "account.subscription": "Yamato プレミアム",
-"account.premiumPreparing": "現在、準備中です。"
+"account.premiumPreparing": "現在、準備中です。",
+
+
+ "season.waiting": "四季がまもなく始まります",
+ "clock.wabisabi": "侘び寂び",
+  "clock.fourseasons": "四季"
 
 
 

@@ -12,10 +12,14 @@
 
 <script setup>
 import { onMounted } from 'vue'
-import { Auth } from 'aws-amplify'
+import { Auth, API, graphqlOperation } from 'aws-amplify'
 import { i18n } from '@/i18n'
 import EffectOverlay from '@/components/EffectOverlay.vue'
 import ChatEffect from '@/components/ChatEffect.vue'
+import { useNotificationStore } from '@/stores/notificationStore'
+import { listChatRooms } from '@/graphql/queries'
+
+const notificationStore = useNotificationStore()
 
 onMounted(async () => {
   try {
@@ -29,8 +33,41 @@ onMounted(async () => {
       i18n.global.locale.value = userLang
     }
 
+    // ✅ 起動時の未読チェック
+    const mySub = user.attributes.sub
+
+    const res = await API.graphql(graphqlOperation(listChatRooms, {
+      filter: {
+        or: [
+          { user1: { eq: mySub } },
+          { user2: { eq: mySub } }
+        ]
+      },
+      limit: 50
+    }))
+
+    const rooms = res.data.listChatRooms.items || []
+
+    let hasUnread = false
+    for (const room of rooms) {
+      if (!room.lastTimestamp || room.lastSenderId === mySub) continue
+
+      const last = new Date(room.lastTimestamp)
+      const readRaw = room.user1 === mySub ? room.lastReadAtUser1 : room.lastReadAtUser2
+      if (!readRaw || last > new Date(readRaw)) {
+        hasUnread = true
+        break
+      }
+    }
+
+    if (hasUnread) {
+      notificationStore.setUnread()
+    } else {
+      notificationStore.clearUnread()
+    }
+
   } catch (e) {
-    console.warn('⚠️ ユーザー情報の取得失敗または未ログイン', e)
+    console.warn('⚠️ ユーザー情報取得・未読チェック失敗または未ログイン', e)
   }
 })
 </script>
@@ -67,7 +104,5 @@ body {
 html, body, #app {
   height: 100%;
 }
-
-</style> 
-
+</style>
   

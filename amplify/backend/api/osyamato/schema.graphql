@@ -83,17 +83,14 @@ type ChatRoom
 }
 
 type Message
-  @model(
-    timestamps: { createdAt: "createdAt", updatedAt: null }
-    subscriptions: { level: public, onCreate: ["onCreateMessage"] }
-  )
+  @model
   @auth(rules: [
     { allow: owner },
     { allow: private, operations: [read] }
   ])
 {
   id: ID!
-  roomId: ID!
+  roomId: ID! @index(name: "byRoom", queryField: "messagesByRoomId", sortKeyFields: ["timestamp"])
   senderSub: String!
   senderYamatoId: String!
   receiverSub: String

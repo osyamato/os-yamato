@@ -168,7 +168,7 @@
 
 
 <script setup>
-import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, onBeforeUnmount, computed } from 'vue'
 import { API, graphqlOperation, Auth } from 'aws-amplify'
 import { listChatRooms, getPublicProfile, listChatRequests } from '@/graphql/queries'
 import { updateChatRoom, updateChatRequest, createChatRoom, deleteChatRoom } from '@/graphql/mutations'
@@ -182,9 +182,14 @@ import Modal from '@/components/Modal.vue'
 import ChatRequestModal from '@/components/ChatRequestModal.vue'
 import ProfileSetupView from '@/views/ProfileSetupView.vue'
 import IconButton from '@/components/IconButton.vue'
+import { useNotificationStore } from '@/stores/notificationStore'
+
 
 import '@/assets/variables.css'
 import { useI18n } from 'vue-i18n'
+
+const notificationStore = useNotificationStore()
+
 const { t } = useI18n()
 
 // 🔷 UI 状態
@@ -457,11 +462,20 @@ onMounted(async () => {
         // ✅ 自分が関係ないチャットルームは無視
         if (!isUser1 && !isUser2) return
 
-        // ✅ 自分が非表示にしているチャットも無視
-        if ((isUser1 && updated.deletedByUser1) || (isUser2 && updated.deletedByUser2)) {
-          return
+        // ✅ 非表示チャットルームは無視
+        if ((isUser1 && updated.deletedByUser1) || (isUser2 && updated.deletedByUser2)) return
+
+        // ✅ 現在のルート確認
+        const currentRoute = router.currentRoute.value
+        const isInChat = currentRoute.name === 'chat'
+        const currentChatRoomId = currentRoute.params.roomId
+
+        // ✅ チャット画面にいて、かつ同じルームなら通知は出さない
+        if (!(isInChat && currentChatRoomId === updated.id) && updated.lastSenderId !== mySub.value) {
+          notificationStore.setUnread(true)
         }
 
+        // 🔄 ローカルデータ更新
         const index = chatRooms.value.findIndex(r => r.id === updated.id)
 
         if (index !== -1) {
@@ -587,7 +601,7 @@ const sortedRooms = computed(() => {
 })
 
 function goToRoom(targetRoomId, receiverYamatoId) {
-showOptionsFor.value = null
+  showOptionsFor.value = null
   const now = new Date().toISOString()
   const room = chatRooms.value.find(r => r.id === targetRoomId)
   if (room) {
@@ -598,6 +612,10 @@ showOptionsFor.value = null
     API.graphql(graphqlOperation(updateChatRoom, { input }))
       .catch(err => console.warn('⚠️ 既読更新失敗:', err))
   }
+
+  // ✅ 通知をクリア
+  notificationStore.clearUnread()
+
   router.push({ name: 'chat', params: { roomId: targetRoomId, receiverYamatoId } })
 }
 
@@ -661,6 +679,9 @@ function goToWindMessage() {
   router.push({ name: 'wind-message' })  // 適宜ルート名に合わせて修正
 }
 
+onBeforeUnmount(() => {
+  notificationStore.clearUnread()
+})
 
 defineExpose({ accept, reject })
 
