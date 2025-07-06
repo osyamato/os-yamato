@@ -213,29 +213,22 @@ onMounted(async () => {
   iconColor.value = user.attributes['custom:iconColor'] || '#274c77'
 })
 async function fetchContacts() {
-  console.log('📥 fetchContacts 開始')
-
   try {
     const res = await API.graphql(graphqlOperation(listContacts))
-    console.log('📦 GraphQL 結果:', res)
 
     const now = new Date()
     const items = res.data?.listContacts?.items?.filter(item => item) || []
-    console.log('📋 フェッチされた件数:', items.length)
 
-    // 削除チェックなどはそのままでOK
     for (const contact of items) {
       const base = contact.lastOpenedAt || contact.createdAt
       const baseDate = new Date(base)
       const diffDays = (now - baseDate) / (1000 * 60 * 60 * 24)
 
       if (diffDays > 365) {
-        console.log(`🛑 削除対象（未使用${diffDays.toFixed(1)}日）: ${contact.name}`)
         try {
           await API.graphql(graphqlOperation(deleteContact, { input: { id: contact.id } }))
-          console.log(`✅ 削除完了: ${contact.name}`)
         } catch (err) {
-          console.error(`❌ 削除失敗: ${contact.name}`, err)
+          // 必要なら UI 通知（例: トースト）
         }
       }
     }
@@ -253,10 +246,8 @@ async function fetchContacts() {
         return aFurigana.localeCompare(bFurigana, 'ja')
       })
 
-    console.log('✅ 表示用 contacts 更新完了:', contacts.value.length, '件')
-
   } catch (e) {
-    console.error('❌ fetchContacts エラー:', JSON.stringify(e, null, 2))
+    // 必要なら UI 通知
   }
 }
 
