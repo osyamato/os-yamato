@@ -17,13 +17,18 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import * as THREE from 'three'
+import { fetchAllCounts } from '@/utils/fetchAllCounts'
 
 const container = ref(null)
 const planets = ref([])
 const selectedPlanet = ref(null)
 const selectedLabel = ref(null)
+const flowers = ref([])
 
-onMounted(() => {
+onMounted(async () => {
+  const counts = await fetchAllCounts()
+  console.log("✅ Counts fetched:", counts)
+
   const scene = new THREE.Scene()
   scene.background = new THREE.Color(0x000000)
 
@@ -38,13 +43,14 @@ onMounted(() => {
   scene.add(light)
 
   const loader = new THREE.TextureLoader()
+  const flowerTexture = loader.load('/dialy.1.png')
 
   const planetInfo = [
-    { texture: '/moon.jpg', text: '写真' },
-    { texture: '/venus.jpg', text: '動画' },
-    { texture: 'https://threejs.org/examples/textures/land_ocean_ice_cloud_2048.jpg', text: 'メッセージ' },
-    { texture: '/jupiter.jpg', text: 'メモ' },
-    { texture: '/mars.jpg', text: '連絡先' }
+    { texture: '/moon.jpg', text: '写真', count: counts.photos },
+    { texture: '/venus.jpg', text: '動画', count: counts.videos },
+    { texture: 'https://threejs.org/examples/textures/land_ocean_ice_cloud_2048.jpg', text: 'メッセージ', count: counts.chatRooms },
+    { texture: '/jupiter.jpg', text: 'メモ', count: counts.memos },
+    { texture: '/mars.jpg', text: '連絡先', count: counts.contacts }
   ]
 
   planetInfo.forEach((info) => {
@@ -62,6 +68,49 @@ onMounted(() => {
 
   selectedPlanet.value = planets.value[2]
   updatePlanetPositions()
+
+  function clearFlowers() {
+    // すべての惑星から花を削除
+    planets.value.forEach(planet => {
+      flowers.value.forEach(f => planet.remove(f))
+    })
+    flowers.value = []
+  }
+
+  function createFlowers(count) {
+    clearFlowers()
+
+    if (selectedPlanet.value.position.y < 0) {
+      console.log("🚫 下段なので花は描写しません")
+      return
+    }
+
+    console.log("🌼 Creating flowers for:", selectedPlanet.value.name, "Count:", count)
+    for (let i = 0; i < count; i++) {
+      const planeGeometry = new THREE.PlaneGeometry(0.5, 0.5)
+      const material = new THREE.MeshBasicMaterial({
+        map: flowerTexture,
+        transparent: true,
+        side: THREE.DoubleSide,
+        depthWrite: false
+      })
+      const flower = new THREE.Mesh(planeGeometry, material)
+
+      const phi = Math.acos(2 * Math.random() - 1)
+      const theta = 2 * Math.PI * Math.random()
+      const radius = 2.01
+
+      flower.position.set(
+        radius * Math.sin(phi) * Math.cos(theta),
+        radius * Math.cos(phi),
+        radius * Math.sin(phi) * Math.sin(theta)
+      )
+      flower.lookAt(new THREE.Vector3(0, 0, 0))
+
+      selectedPlanet.value.add(flower)
+      flowers.value.push(flower)
+    }
+  }
 
   function handleInteraction(event) {
     const rect = renderer.domElement.getBoundingClientRect()
@@ -88,8 +137,12 @@ onMounted(() => {
     if (intersects.length > 0) {
       const clickedPlanet = intersects[0].object
       if (clickedPlanet !== selectedPlanet.value) {
+        clearFlowers()
         selectedPlanet.value = clickedPlanet
         updatePlanetPositions()
+
+        const count = clickedPlanet.userData.info.count || 3
+        createFlowers(count)
       }
     }
   }
@@ -103,7 +156,8 @@ onMounted(() => {
     const isSmallScreen = window.innerHeight < 700
     selectedPlanet.value.position.x = 0
     selectedPlanet.value.position.y = isSmallScreen ? 1 : 4
-selectedPlanet.value.scale.set(2.7, 2.7, 2.7)
+    selectedPlanet.value.scale.set(3.5, 3.5, 3.5)
+
     const gap = 5
     const startX = -((otherPlanets.length - 1) * gap) / 2
 
@@ -112,6 +166,9 @@ selectedPlanet.value.scale.set(2.7, 2.7, 2.7)
       p.position.y = -7
       p.scale.set(0.8, 0.8, 0.8)
     })
+
+    const count = selectedPlanet.value.userData.info.count || 3
+    createFlowers(count)
   }
 
   function updateLabel() {
@@ -133,7 +190,7 @@ selectedPlanet.value.scale.set(2.7, 2.7, 2.7)
 
   function animate() {
     requestAnimationFrame(animate)
-planets.value.forEach(p => p.rotation.y += 0.0008)
+    planets.value.forEach(p => p.rotation.y += 0.0008)
     renderer.render(scene, camera)
     updateLabel()
   }
@@ -172,4 +229,3 @@ h2 {
   transition: font-size 0.3s ease, top 0.3s ease;
 }
 </style>
-
