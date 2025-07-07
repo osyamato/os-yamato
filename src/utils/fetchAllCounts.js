@@ -20,7 +20,7 @@ export async function fetchAllCounts() {
             ]
           },
           {
-            or: [
+            and: [
               { deletedByUser1: { ne: true } },
               { deletedByUser2: { ne: true } }
             ]
