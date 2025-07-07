@@ -356,20 +356,16 @@ async function fetchMemos() {
   try {
     const user = await Auth.currentAuthenticatedUser()
     const sub = user.attributes.sub
-    console.log('👤 現在のユーザー sub:', sub)
 
     const result = await API.graphql(graphqlOperation(listMemos, {
-      filter: { owner: { contains: sub } }  // 🔑 sub を含む owner を取得
+      filter: { owner: { contains: sub } }
     }))
-    console.log('📦 GraphQL 結果:', result)
 
     const items = result.data.listMemos.items
-    console.log('📋 フェッチされたメモ数:', items.length)
 
     const now = new Date()
     const toDelete = []
 
-    // 1年を超えるメモは削除対象として除外
     const filtered = items.filter(memo => {
       const updatedAt = new Date(memo.updatedAt || memo.createdAt)
       const diffDays = (now - updatedAt) / (1000 * 60 * 60 * 24)
@@ -380,37 +376,31 @@ async function fetchMemos() {
       return true
     })
 
-    // 削除処理
     for (const id of toDelete) {
       try {
         await API.graphql(graphqlOperation(deleteMemo, { input: { id } }))
-        console.log(`✅ 古いメモ削除: ${id}`)
       } catch (err) {
-        console.error(`❌ 削除失敗: ${id}`, err)
+        // 削除エラーは無視または必要ならUI通知
       }
     }
 
-    // 新しいリストを反映
-memos.value = filtered.sort((a, b) => {
-  const dateA = new Date(b.updatedAt || b.createdAt)
-  const dateB = new Date(a.updatedAt || a.createdAt)
-  return dateA - dateB
-})
-    console.log('✅ 表示用 memos 更新完了:', memos.value.length, '件')
+    memos.value = filtered.sort((a, b) => {
+      const dateA = new Date(b.updatedAt || b.createdAt)
+      const dateB = new Date(a.updatedAt || a.createdAt)
+      return dateA - dateB
+    })
 
-    // ✅ 選択中メモを再同期
     if (selectedMemo.value?.id) {
       const matched = filtered.find(m => m.id === selectedMemo.value.id)
       selectedMemo.value = matched || null
     }
 
-    // タグ一覧の再構成
     const tagsSet = new Set()
     filtered.forEach(m => (m.tags || []).forEach(tag => tagsSet.add(tag)))
     allTags.value = Array.from(tagsSet)
 
   } catch (err) {
-    console.error('❌ メモ読み込み失敗:', err)
+    // 必要なら UI 表示用に変える
   }
 }
 

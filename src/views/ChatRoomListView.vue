@@ -613,8 +613,6 @@ function goToRoom(targetRoomId, receiverYamatoId) {
       .catch(err => console.warn('⚠️ 既読更新失敗:', err))
   }
 
-  // ✅ 通知をクリア
-  notificationStore.clearUnread()
 
   router.push({ name: 'chat', params: { roomId: targetRoomId, receiverYamatoId } })
 }
@@ -679,8 +677,29 @@ function goToWindMessage() {
   router.push({ name: 'wind-message' })  // 適宜ルート名に合わせて修正
 }
 
+async function checkUnreadStatus() {
+  let hasAnyUnread = false
+
+  for (const room of chatRooms.value) {
+    if (!room.lastTimestamp || room.lastSenderId === mySub.value) continue
+
+    const last = new Date(room.lastTimestamp)
+    const readRaw = room.user1 === mySub.value ? room.lastReadAtUser1 : room.lastReadAtUser2
+    if (!readRaw || last > new Date(readRaw)) {
+      hasAnyUnread = true
+      break
+    }
+  }
+
+  if (hasAnyUnread) {
+    notificationStore.setUnread(true)
+  } else {
+    notificationStore.clearUnread()
+  }
+}
+
 onBeforeUnmount(() => {
-  notificationStore.clearUnread()
+  checkUnreadStatus()
 })
 
 defineExpose({ accept, reject })
