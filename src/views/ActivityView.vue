@@ -3,33 +3,41 @@
     class="planet-view"
     :style="{ opacity: allTexturesLoaded ? 1 : 0, backgroundColor: 'black' }"
   >
-    <h2>アクティビティ</h2>
+    <!-- 2️⃣ アイコンツールバー -->
+    <div class="activity-toolbar">
+      <button
+        class="toolbar-button"
+        :style="{ backgroundColor: iconColor }"
+      >🪐</button>
+      <button
+        class="toolbar-button"
+        :style="{ backgroundColor: iconColor }"
+      >🧮</button>
+    </div>
+
+    <!-- 3️⃣ Three.js 惑星 -->
     <div
       ref="container"
       style="width: 100%; height: 80vh; position: relative; background-color: black;"
     ></div>
-    <div
-      v-if="selectedLabel"
-      class="label"
-      :style="{ left: selectedLabel.x + 'px', top: selectedLabel.y + 'px', fontSize: '1.4rem' }"
-    >
-      {{ selectedLabel.text }}
-    </div>
   </div>
 </template>
-
 
 <script setup>
 import { ref, onMounted } from 'vue'
 import * as THREE from 'three'
+import { Auth } from 'aws-amplify'
 import { fetchAllCounts } from '@/utils/fetchAllCounts'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const container = ref(null)
 const planets = ref([])
 const selectedPlanet = ref(null)
-const selectedLabel = ref(null)
 const flowers = ref([])
 const allTexturesLoaded = ref(false)
+const iconColor = ref('#3b82f6') // デフォルト青
 
 const loader = new THREE.TextureLoader()
 const textureUrls = [
@@ -43,8 +51,16 @@ const textureUrls = [
 
 const loadedTextures = {}
 let texturesLoadedCount = 0
+let labelSprite = null
 
 onMounted(async () => {
+  try {
+    const user = await Auth.currentAuthenticatedUser()
+    iconColor.value = user.attributes['custom:iconColor'] || '#3b82f6'
+  } catch (e) {
+    console.error('❌ ユーザー情報取得失敗', e)
+  }
+
   const counts = await fetchAllCounts()
   console.log("✅ Counts fetched:", counts)
 
@@ -68,11 +84,36 @@ onMounted(async () => {
 })
 
 function getFlowerColor(count) {
-  if (count < 10) return new THREE.Color(0x3b82f6) // 青
-  else if (count < 20) return new THREE.Color(0x8b5cf6) // 紫
-  else if (count < 30) return new THREE.Color(0xfacc15) // 黄色
-  else if (count < 40) return new THREE.Color(0xf97316) // オレンジ
-  else return new THREE.Color(0xef4444) // 赤
+  if (count < 10) return new THREE.Color(0x2563eb)
+  else if (count < 20) return new THREE.Color(0x7c3aed)
+  else if (count < 30) return new THREE.Color(0xfacc15)
+  else if (count < 40) return new THREE.Color(0xf97316)
+  else return new THREE.Color(0xef4444)
+}
+
+function createLabelSprite(text) {
+  const canvas = document.createElement('canvas')
+  canvas.width = 1024   // 高解像度
+  canvas.height = 256
+  const context = canvas.getContext('2d')
+
+  // 背景をクリア
+  context.clearRect(0, 0, canvas.width, canvas.height)
+  context.fillStyle = 'white'
+  context.font = 'bold 100px "Noto Sans JP", sans-serif' // 少し小さめ
+  context.textAlign = 'center'
+  context.textBaseline = 'middle'
+  context.fillText(text, canvas.width / 2, canvas.height / 2)
+
+  const texture = new THREE.CanvasTexture(canvas)
+  texture.minFilter = THREE.LinearFilter
+  const material = new THREE.SpriteMaterial({ map: texture, transparent: true })
+  const sprite = new THREE.Sprite(material)
+
+  // 🌱 ここでスケールを小さく（全体的にコンパクトに）
+  sprite.scale.set(3, 0.75, 1) // ← 必要に応じてさらに調整可
+
+  return sprite
 }
 
 function initScene(counts) {
@@ -86,22 +127,30 @@ function initScene(counts) {
   renderer.setSize(window.innerWidth, window.innerHeight * 0.8)
   container.value.appendChild(renderer.domElement)
 
-  const light = new THREE.AmbientLight(0xffffff, 1)
-  scene.add(light)
+  const ambientLight = new THREE.AmbientLight(0xffffff, 0.6)
+  scene.add(ambientLight)
+
+  const directionalLight = new THREE.DirectionalLight(0xffffff, 2.5)
+  directionalLight.position.set(10, 10, 10)
+  scene.add(directionalLight)
 
   const flowerTexture = loadedTextures['/dialy.1.png']
 
   const planetInfo = [
-    { texture: '/moon.jpg', text: '写真', count: counts.photos },
-    { texture: '/venus.jpg', text: '動画', count: counts.videos },
-    { texture: 'https://threejs.org/examples/textures/land_ocean_ice_cloud_2048.jpg', text: 'メッセージ', count: counts.chatRooms },
-    { texture: '/jupiter.jpg', text: 'メモ', count: counts.memos },
-    { texture: '/mars.jpg', text: '連絡先', count: counts.contacts }
+    { texture: '/moon.jpg', text: t('activity.photo'), count: counts.photos },
+    { texture: '/venus.jpg', text: t('activity.video'), count: counts.videos },
+    { texture: 'https://threejs.org/examples/textures/land_ocean_ice_cloud_2048.jpg', text: t('activity.message'), count: counts.chatRooms },
+    { texture: '/jupiter.jpg', text: t('activity.memo'), count: counts.memos },
+    { texture: '/mars.jpg', text: t('activity.contact'), count: counts.contacts }
   ]
 
   planetInfo.forEach((info) => {
     const texture = loadedTextures[info.texture]
-    const material = new THREE.MeshStandardMaterial({ map: texture })
+    const material = new THREE.MeshStandardMaterial({
+      map: texture,
+      metalness: 0.3,
+      roughness: 0.5
+    })
     const geometry = new THREE.SphereGeometry(2, 64, 64)
     const mesh = new THREE.Mesh(geometry, material)
 
@@ -125,12 +174,8 @@ function initScene(counts) {
   function createFlowers(count) {
     clearFlowers()
 
-    if (selectedPlanet.value.position.y < 0) {
-      console.log("🚫 下段なので花は描写しません")
-      return
-    }
+    if (selectedPlanet.value.position.y < 0) return
 
-    console.log("🌼 Creating flowers for:", selectedPlanet.value.name, "Count:", count)
     const color = getFlowerColor(count)
 
     for (let i = 0; i < count; i++) {
@@ -185,6 +230,10 @@ function initScene(counts) {
     if (intersects.length > 0) {
       const clickedPlanet = intersects[0].object
       if (clickedPlanet !== selectedPlanet.value) {
+        if (labelSprite) {
+          selectedPlanet.value.remove(labelSprite)
+          labelSprite = null
+        }
         clearFlowers()
         selectedPlanet.value = clickedPlanet
         updatePlanetPositions()
@@ -199,6 +248,11 @@ function initScene(counts) {
   window.addEventListener('touchstart', handleInteraction)
 
   function updatePlanetPositions() {
+    if (labelSprite) {
+      selectedPlanet.value.remove(labelSprite)
+      labelSprite = null
+    }
+
     let otherPlanets = planets.value.filter(p => p !== selectedPlanet.value)
 
     const isSmallScreen = window.innerHeight < 700
@@ -217,22 +271,12 @@ function initScene(counts) {
 
     const count = selectedPlanet.value.userData.info.count || 3
     createFlowers(count)
-  }
 
-  function updateLabel() {
-    const p = selectedPlanet.value
-    const vector = new THREE.Vector3()
-    p.getWorldPosition(vector)
-    vector.project(camera)
-
-    const x = (vector.x * 0.5 + 0.5) * renderer.domElement.clientWidth
-    const offset = 100
-    const y = (-vector.y * 0.5 + 0.5) * renderer.domElement.clientHeight - offset
-
-    selectedLabel.value = {
-      x,
-      y,
-      text: p.userData.info.text
+    // ✅ 上段のときのみラベルを追加
+    if (selectedPlanet.value.position.y >= 0) {
+      labelSprite = createLabelSprite(selectedPlanet.value.userData.info.text)
+      labelSprite.position.set(0, 3, 0)
+      selectedPlanet.value.add(labelSprite)
     }
   }
 
@@ -240,7 +284,6 @@ function initScene(counts) {
     requestAnimationFrame(animate)
     planets.value.forEach(p => p.rotation.y += 0.0008)
     renderer.render(scene, camera)
-    updateLabel()
   }
 
   animate()
@@ -255,35 +298,43 @@ function initScene(counts) {
 </script>
 
 <style>
-/* 💡 グローバルに背景を黒にする */
 html, body {
   margin: 0;
   padding: 0;
   overflow-x: hidden;
 }
 
-/* 💡 コンポーネント専用背景だけ黒に */
 .planet-view {
   padding: 24px;
-  background-color: #000000; /* ← ここだけでOK */
+  background-color: #000000;
   color: #ffffff;
   font-family: 'Noto Sans JP', sans-serif;
 }
 
-h2 {
-  text-align: center;
-  margin-top: 0;
-  font-size: 1.5rem;
-  font-weight: normal;
+
+.activity-toolbar {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin: 1rem 0;
 }
 
-.label {
-  position: absolute;
-  transform: translate(-50%, -100%);
+.toolbar-button {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: none;
+  font-size: 20px;
   color: white;
-  font-weight: bold;
-  pointer-events: none;
-  white-space: nowrap;
-  transition: font-size 0.3s ease, top 0.3s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.3s ease, background-color 0.3s ease;
+}
+
+.toolbar-button:hover {
+  transform: scale(1.1);
 }
 </style>
