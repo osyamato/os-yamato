@@ -1,9 +1,13 @@
 <template>
-  <div class="planet-view">
+  <div
+    class="planet-view"
+    :style="{ opacity: allTexturesLoaded ? 1 : 0, backgroundColor: 'black' }"
+  >
     <h2>アクティビティ</h2>
-
-    <div ref="container" style="width: 100%; height: 80vh; position: relative;"></div>
-
+    <div
+      ref="container"
+      style="width: 100%; height: 80vh; position: relative; background-color: black;"
+    ></div>
     <div
       v-if="selectedLabel"
       class="label"
@@ -13,6 +17,7 @@
     </div>
   </div>
 </template>
+
 
 <script setup>
 import { ref, onMounted } from 'vue'
@@ -24,11 +29,53 @@ const planets = ref([])
 const selectedPlanet = ref(null)
 const selectedLabel = ref(null)
 const flowers = ref([])
+const allTexturesLoaded = ref(false)
+
+const loader = new THREE.TextureLoader()
+const textureUrls = [
+  '/moon.jpg',
+  '/venus.jpg',
+  'https://threejs.org/examples/textures/land_ocean_ice_cloud_2048.jpg',
+  '/jupiter.jpg',
+  '/mars.jpg',
+  '/dialy.1.png'
+]
+
+const loadedTextures = {}
+let texturesLoadedCount = 0
 
 onMounted(async () => {
   const counts = await fetchAllCounts()
   console.log("✅ Counts fetched:", counts)
 
+  textureUrls.forEach((url) => {
+    loader.load(
+      url,
+      (texture) => {
+        loadedTextures[url] = texture
+        texturesLoadedCount++
+        if (texturesLoadedCount === textureUrls.length) {
+          allTexturesLoaded.value = true
+          initScene(counts)
+        }
+      },
+      undefined,
+      (error) => {
+        console.error("❌ Texture load failed:", url, error)
+      }
+    )
+  })
+})
+
+function getFlowerColor(count) {
+  if (count < 10) return new THREE.Color(0x3b82f6) // 青
+  else if (count < 20) return new THREE.Color(0x8b5cf6) // 紫
+  else if (count < 30) return new THREE.Color(0xfacc15) // 黄色
+  else if (count < 40) return new THREE.Color(0xf97316) // オレンジ
+  else return new THREE.Color(0xef4444) // 赤
+}
+
+function initScene(counts) {
   const scene = new THREE.Scene()
   scene.background = new THREE.Color(0x000000)
 
@@ -42,8 +89,7 @@ onMounted(async () => {
   const light = new THREE.AmbientLight(0xffffff, 1)
   scene.add(light)
 
-  const loader = new THREE.TextureLoader()
-  const flowerTexture = loader.load('/dialy.1.png')
+  const flowerTexture = loadedTextures['/dialy.1.png']
 
   const planetInfo = [
     { texture: '/moon.jpg', text: '写真', count: counts.photos },
@@ -54,7 +100,7 @@ onMounted(async () => {
   ]
 
   planetInfo.forEach((info) => {
-    const texture = loader.load(info.texture)
+    const texture = loadedTextures[info.texture]
     const material = new THREE.MeshStandardMaterial({ map: texture })
     const geometry = new THREE.SphereGeometry(2, 64, 64)
     const mesh = new THREE.Mesh(geometry, material)
@@ -70,7 +116,6 @@ onMounted(async () => {
   updatePlanetPositions()
 
   function clearFlowers() {
-    // すべての惑星から花を削除
     planets.value.forEach(planet => {
       flowers.value.forEach(f => planet.remove(f))
     })
@@ -86,10 +131,13 @@ onMounted(async () => {
     }
 
     console.log("🌼 Creating flowers for:", selectedPlanet.value.name, "Count:", count)
+    const color = getFlowerColor(count)
+
     for (let i = 0; i < count; i++) {
       const planeGeometry = new THREE.PlaneGeometry(0.5, 0.5)
       const material = new THREE.MeshBasicMaterial({
         map: flowerTexture,
+        color: color,
         transparent: true,
         side: THREE.DoubleSide,
         depthWrite: false
@@ -163,7 +211,7 @@ onMounted(async () => {
 
     otherPlanets.forEach((p, i) => {
       p.position.x = startX + i * gap
-      p.position.y = -7
+      p.position.y = -10
       p.scale.set(0.8, 0.8, 0.8)
     })
 
@@ -203,22 +251,32 @@ onMounted(async () => {
     renderer.setSize(window.innerWidth, window.innerHeight * 0.8)
     updatePlanetPositions()
   })
-})
+}
 </script>
 
-<style scoped>
+<style>
+/* 💡 グローバルに背景を黒にする */
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+/* 💡 コンポーネント専用背景だけ黒に */
 .planet-view {
   padding: 24px;
-  background-color: #000000;
+  background-color: #000000; /* ← ここだけでOK */
   color: #ffffff;
   font-family: 'Noto Sans JP', sans-serif;
 }
+
 h2 {
   text-align: center;
   margin-top: 0;
   font-size: 1.5rem;
   font-weight: normal;
 }
+
 .label {
   position: absolute;
   transform: translate(-50%, -100%);
