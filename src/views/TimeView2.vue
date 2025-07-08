@@ -50,7 +50,7 @@
         <img
           v-for="i in 1"
           :key="i"
-          :src="isNight ? '/sakura.time.night1.png' : '/sakura.time.png'"
+          :src="isNight ? '/sakura.time.night1.png' : '/sakura.time10.png'"
           class="float-petal"
           :style="{ animationDelay: `${i * 0.1}s` }"
         />
