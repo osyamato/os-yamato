@@ -32,7 +32,7 @@
         class="toolbar-button"
         :style="{ backgroundColor: showStars ? 'transparent' : iconColor }"
         @click="toggleShowCount"
-      >🧮</button>
+      >🔢</button>
     </div>
 
     <!-- Three.js 惑星 -->
@@ -177,7 +177,7 @@ function initScene(counts) {
 
   planetInfo.forEach((info) => {
     const texture = loadedTextures[info.texture]
-    const material = new THREE.MeshStandardMaterial({ map: texture, metalness: 0.3, roughness: 0.5 })
+    const material = new THREE.MeshStandardMaterial({ map: texture, metalness: 0, roughness: 0.8 })
     const geometry = new THREE.SphereGeometry(2, 64, 64)
     const mesh = new THREE.Mesh(geometry, material)
     mesh.userData = { info }
@@ -213,13 +213,15 @@ function initScene(counts) {
       const numThisColor = Math.min(remaining, group.limit)
       for (let i = 0; i < numThisColor; i++) {
         const planeGeometry = new THREE.PlaneGeometry(0.5, 0.5)
-        const material = new THREE.MeshBasicMaterial({
-          map: flowerTexture,
-          color: group.color,
-          transparent: true,
-          side: THREE.DoubleSide,
-          depthWrite: false
-        })
+const material = new THREE.MeshStandardMaterial({
+  map: flowerTexture,
+  color: group.color,
+  transparent: true,
+  side: THREE.DoubleSide,
+  depthWrite: false,
+  roughness: 0.6, // ← しっとり感を演出
+  metalness: 0    // ← 花には金属感なし
+})
         const flower = new THREE.Mesh(planeGeometry, material)
         const phi = Math.acos(2 * Math.random() - 1)
         const theta = 2 * Math.PI * Math.random()
@@ -391,7 +393,7 @@ html, body {
   display: flex;
   justify-content: center;
   gap: 1rem;
-  margin: 1rem 0;
+  margin: 0.5rem 0 1rem 0; /* ← ここで上側の余白を調整 */
 }
 .toolbar-button {
   width: 42px;
