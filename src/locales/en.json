@@ -423,7 +423,16 @@
 
 "season.waiting": "The four seasons will start soon",
 "clock.wabisabi": "Wabi-Sabi",
-  "clock.fourseasons": "Four Seasons"
+  "clock.fourseasons": "Four Seasons",
+
+
+
+"activity.title": "Activity",
+  "activity.photo": "Photos",
+  "activity.video": "Videos",
+  "activity.message": "Message List",
+  "activity.memo": "Memos",
+  "activity.contact": "Contacts"
 
 
 

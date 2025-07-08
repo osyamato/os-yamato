@@ -73,6 +73,12 @@
       <button @click="goToSettingsFromHome">
         <img src="/images/setting.png" alt="設定" class="icon-image" />
       </button>
+
+<!-- ✅ アクティビティ -->
+<button @click="goTo('activity')">
+  <img src="/activity.png" alt="アクティビティ" class="icon-image" />
+</button>
+
     </div>
   </div>
 </template>
