@@ -3,28 +3,48 @@
     class="planet-view"
     :style="{ opacity: allTexturesLoaded ? 1 : 0, backgroundColor: 'black' }"
   >
-    <!-- 2️⃣ アイコンツールバー -->
+    <!-- 宇宙背景 -->
+    <div class="starry-background" v-if="showStars">
+      <div
+        v-for="(style, index) in bgStars"
+        :key="'bg-star-' + index"
+        class="background-star"
+        :style="style"
+      />
+    </div>
+    <div class="shooting-stars" v-if="showStars">
+      <div
+        class="star"
+        v-for="star in meteors"
+        :key="star.id"
+        :style="getMeteorStyle(star)"
+      />
+    </div>
+
+    <!-- アイコンツールバー -->
     <div class="activity-toolbar">
       <button
         class="toolbar-button"
-        :style="{ backgroundColor: iconColor }"
+        :style="{ backgroundColor: showStars ? 'transparent' : iconColor }"
+        @click="toggleStars"
       >🪐</button>
       <button
         class="toolbar-button"
-        :style="{ backgroundColor: iconColor }"
+        :style="{ backgroundColor: showStars ? 'transparent' : iconColor }"
+        @click="toggleShowCount"
       >🧮</button>
     </div>
 
-    <!-- 3️⃣ Three.js 惑星 -->
+    <!-- Three.js 惑星 -->
     <div
       ref="container"
-      style="width: 100%; height: 80vh; position: relative; background-color: black;"
+      style="width: 100%; height: 80vh; position: relative;"
     ></div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import * as THREE from 'three'
 import { Auth } from 'aws-amplify'
 import { fetchAllCounts } from '@/utils/fetchAllCounts'
@@ -37,7 +57,13 @@ const planets = ref([])
 const selectedPlanet = ref(null)
 const flowers = ref([])
 const allTexturesLoaded = ref(false)
-const iconColor = ref('#3b82f6') // デフォルト青
+const iconColor = ref('#3b82f6')
+const showCount = ref(false)
+const showStars = ref(false)
+const bgStars = ref([])
+const meteors = ref([])
+let flowerTexture = null
+let labelSprite = null
 
 const loader = new THREE.TextureLoader()
 const textureUrls = [
@@ -51,7 +77,6 @@ const textureUrls = [
 
 const loadedTextures = {}
 let texturesLoadedCount = 0
-let labelSprite = null
 
 onMounted(async () => {
   try {
@@ -62,8 +87,6 @@ onMounted(async () => {
   }
 
   const counts = await fetchAllCounts()
-  console.log("✅ Counts fetched:", counts)
-
   textureUrls.forEach((url) => {
     loader.load(
       url,
@@ -71,6 +94,7 @@ onMounted(async () => {
         loadedTextures[url] = texture
         texturesLoadedCount++
         if (texturesLoadedCount === textureUrls.length) {
+          flowerTexture = loadedTextures['/dialy.1.png']
           allTexturesLoaded.value = true
           initScene(counts)
         }
@@ -81,44 +105,53 @@ onMounted(async () => {
       }
     )
   })
+
+  // 🌟 スクロール禁止
+  document.body.style.overflow = 'hidden'
+
+  for (let i = 0; i < 400; i++) {
+    bgStars.value.push(generateBgStar())
+  }
+  setInterval(() => {
+    const meteor = generateMeteor()
+    meteors.value.push(meteor)
+    setTimeout(() => {
+      meteors.value = meteors.value.filter(s => s.id !== meteor.id)
+    }, 2500)
+  }, 1500)
 })
 
-function getFlowerColor(count) {
-  if (count < 10) return new THREE.Color(0x2563eb)
-  else if (count < 20) return new THREE.Color(0x7c3aed)
-  else if (count < 30) return new THREE.Color(0xfacc15)
-  else if (count < 40) return new THREE.Color(0xf97316)
-  else return new THREE.Color(0xef4444)
-}
+onUnmounted(() => {
+  // 🌟 スクロール元に戻す
+  document.body.style.overflow = ''
+})
 
-function createLabelSprite(text) {
+function createLabelSprite(text, count = null) {
   const canvas = document.createElement('canvas')
-  canvas.width = 1024   // 高解像度
+  canvas.width = 1024
   canvas.height = 256
   const context = canvas.getContext('2d')
-
-  // 背景をクリア
   context.clearRect(0, 0, canvas.width, canvas.height)
   context.fillStyle = 'white'
-  context.font = 'bold 100px "Noto Sans JP", sans-serif' // 少し小さめ
+  context.font = 'bold 100px Roboto, sans-serif'
   context.textAlign = 'center'
   context.textBaseline = 'middle'
-  context.fillText(text, canvas.width / 2, canvas.height / 2)
-
+  let displayText = text
+  if (showCount.value && count !== null) {
+    displayText += `：${count}`
+  }
+  context.fillText(displayText, canvas.width / 2, canvas.height / 2)
   const texture = new THREE.CanvasTexture(canvas)
   texture.minFilter = THREE.LinearFilter
   const material = new THREE.SpriteMaterial({ map: texture, transparent: true })
   const sprite = new THREE.Sprite(material)
-
-  // 🌱 ここでスケールを小さく（全体的にコンパクトに）
-  sprite.scale.set(3, 0.75, 1) // ← 必要に応じてさらに調整可
-
+  sprite.scale.set(3, 0.75, 1)
   return sprite
 }
 
 function initScene(counts) {
   const scene = new THREE.Scene()
-  scene.background = new THREE.Color(0x000000)
+  scene.background = null
 
   const camera = new THREE.PerspectiveCamera(75, window.innerWidth / (window.innerHeight * 0.8), 0.1, 1000)
   camera.position.z = 20
@@ -134,8 +167,6 @@ function initScene(counts) {
   directionalLight.position.set(10, 10, 10)
   scene.add(directionalLight)
 
-  const flowerTexture = loadedTextures['/dialy.1.png']
-
   const planetInfo = [
     { texture: '/moon.jpg', text: t('activity.photo'), count: counts.photos },
     { texture: '/venus.jpg', text: t('activity.video'), count: counts.videos },
@@ -146,17 +177,10 @@ function initScene(counts) {
 
   planetInfo.forEach((info) => {
     const texture = loadedTextures[info.texture]
-    const material = new THREE.MeshStandardMaterial({
-      map: texture,
-      metalness: 0.3,
-      roughness: 0.5
-    })
+    const material = new THREE.MeshStandardMaterial({ map: texture, metalness: 0.3, roughness: 0.5 })
     const geometry = new THREE.SphereGeometry(2, 64, 64)
     const mesh = new THREE.Mesh(geometry, material)
-
     mesh.userData = { info }
-    mesh.name = info.text
-
     scene.add(mesh)
     planets.value.push(mesh)
   })
@@ -173,42 +197,49 @@ function initScene(counts) {
 
   function createFlowers(count) {
     clearFlowers()
-
     if (selectedPlanet.value.position.y < 0) return
 
-    const color = getFlowerColor(count)
+    const colorThresholds = [
+      { limit: 9, color: new THREE.Color(0x2563eb) },
+      { limit: 10, color: new THREE.Color(0x7c3aed) },
+      { limit: 10, color: new THREE.Color(0xfacc15) },
+      { limit: 10, color: new THREE.Color(0xf97316) },
+      { limit: Infinity, color: new THREE.Color(0xef4444) }
+    ]
 
-    for (let i = 0; i < count; i++) {
-      const planeGeometry = new THREE.PlaneGeometry(0.5, 0.5)
-      const material = new THREE.MeshBasicMaterial({
-        map: flowerTexture,
-        color: color,
-        transparent: true,
-        side: THREE.DoubleSide,
-        depthWrite: false
-      })
-      const flower = new THREE.Mesh(planeGeometry, material)
-
-      const phi = Math.acos(2 * Math.random() - 1)
-      const theta = 2 * Math.PI * Math.random()
-      const radius = 2.01
-
-      flower.position.set(
-        radius * Math.sin(phi) * Math.cos(theta),
-        radius * Math.cos(phi),
-        radius * Math.sin(phi) * Math.sin(theta)
-      )
-      flower.lookAt(new THREE.Vector3(0, 0, 0))
-
-      selectedPlanet.value.add(flower)
-      flowers.value.push(flower)
+    let remaining = count
+    for (const group of colorThresholds) {
+      if (remaining <= 0) break
+      const numThisColor = Math.min(remaining, group.limit)
+      for (let i = 0; i < numThisColor; i++) {
+        const planeGeometry = new THREE.PlaneGeometry(0.5, 0.5)
+        const material = new THREE.MeshBasicMaterial({
+          map: flowerTexture,
+          color: group.color,
+          transparent: true,
+          side: THREE.DoubleSide,
+          depthWrite: false
+        })
+        const flower = new THREE.Mesh(planeGeometry, material)
+        const phi = Math.acos(2 * Math.random() - 1)
+        const theta = 2 * Math.PI * Math.random()
+        const radius = 2.01
+        flower.position.set(
+          radius * Math.sin(phi) * Math.cos(theta),
+          radius * Math.cos(phi),
+          radius * Math.sin(phi) * Math.sin(theta)
+        )
+        flower.lookAt(new THREE.Vector3(0, 0, 0))
+        selectedPlanet.value.add(flower)
+        flowers.value.push(flower)
+      }
+      remaining -= numThisColor
     }
   }
 
   function handleInteraction(event) {
     const rect = renderer.domElement.getBoundingClientRect()
     let x, y
-
     if (event.type === 'touchstart') {
       x = event.touches[0].clientX
       y = event.touches[0].clientY
@@ -221,12 +252,9 @@ function initScene(counts) {
       ((x - rect.left) / rect.width) * 2 - 1,
       -((y - rect.top) / rect.height) * 2 + 1
     )
-
     const raycaster = new THREE.Raycaster()
     raycaster.setFromCamera(mouse, camera)
-
     const intersects = raycaster.intersectObjects(planets.value, false)
-
     if (intersects.length > 0) {
       const clickedPlanet = intersects[0].object
       if (clickedPlanet !== selectedPlanet.value) {
@@ -237,7 +265,6 @@ function initScene(counts) {
         clearFlowers()
         selectedPlanet.value = clickedPlanet
         updatePlanetPositions()
-
         const count = clickedPlanet.userData.info.count || 3
         createFlowers(count)
       }
@@ -254,7 +281,6 @@ function initScene(counts) {
     }
 
     let otherPlanets = planets.value.filter(p => p !== selectedPlanet.value)
-
     const isSmallScreen = window.innerHeight < 700
     selectedPlanet.value.position.x = 0
     selectedPlanet.value.position.y = isSmallScreen ? 1 : 4
@@ -262,7 +288,6 @@ function initScene(counts) {
 
     const gap = 5
     const startX = -((otherPlanets.length - 1) * gap) / 2
-
     otherPlanets.forEach((p, i) => {
       p.position.x = startX + i * gap
       p.position.y = -10
@@ -272,9 +297,8 @@ function initScene(counts) {
     const count = selectedPlanet.value.userData.info.count || 3
     createFlowers(count)
 
-    // ✅ 上段のときのみラベルを追加
     if (selectedPlanet.value.position.y >= 0) {
-      labelSprite = createLabelSprite(selectedPlanet.value.userData.info.text)
+      labelSprite = createLabelSprite(selectedPlanet.value.userData.info.text, count)
       labelSprite.position.set(0, 3, 0)
       selectedPlanet.value.add(labelSprite)
     }
@@ -295,6 +319,59 @@ function initScene(counts) {
     updatePlanetPositions()
   })
 }
+
+function toggleShowCount() {
+  showCount.value = !showCount.value
+  if (labelSprite) {
+    selectedPlanet.value.remove(labelSprite)
+    labelSprite = null
+  }
+  if (selectedPlanet.value.position.y >= 0) {
+    const count = selectedPlanet.value.userData.info.count || 3
+    labelSprite = createLabelSprite(selectedPlanet.value.userData.info.text, count)
+    labelSprite.position.set(0, 3, 0)
+    selectedPlanet.value.add(labelSprite)
+  }
+}
+
+function toggleStars() {
+  showStars.value = !showStars.value
+}
+
+function generateMeteor() {
+  return {
+    id: Date.now() + Math.random(),
+    top: Math.random() * 100,
+    left: Math.random() * 100,
+    dx: (Math.random() - 0.5) * 600,
+    dy: (Math.random() - 0.5) * 600,
+    delay: Math.random() * 1.5
+  }
+}
+
+function getMeteorStyle(star) {
+  return {
+    top: `${star.top}%`,
+    left: `${star.left}%`,
+    '--dx': `${star.dx}px`,
+    '--dy': `${star.dy}px`,
+    animationDelay: `${star.delay}s`
+  }
+}
+
+function generateBgStar() {
+  return {
+    top: `${Math.random() * 100}%`,
+    left: `${Math.random() * 100}%`,
+    width: `${Math.random() * 2 + 0.8}px`,
+    height: `${Math.random() * 2 + 0.8}px`,
+    opacity: Math.random() * 0.4 + 0.6,
+    backgroundColor: ['white', '#e0f7ff', '#d0e0ff'][Math.floor(Math.random() * 3)],
+    position: 'absolute',
+    borderRadius: '50%',
+    animation: `twinkle ${Math.random() * 1.5 + 2.5}s ease-in-out infinite`
+  }
+}
 </script>
 
 <style>
@@ -303,22 +380,19 @@ html, body {
   padding: 0;
   overflow-x: hidden;
 }
-
 .planet-view {
   padding: 24px;
-  background-color: #000000;
-  color: #ffffff;
+  background-color: #000;
+  color: #fff;
   font-family: 'Noto Sans JP', sans-serif;
+  touch-action: none; /* ← これ追加！！ */
 }
-
-
 .activity-toolbar {
   display: flex;
   justify-content: center;
   gap: 1rem;
   margin: 1rem 0;
 }
-
 .toolbar-button {
   width: 42px;
   height: 42px;
@@ -333,8 +407,44 @@ html, body {
   cursor: pointer;
   transition: transform 0.3s ease, background-color 0.3s ease;
 }
-
 .toolbar-button:hover {
   transform: scale(1.1);
+}
+.starry-background {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.background-star {
+  position: absolute;
+  border-radius: 50%;
+  animation: twinkle 3s ease-in-out infinite;
+}
+@keyframes twinkle {
+  0%, 100% { opacity: 0.3; }
+  50%      { opacity: 1; }
+}
+.shooting-stars {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.star {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  background-color: white;
+  border-radius: 50%;
+  opacity: 0;
+  animation: shootStar 2.5s linear forwards;
+}
+@keyframes shootStar {
+  0% { opacity: 0; transform: translate(0, 0); }
+  10% { opacity: 1; }
+  80% { opacity: 1; transform: translate(var(--dx), var(--dy)); }
+  100% { opacity: 0; transform: translate(var(--dx), var(--dy)); }
 }
 </style>
