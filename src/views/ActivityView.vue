@@ -149,7 +149,7 @@ onMounted(async () => {
   // 🌟 Toolbar を遅延表示
   setTimeout(() => {
     showToolbar.value = true
-  }, 300) // 300ms 後に表示
+  }, 100) 
 })
 
 const pickerOptions = [
@@ -237,15 +237,16 @@ function createPlanet() {
 
   planetMesh = new THREE.Mesh(geometry, material)
 
-  // ⭐ 球を少し上に持ち上げる（例えば 0.5）
-  planetMesh.position.y = 1.0
+  // ⭐ GlobeView と同じく、位置を上げない
+  planetMesh.position.y = 0
 
   scene.add(planetMesh)
 
-  // 🔥 カメラ位置を近づける
-  camera.position.z = 3.0
-  controls.minDistance = 1.5
-  controls.maxDistance = 4
+  // 🔥 カメラ設定も合わせる
+  camera.position.z = 3
+  controls.minDistance = 2
+  controls.maxDistance = 5
+  controls.target.set(0, 0, 0)
   controls.update()
 
   let key = selectedPlanetKey.value
