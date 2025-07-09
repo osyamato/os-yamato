@@ -1,5 +1,6 @@
 <template>
   <div class="planet-view" :style="{ opacity: allTexturesLoaded ? 1 : 0, backgroundColor: 'black' }">
+
     <!-- 宇宙背景 -->
     <div class="starry-background" v-if="showStars">
       <div
@@ -9,6 +10,7 @@
         :style="style"
       />
     </div>
+
     <div class="shooting-stars" v-if="showStars">
       <div
         class="star"
@@ -19,26 +21,36 @@
     </div>
 
     <!-- ツールバー -->
-    <div class="activity-toolbar">
-      <button class="toolbar-button" :style="{ backgroundColor: showStars ? 'transparent' : iconColor }" @click="toggleStars">🪐</button>
-      <button class="toolbar-button" :style="{ backgroundColor: showStars ? 'transparent' : iconColor }" @click="toggleShowCount">🔢</button>
-    </div>
+<Transition name="toolbar-fade">
+  <div v-if="showToolbar" class="activity-toolbar absolute-toolbar">
+    <button class="toolbar-button" :style="{ backgroundColor: showStars ? 'transparent' : iconColor }" @click="toggleStars">🪐</button>
+    <button class="toolbar-button" :style="{ backgroundColor: showStars ? 'transparent' : iconColor }" @click="toggleShowCount">🔢</button>
+  </div>
+</Transition>
 
     <!-- ピッカー -->
     <div class="picker-container">
-      <select v-model="selectedPlanetKey" @change="changePlanet">
-        <option value="photo">{{ t('activity.photo') }}</option>
-        <option value="video">{{ t('activity.video') }}</option>
-        <option value="message">{{ t('activity.message') }}</option>
-        <option value="memo">{{ t('activity.memo') }}</option>
-        <option value="contact">{{ t('activity.contact') }}</option>
-      </select>
+      <button
+        v-for="option in pickerOptions"
+        :key="option.key"
+        class="picker-button"
+        :class="{ active: selectedPlanetKey === option.key }"
+        @click="() => { selectedPlanetKey = option.key; changePlanet() }"
+      >
+        <img :src="option.img" :alt="option.label" class="picker-icon" />
+      </button>
     </div>
 
     <!-- Three.js 惑星 -->
     <div ref="container" style="width: 100%; height: 80vh; position: relative;"></div>
+
+    <div v-if="showCount" class="count-overlay">
+      <span class="count-label">{{ currentLabel }} : {{ currentCount }}</span>
+    </div>
+
   </div>
 </template>
+
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
@@ -46,6 +58,8 @@ import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { Auth } from 'aws-amplify'
 import { fetchAllCounts } from '@/utils/fetchAllCounts'
+import { computed } from 'vue'
+
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
@@ -57,6 +71,7 @@ const showCount = ref(false)
 const showStars = ref(false)
 const bgStars = ref([])
 const meteors = ref([])
+const showToolbar = ref(false)
 
 const selectedPlanetKey = ref('message')
 const textures = {}
@@ -83,6 +98,21 @@ const colorThresholds = [
   { limit: 10, color: new THREE.Color(0xf97316) },
   { limit: Infinity, color: new THREE.Color(0xef4444) }
 ]
+
+const currentLabel = computed(() => {
+  const found = pickerOptions.find(opt => opt.key === selectedPlanetKey.value)
+  return found ? found.label : ''
+})
+
+const currentCount = computed(() => {
+  let key = selectedPlanetKey.value
+  if (key === 'message') key = 'chatRooms'
+  if (key === 'memo') key = 'memos'
+  if (key === 'contact') key = 'contacts'
+  if (key === 'photo') key = 'photos'
+  if (key === 'video') key = 'videos'
+  return counts[key] || 0
+})
 
 onMounted(async () => {
   try {
@@ -115,7 +145,20 @@ onMounted(async () => {
       meteors.value = meteors.value.filter(s => s.id !== meteor.id)
     }, 2500)
   }, 1500)
+
+  // 🌟 Toolbar を遅延表示
+  setTimeout(() => {
+    showToolbar.value = true
+  }, 300) // 300ms 後に表示
 })
+
+const pickerOptions = [
+  { key: 'photo', img: '/photo.icon.png', label: t('activity.photo') },
+  { key: 'video', img: '/video.png', label: t('activity.video') },
+  { key: 'message', img: '/messege.icon.activity.png', label: t('activity.message') },
+  { key: 'memo', img: '/memo.icon.activity.png', label: t('activity.memo') },
+  { key: 'contact', img: '/contact.icon.png', label: t('activity.contact') },
+]
 
 onUnmounted(() => {
   document.body.style.overflow = ''
@@ -156,7 +199,7 @@ function initScene() {
   controls.enablePan = false
   controls.minDistance = 2
   controls.maxDistance = 10
-  controls.target.set(0, 0, 0)
+  controls.target.set(0, 0.5, 0)
   controls.update()
 
   // 惑星生成
@@ -188,14 +231,22 @@ function createPlanet() {
   const texture = textures[selectedPlanetKey.value]
   texture.anisotropy = renderer.capabilities.getMaxAnisotropy()
 
-  // 👇 Geometry を細かく
-  const geometry = new THREE.SphereGeometry(2.0, 192, 192)
-
-  // 🌏 Globe と同じく
+  // 💡 球を小さめに
+  const geometry = new THREE.SphereGeometry(1.0, 192, 192)
   const material = new THREE.MeshBasicMaterial({ map: texture })
 
   planetMesh = new THREE.Mesh(geometry, material)
+
+  // ⭐ 球を少し上に持ち上げる（例えば 0.5）
+  planetMesh.position.y = 1.0
+
   scene.add(planetMesh)
+
+  // 🔥 カメラ位置を近づける
+  camera.position.z = 3.0
+  controls.minDistance = 1.5
+  controls.maxDistance = 4
+  controls.update()
 
   let key = selectedPlanetKey.value
   if (key === 'message') key = 'chatRooms'
@@ -228,7 +279,7 @@ function createFlowers(count) {
     const numThisColor = Math.min(remaining, group.limit)
 
     for (let i = 0; i < numThisColor; i++) {
-      const geometry = new THREE.PlaneGeometry(0.5, 0.5)
+      const geometry = new THREE.PlaneGeometry(0.25, 0.25)
       const material = new THREE.MeshBasicMaterial({
         map: flowerTexture,
         color: group.color,
@@ -240,14 +291,18 @@ function createFlowers(count) {
 
       const phi = Math.acos(2 * Math.random() - 1)
       const theta = 2 * Math.PI * Math.random()
-const radius = 2.0 + 0.03
+      const radius = 1.0 + 0.03
+
+      // ⭐ ここでは Y 補正しない
       flower.position.set(
         radius * Math.sin(phi) * Math.cos(theta),
         radius * Math.cos(phi),
         radius * Math.sin(phi) * Math.sin(theta)
       )
+      // ⭐ ここも惑星中心に向けるだけ
       flower.lookAt(new THREE.Vector3(0, 0, 0))
 
+      // ⭐ 惑星に追加 → 惑星自体の position.y が適用される
       planetMesh.add(flower)
       flowerMeshes.push(flower)
     }
@@ -332,7 +387,15 @@ html, body {
   display: flex;
   justify-content: center;
   gap: 1rem;
-  margin: 0.5rem 0 1rem 0;
+  /* margin は削除します！ */
+}
+
+.absolute-toolbar {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  translate: -50% 0;
+  z-index: 10;
 }
 
 .toolbar-button {
@@ -357,7 +420,9 @@ html, body {
 .picker-container {
   display: flex;
   justify-content: center;
-  margin-bottom: 1rem;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin: 1.5rem 0 1rem 0;
 }
 
 .starry-background {
@@ -402,5 +467,79 @@ html, body {
   80% { opacity: 1; transform: translate(var(--dx), var(--dy)); }
   100% { opacity: 0; transform: translate(var(--dx), var(--dy)); }
 }
+
+.picker-container {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin: 4rem 0 1rem 0;
+}
+
+.picker-button {
+  border: none;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 6px;
+  cursor: pointer;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.picker-button.active {
+  box-shadow: 0 0 12px rgba(0, 255, 255, 0.5);
+}
+
+.picker-button:hover {
+  transform: scale(1.1);
+}
+
+.picker-icon {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
+.count-overlay {
+  position: absolute;
+  top: 20%;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #fff;
+  font-size: 1.3rem;
+  font-family: 'Helvetica Neue', 'Segoe UI', 'Roboto', sans-serif;
+  letter-spacing: 0.5px;
+  font-weight: 500;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+}
+
+.count-label {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
+  padding: 6px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(4px);
+  box-shadow: 0 0 8px rgba(0, 255, 255, 0.3);
+  transition: all 0.3s ease;
+  white-space: nowrap; /* 👈 追加 */
+}
+
+.toolbar-fade-enter-active,
+.toolbar-fade-leave-active {
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.toolbar-fade-enter-from,
+.toolbar-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-20px);
+}
+
+.toolbar-fade-enter-to,
+.toolbar-fade-leave-from {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 </style>
 
