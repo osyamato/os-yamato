@@ -140,6 +140,72 @@ function addFlower(id, lat, lng, blossomData) {
   flowerMap.set(id + '_hitbox', hitbox)
 }
 
+const handleRegisterSubmit = async (payload) => {
+  const { lat, lng } = getRandomLocationForCountry(payload.country)
+
+  try {
+    const blossomData = {
+      nickname: payload.nickname,
+      comment: payload.comment,
+      yamatoId: payload.yamatoId,
+      country: payload.country,
+      hobby: payload.hobby,
+      lat,
+      lng
+    }
+
+    if (userHasBlossom.value && currentBlossomId) {
+      await API.graphql(graphqlOperation(updateBlossom, {
+        input: {
+          id: currentBlossomId,
+          ...blossomData
+        }
+      }))
+      removeFlower(currentBlossomId)
+      addFlower(currentBlossomId, lat, lng, { id: currentBlossomId, ...blossomData })
+    } else {
+      const result = await API.graphql(graphqlOperation(createBlossom, {
+        input: blossomData
+      }))
+      const newId = result.data.createBlossom.id
+      addFlower(newId, lat, lng, { id: newId, ...blossomData })
+    }
+
+    showRegisterModal.value = false
+  } catch (error) {
+    console.error('❌ 登録失敗', error)
+  }
+}
+
+const openRegisterModal = async () => {
+  try {
+    const user = await Auth.currentAuthenticatedUser()
+    const sub = user.attributes.sub
+    const result = await API.graphql(graphqlOperation(listBlossoms))
+    const blossoms = result.data.listBlossoms.items
+    const existing = blossoms.find(b => b.owner === sub)
+    if (existing) {
+      registerInitialData.value = {
+        id: existing.id,
+        nickname: existing.nickname ?? '',
+        comment: existing.comment ?? '',
+        yamatoId: existing.yamatoId ?? '',
+        country: existing.country ?? '',
+        hobby: existing.hobby ?? ''
+      }
+      userHasBlossom.value = true
+      currentBlossomId = existing.id
+    } else {
+      registerInitialData.value = null
+      userHasBlossom.value = false
+      currentBlossomId = null
+    }
+    showRegisterModal.value = true
+  } catch (e) {
+    console.error('❌ ユーザー情報取得失敗', e)
+  }
+}
+
 function removeFlower(id) {
   if (flowerMap.has(id)) {
     earth.remove(flowerMap.get(id))
@@ -217,7 +283,7 @@ onMounted(async () => {
 
   function animate() {
     requestAnimationFrame(animate)
-    earth.rotation.y += 0.0015
+    earth.rotation.y += 0.0010
     controls.update()
     renderer.render(scene, camera)
   }
