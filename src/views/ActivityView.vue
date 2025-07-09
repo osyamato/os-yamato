@@ -59,7 +59,6 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { Auth } from 'aws-amplify'
 import { fetchAllCounts } from '@/utils/fetchAllCounts'
 import { computed } from 'vue'
-
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
@@ -83,6 +82,8 @@ let meteorInterval = null
 let flowerTexture = null
 const flowerMeshes = []
 
+let isMounted = true  // ⭐ フラグ追加
+
 const planetTextureMap = {
   photo: '/moon.jpg',
   video: '/venus.jpg',
@@ -97,6 +98,14 @@ const colorThresholds = [
   { limit: 10, color: new THREE.Color(0xfacc15) },
   { limit: 10, color: new THREE.Color(0xf97316) },
   { limit: Infinity, color: new THREE.Color(0xef4444) }
+]
+
+const pickerOptions = [
+  { key: 'photo', img: '/photo.icon.png', label: t('activity.photo') },
+  { key: 'video', img: '/video.png', label: t('activity.video') },
+  { key: 'message', img: '/messege.icon.activity.png', label: t('activity.message') },
+  { key: 'memo', img: '/memo.icon.activity.png', label: t('activity.memo') },
+  { key: 'contact', img: '/contact.icon.png', label: t('activity.contact') },
 ]
 
 const currentLabel = computed(() => {
@@ -146,40 +155,63 @@ onMounted(async () => {
     }, 2500)
   }, 1500)
 
-  // 🌟 Toolbar を遅延表示
   setTimeout(() => {
     showToolbar.value = true
-  }, 100) 
+  }, 100)
 })
 
-const pickerOptions = [
-  { key: 'photo', img: '/photo.icon.png', label: t('activity.photo') },
-  { key: 'video', img: '/video.png', label: t('activity.video') },
-  { key: 'message', img: '/messege.icon.activity.png', label: t('activity.message') },
-  { key: 'memo', img: '/memo.icon.activity.png', label: t('activity.memo') },
-  { key: 'contact', img: '/contact.icon.png', label: t('activity.contact') },
-]
-
 onUnmounted(() => {
+  isMounted = false  // ⭐ animate 停止
+
   document.body.style.overflow = ''
+
   if (renderer && container.value?.firstChild) {
     container.value.removeChild(container.value.firstChild)
   }
-  if (renderer) renderer.dispose()
-  if (planetMesh?.geometry) planetMesh.geometry.dispose()
-  if (planetMesh?.material) planetMesh.material.dispose()
-  if (controls) controls.dispose()
+
+  if (renderer) {
+    renderer.dispose()
+    if (renderer.forceContextLoss) renderer.forceContextLoss()
+    renderer.domElement = null
+  }
+
+  if (planetMesh) {
+    if (planetMesh.geometry) planetMesh.geometry.dispose()
+    if (planetMesh.material) planetMesh.material.dispose()
+    scene.remove(planetMesh)
+    planetMesh = null
+  }
+
+  if (controls) {
+    controls.dispose()
+    controls = null
+  }
+
   if (meteorInterval) clearInterval(meteorInterval)
+
+  flowerMeshes.forEach(flower => {
+    if (flower.geometry) flower.geometry.dispose()
+    if (flower.material) flower.material.dispose()
+  })
+  flowerMeshes.length = 0
+
+  Object.keys(textures).forEach(key => {
+    textures[key]?.dispose?.()
+    textures[key] = null
+  })
+
+  if (flowerTexture?.dispose) flowerTexture.dispose()
+  flowerTexture = null
+
+  console.log("✅ ActivityView cleaned up completely")
 })
 
 function initScene() {
   scene = new THREE.Scene()
 
-  // カメラ
   camera = new THREE.PerspectiveCamera(75, window.innerWidth / (window.innerHeight * 0.8), 0.1, 1000)
-  camera.position.z = 6  // 初期距離（近すぎず遠すぎず）
+  camera.position.z = 6
 
-  // ライト
   const ambientLight = new THREE.AmbientLight(0xffffff, 0.8)
   scene.add(ambientLight)
 
@@ -187,12 +219,10 @@ function initScene() {
   dirLight.position.set(5, 5, 5)
   scene.add(dirLight)
 
-  // レンダラー
   renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true })
   renderer.setSize(window.innerWidth, window.innerHeight * 0.8)
   container.value.appendChild(renderer.domElement)
 
-  // OrbitControls 設定
   controls = new OrbitControls(camera, renderer.domElement)
   controls.enableDamping = true
   controls.dampingFactor = 0.1
@@ -202,21 +232,19 @@ function initScene() {
   controls.target.set(0, 0.5, 0)
   controls.update()
 
-  // 惑星生成
   createPlanet()
 
   function animate() {
+    if (!isMounted) return  // ⭐ 追加
     requestAnimationFrame(animate)
-    // 自動回転を入れたい場合はここで
     if (planetMesh) {
       planetMesh.rotation.y += 0.001
     }
-    controls.update()
+    controls?.update()
     renderer.render(scene, camera)
   }
   animate()
 
-  // リサイズ対応
   window.addEventListener('resize', resizeHandler)
 }
 
@@ -231,18 +259,14 @@ function createPlanet() {
   const texture = textures[selectedPlanetKey.value]
   texture.anisotropy = renderer.capabilities.getMaxAnisotropy()
 
-  // 💡 球を小さめに
   const geometry = new THREE.SphereGeometry(1.0, 192, 192)
   const material = new THREE.MeshBasicMaterial({ map: texture })
 
   planetMesh = new THREE.Mesh(geometry, material)
 
-  // ⭐ GlobeView と同じく、位置を上げない
   planetMesh.position.y = 0
-
   scene.add(planetMesh)
 
-  // 🔥 カメラ設定も合わせる
   camera.position.z = 3
   controls.minDistance = 2
   controls.maxDistance = 5
@@ -294,16 +318,12 @@ function createFlowers(count) {
       const theta = 2 * Math.PI * Math.random()
       const radius = 1.0 + 0.03
 
-      // ⭐ ここでは Y 補正しない
       flower.position.set(
         radius * Math.sin(phi) * Math.cos(theta),
         radius * Math.cos(phi),
         radius * Math.sin(phi) * Math.sin(theta)
       )
-      // ⭐ ここも惑星中心に向けるだけ
       flower.lookAt(new THREE.Vector3(0, 0, 0))
-
-      // ⭐ 惑星に追加 → 惑星自体の position.y が適用される
       planetMesh.add(flower)
       flowerMeshes.push(flower)
     }
