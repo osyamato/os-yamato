@@ -65,26 +65,80 @@
 </template>
 
 <script setup>
-import { onMounted, ref, nextTick } from 'vue'
+import { onMounted, onUnmounted, ref, nextTick } from 'vue'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import GlobeRegisterModal from '@/components/GlobeRegisterModal.vue'
 import SearchModal from '@/components/SearchModal.vue'
-import ProfileModal from '@/components/ProfileModal.vue' // ← ⭐️ 追加
+import ProfileModal from '@/components/ProfileModal.vue'
 import { API, graphqlOperation, Auth } from 'aws-amplify'
 import { createBlossom, updateBlossom } from '@/graphql/mutations'
-import { listBlossoms } from '@/graphql/queries'
+import { listBlossoms, getPublicProfile } from '@/graphql/queries'
 import YamatoUserSearchModal from '@/components/YamatoUserSearchModal.vue'
-import { getRandomLocationForCountry } from '@/utils/countryLocations' 
-import { getPublicProfile } from '@/graphql/queries'
+import { getRandomLocationForCountry } from '@/utils/countryLocations'
 
-
-const allBlossoms = ref([])
-const showRegisterModal = ref(false)
 const globeContainer = ref(null)
-let scene
-let earth
+const allBlossoms = ref([])
 const flowerMap = new Map()
+
+let scene, camera, renderer, earth, controls
+
+const showRegisterModal = ref(false)
+const registerInitialData = ref(null)
+const userHasBlossom = ref(false)
+let currentBlossomId = null
+
+const blossoms = ref([])
+
+// ⭐ Meteor, star
+const meteors = ref([])
+const bgStars = ref([])
+const showStars = ref(false)
+
+// 🌟 Profile & Search
+const selectedProfile = ref(null)
+const showProfileModal = ref(false)
+const showSearchModal = ref(false)
+const showSearchModalMounted = ref(false)
+const showYamatoSearchModal = ref(false)
+const initialSearchId = ref('')
+const hasProfile = ref(false)
+
+// 🌸 Flower functions
+function addFlower(id, lat, lng, blossomData) {
+  const radius = 1.01
+  const latRad = THREE.MathUtils.degToRad(lat)
+  const lngRad = THREE.MathUtils.degToRad(lng)
+
+  const x = radius * Math.cos(latRad) * Math.cos(-lngRad)
+  const y = radius * Math.sin(latRad)
+  const z = radius * Math.cos(latRad) * Math.sin(-lngRad)
+
+  const texture = new THREE.TextureLoader().load('/flowers.2.png')
+  const material = new THREE.MeshBasicMaterial({
+    map: texture,
+    transparent: true,
+    side: THREE.DoubleSide,
+    depthWrite: false
+  })
+  const flower = new THREE.Mesh(new THREE.PlaneGeometry(0.15, 0.15), material)
+  const offset = (Math.random() - 0.5) * 0.01
+  flower.position.set(x + offset, y + offset, z + offset)
+  flower.renderOrder = Math.floor(Math.random() * 1000)
+  flower.lookAt(new THREE.Vector3(0, 0, 0))
+  earth.add(flower)
+  flowerMap.set(id, flower)
+
+  const hitbox = new THREE.Mesh(
+    new THREE.PlaneGeometry(0.3, 0.3),
+    new THREE.MeshBasicMaterial({ visible: false })
+  )
+  hitbox.position.copy(flower.position)
+  hitbox.quaternion.copy(flower.quaternion)
+  hitbox.userData = { blossom: blossomData }
+  earth.add(hitbox)
+  flowerMap.set(id + '_hitbox', hitbox)
+}
 
 function removeFlower(id) {
   if (flowerMap.has(id)) {
@@ -98,135 +152,11 @@ function removeFlower(id) {
 }
 
 function clearAllFlowers() {
-  flowerMap.forEach((mesh) => earth.remove(mesh))
+  flowerMap.forEach(mesh => earth.remove(mesh))
   flowerMap.clear()
 }
 
-const blossoms = ref([])
-
-
-const userHasBlossom = ref(false)
-let currentBlossomId = null
-const registerInitialData = ref(null)
-
-const openRegisterModal = async () => {
-  showRegisterModal.value = true
-  try {
-    const user = await Auth.currentAuthenticatedUser()
-    const sub = user.attributes.sub
-    const result = await API.graphql(graphqlOperation(listBlossoms))
-    const blossoms = result.data.listBlossoms.items
-    const existing = blossoms.find(b => b.owner === sub)
-    if (existing) {
-      registerInitialData.value = {
-        id: existing.id,
-        nickname: existing.nickname ?? '',
-        comment: existing.comment ?? '',
-        yamatoId: existing.yamatoId ?? '',
-        country: existing.country ?? '',
-        hobby: existing.hobby ?? ''
-      }
-      userHasBlossom.value = true
-      currentBlossomId = existing.id
-    } else {
-      registerInitialData.value = null
-      userHasBlossom.value = false
-      currentBlossomId = null
-    }
-  } catch (e) {
-    console.error('❌ ユーザー情報取得失敗', e)
-  }
-}
-
-const addFlower = (id, lat, lng, blossomData) => {
-  const radius = 1.01
-  const latRad = THREE.MathUtils.degToRad(lat)
-  const lngRad = THREE.MathUtils.degToRad(lng)
-
-  const x = radius * Math.cos(latRad) * Math.cos(-lngRad)
-  const y = radius * Math.sin(latRad)
-  const z = radius * Math.cos(latRad) * Math.sin(-lngRad)
-
-  const texture = new THREE.TextureLoader().load('/flowers.2.png')
-
-  const material = new THREE.MeshBasicMaterial({
-    map: texture,
-    transparent: true,
-    side: THREE.DoubleSide,
-    depthWrite: false // ✅ 重なりの透過対策
-  })
-
-  const flower = new THREE.Mesh(new THREE.PlaneGeometry(0.15, 0.15), material)
-
-  // ✅ 群生感を出すためのランダムオフセット
-  const offset = (Math.random() - 0.5) * 0.01
-  flower.position.set(x + offset, y + offset, z + offset)
-
-  // ✅ 透過順をランダムで調整
-  flower.renderOrder = Math.floor(Math.random() * 1000)
-
-  // ✅ カメラ方向に向ける
-  flower.lookAt(new THREE.Vector3(0, 0, 0))
-
-  // ✅ 登録
-  earth.add(flower)
-  flowerMap.set(id, flower)
-
-  // ✅ クリック用のヒットボックスも同様に位置と向き調整
-  const hitbox = new THREE.Mesh(
-    new THREE.PlaneGeometry(0.3, 0.3),
-    new THREE.MeshBasicMaterial({ visible: false })
-  )
-  hitbox.position.copy(flower.position)
-  hitbox.quaternion.copy(flower.quaternion)
-  hitbox.userData = { blossom: blossomData }
-
-  earth.add(hitbox)
-  flowerMap.set(id + '_hitbox', hitbox)
-}
-
-const handleRegisterSubmit = async (payload) => {
-  const { lat, lng } = getRandomLocationForCountry(payload.country) // ← 差し替え
-
-  try {
-    const blossomData = {
-      nickname: payload.nickname,
-      comment: payload.comment,
-      yamatoId: payload.yamatoId,
-      country: payload.country,
-      hobby: payload.hobby,
-      lat,
-      lng
-    }
-
-    if (userHasBlossom.value && currentBlossomId) {
-      await API.graphql(graphqlOperation(updateBlossom, {
-        input: {
-          id: currentBlossomId,
-          ...blossomData
-        }
-      }))
-      removeFlower(currentBlossomId)
-      addFlower(currentBlossomId, lat, lng, { id: currentBlossomId, ...blossomData })
-    } else {
-      const result = await API.graphql(graphqlOperation(createBlossom, {
-        input: blossomData
-      }))
-      const newId = result.data.createBlossom.id
-      addFlower(newId, lat, lng, { id: newId, ...blossomData })
-    }
-
-    console.log('✅ 登録完了')
-  } catch (error) {
-    console.error('❌ 登録失敗', error)
-  }
-
-  showRegisterModal.value = false
-}
-
-let renderer
-let camera
-
+// 🌏 Globe setup
 onMounted(async () => {
   await nextTick()
   if (!globeContainer.value) return
@@ -249,7 +179,7 @@ onMounted(async () => {
   earth = new THREE.Mesh(geometry, material)
   scene.add(earth)
 
-  const controls = new OrbitControls(camera, renderer.domElement)
+  controls = new OrbitControls(camera, renderer.domElement)
   controls.enableDamping = true
   controls.dampingFactor = 0.1
   controls.enablePan = false
@@ -262,20 +192,17 @@ onMounted(async () => {
     camera.position.z = 4
     controls.minDistance = 3
   }
-  try {
-    // ✅ Cognitoユーザー情報の取得
+
+  try {
     const user = await Auth.currentAuthenticatedUser()
     const sub = user.attributes.sub
     const iconColor = user.attributes['custom:iconColor'] || '#a8dadc'
-
-    // ✅ CSS変数に反映
     document.documentElement.style.setProperty('--userColor', iconColor)
 
     const result = await API.graphql(graphqlOperation(listBlossoms))
     const blossoms = result.data.listBlossoms.items
-
-
     allBlossoms.value = blossoms
+
     clearAllFlowers()
     blossoms.forEach(b => {
       if (b.lat && b.lng && b.id) addFlower(b.id, b.lat, b.lng, b)
@@ -288,7 +215,7 @@ onMounted(async () => {
     console.error('❌ 花またはユーザー情報の取得失敗', e)
   }
 
-  const animate = () => {
+  function animate() {
     requestAnimationFrame(animate)
     earth.rotation.y += 0.0015
     controls.update()
@@ -296,17 +223,59 @@ onMounted(async () => {
   }
   animate()
 
-  window.addEventListener('resize', () => {
+  window.addEventListener('resize', handleResize)
+})
+
+function handleResize() {
+  if (camera && renderer && globeContainer.value) {
     const width = globeContainer.value.clientWidth
     const height = globeContainer.value.clientHeight
     camera.aspect = width / height
     camera.updateProjectionMatrix()
     renderer.setSize(width, height)
-  })
+  }
+}
+
+// 🌟 クリーンアップ
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize)
+  clearAllFlowers()
+
+  if (renderer && globeContainer.value) {
+    renderer.dispose()
+    if (globeContainer.value.firstChild) {
+      globeContainer.value.removeChild(globeContainer.value.firstChild)
+    }
+  }
+
+  if (scene) {
+    scene.traverse(obj => {
+      if (obj.geometry) obj.geometry.dispose()
+      if (obj.material) {
+        if (Array.isArray(obj.material)) {
+          obj.material.forEach(m => m.dispose())
+        } else {
+          obj.material.dispose()
+        }
+      }
+    })
+  }
+
+  console.log('✅ GlobeView cleaned up')
 })
- 
-const meteors = ref([])
-const bgStars = ref([])
+
+// ⭐ Star / Meteor
+for (let i = 0; i < 500; i++) {
+  bgStars.value.push(generateBgStar())
+}
+
+setInterval(() => {
+  const meteor = generateMeteor()
+  meteors.value.push(meteor)
+  setTimeout(() => {
+    meteors.value = meteors.value.filter(s => s.id !== meteor.id)
+  }, 2500)
+}, 1500)
 
 function generateMeteor() {
   return {
@@ -343,60 +312,31 @@ function generateBgStar() {
   }
 }
 
-onMounted(() => {
-  for (let i = 0; i < 500; i++) {
-    bgStars.value.push(generateBgStar())
-  }
-  setInterval(() => {
-    const meteor = generateMeteor()
-    meteors.value.push(meteor)
-    setTimeout(() => {
-      meteors.value = meteors.value.filter(s => s.id !== meteor.id)
-    }, 2500)
-  }, 1500)
-})
-
-const showStars = ref(false)
 function toggleStars() {
   showStars.value = !showStars.value
 }
 
-
-
-const selectedProfile = ref(null)
-const showProfileModal = ref(false)
-
-function closeProfileModal() {
-  selectedProfile.value = null
-  showProfileModal.value = false
-}
-
-const showSearchModal = ref(false)
-const showSearchModalMounted = ref(false)
-
-function openSearchModal() {
+// 🌟 Search & Profile handlers
+const openSearchModal = () => {
   showSearchModalMounted.value = true
   nextTick(() => {
     showSearchModal.value = true
   })
 }
-
 function handleSearchClose() {
   showSearchModal.value = false
   setTimeout(() => {
     showSearchModalMounted.value = false
-  }, 300) // アニメーション時間に応じて調整
+  }, 300)
 }
-
 function handleSearchResult(blossom) {
   selectedProfile.value = blossom
   showSearchModal.value = false
   setTimeout(() => {
     showSearchModalMounted.value = false
     showProfileModal.value = true
-  }, 300) // アニメーションに合わせて切り替え
+  }, 300)
 }
-
 function handleProfileBack() {
   showProfileModal.value = false
   nextTick(() => {
@@ -404,9 +344,6 @@ function handleProfileBack() {
     showSearchModal.value = true
   })
 }
-const showYamatoSearchModal = ref(false)
-const initialSearchId = ref('')
-
 function handleProfileRequest(yamatoId) {
   showProfileModal.value = false
   nextTick(() => {
@@ -415,8 +352,7 @@ function handleProfileRequest(yamatoId) {
   })
 }
 
-const hasProfile = ref(false)
-
+// 🌟 User profile
 onMounted(async () => {
   try {
     const user = await Auth.currentAuthenticatedUser()
@@ -428,7 +364,6 @@ onMounted(async () => {
     hasProfile.value = false
   }
 })
-
 </script>
 
 

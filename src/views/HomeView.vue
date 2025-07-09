@@ -1,84 +1,55 @@
 <template>
   <div class="desktop" :style="wallpaperStyle">
     <div class="icon-grid">
-      <!-- ✅ カレンダー -->
-      <button @click="goTo('calendar')" class="calendar-button">
-        <img src="/calendar.png" alt="カレンダー" class="icon-image" />
+      <!-- ✅ カレンダー（文字オーバーレイのため特殊対応） -->
+      <button @click="goTo('calendar')" class="icon-button calendar-button" style="background-image: url('/calendar.png')">
         <span class="calendar-date">{{ currentDay }}</span>
         <span class="calendar-month">{{ currentMonthName }}</span>
       </button>
 
       <!-- ✅ メモ -->
-      <button @click="goTo('memo')">
-        <img src="/memo.icon.png" alt="メモ" class="icon-image" />
-      </button>
+      <button @click="goTo('memo')" class="icon-button" style="background-image: url('/memo.icon.png')"></button>
 
       <!-- ✅ 連絡先 -->
-      <button @click="goTo('contact')">
-        <img src="/contact.icon.png" alt="連絡先" class="icon-image" />
-      </button>
+      <button @click="goTo('contact')" class="icon-button" style="background-image: url('/contact.icon.png')"></button>
 
       <!-- ✅ 日記 -->
-      <button @click="goTo('diary')">
-        <img src="/diary.icon.png" alt="日記" class="icon-image" />
-      </button>
+      <button @click="goTo('diary')" class="icon-button" style="background-image: url('/diary.icon.png')"></button>
 
       <!-- ✅ 写真 -->
-      <button @click="goTo('photo')">
-        <img src="/photo.icon.png" alt="写真" class="icon-image" />
-      </button>
+      <button @click="goTo('photo')" class="icon-button" style="background-image: url('/photo.icon.png')"></button>
 
       <!-- ✅ 動画 -->
-      <button @click="goTo('video')">
-        <img src="/video.png" alt="動画一覧" class="icon-image" />
-      </button>
+      <button @click="goTo('video')" class="icon-button" style="background-image: url('/video.png')"></button>
 
       <!-- ✅ メッセージ -->
-      <button @click="goToChatFromHome" class="chat-button">
-        <img src="/messege.icon.png" alt="メッセージ" class="icon-image" />
+      <button @click="goToChatFromHome" class="icon-button chat-button" style="background-image: url('/messege.icon.png')">
         <span v-if="notificationStore.hasUnread" class="notification-dot">🌱</span>
       </button>
 
       <!-- ✅ 風の便り -->
-      <button @click="goTo('wind-inbox')">
-        <img src="/WindMessage2.png" alt="風の便り" class="icon-image" />
-      </button>
+      <button @click="goTo('wind-inbox')" class="icon-button" style="background-image: url('/WindMessage2.png')"></button>
 
       <!-- ✅ Globe -->
-      <button @click="goTo('globe')">
-        <img src="/earth.png" alt="地球" class="icon-image" />
-      </button>
+      <button @click="goTo('globe')" class="icon-button" style="background-image: url('/earth.png')"></button>
 
       <!-- ✅ ゲーム -->
-      <button @click="goTo('flower-match')">
-        <img src="/game.png" alt="花あわせゲーム" class="icon-image" />
-      </button>
+      <button @click="goTo('flower-match')" class="icon-button" style="background-image: url('/game.png')"></button>
 
       <!-- ✅ 時計 -->
-      <button @click="goTo('time0')">
-        <img src="/clock.png" alt="時計" class="icon-image" />
-      </button>
+      <button @click="goTo('time0')" class="icon-button" style="background-image: url('/clock.png')"></button>
 
       <!-- ✅ 天気 -->
-      <button @click="goTo('weather')">
-        <img src="/weather.icon.png" alt="天気" class="icon-image" />
-      </button>
+      <button @click="goTo('weather')" class="icon-button" style="background-image: url('/weather.icon.png')"></button>
 
       <!-- ✅ ヒント -->
-      <button @click="goToIconGuide">
-        <img src="/icon.2.png" alt="ヒント" class="icon-image" />
-      </button>
+      <button @click="goToIconGuide()" class="icon-button" style="background-image: url('/icon.2.png')"></button>
 
-      <!-- 🎛 設定 -->
-      <button @click="goToSettingsFromHome">
-        <img src="/images/setting.png" alt="設定" class="icon-image" />
-      </button>
+      <!-- ✅ 設定 -->
+      <button @click="goToSettingsFromHome()" class="icon-button" style="background-image: url('/setting.png')"></button>
 
-<!-- ✅ アクティビティ -->
-<button @click="goTo('activity')">
-  <img src="/activity.png" alt="アクティビティ" class="icon-image" />
-</button>
-
+      <!-- ✅ アクティビティ -->
+      <button @click="goTo('activity')" class="icon-button" style="background-image: url('/activity.png')"></button>
     </div>
   </div>
 </template>
@@ -93,7 +64,6 @@ import { useNotificationStore } from '@/stores/notificationStore'
 
 const notificationStore = useNotificationStore()
 const router = useRouter()
-const route = useRoute()
 const wallpaper = ref('')
 const subscription = ref(null)
 
@@ -105,7 +75,6 @@ const currentMonthName = computed(() => t(`calendar.month.${today.getMonth() + 1
 
 const wallpaperStyle = computed(() => {
   if (!wallpaper.value) return {}
-
   if (wallpaper.value.startsWith('color.')) {
     const colorMap = {
       'color.lightBlue': '#e6f0f9',
@@ -114,7 +83,6 @@ const wallpaperStyle = computed(() => {
     }
     return { backgroundColor: colorMap[wallpaper.value] || '#f5f5f5' }
   }
-
   return {
     backgroundImage: `url(/${wallpaper.value})`,
     backgroundSize: 'cover',
@@ -126,15 +94,12 @@ const wallpaperStyle = computed(() => {
 function goTo(path) {
   router.push(`/${path}`)
 }
-
 function goToSettingsFromHome() {
   router.push({ path: '/settings', query: { from: 'home' } })
 }
-
 function goToIconGuide() {
   router.push({ path: '/icon-guide', query: { from: 'home' } })
 }
-
 function goToChatFromHome() {
   notificationStore.clearUnread()
   router.push({ path: '/chat-rooms', query: { from: 'home' } })
@@ -160,19 +125,12 @@ onMounted(async () => {
       const newMsg = value?.data?.onCreateMessage
       if (newMsg && newMsg.roomId) {
         const currentRoute = router.currentRoute.value
-
         const isInChatRoom = currentRoute.name === 'chat'
         const isChatRoomList = currentRoute.name === 'chat-rooms'
         const currentChatRoomId = currentRoute.params.roomId
-
-        if (
-          (isInChatRoom && currentChatRoomId === newMsg.roomId) ||
-          isChatRoomList
-        ) {
-          // ✅ 現在チャットルームを開いている、またはチャットルーム一覧画面なら通知マークを付けない
+        if ((isInChatRoom && currentChatRoomId === newMsg.roomId) || isChatRoomList) {
           return
         }
-
         notificationStore.setUnread(true)
       }
     },
@@ -186,7 +144,6 @@ onUnmounted(() => {
     subscription.value = null
   }
 })
-
 </script>
 
 <style scoped>
@@ -210,34 +167,23 @@ onUnmounted(() => {
   margin-top: 2rem;
 }
 
-button {
+.icon-button {
   width: 70px;
   height: 70px;
-  padding: 0;
-  font-size: 2rem;
   border-radius: 1rem;
-  background: #fff;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-color: #fff;
   border: none;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
   transition: transform 0.2s, box-shadow 0.2s;
   position: relative;
 }
 
-.icon-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 16px;
-  will-change: opacity, transform;
-  transition: opacity 0.2s ease-in-out;
-}
-
-button:hover {
-  transform: scale(1.05);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+.icon-button:hover {
+  transform: none;
+  box-shadow: none;
 }
 
 .calendar-button {
