@@ -71,7 +71,7 @@
 
       <!-- 🎛 設定 -->
       <button @click="goToSettingsFromHome">
-        <img src="/images/setting.png" alt="設定" class="icon-image" />
+        <img src="/setting.png" alt="設定" class="icon-image" />
       </button>
 
 <!-- ✅ アクティビティ -->
@@ -286,4 +286,5 @@ button:hover {
   line-height: 1;
 }
 </style>
+
 
