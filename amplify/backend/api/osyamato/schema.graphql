@@ -84,10 +84,7 @@ type ChatRoom
 
 type Message
   @model
-  @auth(rules: [
-    { allow: owner },
-    { allow: private, operations: [read] }
-  ])
+  @auth(rules: [{ allow: owner }, { allow: private, operations: [read] }])
 {
   id: ID!
   roomId: ID! @index(name: "byRoom", queryField: "messagesByRoomId", sortKeyFields: ["timestamp"])
@@ -103,6 +100,7 @@ type Message
   createdAt: AWSDateTime
   expiresAt: AWSTimestamp
 }
+
 
 type Reaction
   @model
@@ -244,6 +242,32 @@ type Video
   videoTakenAt: AWSDateTime
   isFavorite: Boolean
   lastOpenedAt: AWSDateTime
+  createdAt: AWSDateTime!
+  updatedAt: AWSDateTime!
+}
+
+
+type GPTMiniSession
+  @model
+  @auth(rules: [{ allow: owner }])
+{
+  id: ID!
+  title: String
+  mode: String!
+  lastOpenedAt: AWSDateTime
+  createdAt: AWSDateTime!
+  updatedAt: AWSDateTime!
+}
+
+type GPTMiniHistory
+  @model
+  @auth(rules: [{ allow: owner }])
+{
+  id: ID!
+  sessionId: ID! @index(name: "bySession", queryField: "historiesBySession", sortKeyFields: ["createdAt"])
+  prompt: String!
+  response: String!
+  language: String
   createdAt: AWSDateTime!
   updatedAt: AWSDateTime!
 }

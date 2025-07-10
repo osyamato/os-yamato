@@ -36,6 +36,8 @@ import TimeView0 from '../views/TimeView0.vue'
 import TimeView3 from '../views/TimeView3.vue'
 import ActivityView from '../views/ActivityView.vue'
 import GPTMiniView from '../views/GPTMiniView.vue'
+import GPTMiniChatView from '../views/GPTMiniChatView.vue'
+
 
 const routes = [
   { path: '/', redirect: '/signin' },
@@ -84,8 +86,8 @@ const routes = [
   { path: '/time0', name: 'time0', component: TimeView0 },
 { path: '/time3', name: 'time3', component: TimeView3 },
 { path: '/activity', name: 'activity', component: ActivityView },
-{ path: '/gpt-mini', name: 'gpt-mini', component: GPTMiniView }
-
+{ path: '/gpt-mini', name: 'gpt-mini', component: GPTMiniView },
+{ path: '/gpt-mini/:id', name: 'gpt-mini-chat', component: GPTMiniChatView, props: true },
 
 ]
 

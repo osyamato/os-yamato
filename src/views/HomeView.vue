@@ -50,8 +50,7 @@
 
       <!-- ✅ アクティビティ -->
       <button @click="goTo('activity')" class="icon-button" style="background-image: url('/activity.png')"></button>
-
-<button @click="goTo('gpt-mini')" class="icon-button" style="font-size: 30px;">🍃</button>
+      <button @click="goTo('gpt-mini')" class="icon-button">🍃</button>
 
     </div>
   </div>

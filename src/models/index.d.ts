@@ -585,3 +585,65 @@ export declare type Video = LazyLoading extends LazyLoadingDisabled ? EagerVideo
 export declare const Video: (new (init: ModelInit<Video>) => Video) & {
   copyOf(source: Video, mutator: (draft: MutableModel<Video>) => MutableModel<Video> | void): Video;
 }
+
+type EagerGPTMiniSession = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<GPTMiniSession, 'id'>;
+  };
+  readonly id: string;
+  readonly title?: string | null;
+  readonly mode: string;
+  readonly lastOpenedAt?: string | null;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+}
+
+type LazyGPTMiniSession = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<GPTMiniSession, 'id'>;
+  };
+  readonly id: string;
+  readonly title?: string | null;
+  readonly mode: string;
+  readonly lastOpenedAt?: string | null;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+}
+
+export declare type GPTMiniSession = LazyLoading extends LazyLoadingDisabled ? EagerGPTMiniSession : LazyGPTMiniSession
+
+export declare const GPTMiniSession: (new (init: ModelInit<GPTMiniSession>) => GPTMiniSession) & {
+  copyOf(source: GPTMiniSession, mutator: (draft: MutableModel<GPTMiniSession>) => MutableModel<GPTMiniSession> | void): GPTMiniSession;
+}
+
+type EagerGPTMiniHistory = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<GPTMiniHistory, 'id'>;
+  };
+  readonly id: string;
+  readonly sessionId: string;
+  readonly prompt: string;
+  readonly response: string;
+  readonly language?: string | null;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+}
+
+type LazyGPTMiniHistory = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<GPTMiniHistory, 'id'>;
+  };
+  readonly id: string;
+  readonly sessionId: string;
+  readonly prompt: string;
+  readonly response: string;
+  readonly language?: string | null;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+}
+
+export declare type GPTMiniHistory = LazyLoading extends LazyLoadingDisabled ? EagerGPTMiniHistory : LazyGPTMiniHistory
+
+export declare const GPTMiniHistory: (new (init: ModelInit<GPTMiniHistory>) => GPTMiniHistory) & {
+  copyOf(source: GPTMiniHistory, mutator: (draft: MutableModel<GPTMiniHistory>) => MutableModel<GPTMiniHistory> | void): GPTMiniHistory;
+}
