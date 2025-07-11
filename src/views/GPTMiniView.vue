@@ -17,8 +17,21 @@
     </div>
 
     <!-- 🔽 モードテキスト -->
-    <p v-if="selectedMode" class="mode-text">モード: {{ getModeLabel(selectedMode) }}</p>
+    <p v-if="selectedMode" class="mode-text" @click="openModeModal">
+      モード: <span class="mode-label">{{ getModeLabel(selectedMode) }}</span>
+    </p>
     <p v-else class="hint-text">アイコンを選んで問いかけてみよう</p>
+
+    <!-- 🔽 新規セッションボタン -->
+    <div v-if="selectedMode" class="new-session-button-wrapper">
+      <div
+        class="mode-icon add-icon"
+        @click="createSession"
+        :style="{ backgroundColor: iconColor }"
+      >
+        ＋
+      </div>
+    </div>
 
     <!-- 🔽 セッション一覧 -->
     <div v-if="filteredSessions.length">
@@ -34,8 +47,15 @@
     </div>
     <p v-else-if="selectedMode">このモードのセッションはありません。</p>
 
-    <!-- 🔽 新規セッション -->
-    <button @click="createSession" :disabled="!selectedMode">＋ 新規セッション</button>
+    <!-- 🔽 モード説明モーダル -->
+    <transition name="modal">
+      <div v-if="showModeModal" class="modal-overlay" @click.self="closeModeModal">
+        <div class="modal-content">
+          <h3>モード説明</h3>
+          <p v-if="selectedModeDescription">{{ selectedModeDescription }}</p>
+        </div>
+      </div>
+    </transition>
   </div>
 </template>
 
@@ -48,11 +68,12 @@ const router = useRouter()
 const sessions = ref([])
 const selectedMode = ref('')
 const iconColor = ref('#3b82f6')
+const showModeModal = ref(false)
 
 const modes = [
-  { key: 'breeze', emoji: '🍃', label: 'そよ風' },
-  { key: 'deep', emoji: '🌊', label: '深い思索' },
-  { key: 'poetic', emoji: '✨', label: '詩的' }
+  { key: 'breeze', emoji: '🍃', label: 'そよ風', desc: '気軽にフレンドリーな返答を楽しむモードです。' },
+  { key: 'deep', emoji: '🌊', label: '深い思索', desc: '哲学的で深い対話を楽しめるモードです。' },
+  { key: 'poetic', emoji: '✨', label: '詩的', desc: '詩や物語のように美しい返答を楽しめます。' }
 ]
 
 const listSessionsQuery = /* GraphQL */ `
@@ -118,6 +139,11 @@ function getModeLabel(modeKey) {
   return mode ? mode.label : ''
 }
 
+const selectedModeDescription = computed(() => {
+  const mode = modes.find(m => m.key === selectedMode.value)
+  return mode ? mode.desc : ''
+})
+
 function getIconStyle(mode) {
   const isActive = selectedMode.value === mode
   return {
@@ -141,9 +167,16 @@ function formatDate(str) {
   return `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`
 }
 
+function openModeModal() {
+  showModeModal.value = true
+}
+
+function closeModeModal() {
+  showModeModal.value = false
+}
+
 onMounted(async () => {
   fetchSessions()
-
   try {
     const user = await Auth.currentAuthenticatedUser()
     iconColor.value = user.attributes['custom:iconColor'] || '#3b82f6'
@@ -152,6 +185,7 @@ onMounted(async () => {
   }
 })
 </script>
+
 
 <style scoped>
 .gpt-mini-view {
@@ -197,20 +231,39 @@ onMounted(async () => {
 .mode-text {
   margin: 0.5rem 0 1rem;
   font-size: 1rem;
-  color: #333;
-  text-align: center; /* ← ここで中央揃え */
+  color: #274c77;
+  text-align: center;
+  font-weight: bold;
 }
-@media (prefers-color-scheme: dark) {
-  .mode-text {
-    color: #ccc;
-  }
-}
-
 .hint-text {
   margin: 1rem 0;
   font-size: 0.95rem;
   color: #666;
   text-align: center;
+}
+
+.new-session-button-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.add-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  /* ここを修正 ↓ */
+  /* background-color: #3b82f6; ← 固定値を削除 */
+  color: #fff;
+  font-size: 1.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.add-icon:hover {
+  transform: scale(1.1);
 }
 
 .session-card {
@@ -230,14 +283,10 @@ onMounted(async () => {
   margin: 0 auto 0.5rem;
 }
 @media (min-width: 768px) {
-  .session-card {
-    width: 400px;
-  }
+  .session-card { width: 400px; }
 }
 @media (min-width: 1024px) {
-  .session-card {
-    width: 480px;
-  }
+  .session-card { width: 480px; }
 }
 @media (prefers-color-scheme: dark) {
   .session-card {
@@ -254,7 +303,6 @@ onMounted(async () => {
     background: #555;
   }
 }
-
 .session-title {
   font-weight: bold;
   font-size: 1rem;
@@ -276,7 +324,46 @@ onMounted(async () => {
   }
 }
 
-button:disabled {
-  opacity: 0.5;
+.mode-text {
+  margin: 0.5rem 0 1rem;
+  font-size: 1rem;
+  color: #274c77;
+  text-align: center;
+  cursor: pointer;
 }
+.mode-text .mode-label {
+  text-decoration: underline;
+}
+
+/* モーダル */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(6px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: #fff;
+  color: #222;
+  padding: 1.5rem;
+  border-radius: 12px;
+  max-width: 300px;
+  width: 80%;
+  text-align: center;
+}
+@media (prefers-color-scheme: dark) {
+  .modal-content {
+    background: #333;
+    color: #fff;
+  }
+}
+
 </style>

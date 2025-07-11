@@ -1,50 +1,67 @@
 <template>
-  <div class="gpt-mini-chat-view">
-    <h2>GPT Mini Chat 🌿</h2>
-    <p>セッションID: {{ sessionId }}</p>
+  <div class="view-wrapper">
+    <div class="chat-container">
+      <!-- 🔼 ヘッダー -->
+      <div class="chat-header">GPT Mini Chat</div>
 
-    <!-- 🔽 メッセージ履歴 -->
-    <div class="history-list">
-      <div
-        v-for="history in histories"
-        :key="history.id"
-        :class="['message-row', history.isMine ? 'mine' : 'ai']"
-      >
-        <div class="bubble">
-          <p>{{ history.isMine ? history.prompt : history.response }}</p>
-          <small>{{ formatDate(history.createdAt) }}</small>
+      <!-- 🔼 メッセージ一覧 -->
+      <div class="message-list">
+        <div
+          v-for="(msg, index) in messages"
+          :key="index"
+          class="message-row"
+          :class="{ mine: msg.isMine }"
+        >
+          <span v-if="!msg.isMine" class="avatar">🤖</span>
+          <div :class="['message', { mine: msg.isMine }]" v-html="msg.content.replace(/\n/g, '<br>')"></div>
         </div>
+        <div ref="bottom"></div>
       </div>
-    </div>
 
-    <!-- 🔽 入力エリア -->
-    <div class="input-area">
-      <textarea
-        v-model="newMessage"
-        placeholder="メッセージを入力..."
-        rows="1"
-        @input="autoResize"
-      ></textarea>
-      <button @click="sendMessage" :disabled="!newMessage.trim()">送信</button>
+      <!-- ✨ エフェクト -->
+      <ChatEffect ref="chatEffect" />
+
+      <!-- 🔽 入力欄 -->
+      <div class="input-area">
+        <textarea
+          v-model="newMessage"
+          placeholder="メッセージを入力..."
+          rows="1"
+          class="message-input"
+          @input="autoResize"
+          ref="textareaRef"
+        ></textarea>
+        <button
+          type="button"
+          class="circle-button"
+          :disabled="!newMessage.trim()"
+          @click="sendMessage"
+        >
+          ⇧
+        </button>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, nextTick, onMounted } from 'vue'
 import { API, graphqlOperation } from 'aws-amplify'
 import { useRoute } from 'vue-router'
+import ChatEffect from '@/components/ChatEffect.vue'
 
 const route = useRoute()
 const sessionId = route.params.id
 
-const histories = ref([])
 const newMessage = ref('')
+const messages = ref([])
+const chatEffect = ref(null)
+const bottom = ref(null)
+const textareaRef = ref(null)
 
-// GraphQL クエリ
 const listHistoriesQuery = /* GraphQL */ `
-  query HistoriesBySession($sessionId: ID!) {
-    historiesBySession(sessionId: $sessionId, sortDirection: ASC) {
+  query ListGPTMiniHistories($sessionId: ID!) {
+    listGPTMiniHistories(filter: { sessionId: { eq: $sessionId } }) {
       items {
         id
         sessionId
@@ -60,6 +77,7 @@ const createHistoryMutation = /* GraphQL */ `
   mutation CreateGPTMiniHistory($input: CreateGPTMiniHistoryInput!) {
     createGPTMiniHistory(input: $input) {
       id
+      sessionId
       prompt
       response
       createdAt
@@ -67,152 +85,240 @@ const createHistoryMutation = /* GraphQL */ `
   }
 `
 
-// 履歴取得
+onMounted(() => {
+  fetchHistories()
+})
+
 async function fetchHistories() {
   try {
     const res = await API.graphql(graphqlOperation(listHistoriesQuery, { sessionId }))
-    const items = res.data.historiesBySession.items || []
-    histories.value = items.map(item => ({
-      ...item,
-      isMine: true
-    }))
+    const items = res.data.listGPTMiniHistories.items || []
+    messages.value = items
+      .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
+      .flatMap(item => [
+        { content: item.prompt, isMine: true },
+        { content: item.response, isMine: false }
+      ])
+    await nextTick()
+    scrollToBottom()
   } catch (e) {
     console.error('❌ 履歴取得エラー:', e)
   }
 }
 
-// 送信
 async function sendMessage() {
-  if (!newMessage.value.trim()) return
+  const content = newMessage.value.trim()
+  if (!content) return
+
+  messages.value.push({ content, isMine: true })
+  scrollToBottom()
+
+  const mockResponse = `これは仮の応答です: 「${content}」`
+  messages.value.push({ content: mockResponse, isMine: false })
+  scrollToBottom()
 
   try {
-    const prompt = newMessage.value.trim()
-    newMessage.value = ''
-
-    // 仮履歴を追加（即表示）
-    const tempHistory = {
-      id: `temp-${Date.now()}`,
-      prompt,
-      response: '…',
-      createdAt: new Date().toISOString(),
-      isMine: true
-    }
-    histories.value.push(tempHistory)
-
-    // Lambda (例: Yamato GPT Mini API) へ問い合わせ（ここは実際のAPIに合わせて修正）
-    const aiRes = await fetch('https://tfxc3pudv4.execute-api.ap-northeast-1.amazonaws.com/Yamato_GPT_mini', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt, mode: 'breeze', language: 'ja' })
-    })
-    const aiData = await aiRes.json()
-    const aiText = aiData.text
-
-    // GraphQL 経由で履歴保存
+    const now = new Date().toISOString()
     const input = {
       sessionId,
-      prompt,
-      response: aiText,
-      language: 'ja'
+      prompt: content,
+      response: mockResponse,
+      createdAt: now
     }
-    const res = await API.graphql(graphqlOperation(createHistoryMutation, { input }))
-
-    // 仮履歴を削除
-    histories.value = histories.value.filter(h => h.id !== tempHistory.id)
-
-    // 正式履歴を追加
-    histories.value.push({
-      ...res.data.createGPTMiniHistory,
-      isMine: true
-    })
+    await API.graphql(graphqlOperation(createHistoryMutation, { input }))
   } catch (e) {
-    console.error('❌ メッセージ送信エラー:', e)
+    console.error('❌ 履歴保存エラー:', e)
+  }
+
+  maybePlayEffect(content)
+
+  newMessage.value = ''
+  nextTick(() => {
+    if (textareaRef.value) textareaRef.value.style.height = 'auto'
+  })
+}
+
+function maybePlayEffect(content) {
+  if (!chatEffect.value) return
+
+  if (/風|breeze/i.test(content)) {
+    chatEffect.value.playEffect('wind')
+  } else if (/深い|deep/i.test(content)) {
+    chatEffect.value.playEffect('starry')
+  } else if (/詩的|poetic/i.test(content)) {
+    chatEffect.value.playEffect('bubble')
   }
 }
 
-function formatDate(str) {
-  if (!str) return ''
-  const d = new Date(str)
-  return `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()} ${d.getHours()}:${d.getMinutes()}`
+function scrollToBottom() {
+  nextTick(() => {
+    bottom.value?.scrollIntoView({ behavior: 'smooth' })
+  })
 }
 
-function autoResize(e) {
-  const el = e.target
-  el.style.height = 'auto'
-  el.style.height = Math.min(el.scrollHeight, 150) + 'px'
+function autoResize(event) {
+  const textarea = event.target
+  textarea.style.height = 'auto'
+  textarea.style.height = Math.min(textarea.scrollHeight, 150) + 'px'
 }
-
-onMounted(() => {
-  fetchHistories()
-})
 </script>
 
-<style scoped>
-.gpt-mini-chat-view {
-  padding: 20px;
+<style>
+.view-wrapper {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
-.history-list {
-  margin-bottom: 20px;
+.chat-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: #ffffff;
+  color: #000;
+  margin: 0 auto;
+  width: 100%;
+  max-width: 600px;
+  box-sizing: border-box;
+}
+
+@media (min-width: 768px) {
+  .chat-container {
+    min-width: 600px;
+  }
+}
+
+.chat-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(10px);
+  padding: 0.75rem 1rem;
+  font-size: 1.1rem;
+  font-weight: bold;
+  text-align: center;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  color: #333;
+}
+
+.message-list {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
 }
 
 .message-row {
   display: flex;
-  margin-bottom: 10px;
+  align-items: flex-end;
+  margin: 0.5rem 0;
 }
 
 .message-row.mine {
   justify-content: flex-end;
 }
 
-.message-row.ai {
-  justify-content: flex-start;
+.message {
+  display: inline-block;
+  padding: 0.75rem 1rem;
+  border-radius: 18px;
+  font-size: 1rem;
+  background-color: #e0e0e0;
+  color: #000;
+  word-break: break-word;
+  white-space: pre-wrap;
+  line-height: 1.5;
+  text-align: left;
+  max-width: 80vw;
+  max-width: min(80vw, 520px);
 }
 
-.bubble {
-  max-width: 70%;
-  padding: 10px;
-  border-radius: 10px;
-  background-color: #333;
-  color: white;
-  position: relative;
+.message.mine {
+  background-color: #145523 !important; /* ✅ 濃い緑に強制 */
+  color: #fff !important;
+  margin-left: auto;
 }
 
-.message-row.mine .bubble {
-  background-color: #3b82f6;
+@media (max-width: 600px) {
+  .message {
+    max-width: 70vw;
+  }
 }
 
-.bubble small {
-  display: block;
-  margin-top: 5px;
-  font-size: 0.7rem;
-  opacity: 0.7;
+.avatar {
+  margin-right: 0.5rem;
 }
 
 .input-area {
   display: flex;
-  gap: 8px;
+  align-items: flex-end;
+  padding: 1rem;
+  border-top: 1px solid #333;
+  gap: 0.5rem;
 }
 
-textarea {
+.message-input {
   flex: 1;
-  resize: none;
-  border-radius: 6px;
-  padding: 8px;
+  padding: 0.6rem 1rem;
   font-size: 1rem;
+  border-radius: 18px;
+  border: 1px solid #ccc;
+  background-color: #fff;
+  color: #000;
+  resize: none;
+  max-height: 150px;
+  min-height: 40px;
+  box-sizing: border-box;
 }
 
-button {
-  padding: 8px 12px;
-  border-radius: 6px;
-  background-color: #3b82f6;
-  color: white;
+.circle-button {
+  background-color: #145523;
+  color: #fff;
   border: none;
+  border-radius: 50%;
+  width: 2.4rem !important;
+  height: 2.4rem !important;
+  font-size: 1.2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 0.4rem;
   cursor: pointer;
+  flex: 0 0 auto;
+  transition: background-color 0.2s ease;
 }
 
-button:disabled {
-  background-color: #999;
+.circle-button:hover {
+  background-color: #e0e0e0;
+}
+
+.circle-button.disabled {
+  opacity: 0.5;
   cursor: not-allowed;
 }
+
+@media (prefers-color-scheme: dark) {
+  .chat-container {
+    background-color: #121212 !important;
+    color: #fff !important;
+  }
+
+  .message {
+    background-color: #333 !important;
+    color: #fff !important;
+  }
+
+  .message.mine {
+    background-color: #145523 !important;
+  }
+
+  .chat-header {
+    background: rgba(0, 0, 0, 0.4) !important;
+    color: #fff !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+  }
+}
 </style>
+
