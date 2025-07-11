@@ -39,10 +39,12 @@
         v-for="session in filteredSessions"
         :key="session.id"
         class="session-card"
-        @click="goToSession(session.id)"
       >
-        <h3 class="session-title">{{ session.title || '(無題)' }}</h3>
-        <p class="session-date">更新: {{ formatDate(session.updatedAt) }}</p>
+        <div class="session-info" @click="goToSession(session.id)">
+          <h3 class="session-title">{{ session.title || '(無題)' }}</h3>
+          <p class="session-date">更新: {{ formatDate(session.updatedAt) }}</p>
+        </div>
+        <button class="more-button" @click.stop="openConfirm(session)">…</button>
       </div>
     </div>
     <p v-else-if="selectedMode">このモードのセッションはありません。</p>
@@ -56,19 +58,31 @@
         </div>
       </div>
     </transition>
+
+    <!-- 🔽 確認ダイアログ -->
+    <ConfirmDialog
+      :visible="showConfirm"
+      message="account.confirmDelete"
+      @confirm="confirmDelete"
+      @cancel="cancelDelete"
+    />
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onActivated, watch } from 'vue'
 import { API, graphqlOperation, Auth } from 'aws-amplify'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
+import ConfirmDialog from '@/components/ConfirmDialog.vue'
 
 const router = useRouter()
+const route = useRoute()
 const sessions = ref([])
 const selectedMode = ref('')
 const iconColor = ref('#3b82f6')
 const showModeModal = ref(false)
+const showConfirm = ref(false)
+const sessionToDelete = ref(null)
 
 const modes = [
   { key: 'breeze', emoji: '🍃', label: 'そよ風', desc: '気軽にフレンドリーな返答を楽しむモードです。' },
@@ -102,6 +116,14 @@ const createSessionMutation = /* GraphQL */ `
   }
 `
 
+const deleteSessionMutation = /* GraphQL */ `
+  mutation DeleteGPTMiniSession($input: DeleteGPTMiniSessionInput!) {
+    deleteGPTMiniSession(input: $input) {
+      id
+    }
+  }
+`
+
 async function fetchSessions() {
   try {
     const res = await API.graphql(graphqlOperation(listSessionsQuery))
@@ -119,8 +141,11 @@ async function createSession() {
       title: '',
       lastOpenedAt: now
     }
-    await API.graphql(graphqlOperation(createSessionMutation, { input }))
-    await fetchSessions()
+    const res = await API.graphql(graphqlOperation(createSessionMutation, { input }))
+    const newSession = res.data.createGPTMiniSession
+
+    // ✅ 作成後すぐにチャット画面へ遷移
+    router.push({ name: 'gpt-mini-chat', params: { id: newSession.id }, query: { mode: selectedMode.value } })
   } catch (e) {
     console.error('❌ セッション作成エラー:', e)
   }
@@ -129,8 +154,10 @@ async function createSession() {
 function toggleMode(mode) {
   if (selectedMode.value === mode) {
     selectedMode.value = ''
+    router.replace({ query: {} })
   } else {
     selectedMode.value = mode
+    router.replace({ query: { mode } })
   }
 }
 
@@ -158,7 +185,7 @@ const filteredSessions = computed(() =>
 )
 
 function goToSession(id) {
-  router.push({ name: 'gpt-mini-chat', params: { id } })
+  router.push({ name: 'gpt-mini-chat', params: { id }, query: { mode: selectedMode.value } })
 }
 
 function formatDate(str) {
@@ -175,17 +202,54 @@ function closeModeModal() {
   showModeModal.value = false
 }
 
+function openConfirm(session) {
+  sessionToDelete.value = session
+  showConfirm.value = true
+}
+
+async function confirmDelete() {
+  if (!sessionToDelete.value) return
+  try {
+    await API.graphql(graphqlOperation(deleteSessionMutation, { input: { id: sessionToDelete.value.id } }))
+    await fetchSessions()
+    showConfirm.value = false
+    sessionToDelete.value = null
+  } catch (e) {
+    console.error('❌ セッション削除エラー:', e)
+  }
+}
+
+function cancelDelete() {
+  showConfirm.value = false
+  sessionToDelete.value = null
+}
+
 onMounted(async () => {
-  fetchSessions()
+  await fetchSessions()
+
   try {
     const user = await Auth.currentAuthenticatedUser()
     iconColor.value = user.attributes['custom:iconColor'] || '#3b82f6'
   } catch (e) {
     console.warn('⚠️ アイコンカラー取得失敗:', e)
   }
-})
-</script>
 
+  if (route.query.mode) {
+    selectedMode.value = route.query.mode
+  }
+})
+
+onActivated(async () => {
+  await fetchSessions()
+})
+
+watch(
+  () => route.query.mode,
+  (newMode) => {
+    selectedMode.value = newMode || ''
+  }
+)
+</script>
 
 <style scoped>
 .gpt-mini-view {
@@ -200,6 +264,7 @@ onMounted(async () => {
   color: black !important;
   margin-bottom: 1.5rem;
 }
+
 @media (prefers-color-scheme: dark) {
   .gpt-mini-view h2 {
     color: white !important;
@@ -234,6 +299,10 @@ onMounted(async () => {
   color: #274c77;
   text-align: center;
   font-weight: bold;
+  cursor: pointer;
+}
+.mode-text .mode-label {
+  text-decoration: underline;
 }
 .hint-text {
   margin: 1rem 0;
@@ -252,8 +321,6 @@ onMounted(async () => {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  /* ここを修正 ↓ */
-  /* background-color: #3b82f6; ← 固定値を削除 */
   color: #fff;
   font-size: 1.4rem;
   display: flex;
@@ -267,6 +334,7 @@ onMounted(async () => {
 }
 
 .session-card {
+  position: relative;
   width: 330px;
   height: 90px;
   background: white;
@@ -282,6 +350,7 @@ onMounted(async () => {
   box-sizing: border-box;
   margin: 0 auto 0.5rem;
 }
+
 @media (min-width: 768px) {
   .session-card { width: 400px; }
 }
@@ -303,6 +372,7 @@ onMounted(async () => {
     background: #555;
   }
 }
+
 .session-title {
   font-weight: bold;
   font-size: 1rem;
@@ -318,21 +388,34 @@ onMounted(async () => {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
 @media (prefers-color-scheme: dark) {
   .session-date {
     color: #ccc;
   }
 }
 
-.mode-text {
-  margin: 0.5rem 0 1rem;
-  font-size: 1rem;
-  color: #274c77;
-  text-align: center;
-  cursor: pointer;
+.session-info {
+  flex: 1;
 }
-.mode-text .mode-label {
-  text-decoration: underline;
+
+.more-button {
+  position: absolute;
+  right: 12px;
+  top: 6px;
+  background: transparent;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: #888;
+}
+.more-button:hover {
+  color: #333;
+}
+@media (prefers-color-scheme: dark) {
+  .more-button:hover {
+    color: #fff;
+  }
 }
 
 /* モーダル */
@@ -365,5 +448,4 @@ onMounted(async () => {
     color: #fff;
   }
 }
-
 </style>

@@ -44,10 +44,11 @@
   </div>
 </template>
 
+
 <script setup>
 import { ref, nextTick, onMounted } from 'vue'
 import { API, graphqlOperation } from 'aws-amplify'
-import { useRoute } from 'vue-router'
+import { useRoute, onBeforeRouteLeave } from 'vue-router'
 import ChatEffect from '@/components/ChatEffect.vue'
 
 const route = useRoute()
@@ -58,6 +59,7 @@ const messages = ref([])
 const chatEffect = ref(null)
 const bottom = ref(null)
 const textareaRef = ref(null)
+const sessionTitle = ref('')
 
 const listHistoriesQuery = /* GraphQL */ `
   query ListGPTMiniHistories($sessionId: ID!) {
@@ -81,6 +83,23 @@ const createHistoryMutation = /* GraphQL */ `
       prompt
       response
       createdAt
+    }
+  }
+`
+
+const updateSessionMutation = /* GraphQL */ `
+  mutation UpdateGPTMiniSession($input: UpdateGPTMiniSessionInput!) {
+    updateGPTMiniSession(input: $input) {
+      id
+      title
+    }
+  }
+`
+
+const deleteSessionMutation = /* GraphQL */ `
+  mutation DeleteGPTMiniSession($input: DeleteGPTMiniSessionInput!) {
+    deleteGPTMiniSession(input: $input) {
+      id
     }
   }
 `
@@ -112,20 +131,30 @@ async function sendMessage() {
   const content = newMessage.value.trim()
   if (!content) return
 
-newMessage.value = '' 
-  // ユーザーのメッセージ追加
+  newMessage.value = ''
+
   messages.value.push({ content, isMine: true })
   scrollToBottom()
 
   try {
-    // GPT 呼び出し
     const gptReply = await callGPT(content)
 
-    // GPTの返答追加
     messages.value.push({ content: gptReply || '（返答なし）', isMine: false })
     scrollToBottom()
 
-    // DynamoDB 保存
+    // ✅ 最初の送信時にタイトル自動生成
+    if (!sessionTitle.value || sessionTitle.value === '') {
+      const newTitle = generateTitleFromMessage(content)
+      sessionTitle.value = newTitle
+
+      await API.graphql(graphqlOperation(updateSessionMutation, {
+        input: {
+          id: sessionId,
+          title: newTitle
+        }
+      }))
+    }
+
     const now = new Date().toISOString()
     const input = {
       sessionId,
@@ -135,17 +164,21 @@ newMessage.value = ''
     }
     await API.graphql(graphqlOperation(createHistoryMutation, { input }))
 
-    // エフェクト
     maybePlayEffect(content)
   } catch (e) {
     console.error('❌ GPT 呼び出し失敗:', e)
     messages.value.push({ content: '⚠️ GPT 呼び出しに失敗しました。', isMine: false })
   }
 
-  newMessage.value = ''
   nextTick(() => {
     if (textareaRef.value) textareaRef.value.style.height = 'auto'
   })
+}
+
+function generateTitleFromMessage(content) {
+  if (!content) return '(無題)'
+  const snippet = content.slice(0, 10)
+  return `${snippet}…`
 }
 
 async function callGPT(prompt) {
@@ -157,8 +190,6 @@ async function callGPT(prompt) {
     })
 
     const data = await res.json()
-
-    // サーバー側レスポンスが text に入っている前提
     return data.text || '（返答なし）'
   } catch (e) {
     console.error('❌ GPT 呼び出し失敗:', e)
@@ -189,7 +220,22 @@ function autoResize(event) {
   textarea.style.height = 'auto'
   textarea.style.height = Math.min(textarea.scrollHeight, 150) + 'px'
 }
+
+// ✅ ナビゲーションガードで履歴がない場合は削除
+onBeforeRouteLeave(async (to, from, next) => {
+  try {
+    if (messages.value.length === 0) {
+      await API.graphql(graphqlOperation(deleteSessionMutation, { input: { id: sessionId } }))
+      console.log('💬 会話がなかったのでセッション削除しました')
+    }
+  } catch (e) {
+    console.error('❌ セッション削除失敗:', e)
+  }
+  next()
+})
 </script>
+
+
 
 <style>
 .view-wrapper {
