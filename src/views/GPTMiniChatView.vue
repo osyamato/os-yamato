@@ -93,12 +93,14 @@ async function fetchHistories() {
   try {
     const res = await API.graphql(graphqlOperation(listHistoriesQuery, { sessionId }))
     const items = res.data.listGPTMiniHistories.items || []
+
     messages.value = items
       .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
       .flatMap(item => [
-        { content: item.prompt, isMine: true },
-        { content: item.response, isMine: false }
+        { content: item.prompt || '（内容なし）', isMine: true },
+        { content: item.response || '（返答なし）', isMine: false }
       ])
+
     await nextTick()
     scrollToBottom()
   } catch (e) {
@@ -110,32 +112,58 @@ async function sendMessage() {
   const content = newMessage.value.trim()
   if (!content) return
 
+newMessage.value = '' 
+  // ユーザーのメッセージ追加
   messages.value.push({ content, isMine: true })
   scrollToBottom()
 
-  const mockResponse = `これは仮の応答です: 「${content}」`
-  messages.value.push({ content: mockResponse, isMine: false })
-  scrollToBottom()
-
   try {
+    // GPT 呼び出し
+    const gptReply = await callGPT(content)
+
+    // GPTの返答追加
+    messages.value.push({ content: gptReply || '（返答なし）', isMine: false })
+    scrollToBottom()
+
+    // DynamoDB 保存
     const now = new Date().toISOString()
     const input = {
       sessionId,
       prompt: content,
-      response: mockResponse,
-      createdAt: now
+      response: gptReply,
+      createdAt: now,
     }
     await API.graphql(graphqlOperation(createHistoryMutation, { input }))
-  } catch (e) {
-    console.error('❌ 履歴保存エラー:', e)
-  }
 
-  maybePlayEffect(content)
+    // エフェクト
+    maybePlayEffect(content)
+  } catch (e) {
+    console.error('❌ GPT 呼び出し失敗:', e)
+    messages.value.push({ content: '⚠️ GPT 呼び出しに失敗しました。', isMine: false })
+  }
 
   newMessage.value = ''
   nextTick(() => {
     if (textareaRef.value) textareaRef.value.style.height = 'auto'
   })
+}
+
+async function callGPT(prompt) {
+  try {
+    const res = await fetch('https://tfxc3pudv4.execute-api.ap-northeast-1.amazonaws.com/Yamato_GPT_mini', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt })
+    })
+
+    const data = await res.json()
+
+    // サーバー側レスポンスが text に入っている前提
+    return data.text || '（返答なし）'
+  } catch (e) {
+    console.error('❌ GPT 呼び出し失敗:', e)
+    return '⚠️ エラーが発生しました。'
+  }
 }
 
 function maybePlayEffect(content) {
