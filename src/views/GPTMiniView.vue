@@ -1,26 +1,37 @@
 <template>
   <div class="gpt-mini-view">
-    <h2>GPT Mini 🌿</h2>
+    <!-- 🔽 タイトル -->
+    <transition name="fade-down">
+      <h2 v-if="showHeader">風にたずねる</h2>
+    </transition>
 
     <!-- 🔽 モード選択 -->
-    <div class="mode-select">
-      <div
-        v-for="mode in modes"
-        :key="mode.key"
-        class="mode-icon"
-        :class="{ active: selectedMode === mode.key }"
-        :style="getIconStyle(mode.key)"
-        @click="toggleMode(mode.key)"
-      >
-        {{ mode.emoji }}
+    <transition name="fade-down">
+      <div v-if="showHeader" class="mode-select">
+        <div
+          v-for="mode in modes"
+          :key="mode.key"
+          class="mode-icon"
+          :class="{ active: selectedMode === mode.key }"
+          :style="getIconStyle(mode.key)"
+          @click="toggleMode(mode.key)"
+        >
+          {{ mode.emoji }}
+        </div>
       </div>
-    </div>
+    </transition>
 
-    <!-- 🔽 モードテキスト -->
-    <p v-if="selectedMode" class="mode-text" @click="openModeModal">
-      モード: <span class="mode-label">{{ getModeLabel(selectedMode) }}</span>
-    </p>
-    <p v-else class="hint-text">アイコンを選んで問いかけてみよう</p>
+    <!-- 🔽 モードテキスト or ヒント -->
+    <template v-if="selectedMode">
+      <p class="mode-text" @click="openModeModal">
+        モード: <span class="mode-label">{{ getModeLabel(selectedMode) }}</span>
+      </p>
+    </template>
+    <template v-else>
+      <transition name="fade-float">
+        <p v-if="showHint" class="hint-text">アイコンを選んでたずねてみよう</p>
+      </transition>
+    </template>
 
     <!-- 🔽 新規セッションボタン -->
     <div v-if="selectedMode" class="new-session-button-wrapper">
@@ -83,11 +94,14 @@ const iconColor = ref('#3b82f6')
 const showModeModal = ref(false)
 const showConfirm = ref(false)
 const sessionToDelete = ref(null)
+const showHeader = ref(false)
+const showHint = ref(false)
 
 const modes = [
   { key: 'breeze', emoji: '🍃', label: 'そよ風', desc: '気軽にフレンドリーな返答を楽しむモードです。' },
-  { key: 'deep', emoji: '🌊', label: '深い思索', desc: '哲学的で深い対話を楽しめるモードです。' },
-  { key: 'poetic', emoji: '✨', label: '詩的', desc: '詩や物語のように美しい返答を楽しめます。' }
+  { key: 'deep', emoji: '💭', label: '深い思索', desc: '哲学的で深い対話を楽しめるモードです。' },
+  { key: 'poetic', emoji: '🌙', label: '詩的', desc: '詩や物語のように美しい返答を楽しめます。' },
+  { key: 'factual', emoji: '📖', label: '事実回答', desc: '正確な情報やデータを知りたいときに使うモードです。' }
 ]
 
 const listSessionsQuery = /* GraphQL */ `
@@ -144,7 +158,6 @@ async function createSession() {
     const res = await API.graphql(graphqlOperation(createSessionMutation, { input }))
     const newSession = res.data.createGPTMiniSession
 
-    // ✅ 作成後すぐにチャット画面へ遷移
     router.push({ name: 'gpt-mini-chat', params: { id: newSession.id }, query: { mode: selectedMode.value } })
   } catch (e) {
     console.error('❌ セッション作成エラー:', e)
@@ -225,18 +238,26 @@ function cancelDelete() {
 }
 
 onMounted(async () => {
-  await fetchSessions()
-
   try {
     const user = await Auth.currentAuthenticatedUser()
-    iconColor.value = user.attributes['custom:iconColor'] || '#3b82f6'
+    iconColor.value = user.attributes['custom:iconColor'] || '#274c77'
   } catch (e) {
     console.warn('⚠️ アイコンカラー取得失敗:', e)
   }
 
+  await fetchSessions()
+
   if (route.query.mode) {
     selectedMode.value = route.query.mode
   }
+
+  // タイトルとアイコン表示
+  showHeader.value = true
+
+  // 0.6秒後にヒントを表示（アニメーションの後）
+  setTimeout(() => {
+    showHint.value = true
+  }, 600)
 })
 
 onActivated(async () => {
@@ -287,7 +308,10 @@ watch(
   justify-content: center;
   margin: 0 12px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease,
+    transform 0.1s ease;
 }
 .mode-icon:hover {
   transform: scale(1.1);
@@ -448,4 +472,28 @@ watch(
     color: #fff;
   }
 }
+
+/* アニメーション: fade-down */
+.fade-down-enter-active {
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.fade-down-enter-from {
+  opacity: 0;
+  transform: translateY(-20px);
+}
+.fade-down-enter-to {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.fade-float-enter-active {
+  transition: opacity 0.8s ease;
+}
+.fade-float-enter-from {
+  opacity: 0;
+}
+.fade-float-enter-to {
+  opacity: 1;
+}
+
 </style>
