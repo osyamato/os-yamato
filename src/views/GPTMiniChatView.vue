@@ -2,7 +2,7 @@
   <div class="view-wrapper">
     <div class="chat-container">
       <!-- 🔼 ヘッダー -->
-      <div class="chat-header">GPT Mini Chat</div>
+<div class="chat-header">{{ sessionTitle || '風にたずねる' }}</div>
 
       <!-- 🔼 メッセージ一覧 -->
       <div class="message-list">
@@ -12,7 +12,7 @@
           class="message-row"
           :class="{ mine: msg.isMine }"
         >
-          <span v-if="!msg.isMine" class="avatar">🤖</span>
+<span v-if="!msg.isMine" class="avatar">{{ botEmoji }}</span>
           <div :class="['message', { mine: msg.isMine }]" v-html="msg.content.replace(/\n/g, '<br>')"></div>
         </div>
         <div ref="bottom"></div>
@@ -44,7 +44,6 @@
   </div>
 </template>
 
-
 <script setup>
 import { ref, nextTick, onMounted } from 'vue'
 import { API, graphqlOperation } from 'aws-amplify'
@@ -53,6 +52,7 @@ import ChatEffect from '@/components/ChatEffect.vue'
 
 const route = useRoute()
 const sessionId = route.params.id
+const mode = route.query.mode || 'breeze' 
 
 const newMessage = ref('')
 const messages = ref([])
@@ -60,6 +60,15 @@ const chatEffect = ref(null)
 const bottom = ref(null)
 const textareaRef = ref(null)
 const sessionTitle = ref('')
+
+const botEmojiMap = {
+  breeze: '🍃',
+  deep: '💭',
+  poetic: '🌙',
+  factual: '📖'
+}
+
+const botEmoji = ref(botEmojiMap[mode] || '🤖')
 
 const listHistoriesQuery = /* GraphQL */ `
   query ListGPTMiniHistories($sessionId: ID!) {
@@ -71,6 +80,15 @@ const listHistoriesQuery = /* GraphQL */ `
         response
         createdAt
       }
+    }
+  }
+`
+const getSessionQuery = /* GraphQL */ `
+  query GetGPTMiniSession($id: ID!) {
+    getGPTMiniSession(id: $id) {
+      id
+      title
+      mode
     }
   }
 `
@@ -110,6 +128,12 @@ onMounted(() => {
 
 async function fetchHistories() {
   try {
+    // ✅ セッション情報を先に取得
+    const sessionRes = await API.graphql(graphqlOperation(getSessionQuery, { id: sessionId }))
+    const session = sessionRes.data.getGPTMiniSession
+    sessionTitle.value = session.title || '(無題)'
+
+    // ✅ 履歴取得
     const res = await API.graphql(graphqlOperation(listHistoriesQuery, { sessionId }))
     const items = res.data.listGPTMiniHistories.items || []
 
@@ -123,7 +147,7 @@ async function fetchHistories() {
     await nextTick()
     scrollToBottom()
   } catch (e) {
-    console.error('❌ 履歴取得エラー:', e)
+    console.error('❌ 履歴 or セッション取得エラー:', e)
   }
 }
 
@@ -137,7 +161,7 @@ async function sendMessage() {
   scrollToBottom()
 
   try {
-    const gptReply = await callGPT(content)
+    const gptReply = await callGPT()
 
     messages.value.push({ content: gptReply || '（返答なし）', isMine: false })
     scrollToBottom()
@@ -181,12 +205,18 @@ function generateTitleFromMessage(content) {
   return `${snippet}…`
 }
 
-async function callGPT(prompt) {
+async function callGPT() {
   try {
+    // ✅ 会話履歴を全件送る
+    const conversationHistory = messages.value.map(m => ({
+      role: m.isMine ? "user" : "assistant",
+      content: m.content
+    }))
+
     const res = await fetch('https://tfxc3pudv4.execute-api.ap-northeast-1.amazonaws.com/Yamato_GPT_mini', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt })
+      body: JSON.stringify({ messages: conversationHistory, mode })
     })
 
     const data = await res.json()
