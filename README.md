@@ -1,5 +1,8 @@
 OS Yamato 🌸
 
+![スクリーンショット 0007-07-11 0 26 47](https://github.com/user-attachments/assets/2e783452-9976-4b17-ae03-08480f163f42)
+
+
 Visit: https://hanaco875.com
 
 A gentle operating system where data blooms, fades, and returns to the wind.
