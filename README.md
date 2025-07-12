@@ -1,7 +1,6 @@
 OS Yamato 🌸
 
-![スクリーンショット 0007-07-11 0 26 47](https://github.com/user-attachments/assets/2e783452-9976-4b17-ae03-08480f163f42)
-
+![スクリーンショット 0007-07-11 0 26 47](https://github.com/user-attachments/assets/52cad7db-4356-4d0b-accd-3b72dec97cfb)
 
 Visit: https://hanaco875.com
 
