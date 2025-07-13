@@ -35,14 +35,15 @@
           ></div>
         </div>
 
-        <div v-if="isLoadingReply" class="gpt-message-row">
-          <span class="gpt-avatar">{{ botEmoji }}</span>
-          <div class="gpt-dots-loader">
-            <span class="dot"></span>
-            <span class="dot"></span>
-            <span class="dot"></span>
-          </div>
-        </div>
+        <!-- ドットアニメーション -->
+<div v-if="isLoadingReply" class="gpt-message-row">
+  <span class="gpt-avatar">{{ botEmoji }}</span>
+  <div class="gpt-dots-loader">
+    <span class="dot"></span>
+    <span class="dot"></span>
+    <span class="dot"></span>
+  </div>
+</div>
 
         <div ref="bottom"></div>
       </div>
@@ -51,7 +52,7 @@
       <div class="gpt-input-area">
         <textarea
           v-model="newMessage"
-          placeholder="メッセージを入力..."
+          :placeholder="t('gptMini.inputPlaceholder')"
           rows="1"
           class="gpt-message-input"
           @input="autoResize"
@@ -74,88 +75,48 @@
 import { ref, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { API, graphqlOperation } from 'aws-amplify'
 import { useRoute, onBeforeRouteLeave } from 'vue-router'
-import ChatEffect from '@/components/ChatEffect.vue'
-
 import { useI18n } from 'vue-i18n'
-const { t } = useI18n()
 
+const { t, locale } = useI18n()
 const route = useRoute()
 const sessionId = route.params.id
 const mode = route.query.mode || 'breeze'
 
 const newMessage = ref('')
 const messages = ref([])
-const chatEffect = ref(null)
 const bottom = ref(null)
 const textareaRef = ref(null)
 const sessionTitle = ref('')
 const isTitleLoaded = ref(false)
 const isEditingTitle = ref(false)
 const editedTitle = ref('')
-
 const isLoadingReply = ref(false)
+const shouldShowDots = ref(false)
 
-const botEmojiMap = {
-  breeze: '🍃',
-  deep: '💭',
-  poetic: '🌙',
-  factual: '📖'
-}
+const botEmojiMap = { breeze: '🍃', deep: '💭', poetic: '🌙', factual: '📖' }
 const botEmoji = ref(botEmojiMap[mode] || '🤖')
 
-const listHistoriesQuery = /* GraphQL */ `
-  query ListGPTMiniHistories($sessionId: ID!) {
-    listGPTMiniHistories(filter: { sessionId: { eq: $sessionId } }) {
-      items {
-        id
-        sessionId
-        prompt
-        response
-        createdAt
-      }
-    }
+// GraphQL queries
+const listHistoriesQuery = `query ListGPTMiniHistories($sessionId: ID!) {
+  listGPTMiniHistories(filter: { sessionId: { eq: $sessionId } }) {
+    items { id sessionId prompt response createdAt }
   }
-`
-const getSessionQuery = /* GraphQL */ `
-  query GetGPTMiniSession($id: ID!) {
-    getGPTMiniSession(id: $id) {
-      id
-      title
-      mode
-    }
-  }
-`
-const createHistoryMutation = /* GraphQL */ `
-  mutation CreateGPTMiniHistory($input: CreateGPTMiniHistoryInput!) {
-    createGPTMiniHistory(input: $input) {
-      id
-      sessionId
-      prompt
-      response
-      createdAt
-    }
-  }
-`
-const updateSessionMutation = /* GraphQL */ `
-  mutation UpdateGPTMiniSession($input: UpdateGPTMiniSessionInput!) {
-    updateGPTMiniSession(input: $input) {
-      id
-      title
-    }
-  }
-`
-const deleteSessionMutation = /* GraphQL */ `
-  mutation DeleteGPTMiniSession($input: DeleteGPTMiniSessionInput!) {
-    deleteGPTMiniSession(input: $input) {
-      id
-    }
-  }
-`
+}`
+const getSessionQuery = `query GetGPTMiniSession($id: ID!) {
+  getGPTMiniSession(id: $id) { id title mode }
+}`
+const createHistoryMutation = `mutation CreateGPTMiniHistory($input: CreateGPTMiniHistoryInput!) {
+  createGPTMiniHistory(input: $input) { id }
+}`
+const updateSessionMutation = `mutation UpdateGPTMiniSession($input: UpdateGPTMiniSessionInput!) {
+  updateGPTMiniSession(input: $input) { id title }
+}`
+const deleteSessionMutation = `mutation DeleteGPTMiniSession($input: DeleteGPTMiniSessionInput!) {
+  deleteGPTMiniSession(input: $input) { id }
+}`
 
 onMounted(() => {
   fetchHistories()
-
-  // ✅ popstate でブラウザ戻るを検知
   window.addEventListener('popstate', handleBack)
 })
 
@@ -163,7 +124,7 @@ async function fetchHistories() {
   try {
     const sessionRes = await API.graphql(graphqlOperation(getSessionQuery, { id: sessionId }))
     const session = sessionRes.data.getGPTMiniSession
-sessionTitle.value = session.title || t('common.untitled')
+    sessionTitle.value = session.title || t('common.untitled')
     isTitleLoaded.value = true
 
     const res = await API.graphql(graphqlOperation(listHistoriesQuery, { sessionId }))
@@ -179,7 +140,7 @@ sessionTitle.value = session.title || t('common.untitled')
     await nextTick()
     scrollToBottom()
   } catch (e) {
-    console.error('❌ 履歴 or セッション取得エラー:', e)
+    console.error('❌ 履歴取得失敗:', e)
   }
 }
 
@@ -200,21 +161,12 @@ async function saveTitle() {
     isEditingTitle.value = false
     return
   }
-
   sessionTitle.value = editedTitle.value
-
   try {
-    await API.graphql(graphqlOperation(updateSessionMutation, {
-      input: {
-        id: sessionId,
-        title: editedTitle.value
-      }
-    }))
-    console.log('✅ タイトル更新成功')
+    await API.graphql(graphqlOperation(updateSessionMutation, { input: { id: sessionId, title: editedTitle.value } }))
   } catch (e) {
     console.error('❌ タイトル更新失敗:', e)
   }
-
   isEditingTitle.value = false
 }
 
@@ -226,27 +178,25 @@ async function sendMessage() {
   messages.value.push({ content, isMine: true })
   scrollToBottom()
 
+  // ✅ dots を先に true にする
   isLoadingReply.value = true
 
   try {
     const gptReply = await callGPT()
 
+    // ✅ dots はここで false にする
+    isLoadingReply.value = false
+
     messages.value.push({ content: gptReply || '（返答なし）', isMine: false })
     scrollToBottom()
 
-    // ✅ タイトル自動生成（ローカライズ対応）
     if (!sessionTitle.value || sessionTitle.value === '' || sessionTitle.value === t('common.untitled')) {
       const newTitle = generateTitleFromMessage(content)
       sessionTitle.value = newTitle
       isTitleLoaded.value = true
-
       await API.graphql(graphqlOperation(updateSessionMutation, {
-        input: {
-          id: sessionId,
-          title: newTitle
-        }
+        input: { id: sessionId, title: newTitle }
       }))
-      console.log('✅ タイトルを最初のメッセージから自動生成')
     }
 
     const now = new Date().toISOString()
@@ -255,15 +205,18 @@ async function sendMessage() {
       prompt: content,
       response: gptReply,
       createdAt: now,
+      language: locale.value
     }
     await API.graphql(graphqlOperation(createHistoryMutation, { input }))
-
-    maybePlayEffect(content)
+    await API.graphql(graphqlOperation(updateSessionMutation, {
+      input: { id: sessionId, title: sessionTitle.value }
+    }))
   } catch (e) {
     console.error('❌ GPT 呼び出し失敗:', e)
+    isLoadingReply.value = false // ✅ エラー時も必ず false
     messages.value.push({ content: '⚠️ GPT 呼び出しに失敗しました。', isMine: false })
   } finally {
-    isLoadingReply.value = false
+    // ✅ finally では二度目に false にしない
   }
 
   nextTick(() => {
@@ -273,8 +226,7 @@ async function sendMessage() {
 
 function generateTitleFromMessage(content) {
   if (!content) return '(無題)'
-  const snippet = content.slice(0, 10)
-  return `${snippet}…`
+  return `${content.slice(0, 10)}…`
 }
 
 async function callGPT() {
@@ -283,13 +235,11 @@ async function callGPT() {
       role: m.isMine ? "user" : "assistant",
       content: m.content
     }))
-
     const res = await fetch('https://tfxc3pudv4.execute-api.ap-northeast-1.amazonaws.com/Yamato_GPT_mini', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages: conversationHistory, mode })
+      body: JSON.stringify({ messages: conversationHistory, mode, language: locale.value })
     })
-
     const data = await res.json()
     return data.text || '（返答なし）'
   } catch (e) {
@@ -298,17 +248,6 @@ async function callGPT() {
   }
 }
 
-function maybePlayEffect(content) {
-  if (!chatEffect.value) return
-
-  if (/風|breeze/i.test(content)) {
-    chatEffect.value.playEffect('wind')
-  } else if (/深い|deep/i.test(content)) {
-    chatEffect.value.playEffect('starry')
-  } else if (/詩的|poetic/i.test(content)) {
-    chatEffect.value.playEffect('bubble')
-  }
-}
 function scrollToBottom() {
   nextTick(() => {
     bottom.value?.scrollIntoView({ behavior: 'smooth' })
@@ -325,25 +264,17 @@ onBeforeRouteLeave((to, from, next) => {
   try {
     if (messages.value.length === 0) {
       API.graphql(graphqlOperation(deleteSessionMutation, { input: { id: sessionId } }))
-        .then(() => console.log('💬 会話がなかったのでセッション削除しました'))
-        .catch(e => console.error('❌ セッション削除失敗:', e))
     }
   } catch (e) {
     console.error('❌ セッション削除失敗:', e)
   }
-
-  // ✅ state にフラグをセット
-  if (to.name === 'gpt-mini') {
-    to.state = { fromChat: true }
-  }
-
+  if (to.name === 'gpt-mini') to.state = { fromChat: true }
   next()
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('popstate', handleBack)
 })
-
 </script>
 
 

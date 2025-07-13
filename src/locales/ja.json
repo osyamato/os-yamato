@@ -435,7 +435,8 @@
 "gptMini.updated": "更新", 
  "gptHint": "アイコンを選んでたずねてみよう",
 "common.untitled": "(無題)",
-"gptMini.modeDescription": "モード説明"
+"gptMini.modeDescription": "モード説明",
+ "gptMini.inputPlaceholder": "メッセージを入力..."
 
 
 }
