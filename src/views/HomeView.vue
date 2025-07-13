@@ -50,7 +50,8 @@
 
       <!-- ✅ アクティビティ -->
       <button @click="goTo('activity')" class="icon-button" style="background-image: url('/activity.png')"></button>
-      <button @click="goTo('gpt-mini')" class="icon-button">🍃</button>
+
+<button @click="goToGPTMiniFromHome" class="icon-button">🍃</button>
 
     </div>
   </div>
@@ -105,6 +106,10 @@ function goToIconGuide() {
 function goToChatFromHome() {
   notificationStore.clearUnread()
   router.push({ path: '/chat-rooms', query: { from: 'home' } })
+}
+
+function goToGPTMiniFromHome() {
+  router.push({ path: '/gpt-mini', query: { from: 'home' } })
 }
 
 onMounted(async () => {

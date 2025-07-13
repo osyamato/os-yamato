@@ -415,12 +415,27 @@
   "activity.video": "動画",
   "activity.message": "メッセージリスト",
   "activity.memo": "メモ",
-  "activity.contact": "連絡先"
+  "activity.contact": "連絡先",
 
-
-
-
-
+"gpt.title": "風にたずねる",
+  "gpt.hint": "アイコンを選んでたずねてみよう",
+  "gpt.mode": "モード",
+  "gpt.noSessions": "このモードのセッションはありません。",
+  "gpt.updated": "更新",
+  "gpt.untitled": "(無題)",
+  "gpt.modeDescription": "モード説明",
+  "gptModeBreeze": "そよ風",
+  "gptDescBreeze": "🍃気軽にフレンドリーな返答を楽しむモードです。",
+  "gptModeDeep": "深い思索",
+  "gptDescDeep": "💭哲学的で深い対話を楽しめるモードです。",
+  "gptModePoetic": "詩的",
+  "gptDescPoetic": "🌙詩や物語のように美しい返答を楽しめます。",
+  "gptModeFactual": "知恵の灯",
+  "gptDescFactual": "📖正確で知的な情報をやさしく照らすモードです。",
+"gptMini.updated": "更新", 
+ "gptHint": "アイコンを選んでたずねてみよう",
+"common.untitled": "(無題)",
+"gptMini.modeDescription": "モード説明"
 
 
 }

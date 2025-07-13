@@ -1,39 +1,65 @@
 <template>
-  <div class="view-wrapper">
-    <div class="chat-container">
+  <div class="gpt-view-wrapper">
+    <div class="gpt-chat-container">
       <!-- 🔼 ヘッダー -->
-<div class="chat-header">{{ sessionTitle || '風にたずねる' }}</div>
+      <div class="gpt-chat-header">
+        <template v-if="isEditingTitle">
+          <input
+            id="titleInput"
+            v-model="editedTitle"
+            @blur="saveTitle"
+            @keyup.enter="saveTitle"
+            class="gpt-title-input"
+          />
+        </template>
+        <template v-else>
+          <span v-if="isTitleLoaded" @click="startEditTitle">
+            {{ sessionTitle }}
+          </span>
+          <span v-else> </span>
+        </template>
+      </div>
 
       <!-- 🔼 メッセージ一覧 -->
-      <div class="message-list">
+      <div class="gpt-message-list">
         <div
           v-for="(msg, index) in messages"
           :key="index"
-          class="message-row"
+          class="gpt-message-row"
           :class="{ mine: msg.isMine }"
         >
-<span v-if="!msg.isMine" class="avatar">{{ botEmoji }}</span>
-          <div :class="['message', { mine: msg.isMine }]" v-html="msg.content.replace(/\n/g, '<br>')"></div>
+          <span v-if="!msg.isMine" class="gpt-avatar">{{ botEmoji }}</span>
+          <div
+            :class="['gpt-message', { mine: msg.isMine }]"
+            v-html="msg.content.replace(/\n/g, '<br>')"
+          ></div>
         </div>
+
+        <div v-if="isLoadingReply" class="gpt-message-row">
+          <span class="gpt-avatar">{{ botEmoji }}</span>
+          <div class="gpt-dots-loader">
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+          </div>
+        </div>
+
         <div ref="bottom"></div>
       </div>
 
-      <!-- ✨ エフェクト -->
-      <ChatEffect ref="chatEffect" />
-
       <!-- 🔽 入力欄 -->
-      <div class="input-area">
+      <div class="gpt-input-area">
         <textarea
           v-model="newMessage"
           placeholder="メッセージを入力..."
           rows="1"
-          class="message-input"
+          class="gpt-message-input"
           @input="autoResize"
           ref="textareaRef"
         ></textarea>
         <button
           type="button"
-          class="circle-button"
+          class="gpt-circle-button"
           :disabled="!newMessage.trim()"
           @click="sendMessage"
         >
@@ -45,14 +71,17 @@
 </template>
 
 <script setup>
-import { ref, nextTick, onMounted } from 'vue'
+import { ref, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { API, graphqlOperation } from 'aws-amplify'
 import { useRoute, onBeforeRouteLeave } from 'vue-router'
 import ChatEffect from '@/components/ChatEffect.vue'
 
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
+
 const route = useRoute()
 const sessionId = route.params.id
-const mode = route.query.mode || 'breeze' 
+const mode = route.query.mode || 'breeze'
 
 const newMessage = ref('')
 const messages = ref([])
@@ -60,6 +89,11 @@ const chatEffect = ref(null)
 const bottom = ref(null)
 const textareaRef = ref(null)
 const sessionTitle = ref('')
+const isTitleLoaded = ref(false)
+const isEditingTitle = ref(false)
+const editedTitle = ref('')
+
+const isLoadingReply = ref(false)
 
 const botEmojiMap = {
   breeze: '🍃',
@@ -67,7 +101,6 @@ const botEmojiMap = {
   poetic: '🌙',
   factual: '📖'
 }
-
 const botEmoji = ref(botEmojiMap[mode] || '🤖')
 
 const listHistoriesQuery = /* GraphQL */ `
@@ -92,7 +125,6 @@ const getSessionQuery = /* GraphQL */ `
     }
   }
 `
-
 const createHistoryMutation = /* GraphQL */ `
   mutation CreateGPTMiniHistory($input: CreateGPTMiniHistoryInput!) {
     createGPTMiniHistory(input: $input) {
@@ -104,7 +136,6 @@ const createHistoryMutation = /* GraphQL */ `
     }
   }
 `
-
 const updateSessionMutation = /* GraphQL */ `
   mutation UpdateGPTMiniSession($input: UpdateGPTMiniSessionInput!) {
     updateGPTMiniSession(input: $input) {
@@ -113,7 +144,6 @@ const updateSessionMutation = /* GraphQL */ `
     }
   }
 `
-
 const deleteSessionMutation = /* GraphQL */ `
   mutation DeleteGPTMiniSession($input: DeleteGPTMiniSessionInput!) {
     deleteGPTMiniSession(input: $input) {
@@ -124,16 +154,18 @@ const deleteSessionMutation = /* GraphQL */ `
 
 onMounted(() => {
   fetchHistories()
+
+  // ✅ popstate でブラウザ戻るを検知
+  window.addEventListener('popstate', handleBack)
 })
 
 async function fetchHistories() {
   try {
-    // ✅ セッション情報を先に取得
     const sessionRes = await API.graphql(graphqlOperation(getSessionQuery, { id: sessionId }))
     const session = sessionRes.data.getGPTMiniSession
-    sessionTitle.value = session.title || '(無題)'
+sessionTitle.value = session.title || t('common.untitled')
+    isTitleLoaded.value = true
 
-    // ✅ 履歴取得
     const res = await API.graphql(graphqlOperation(listHistoriesQuery, { sessionId }))
     const items = res.data.listGPTMiniHistories.items || []
 
@@ -151,14 +183,50 @@ async function fetchHistories() {
   }
 }
 
+function startEditTitle() {
+  editedTitle.value = sessionTitle.value
+  isEditingTitle.value = true
+  nextTick(() => {
+    document.getElementById('titleInput')?.focus()
+  })
+}
+
+function handleBack() {
+  sessionStorage.setItem('fromGptChat', 'true')
+}
+
+async function saveTitle() {
+  if (!editedTitle.value.trim()) {
+    isEditingTitle.value = false
+    return
+  }
+
+  sessionTitle.value = editedTitle.value
+
+  try {
+    await API.graphql(graphqlOperation(updateSessionMutation, {
+      input: {
+        id: sessionId,
+        title: editedTitle.value
+      }
+    }))
+    console.log('✅ タイトル更新成功')
+  } catch (e) {
+    console.error('❌ タイトル更新失敗:', e)
+  }
+
+  isEditingTitle.value = false
+}
+
 async function sendMessage() {
   const content = newMessage.value.trim()
   if (!content) return
 
   newMessage.value = ''
-
   messages.value.push({ content, isMine: true })
   scrollToBottom()
+
+  isLoadingReply.value = true
 
   try {
     const gptReply = await callGPT()
@@ -166,10 +234,11 @@ async function sendMessage() {
     messages.value.push({ content: gptReply || '（返答なし）', isMine: false })
     scrollToBottom()
 
-    // ✅ 最初の送信時にタイトル自動生成
-    if (!sessionTitle.value || sessionTitle.value === '') {
+    // ✅ タイトル自動生成（ローカライズ対応）
+    if (!sessionTitle.value || sessionTitle.value === '' || sessionTitle.value === t('common.untitled')) {
       const newTitle = generateTitleFromMessage(content)
       sessionTitle.value = newTitle
+      isTitleLoaded.value = true
 
       await API.graphql(graphqlOperation(updateSessionMutation, {
         input: {
@@ -177,6 +246,7 @@ async function sendMessage() {
           title: newTitle
         }
       }))
+      console.log('✅ タイトルを最初のメッセージから自動生成')
     }
 
     const now = new Date().toISOString()
@@ -192,6 +262,8 @@ async function sendMessage() {
   } catch (e) {
     console.error('❌ GPT 呼び出し失敗:', e)
     messages.value.push({ content: '⚠️ GPT 呼び出しに失敗しました。', isMine: false })
+  } finally {
+    isLoadingReply.value = false
   }
 
   nextTick(() => {
@@ -207,7 +279,6 @@ function generateTitleFromMessage(content) {
 
 async function callGPT() {
   try {
-    // ✅ 会話履歴を全件送る
     const conversationHistory = messages.value.map(m => ({
       role: m.isMine ? "user" : "assistant",
       content: m.content
@@ -238,7 +309,6 @@ function maybePlayEffect(content) {
     chatEffect.value.playEffect('bubble')
   }
 }
-
 function scrollToBottom() {
   nextTick(() => {
     bottom.value?.scrollIntoView({ behavior: 'smooth' })
@@ -251,30 +321,40 @@ function autoResize(event) {
   textarea.style.height = Math.min(textarea.scrollHeight, 150) + 'px'
 }
 
-// ✅ ナビゲーションガードで履歴がない場合は削除
-onBeforeRouteLeave(async (to, from, next) => {
+onBeforeRouteLeave((to, from, next) => {
   try {
     if (messages.value.length === 0) {
-      await API.graphql(graphqlOperation(deleteSessionMutation, { input: { id: sessionId } }))
-      console.log('💬 会話がなかったのでセッション削除しました')
+      API.graphql(graphqlOperation(deleteSessionMutation, { input: { id: sessionId } }))
+        .then(() => console.log('💬 会話がなかったのでセッション削除しました'))
+        .catch(e => console.error('❌ セッション削除失敗:', e))
     }
   } catch (e) {
     console.error('❌ セッション削除失敗:', e)
   }
+
+  // ✅ state にフラグをセット
+  if (to.name === 'gpt-mini') {
+    to.state = { fromChat: true }
+  }
+
   next()
 })
+
+onBeforeUnmount(() => {
+  window.removeEventListener('popstate', handleBack)
+})
+
 </script>
 
 
-
 <style>
-.view-wrapper {
+.gpt-view-wrapper {
   height: 100vh;
   display: flex;
   flex-direction: column;
 }
 
-.chat-container {
+.gpt-chat-container {
   display: flex;
   flex-direction: column;
   height: 100vh;
@@ -287,12 +367,12 @@ onBeforeRouteLeave(async (to, from, next) => {
 }
 
 @media (min-width: 768px) {
-  .chat-container {
+  .gpt-chat-container {
     min-width: 600px;
   }
 }
 
-.chat-header {
+.gpt-chat-header {
   position: sticky;
   top: 0;
   z-index: 100;
@@ -306,7 +386,7 @@ onBeforeRouteLeave(async (to, from, next) => {
   color: #333;
 }
 
-.message-list {
+.gpt-message-list {
   flex: 1;
   overflow-y: auto;
   display: flex;
@@ -314,17 +394,17 @@ onBeforeRouteLeave(async (to, from, next) => {
   padding: 0;
 }
 
-.message-row {
+.gpt-message-row {
   display: flex;
   align-items: flex-end;
   margin: 0.5rem 0;
 }
 
-.message-row.mine {
+.gpt-message-row.mine {
   justify-content: flex-end;
 }
 
-.message {
+.gpt-message {
   display: inline-block;
   padding: 0.75rem 1rem;
   border-radius: 18px;
@@ -339,23 +419,23 @@ onBeforeRouteLeave(async (to, from, next) => {
   max-width: min(80vw, 520px);
 }
 
-.message.mine {
-  background-color: #145523 !important; /* ✅ 濃い緑に強制 */
-  color: #fff !important;
+.gpt-message.mine {
+  background-color: #145523;
+  color: #fff;
   margin-left: auto;
 }
 
 @media (max-width: 600px) {
-  .message {
-    max-width: 70vw;
+  .gpt-message {
+    max-width: 80vw;
   }
 }
 
-.avatar {
+.gpt-avatar {
   margin-right: 0.5rem;
 }
 
-.input-area {
+.gpt-input-area {
   display: flex;
   align-items: flex-end;
   padding: 1rem;
@@ -363,7 +443,7 @@ onBeforeRouteLeave(async (to, from, next) => {
   gap: 0.5rem;
 }
 
-.message-input {
+.gpt-message-input {
   flex: 1;
   padding: 0.6rem 1rem;
   font-size: 1rem;
@@ -377,7 +457,7 @@ onBeforeRouteLeave(async (to, from, next) => {
   box-sizing: border-box;
 }
 
-.circle-button {
+.gpt-circle-button {
   background-color: #145523;
   color: #fff;
   border: none;
@@ -394,35 +474,73 @@ onBeforeRouteLeave(async (to, from, next) => {
   transition: background-color 0.2s ease;
 }
 
-.circle-button:hover {
+.gpt-circle-button:hover {
   background-color: #e0e0e0;
 }
 
-.circle-button.disabled {
+.gpt-circle-button.disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
 @media (prefers-color-scheme: dark) {
-  .chat-container {
+  .gpt-chat-container {
     background-color: #121212 !important;
     color: #fff !important;
   }
 
-  .message {
+  .gpt-message {
     background-color: #333 !important;
     color: #fff !important;
   }
 
-  .message.mine {
+  .gpt-message.mine {
     background-color: #145523 !important;
   }
 
-  .chat-header {
+  .gpt-chat-header {
     background: rgba(0, 0, 0, 0.4) !important;
     color: #fff !important;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
   }
 }
+
+.gpt-title-input {
+  font-size: 1.1rem;
+  font-weight: bold;
+  text-align: center;
+  border: none;
+  border-bottom: 1px solid #ccc;
+  background: transparent;
+  color: inherit;
+  outline: none;
+}
+
+.gpt-dots-loader {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0.5rem;
+}
+
+.gpt-dots-loader .dot {
+  width: 6px;
+  height: 6px;
+  margin: 0 4px;
+  background-color: #888;
+  border-radius: 50%;
+  opacity: 0.4;
+  animation: dot-flash 1.4s infinite ease-in-out both;
+}
+
+.gpt-dots-loader .dot:nth-child(1) { animation-delay: 0s; }
+.gpt-dots-loader .dot:nth-child(2) { animation-delay: 0.2s; }
+.gpt-dots-loader .dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes dot-flash {
+  0%, 80%, 100% { opacity: 0.4; transform: translateY(0); }
+  40% { opacity: 1; transform: translateY(-6px); }
+}
+
 </style>
 
