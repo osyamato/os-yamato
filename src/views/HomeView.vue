@@ -51,7 +51,7 @@
       <!-- ✅ アクティビティ -->
       <button @click="goTo('activity')" class="icon-button" style="background-image: url('/activity.png')"></button>
 
-<button @click="goToGPTMiniFromHome" class="icon-button">🍃</button>
+<button @click="goToGPTMiniFromHome" class="icon-button" style="background-image: url('/ai.icon.png')"></button>
 
     </div>
   </div>
@@ -186,6 +186,14 @@ onUnmounted(() => {
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
   transition: transform 0.2s, box-shadow 0.2s;
   position: relative;
+}
+
+/* PC だけ hover を有効にする */
+@media (hover: hover) and (pointer: fine) {
+  .icon-button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
 }
 
 .icon-button:hover {

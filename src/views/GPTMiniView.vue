@@ -73,6 +73,7 @@
   </div>
 </template>
 
+
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { API, graphqlOperation, Auth } from 'aws-amplify'
@@ -93,6 +94,8 @@ const sessionToDelete = ref(null)
 const showHeader = ref(false)
 const showHint = ref(false)
 const animateOnce = ref(true)
+
+const isFetching = ref(false)
 
 const modes = [
   { key: 'breeze', emoji: '🍃', labelKey: 'gptModeBreeze', descKey: 'gptDescBreeze' },
@@ -193,7 +196,9 @@ function getIconStyle(mode) {
 }
 
 const filteredSessions = computed(() =>
-  sessions.value.filter(s => s.mode === selectedMode.value)
+  sessions.value
+    .filter(s => s.mode === selectedMode.value)
+    .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
 )
 
 function goToSession(id) {
@@ -252,12 +257,15 @@ onMounted(async () => {
   }
 
   // ✅ fromChat フラグで判定
-  if (history.state && history.state.fromChat) {
-    animateOnce.value = false
-    history.replaceState({}, '') // 消す
-  } else {
-    animateOnce.value = true
-  }
+if (history.state && history.state.fromChat) {
+  animateOnce.value = false
+  history.replaceState({}, '')
+  setTimeout(async () => {
+    await fetchSessions()
+  }, 300) // ← 適当な遅延で画面安定後に呼ぶ
+} else {
+  animateOnce.value = true
+}
 
   showHeader.value = true
   setTimeout(() => {
@@ -482,5 +490,6 @@ watch(() => route.query.mode, (newMode) => {
     color: #fff;
   }
 }
+
 
 </style>

@@ -452,7 +452,9 @@
 "gptMini.updated": "Updated",
 "gptHint": "Choose an icon to start asking",
 "common.untitled": "(Untitled)",
-"gptMini.modeDescription": "Mode Description"
+"gptMini.modeDescription": "Mode Description",
+
+ "gptMini.inputPlaceholder": "Type your message..."
 
 
 
