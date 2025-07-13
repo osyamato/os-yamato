@@ -1,36 +1,30 @@
 <template>
   <div class="gpt-mini-view">
-    <!-- 🔽 タイトル -->
-    <transition name="fade-down">
-      <h2 v-if="showHeader">風にたずねる</h2>
-    </transition>
+    <!-- ✅ タイトル -->
+    <h2 :class="{ dropDown: animateOnce }" v-if="showHeader">{{ t('gpt.title') }}</h2>
 
     <!-- 🔽 モード選択 -->
-    <transition name="fade-down">
-      <div v-if="showHeader" class="mode-select">
-        <div
-          v-for="mode in modes"
-          :key="mode.key"
-          class="mode-icon"
-          :class="{ active: selectedMode === mode.key }"
-          :style="getIconStyle(mode.key)"
-          @click="toggleMode(mode.key)"
-        >
-          {{ mode.emoji }}
-        </div>
+    <div v-if="showHeader" class="mode-select">
+      <div
+        v-for="mode in modes"
+        :key="mode.key"
+        class="mode-icon"
+        :class="{ active: selectedMode === mode.key }"
+        :style="getIconStyle(mode.key)"
+        @click="toggleMode(mode.key)"
+      >
+        {{ mode.emoji }}
       </div>
-    </transition>
+    </div>
 
     <!-- 🔽 モードテキスト or ヒント -->
     <template v-if="selectedMode">
       <p class="mode-text" @click="openModeModal">
-        モード: <span class="mode-label">{{ getModeLabel(selectedMode) }}</span>
+        <span class="mode-label">{{ getModeLabel(selectedMode) }}</span>
       </p>
     </template>
     <template v-else>
-      <transition name="fade-float">
-        <p v-if="showHint" class="hint-text">アイコンを選んでたずねてみよう</p>
-      </transition>
+      <p v-if="showHint" class="hint-text">{{ t('gptHint') }}</p>
     </template>
 
     <!-- 🔽 新規セッションボタン -->
@@ -52,19 +46,18 @@
         class="session-card"
       >
         <div class="session-info" @click="goToSession(session.id)">
-          <h3 class="session-title">{{ session.title || '(無題)' }}</h3>
-          <p class="session-date">更新: {{ formatDate(session.updatedAt) }}</p>
+          <h3 class="session-title">{{ session.title || t('common.untitled') }}</h3>
+          <p class="session-date">{{ t('gptMini.updated') }}: {{ formatDate(session.updatedAt) }}</p>
         </div>
         <button class="more-button" @click.stop="openConfirm(session)">…</button>
       </div>
     </div>
-    <p v-else-if="selectedMode">このモードのセッションはありません。</p>
 
     <!-- 🔽 モード説明モーダル -->
     <transition name="modal">
       <div v-if="showModeModal" class="modal-overlay" @click.self="closeModeModal">
         <div class="modal-content">
-          <h3>モード説明</h3>
+          <h3>{{ t('gptMini.modeDescription') }}</h3>
           <p v-if="selectedModeDescription">{{ selectedModeDescription }}</p>
         </div>
       </div>
@@ -81,13 +74,16 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onActivated, watch } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { API, graphqlOperation, Auth } from 'aws-amplify'
 import { useRouter, useRoute } from 'vue-router'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
+import { useI18n } from 'vue-i18n'
 
+const { t } = useI18n()
 const router = useRouter()
 const route = useRoute()
+
 const sessions = ref([])
 const selectedMode = ref('')
 const iconColor = ref('#3b82f6')
@@ -96,12 +92,13 @@ const showConfirm = ref(false)
 const sessionToDelete = ref(null)
 const showHeader = ref(false)
 const showHint = ref(false)
+const animateOnce = ref(true)
 
 const modes = [
-  { key: 'breeze', emoji: '🍃', label: 'そよ風', desc: '気軽にフレンドリーな返答を楽しむモードです。' },
-  { key: 'deep', emoji: '💭', label: '深い思索', desc: '哲学的で深い対話を楽しめるモードです。' },
-  { key: 'poetic', emoji: '🌙', label: '詩的', desc: '詩や物語のように美しい返答を楽しめます。' },
-  { key: 'factual', emoji: '📖', label: '事実回答', desc: '正確な情報やデータを知りたいときに使うモードです。' }
+  { key: 'breeze', emoji: '🍃', labelKey: 'gptModeBreeze', descKey: 'gptDescBreeze' },
+  { key: 'deep', emoji: '💭', labelKey: 'gptModeDeep', descKey: 'gptDescDeep' },
+  { key: 'poetic', emoji: '🌙', labelKey: 'gptModePoetic', descKey: 'gptDescPoetic' },
+  { key: 'factual', emoji: '📖', labelKey: 'gptModeFactual', descKey: 'gptDescFactual' }
 ]
 
 const listSessionsQuery = /* GraphQL */ `
@@ -158,6 +155,8 @@ async function createSession() {
     const res = await API.graphql(graphqlOperation(createSessionMutation, { input }))
     const newSession = res.data.createGPTMiniSession
 
+    // ✅ 戻り用フラグをセット
+    history.replaceState({ fromChat: true }, '')
     router.push({ name: 'gpt-mini-chat', params: { id: newSession.id }, query: { mode: selectedMode.value } })
   } catch (e) {
     console.error('❌ セッション作成エラー:', e)
@@ -176,12 +175,12 @@ function toggleMode(mode) {
 
 function getModeLabel(modeKey) {
   const mode = modes.find(m => m.key === modeKey)
-  return mode ? mode.label : ''
+  return mode ? t(mode.labelKey) : ''
 }
 
 const selectedModeDescription = computed(() => {
   const mode = modes.find(m => m.key === selectedMode.value)
-  return mode ? mode.desc : ''
+  return mode ? t(mode.descKey) : ''
 })
 
 function getIconStyle(mode) {
@@ -198,6 +197,7 @@ const filteredSessions = computed(() =>
 )
 
 function goToSession(id) {
+  history.replaceState({ fromChat: true }, '')
   router.push({ name: 'gpt-mini-chat', params: { id }, query: { mode: selectedMode.value } })
 }
 
@@ -251,28 +251,27 @@ onMounted(async () => {
     selectedMode.value = route.query.mode
   }
 
-  // タイトルとアイコン表示
-  showHeader.value = true
+  // ✅ fromChat フラグで判定
+  if (history.state && history.state.fromChat) {
+    animateOnce.value = false
+    history.replaceState({}, '') // 消す
+  } else {
+    animateOnce.value = true
+  }
 
-  // 0.6秒後にヒントを表示（アニメーションの後）
+  showHeader.value = true
   setTimeout(() => {
     showHint.value = true
   }, 600)
 })
 
-onActivated(async () => {
-  await fetchSessions()
+watch(() => route.query.mode, (newMode) => {
+  selectedMode.value = newMode || ''
 })
-
-watch(
-  () => route.query.mode,
-  (newMode) => {
-    selectedMode.value = newMode || ''
-  }
-)
 </script>
 
-<style scoped>
+
+<style>
 .gpt-mini-view {
   padding: 2rem;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
@@ -289,6 +288,21 @@ watch(
 @media (prefers-color-scheme: dark) {
   .gpt-mini-view h2 {
     color: white !important;
+  }
+}
+
+.dropDown {
+  animation: dropDown 0.6s ease;
+}
+
+@keyframes dropDown {
+  0% {
+    transform: translateY(-40px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
   }
 }
 
@@ -325,9 +339,7 @@ watch(
   font-weight: bold;
   cursor: pointer;
 }
-.mode-text .mode-label {
-  text-decoration: underline;
-}
+
 .hint-text {
   margin: 1rem 0;
   font-size: 0.95rem;
@@ -412,7 +424,6 @@ watch(
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-
 @media (prefers-color-scheme: dark) {
   .session-date {
     color: #ccc;
@@ -442,7 +453,6 @@ watch(
   }
 }
 
-/* モーダル */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -471,29 +481,6 @@ watch(
     background: #333;
     color: #fff;
   }
-}
-
-/* アニメーション: fade-down */
-.fade-down-enter-active {
-  transition: opacity 0.6s ease, transform 0.6s ease;
-}
-.fade-down-enter-from {
-  opacity: 0;
-  transform: translateY(-20px);
-}
-.fade-down-enter-to {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.fade-float-enter-active {
-  transition: opacity 0.8s ease;
-}
-.fade-float-enter-from {
-  opacity: 0;
-}
-.fade-float-enter-to {
-  opacity: 1;
 }
 
 </style>
