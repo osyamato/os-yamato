@@ -62,7 +62,7 @@ Notes, photos, and messages gently fade if left untouched — and disappear afte
 🌐 Try OS Yamato
 
 Visit: https://hanaco875.com
-Demo video: YouTube Shorts
+Demo video: https://www.youtube.com/shorts/DqIeSdYvQ9Q
 
 Code: GitHub - osyamato
 Join discussions: GitHub Discussions
