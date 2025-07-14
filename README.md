@@ -59,17 +59,15 @@ Notes, photos, and messages gently fade if left untouched — and disappear afte
 	•	💡 Design Ethos: Inspired by impermanence and wabi-sabi
 
 ⸻
-
 🌐 Try OS Yamato
 
 Visit: https://hanaco875.com
+Demo video: YouTube Shorts
 
 Code: GitHub - osyamato
-
 Join discussions: GitHub Discussions
 
 You can also try using our test accounts (details in note and X posts).
-
 
 ⸻
 
@@ -78,7 +76,6 @@ You can also try using our test accounts (details in note and X posts).
 Let it bloom. Let it fade.
 Let it return to the wind.
 We’re so happy you’re here.
-
 ⸻
 
 💻 For Developers
