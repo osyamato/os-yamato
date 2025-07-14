@@ -305,7 +305,7 @@ function createSingleFlower(color) {
 
   const phi = Math.acos(2 * Math.random() - 1)
   const theta = 2 * Math.PI * Math.random()
-  const radius = 1.0 + 0.03
+  const radius = 1.0 + 0.01
 
   flower.position.set(
     radius * Math.sin(phi) * Math.cos(theta),
