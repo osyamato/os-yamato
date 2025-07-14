@@ -1,39 +1,25 @@
 <template>
-<div
-  class="calendar-container"
-  :class="{ dropDown: !getIsBack() }"
-  @touchstart="handleTouchStart"
-  @touchend="handleTouchEnd"
->
+  <div
+    class="calendar-container"
+    :class="{ dropDown: !getIsBack() }"
+    @touchstart="handleTouchStart"
+    @touchend="handleTouchEnd"
+  >
     <!-- 月表示 -->
-<h2 class="month-title">
-  <button @click="prevMonth">&lt;</button>
-
-  <!-- 👇 月を押すとピッカーが開く -->
-  <span @click="showMonthPicker = true" style="cursor: pointer;">
-    {{ t(`month.${currentMonth}`) }}
-  </span>
-
-  <button @click="nextMonth">&gt;</button>
-</h2>
+    <h2 class="month-title">
+      <button @click="prevMonth">&lt;</button>
+      <span @click="showMonthPicker = true" style="cursor: pointer;">
+        {{ t(`month.${currentMonth}`) }}
+      </span>
+      <button @click="nextMonth">&gt;</button>
+    </h2>
 
     <!-- テンプレートショートカット -->
-<div class="template-shortcut">
-  <!-- 🗑️ 削除ボタン -->
-  <IconButton :color="selectedColor" size="medium" @click="confirmAndDeleteMonth">
-    🗑️
-  </IconButton>
-
-  <!-- ＋ クイック作成 -->
-  <IconButton :color="selectedColor" size="medium" @click="handleQuickTagClick">
-    ＋
-  </IconButton>
-
-  <!-- 🏷️ テンプレート画面 -->
-  <IconButton :color="selectedColor" size="medium" @click="goToTemplateView">
-    🏷️
-  </IconButton>
-</div>
+    <div class="template-shortcut">
+      <IconButton :color="selectedColor" size="medium" @click="confirmAndDeleteMonth">🗑️</IconButton>
+      <IconButton :color="selectedColor" size="medium" @click="handleQuickTagClick">＋</IconButton>
+      <IconButton :color="selectedColor" size="medium" @click="goToTemplateView">🏷️</IconButton>
+    </div>
 
     <!-- カレンダーグリッド -->
     <table class="calendar-grid">
@@ -77,83 +63,87 @@
     </table>
 
     <!-- イベントモーダル -->
-    <Modal :visible="selectedDate !== null" customClass="compact" @close="resetModal">
+<Modal
+  :visible="selectedDate !== null"
+  customClass="compact"
+  @close="resetModal"
+  @after-leave="resetModalFields"
+>
       <template #default>
-        <transition name="fade-height" mode="out-in">
-          <div :key="isEditing ? 'edit' : 'view'" class="modal-inner" :class="animationDirection">
-            <!-- 日付ヘッダーと祝日 -->
-            <div class="date-header-with-icon">
-              <h3>{{ selectedDate?.toLocaleDateString() }}</h3>
-              <IconButton
-                v-if="!isEditing && selectedEvents.length"
-                @click="resetNewEvent"
-                size="small"
-                :color="selectedColor"
-              >＋</IconButton>
-            </div>
-            <p v-if="getHolidayNameSafe(selectedDate)" class="holiday-tag">
-              🇯🇵 {{ getHolidayNameSafe(selectedDate) }}
-            </p>
+        <div class="modal-inner-wrapper">
+          <transition name="fade-height" mode="out-in">
+            <div :key="isEditing ? 'edit' : 'view'" class="modal-inner" :class="animationDirection">
+              <!-- 日付ヘッダーと祝日 -->
+              <div class="date-header-with-icon">
+                <h3>{{ selectedDate?.toLocaleDateString() }}</h3>
+                <IconButton
+                  v-if="!isEditing && selectedEvents.length"
+                  @click="resetNewEvent"
+                  size="small"
+                  :color="selectedColor"
+                >＋</IconButton>
+              </div>
+              <p v-if="getHolidayNameSafe(selectedDate)" class="holiday-tag">
+                🇯🇵 {{ getHolidayNameSafe(selectedDate) }}
+              </p>
 
-            <!-- 一覧表示 -->
-            <div v-if="selectedEvents.length && !isEditing">
-              <div
-                class="event-card"
-                v-for="(event, index) in selectedEvents"
-                :key="event.id || index"
-              >
-                <p><strong>{{ event.title }}</strong></p>
-<p>
-  <span v-if="event.isAllDay">- {{ t('calendar.allDay') }} -</span>
-  <span v-else>{{ event.startTime }} - {{ event.endTime }}</span>
-</p>
+              <!-- 一覧表示 -->
+              <div v-if="selectedEvents.length && !isEditing">
+                <div
+                  class="event-card"
+                  v-for="(event, index) in selectedEvents"
+                  :key="event.id || index"
+                >
+                  <p><strong>{{ event.title }}</strong></p>
+                  <p>
+                    <span v-if="event.isAllDay">- {{ t('calendar.allDay') }} -</span>
+                    <span v-else>{{ event.startTime }} - {{ event.endTime }}</span>
+                  </p>
+                  <p class="memo-text">{{ event.memo }}</p>
+                  <div class="button-container-row">
+                    <IconButton :color="selectedColor" size="small" @click="startEdit(event)">✏️</IconButton>
+                    <IconButton :color="selectedColor" size="small" class="danger" @click="promptDeleteEvent(event.id)">🗑️</IconButton>
+                  </div>
+                </div>
+              </div>
 
-                <p class="memo-text">{{ event.memo }}</p>
+              <!-- 編集・追加モード -->
+              <div v-else>
+                <input v-model="title" :placeholder="t('form.title')" />
+                <div class="template-tag-row" v-if="templates.length">
+                  <YamatoButton
+                    v-for="tpl in templates"
+                    :key="tpl.id"
+                    :color="selectedColor"
+                    size="small"
+                    @click="applyTemplate(tpl)"
+                  >
+                    {{ tpl.emoji }} {{ tpl.label }}
+                  </YamatoButton>
+                </div>
+                <div class="all-day-wrapper">
+                  <label class="all-day-toggle">
+                    <input type="checkbox" v-model="isAllDay" />
+                    <span>{{ t('calendar.allDay') }}</span>
+                  </label>
+                </div>
+                <div class="time-input-row" v-if="!isAllDay">
+                  <input type="time" v-model="startTime" />
+                  <input type="time" v-model="endTime" />
+                </div>
+                <input v-model="memo" :placeholder="t('form.memo')" />
                 <div class="button-container-row">
-                  <IconButton :color="selectedColor" size="small" @click="startEdit(event)">✏️</IconButton>
-                  <IconButton :color="selectedColor" size="small" class="danger" @click="promptDeleteEvent(event.id)">🗑️</IconButton>
+                  <YamatoButton :disabled="!isFormFilled" @click="editingEventId ? updateSchedule() : createSchedule()">
+                    {{ editingEventId ? t('button.update') : t('button.add') }}
+                  </YamatoButton>
+                  <YamatoButton v-if="selectedEvents.length" @click="cancelEdit">
+                    {{ t('button.back') }}
+                  </YamatoButton>
                 </div>
               </div>
             </div>
-
-            <!-- 編集・追加モード -->
-            <div v-else>
-              <input v-model="title" :placeholder="t('form.title')" />
-              <div class="template-tag-row" v-if="templates.length">
-                <YamatoButton
-                  v-for="tpl in templates"
-                  :key="tpl.id"
-                  :color="selectedColor"
-                  size="small"
-                  @click="applyTemplate(tpl)"
-                >
-                  {{ tpl.emoji }} {{ tpl.label }}
-                </YamatoButton>
-              </div>
-<div class="all-day-wrapper">
-  <label class="all-day-toggle">
-    <input type="checkbox" v-model="isAllDay" />
-    <span>{{ t('calendar.allDay') }}</span>
-  </label>
-</div>
-
-<!-- ✅ 終日なら時間入力を非表示 -->
-<div class="time-input-row" v-if="!isAllDay">
-  <input type="time" v-model="startTime" />
-  <input type="time" v-model="endTime" />
-</div>
-              <input v-model="memo" :placeholder="t('form.memo')" />
-              <div class="button-container-row">
-                <YamatoButton :disabled="!isFormFilled" @click="editingEventId ? updateSchedule() : createSchedule()">
-                  {{ editingEventId ? t('button.update') : t('button.add') }}
-                </YamatoButton>
-                <YamatoButton v-if="selectedEvents.length" @click="cancelEdit">
-                  {{ t('button.back') }}
-                </YamatoButton>
-              </div>
-            </div>
-          </div>
-        </transition>
+          </transition>
+        </div>
       </template>
     </Modal>
 
@@ -162,7 +152,7 @@
       <template #default>
         <h3 class="modal-title">{{ t('quickTag.title') }}</h3>
         <div class="quick-tag-grid" v-if="templates.length">
-<YamatoButton
+          <YamatoButton
             v-for="tpl in templates"
             :key="tpl.id"
             :color="selectedColor"
@@ -177,19 +167,19 @@
           <button
             v-for="n in 31"
             :key="n"
-            :class="['date-button', { selected: quickDates.includes(n) } ]"
+            :class="['date-button', { selected: quickDates.includes(n) }]"
             @click="toggleQuickDate(n)"
           >
             {{ n }}
           </button>
         </div>
-<div class="button-row">
-<YamatoButton
-  :disabled="!selectedQuickTemplate || quickDates.length === 0"
-  @click="registerQuickTagSchedule"
->
-  {{ t('button.register') }}
-</YamatoButton>
+        <div class="button-row">
+          <YamatoButton
+            :disabled="!selectedQuickTemplate || quickDates.length === 0"
+            @click="registerQuickTagSchedule"
+          >
+            {{ t('button.register') }}
+          </YamatoButton>
         </div>
       </template>
     </Modal>
@@ -203,31 +193,28 @@
       @cancel="showConfirm = false"
     />
 
-<Modal :visible="showMonthPicker" customClass="compact" @close="showMonthPicker = false">
-  <template #default>
-    <h3 class="modal-title">{{ $t('calendar.selectYearMonth') }}</h3>
-
-    <div class="time-input-row">
-      <select v-model="selectedYear">
-        <option v-for="y in yearOptions" :key="y" :value="y">
-          {{ $t('calendar.year', { year: y }) }}
-        </option>
-      </select>
-
-      <select v-model="selectedMonth">
-        <option v-for="m in 12" :key="m" :value="m - 1">
-          {{ $t('calendar.month', { month: m }) }}
-        </option>
-      </select>
-    </div>
-
-    <div class="button-container-row">
-      <YamatoButton @click="jumpToSelectedMonth">{{ $t('calendar.goTo') }}</YamatoButton>
-      <YamatoButton @click="showMonthPicker = false" type="danger">{{ $t('calendar.cancel') }}</YamatoButton>
-    </div>
-  </template>
-</Modal>
-
+    <!-- 月選択モーダル -->
+    <Modal :visible="showMonthPicker" customClass="compact" @close="showMonthPicker = false">
+      <template #default>
+        <h3 class="modal-title">{{ $t('calendar.selectYearMonth') }}</h3>
+        <div class="time-input-row">
+          <select v-model="selectedYear">
+            <option v-for="y in yearOptions" :key="y" :value="y">
+              {{ $t('calendar.year', { year: y }) }}
+            </option>
+          </select>
+          <select v-model="selectedMonth">
+            <option v-for="m in 12" :key="m" :value="m - 1">
+              {{ $t('calendar.month', { month: m }) }}
+            </option>
+          </select>
+        </div>
+        <div class="button-container-row">
+          <YamatoButton @click="jumpToSelectedMonth">{{ $t('calendar.goTo') }}</YamatoButton>
+          <YamatoButton @click="showMonthPicker = false" type="danger">{{ $t('calendar.cancel') }}</YamatoButton>
+        </div>
+      </template>
+    </Modal>
   </div>
 </template>
 
@@ -336,10 +323,12 @@ const isEditing = ref(false)
 let touchStartX = 0
 
 function handleTouchStart(e) {
+  if (showQuickTagModal.value || showMonthPicker.value || selectedDate.value !== null) return
   touchStartX = e.changedTouches[0].clientX
 }
 
 function handleTouchEnd(e) {
+  if (showQuickTagModal.value || showMonthPicker.value || selectedDate.value !== null) return
   const touchEndX = e.changedTouches[0].clientX
   const diffX = touchEndX - touchStartX
 
@@ -424,8 +413,17 @@ function resetNewEvent() {
 
 function resetModal() {
   selectedDate.value = null
+}
+
+function resetModalFields() {
   isEditing.value = false
-  cancelEdit()
+  editingEventId.value = null
+  selectedEvent.value = null
+  title.value = ''
+  startTime.value = '12:00'
+  endTime.value = '13:00'
+  memo.value = ''
+  isAllDay.value = false
 }
 async function fetchTemplates() {
   const { data } = await API.graphql(graphqlOperation(listScheduleTemplates))
@@ -697,6 +695,24 @@ function prevMonth() {
     }
   }, 10)
 }
+
+
+function preventPinch(e) {
+  if (e.touches.length > 1) {
+    e.preventDefault()
+  }
+}
+
+watch(showQuickTagModal, (val) => {
+  if (val) {
+    document.body.style.overflow = 'hidden'
+    document.addEventListener('touchmove', preventPinch, { passive: false })
+  } else {
+    document.body.style.overflow = ''
+    document.removeEventListener('touchmove', preventPinch)
+  }
+})
+
 
 // -----------------------
 // 📌 Watchers
