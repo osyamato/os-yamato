@@ -432,9 +432,29 @@
   "activity.video": "Videos",
   "activity.message": "Message List",
   "activity.memo": "Memos",
-  "activity.contact": "Contacts"
+  "activity.contact": "Contacts",
 
+"gpt.title": "Ask the Wind",
+  "gpt.hint": "Select an icon and ask your question",
+  "gpt.mode": "Mode",
+  "gpt.noSessions": "No sessions in this mode.",
+  "gpt.updated": "Updated",
+  "gpt.untitled": "(Untitled)",
+  "gpt.modeDescription": "Mode Description",
+  "gptModeBreeze": "Breeze",
+  "gptDescBreeze": "🍃A casual, friendly reply mode.",
+  "gptModeDeep": "Deep Thought",
+  "gptDescDeep": "💭A mode for philosophical, deep conversations.",
+  "gptModePoetic": "Poetic",
+  "gptDescPoetic": "🌙Enjoy beautiful, poetic, story-like replies.",
+  "gptModeFactual": "Light of Wisdom",
+  "gptDescFactual": "📖Gently illuminates accurate and intellectual information.",
+"gptMini.updated": "Updated",
+"gptHint": "Choose an icon to start asking",
+"common.untitled": "(Untitled)",
+"gptMini.modeDescription": "Mode Description",
 
+ "gptMini.inputPlaceholder": "Type your message..."
 
 
 

@@ -292,43 +292,61 @@ function clearFlowers() {
   })
   flowerMeshes.length = 0
 }
+function createSingleFlower(color) {
+  const geometry = new THREE.PlaneGeometry(0.25, 0.25)
+  const material = new THREE.MeshBasicMaterial({
+    map: flowerTexture,
+    color: color,
+    transparent: true,
+    side: THREE.DoubleSide,
+    depthWrite: false
+  })
+  const flower = new THREE.Mesh(geometry, material)
+
+  const phi = Math.acos(2 * Math.random() - 1)
+  const theta = 2 * Math.PI * Math.random()
+  const radius = 1.0 + 0.01
+
+  flower.position.set(
+    radius * Math.sin(phi) * Math.cos(theta),
+    radius * Math.cos(phi),
+    radius * Math.sin(phi) * Math.sin(theta)
+  )
+  flower.lookAt(new THREE.Vector3(0, 0, 0))
+  planetMesh.add(flower)
+  flowerMeshes.push(flower)
+}
 
 function createFlowers(count) {
   if (!planetMesh || !flowerTexture) return
 
   clearFlowers()
 
-  let remaining = Math.min(count, 30)
-  for (const group of colorThresholds) {
-    if (remaining <= 0) break
-    const numThisColor = Math.min(remaining, group.limit)
+  let total = Math.min(count, 500)
+  let remaining = Math.min(total, 50)
+
+  // まず最初の50枚を既存の色分けで
+  colorThresholds.forEach((group, index) => {
+    if (remaining <= 0) return
+
+    const numThisColor = (index === colorThresholds.length - 1)
+      ? remaining
+      : Math.min(remaining, group.limit)
 
     for (let i = 0; i < numThisColor; i++) {
-      const geometry = new THREE.PlaneGeometry(0.25, 0.25)
-      const material = new THREE.MeshBasicMaterial({
-        map: flowerTexture,
-        color: group.color,
-        transparent: true,
-        side: THREE.DoubleSide,
-        depthWrite: false
-      })
-      const flower = new THREE.Mesh(geometry, material)
-
-      const phi = Math.acos(2 * Math.random() - 1)
-      const theta = 2 * Math.PI * Math.random()
-      const radius = 1.0 + 0.03
-
-      flower.position.set(
-        radius * Math.sin(phi) * Math.cos(theta),
-        radius * Math.cos(phi),
-        radius * Math.sin(phi) * Math.sin(theta)
-      )
-      flower.lookAt(new THREE.Vector3(0, 0, 0))
-      planetMesh.add(flower)
-      flowerMeshes.push(flower)
+      createSingleFlower(group.color)
     }
 
     remaining -= numThisColor
+  })
+
+  // 超過分を赤で
+  let extra = total - 50
+  if (extra > 0) {
+    const redColor = new THREE.Color(0xef4444)
+    for (let i = 0; i < extra; i++) {
+      createSingleFlower(redColor)
+    }
   }
 }
 
