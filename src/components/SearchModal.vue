@@ -278,6 +278,10 @@ function emojiHobby(code) {
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
+
+  max-height: 180px; /* ✅ 結果の最大高さを制御 */
+  overflow-y: auto;  /* ✅ 内容が多い場合スクロール */
+  padding-right: 4px; /* ✅ スクロールバー分のスペースを確保（必要なら） */
 }
 
 .result-card {

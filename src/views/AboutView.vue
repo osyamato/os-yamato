@@ -14,13 +14,14 @@
     </div>
 
     <!-- 🌐 言語ピッカー -->
-    <div class="lang-picker">
-      <label for="language">🌐 {{ $t('about.language') }}</label>
-      <select id="language" v-model="currentLang" @change="changeLanguage">
-        <option value="ja">日本語</option>
-        <option value="en">English</option>
-      </select>
-    </div>
+<div class="lang-picker">
+  <label for="language">🌐 {{ $t('about.language') }}</label>
+  <select id="language" v-model="currentLang" @change="changeLanguage">
+    <option value="ja">{{ $t('about.japanese') }}</option>
+    <option value="en">{{ $t('about.english') }}</option>
+    <option value="zh">{{ $t('about.chinese') }}</option> <!-- ✅ ローカライズ -->
+  </select>
+</div>
 
     <section>
       <h3>{{ $t('about.conceptTitle') }}</h3>

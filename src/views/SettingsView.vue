@@ -7,11 +7,12 @@
 <label for="language">
   {{ t('languageLabel') }} 🌐
 </label>
-      <select v-model="selectedLanguage" id="language">
-        <option disabled value="">{{ t('selectLanguage') }}</option>
-        <option value="ja">{{ t('japanese') }}</option>
-        <option value="en">{{ t('english') }}</option>
-      </select>
+<select v-model="selectedLanguage" id="language">
+  <option disabled value="">{{ t('selectLanguage') }}</option>
+  <option value="ja">{{ t('japanese') }}</option>
+  <option value="en">{{ t('english') }}</option>
+  <option value="zh">{{ t('chinese') }}</option> <!-- ✅ 追加 -->
+</select>
     </div>
 
     <!-- 🎨 アイコン色選択 -->

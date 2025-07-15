@@ -1,11 +1,11 @@
 <template>
-  <transition name="modal">
-    <div v-show="visible" class="modal-background" @click="handleBackgroundClick">
-      <div class="modal-inner-card" :class="customClass" @click.stop>
-        <slot />
-      </div>
+<transition name="modal" @after-leave="$emit('after-leave')">
+  <div v-show="visible" class="modal-background" @click="handleBackgroundClick">
+    <div class="modal-inner-card" :class="customClass" @click.stop>
+      <slot />
     </div>
-  </transition>
+  </div>
+</transition>
 </template>
 
 <script setup>
