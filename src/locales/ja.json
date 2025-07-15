@@ -2,6 +2,10 @@
   "common.cancel": "キャンセル",
   "common.delete": "削除",
 
+"about.language": "言語",
+"about.japanese": "日本語",
+"about.english": "English",
+"about.chinese": "中文",
 
  "title": "設定",
   "languageLabel": "言語を選択:",
