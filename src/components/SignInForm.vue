@@ -58,13 +58,14 @@
         <div class="mt-16 flex justify-center items-center gap-2 text-white text-sm">
           <span class="text-lg">🌐</span>
           <label class="mr-1">{{ $t('auth.language') }}</label>
-          <select
-            v-model="locale"
-            class="rounded px-3 py-1 border border-blue-500 bg-white bg-opacity-90 text-black focus:outline-none"
-          >
-            <option value="ja">日本語</option>
-            <option value="en">English</option>
-          </select>
+<select
+  v-model="locale"
+  class="rounded px-3 py-1 border border-blue-500 bg-white bg-opacity-90 text-black focus:outline-none"
+>
+  <option value="ja">{{ $t('japanese') }}</option>
+  <option value="en">{{ $t('english') }}</option>
+  <option value="zh">{{ $t('chinese') }}</option> <!-- ✅ 追加 -->
+</select>
         </div>
       </div>
     </div>

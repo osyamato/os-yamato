@@ -2,6 +2,11 @@
 "common.cancel": "Cancel",
   "common.delete": "Delete",
 
+"about.language": "Language",
+"about.japanese": "Japanese",
+"about.english": "English",
+"about.chinese": "Chinese",
+
 
   "title": "Settings",
   "languageLabel": "Select Language:",
