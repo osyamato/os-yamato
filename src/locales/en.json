@@ -6,6 +6,7 @@
 "about.japanese": "Japanese",
 "about.english": "English",
 "about.chinese": "Chinese",
+"spanish": "Spanish",
 
 
   "title": "Settings",
@@ -33,6 +34,7 @@
 "tagInputPlaceholder": "New tag…",
   "japanese": "Japanese",
   "english": "English",
+"chinese": "Chinese",
   "account": "Account",
 "about": "About OS Yamato",
 
