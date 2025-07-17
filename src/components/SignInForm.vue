@@ -64,7 +64,8 @@
 >
   <option value="ja">{{ $t('japanese') }}</option>
   <option value="en">{{ $t('english') }}</option>
-  <option value="zh">{{ $t('chinese') }}</option> <!-- ✅ 追加 -->
+  <option value="es">{{ $t('spanish') }}</option>   <!-- 🇪🇸 追加 -->
+  <option value="zh">{{ $t('chinese') }}</option>
 </select>
         </div>
       </div>

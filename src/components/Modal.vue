@@ -19,12 +19,13 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['close', 'refresh'])
+const emit = defineEmits(['close', 'refresh', 'after-leave'])
 
 function handleBackgroundClick() {
   emit('close')
   emit('refresh')
 }
+
 </script>
 
 <style scoped>

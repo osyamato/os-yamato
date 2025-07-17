@@ -3,6 +3,8 @@ import { createI18n } from 'vue-i18n'
 import ja from './locales/ja.json'
 import en from './locales/en.json'
 import zh from './locales/zh.json' // ✅ 追加
+import es from './locales/es.json' 
+
 
 export const i18n = createI18n({
   legacy: false,
@@ -11,7 +13,8 @@ export const i18n = createI18n({
   messages: {
     ja,
     en,
-    zh // ✅ 追加
+    zh,
+    es
   }
 })
 
