@@ -17,9 +17,10 @@
 <div class="lang-picker">
   <label for="language">🌐 {{ $t('about.language') }}</label>
   <select id="language" v-model="currentLang" @change="changeLanguage">
-    <option value="ja">{{ $t('about.japanese') }}</option>
-    <option value="en">{{ $t('about.english') }}</option>
-    <option value="zh">{{ $t('about.chinese') }}</option> <!-- ✅ ローカライズ -->
+  <option value="ja">{{ $t('japanese') }}</option>
+  <option value="en">{{ $t('english') }}</option>
+  <option value="es">{{ $t('spanish') }}</option>   <!-- 🇪🇸 追加 -->
+  <option value="zh">{{ $t('chinese') }}</option>
   </select>
 </div>
 

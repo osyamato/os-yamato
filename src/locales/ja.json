@@ -6,6 +6,10 @@
 "about.japanese": "日本語",
 "about.english": "English",
 "about.chinese": "中文",
+"chinese": "中国語",
+"spanish": "スペイン語",
+
+
 
  "title": "設定",
   "languageLabel": "言語を選択:",

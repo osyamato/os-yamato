@@ -1,14 +1,13 @@
 <template>
-  <!-- ✅ アニメーション専用オーバーレイ -->
   <EffectOverlay>
     <ChatEffect />
   </EffectOverlay>
 
-  <!-- アプリ本体 -->
   <div id="app">
     <router-view />
   </div>
 </template>
+
 
 <script setup>
 import { onMounted } from 'vue'
@@ -25,17 +24,24 @@ onMounted(async () => {
   try {
     const user = await Auth.currentAuthenticatedUser()
 
+    // ✅ ボタン色の設定
     const iconColor = user.attributes['custom:iconColor'] || '#274c77'
     document.documentElement.style.setProperty('--yamato-button-color', iconColor)
 
+    // ✅ 言語の設定（Amplify属性 > localStorage > fallback）
+    const supportedLocales = ['ja', 'en', 'es', 'zh']
     const userLang = user.attributes['custom:language']
-    if (userLang === 'en' || userLang === 'ja') {
-      i18n.global.locale.value = userLang
-    }
+    const savedLang = localStorage.getItem('locale')
+
+    const preferredLang =
+      supportedLocales.includes(userLang) ? userLang :
+      supportedLocales.includes(savedLang) ? savedLang :
+      'ja'
+
+    i18n.global.locale.value = preferredLang
 
     // ✅ 起動時の未読チェック
     const mySub = user.attributes.sub
-
     const res = await API.graphql(graphqlOperation(listChatRooms, {
       filter: {
         or: [
@@ -68,6 +74,13 @@ onMounted(async () => {
 
   } catch (e) {
     console.warn('⚠️ ユーザー情報取得・未読チェック失敗または未ログイン', e)
+
+    // 未ログイン時でも localStorage から言語を復元
+    const supportedLocales = ['ja', 'en', 'es', 'zh']
+    const savedLang = localStorage.getItem('locale')
+    if (supportedLocales.includes(savedLang)) {
+      i18n.global.locale.value = savedLang
+    }
   }
 })
 </script>
@@ -105,4 +118,5 @@ html, body, #app {
   height: 100%;
 }
 </style>
-  
+ 
+

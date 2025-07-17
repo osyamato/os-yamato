@@ -13,6 +13,8 @@
 "japanese": "日语",
 "english": "英语",
 "chinese": "中文",
+"spanish": "西班牙语",
+
 "about.language": "语言",
 "about.japanese": "日语",
 "about.english": "英语",
@@ -373,7 +375,48 @@
 "wind.season.spring": "春",
 "wind.season.summer": "夏",
 "wind.season.autumn": "秋",
-"wind.season.winter": "冬"
+"wind.season.winter": "冬",
+
+ "month.1": "一月",
+  "month.2": "二月",
+  "month.3": "三月",
+  "month.4": "四月",
+  "month.5": "五月",
+  "month.6": "六月",
+  "month.7": "七月",
+  "month.8": "八月",
+  "month.9": "九月",
+  "month.10": "十月",
+  "month.11": "十一月",
+  "month.12": "十二月",
+  "calendar.allDay": "全天",
+  "calendar.selectYearMonth": "选择年份和月份",
+  "calendar.year": "{year}年",
+  "calendar.month": "{month}月",
+  "calendar.goTo": "跳转",
+  "calendar.cancel": "取消",
+  "quickTag.title": "快速模板",
+  "button.register": "注册",
+  "form.title": "标题",
+  "form.memo": "备注",
+  "button.add": "添加",
+  "button.update": "更新",
+  "button.back": "返回",
+  "confirm.delete": "您确定要删除此项目吗？",
+
+
+"calendar.month.1": "一月",
+"calendar.month.2": "二月",
+"calendar.month.3": "三月",
+"calendar.month.4": "四月",
+"calendar.month.5": "五月",
+"calendar.month.6": "六月",
+"calendar.month.7": "七月",
+"calendar.month.8": "八月",
+"calendar.month.9": "九月",
+"calendar.month.10": "十月",
+"calendar.month.11": "十一月",
+"calendar.month.12": "十二月"
 
 
 }
