@@ -377,7 +377,30 @@
   "button.add": "Añadir",
   "button.update": "Actualizar",
   "button.back": "Volver",
-  "confirm.delete": "¿Estás seguro de que deseas eliminar este elemento?"
+  "confirm.delete": "¿Estás seguro de que deseas eliminar este elemento?",
+  
+
+  "gpt.title": "Consultar al viento",
+  "gpt.hint": "Selecciona un ícono para preguntar",
+  "gpt.mode": "Modo",
+  "gpt.noSessions": "No hay sesiones en este modo.",
+  "gpt.updated": "Actualizado",
+  "gpt.untitled": "(Sin título)",
+  "gpt.modeDescription": "Descripción del modo",
+  "gptModeBreeze": "Brisa",
+  "gptDescBreeze": "🍃 Respuestas ligeras y amables.",
+  "gptModeDeep": "Reflexión profunda",
+  "gptDescDeep": "💭 Conversaciones profundas como una filosofía.",
+  "gptModePoetic": "Poético",
+  "gptDescPoetic": "🌙 Respuestas bellas como poesía.",
+  "gptModeFactual": "Luz del conocimiento",
+  "gptDescFactual": "📖 Ilumina el conocimiento con suavidad y precisión.",
+  "gptMini.updated": "Actualizado",
+  "gptHint": "Selecciona un ícono para preguntar",
+  "common.untitled": "(Sin título)",
+  "gptMini.modeDescription": "Descripción del modo",
+  "gptMini.inputPlaceholder": "Escribe un mensaje..."
+
 
 
 
