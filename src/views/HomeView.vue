@@ -1,5 +1,5 @@
 <template>
-<div class="desktop">
+  <div class="desktop" :style="wallpaperStyle">
     <div class="icon-grid">
       <!-- ✅ カレンダー（文字オーバーレイのため特殊対応） -->
       <button @click="goTo('calendar')" class="icon-button calendar-button" style="background-image: url('/calendar.png')">
@@ -59,18 +59,15 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted, computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { Auth, API, graphqlOperation } from 'aws-amplify'
 import { onCreateMessage } from '@/graphql/subscriptions'
 import { useI18n } from 'vue-i18n'
 import { useNotificationStore } from '@/stores/notificationStore'
-import { useWallpaperStore } from '@/stores/wallpaperStore'
-import { useWallpaperStyle } from '@/composables/useWallpaperStyle'
 
 const notificationStore = useNotificationStore()
-const wallpaperStore = useWallpaperStore()
-const { wallpaperStyle } = useWallpaperStyle()
 const router = useRouter()
+const wallpaper = ref('')
 const subscription = ref(null)
 
 const { t } = useI18n()
@@ -78,6 +75,24 @@ const today = new Date()
 
 const currentDay = computed(() => today.getDate())
 const currentMonthName = computed(() => t(`calendar.month.${today.getMonth() + 1}`))
+
+const wallpaperStyle = computed(() => {
+  if (!wallpaper.value) return {}
+  if (wallpaper.value.startsWith('color.')) {
+    const colorMap = {
+      'color.lightBlue': '#e6f0f9',
+      'color.lightYellow': '#fff9e3',
+      'color.lightPurple': '#f5f0fb'
+    }
+    return { backgroundColor: colorMap[wallpaper.value] || '#f5f5f5' }
+  }
+  return {
+    backgroundImage: `url(/${wallpaper.value})`,
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    backgroundRepeat: 'no-repeat'
+  }
+})
 
 function goTo(path) {
   router.push(`/${path}`)
@@ -92,6 +107,7 @@ function goToChatFromHome() {
   notificationStore.clearUnread()
   router.push({ path: '/chat-rooms', query: { from: 'home' } })
 }
+
 function goToGPTMiniFromHome() {
   router.push({ path: '/gpt-mini', query: { from: 'home' } })
 }
@@ -106,7 +122,7 @@ onMounted(async () => {
 
   try {
     const user = await Auth.currentAuthenticatedUser()
-    wallpaperStore.wallpaper = user.attributes['custom:wallpaper'] || ''
+    wallpaper.value = user.attributes['custom:wallpaper'] || ''
   } catch (error) {
     console.error('❌ 背景画像の取得失敗:', error)
   }
@@ -119,7 +135,9 @@ onMounted(async () => {
         const isInChatRoom = currentRoute.name === 'chat'
         const isChatRoomList = currentRoute.name === 'chat-rooms'
         const currentChatRoomId = currentRoute.params.roomId
-        if ((isInChatRoom && currentChatRoomId === newMsg.roomId) || isChatRoomList) return
+        if ((isInChatRoom && currentChatRoomId === newMsg.roomId) || isChatRoomList) {
+          return
+        }
         notificationStore.setUnread(true)
       }
     },
