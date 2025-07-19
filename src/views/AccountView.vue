@@ -1,6 +1,7 @@
 <template>
   <div class="account-view">
-<h2 class="header-title">{{ $t('account.title') }}</h2>
+<h2 class="header-title" :style="{ color: 'var(--yamato-text-color)' }">{{ $t('account.title') }}</h2>
+
 <p class="user-email">{{ userEmail }}</p>
 
     <!-- サインアウト -->
@@ -93,16 +94,20 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, nextTick, watchEffect } from 'vue'
 import { useRouter } from 'vue-router'
 import { Auth } from 'aws-amplify'
 import { useI18n } from 'vue-i18n'
+
+import { useWallpaper } from '@/composables/useWallpaper' 
 
 import YamatoButton from '@/components/YamatoButton.vue'
 import IconButton from '@/components/IconButton.vue'
 import ModalContent from '@/components/Modal.vue'
 import TermsModal from '@/components/TermsModal.vue'
 import PremiumModal from '@/components/PremiumModal.vue'
+
+const { wallpaperStyle } = useWallpaper()
 
 const showPremiumInfoModal = ref(false)
 const showTermsModal = ref(false)
@@ -175,38 +180,30 @@ function goToResetPassword() {
   router.push('/forgot-password')
 }
 
+
 </script>
 
 
 <style scoped>
-/* --- スタイルはそのまま --- */
+
 .header-title {
+  font-size: 1.6rem;
+  margin-bottom: 1rem;
   text-align: center;
-  font-size: 1.4rem;
-  font-weight: bold;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
-  color: #000;
-  margin-bottom: 1.2rem;
 }
-@media (prefers-color-scheme: dark) {
-  .header-title {
-    color: #fff;
-  }
+
+/* 👇 ここを追加または上書き */
+.account-view .header-title {
+  color: var(--yamato-text-color, #111) !important;
 }
 
 .account-view {
   padding: 2rem;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
   animation: dropDown 0.4s ease-out;
-  color: #111;
+  color: var(--yamato-text-color, #111); /* ✅ 動的に */
   text-align: center;
   font-weight: bold;
-}
-
-@media (prefers-color-scheme: dark) {
-  .account-view {
-    color: #fff;
-  }
 }
 
 .account-item {
@@ -256,16 +253,10 @@ function goToResetPassword() {
 }
 
 .terms-link span {
-  color: #007aff;
+  color: var(--yamato-link-color, #007aff); /* ✅ 動的カラーに */
   cursor: pointer;
   text-decoration: underline;
   margin: 0 0.5rem;
-}
-
-@media (prefers-color-scheme: dark) {
-  .terms-link span {
-    color: #80bfff;
-  }
 }
 
 
@@ -287,15 +278,10 @@ function goToResetPassword() {
 
 .user-email {
   font-size: 0.9rem;
-  color: #555;
+  color: var(--yamato-text-color, #555);
   margin-top: -0.5rem;
   margin-bottom: 1rem;
   word-break: break-all;
-}
-@media (prefers-color-scheme: dark) {
-  .user-email {
-    color: #ccc;
-  }
 }
 
 
