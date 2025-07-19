@@ -1,11 +1,11 @@
 <template>
-  <transition name="modal" @after-leave="$emit('after-leave')">
-    <div v-show="visible" class="modal-background" @click="handleBackgroundClick">
-      <div class="modal-inner-card" :class="customClass" @click.stop>
-        <slot />
-      </div>
+<transition name="modal" @after-leave="$emit('after-leave')">
+  <div v-show="visible" class="modal-background" @click="handleBackgroundClick">
+    <div class="modal-inner-card" :class="customClass" @click.stop>
+      <slot />
     </div>
-  </transition>
+  </div>
+</transition>
 </template>
 
 <script setup>
@@ -25,6 +25,7 @@ function handleBackgroundClick() {
   emit('close')
   emit('refresh')
 }
+
 </script>
 
 <style scoped>
@@ -43,8 +44,8 @@ function handleBackgroundClick() {
 
 /* ✅ 基本モーダル */
 .modal-inner-card {
-  background: var(--yamato-modal-bg, #ffffff); /* ✅ 明色用フォールバックを白に */
-  color: var(--yamato-text-color, #111);       /* ✅ テキスト色も変数に統一 */
+  background: #fff;
+  color: #111;
   border-radius: 14px;
   padding: 1.5rem;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
@@ -73,17 +74,47 @@ function handleBackgroundClick() {
   max-width: 420px;
   border-radius: 12px;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-  background: var(--yamato-modal-bg, #ffffff); /* ✅ 白フォールバック */
-  color: var(--yamato-text-color, #111);       /* ✅ テキスト色に変数 */
+  background: #fff;
+  color: #111;
 }
 
-/* ✅ タイトル */
+/* 🌙 ダークモード */
+@media (prefers-color-scheme: dark) {
+  .modal-inner-card:not(.naked) {
+    background: #1f1f1f;
+    color: #f5f5f5;
+    box-shadow: 0 8px 24px rgba(255, 255, 255, 0.05);
+  }
+
+  .modal-inner-card.compact {
+    background: #1f1f1f !important;
+    color: #f5f5f5 !important;
+  }
+
+  textarea,
+  input {
+    background: #2e2e2e !important;
+    color: #fff !important;
+    border-color: #444 !important;
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: #aaa !important;
+  }
+}
 .modal-title {
-  color: var(--yamato-text-color, #111);
+  color: #111;
   font-weight: bold;
   font-size: 1.2rem;
   margin-bottom: 1rem;
   text-align: center;
+}
+
+@media (prefers-color-scheme: dark) {
+  .modal-title {
+    color: #f5f5f5;
+  }
 }
 
 /* ✨ アニメーション */
@@ -99,10 +130,16 @@ function handleBackgroundClick() {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
   margin-bottom: 1rem;
   text-align: center;
-  color: var(--yamato-text-color, #111) !important;
+  color: #222 !important;
   opacity: 1 !important;
   filter: none !important;
   mix-blend-mode: normal !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  ::v-deep(.modal-title) {
+    color: #f5f5f5 !important;
+  }
 }
 
 @keyframes dropDown {
