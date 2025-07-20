@@ -637,6 +637,22 @@ export const schema = {
                     "isRequired": false,
                     "attributes": []
                 },
+                "reactions": {
+                    "name": "reactions",
+                    "isArray": true,
+                    "type": {
+                        "model": "Reaction"
+                    },
+                    "isRequired": false,
+                    "attributes": [],
+                    "isArrayNullable": true,
+                    "association": {
+                        "connectionType": "HAS_MANY",
+                        "associatedWith": [
+                            "messageId"
+                        ]
+                    }
+                },
                 "updatedAt": {
                     "name": "updatedAt",
                     "isArray": false,
@@ -751,6 +767,16 @@ export const schema = {
                 {
                     "type": "model",
                     "properties": {}
+                },
+                {
+                    "type": "key",
+                    "properties": {
+                        "name": "byMessage",
+                        "fields": [
+                            "messageId",
+                            "createdAt"
+                        ]
+                    }
                 },
                 {
                     "type": "auth",
@@ -1777,5 +1803,5 @@ export const schema = {
     "enums": {},
     "nonModels": {},
     "codegenVersion": "3.4.4",
-    "version": "2fcc3e3261e747e399243972d196eb43"
+    "version": "3988cb257089f5838353e8c5e414c85d"
 };

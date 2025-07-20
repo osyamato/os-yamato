@@ -106,6 +106,7 @@
 </template>
 
 
+
 <script setup>
 import { ref, onMounted, watch, computed, onBeforeUnmount } from 'vue'
 import { Storage, API, graphqlOperation, Auth } from 'aws-amplify'
@@ -115,9 +116,30 @@ import exifr from 'exifr'
 import IconButton from '@/components/IconButton.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import { useI18n } from 'vue-i18n'
+import Tesseract from 'tesseract.js'
 
 const { t } = useI18n()
 
+
+const ocrText = ref('')
+const isOcrLoading = ref(false)
+
+async function extractTextFromPhoto(photo) {
+  ocrText.value = ''
+  isOcrLoading.value = true
+  try {
+    const url = await Storage.get(photo.fileName, { level: 'protected' })
+    const result = await Tesseract.recognize(url, 'jpn+eng', {
+      logger: (m) => console.log('🧠 OCRログ:', m)
+    })
+    ocrText.value = result.data.text.trim()
+  } catch (e) {
+    console.error('📝 OCR失敗:', e)
+    ocrText.value = '文字の抽出に失敗しました'
+  } finally {
+    isOcrLoading.value = false
+  }
+}
 
 const iconColor = ref('#274c77')
 
@@ -1089,6 +1111,32 @@ function handleKeydown(e) {
   align-items: center;
   justify-content: center;
   z-index: 20;
+}
+
+.modal-ocr-icon {
+  margin-left: 1rem;
+  cursor: pointer;
+  font-size: 1.2rem;
+}
+
+.ocr-section {
+  margin: 1rem;
+  padding: 0.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.ocr-title {
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.ocr-result {
+  white-space: pre-wrap;
+  font-size: 0.9rem;
+  line-height: 1.4;
 }
 
 </style>

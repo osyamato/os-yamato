@@ -1,5 +1,5 @@
 <template>
-<div class="view-wrapper" @click="dismissKeyboard">
+  <div class="view-wrapper" @click="dismissKeyboard">
     <div class="chat-container">
       <!-- 🔼 ヘッダー -->
       <div class="chat-header">
@@ -20,93 +20,56 @@
           >
             <!-- 💬 相手メッセージ -->
             <div v-if="msg.senderSub !== mySub">
-
-<template v-if="msg.contentType === 'image'">
-  <div class="message-wrapper text-with-time">
-    <img
-      :src="msg.imageUrl"
-      class="message-image"
-      @click="openImageModal(msg.imageUrl, msg.imageKey)"
-      @load="onImageLoad"
-    />
-    <span class="timestamp-right">{{ formatTime(msg.timestamp) }}</span>
-
-    <!-- ❤️ リアクション（相手メッセージ） -->
-    <div
-      v-if="msg.reactions?.items?.length"
-      :class="['reaction-display', msg.senderSub === mySub ? 'right-corner' : 'left-corner']"
-    >
-      <span v-for="r in msg.reactions.items" :key="r.id || r.emoji">{{ r.emoji }}</span>
-    </div>
-  </div>
-</template>
-
-<template v-else>
-  <div class="message-wrapper text-with-time">
-    <div
-      class="message"
-      @touchstart="startLongPress(msg.id)"
-      @touchend="cancelLongPress"
-      @mousedown="startLongPress(msg.id)"
-      @mouseup="cancelLongPress"
-      @mouseleave="cancelLongPress"
-    >
-      <div v-html="msg.content.replace(/\n/g, '<br>')"></div>
-    </div>
-
-    <!-- 🕒 吹き出しの右に時間 -->
-    <span class="timestamp-right">{{ formatTime(msg.timestamp) }}</span>
-
-    <!-- 🖼️ リアクション表示 -->
-    <div v-if="msg.reactions?.items?.length" class="reaction-display over">
-      <span v-for="r in msg.reactions.items" :key="r.id || r.emoji">{{ r.emoji }}</span>
-    </div>
-  </div>
-</template>
+              <span class="timestamp-side">{{ formatTime(msg.timestamp) }}</span>
+              <template v-if="msg.contentType === 'image'">
+                <img
+                  :src="msg.imageUrl"
+                  class="message-image"
+                  @click="openImageModal(msg.imageUrl, msg.imageKey)"
+                  @load="onImageLoad"
+                />
+              </template>
+              <template v-else>
+<div
+  v-if="msg.senderSub !== mySub"
+  class="message"
+  @touchstart="startLongPress(msg.id)"
+  @touchend="cancelLongPress"
+  @mousedown="startLongPress(msg.id)"
+  @mouseup="cancelLongPress"
+  @mouseleave="cancelLongPress"
+>
+                  <div v-html="msg.content.replace(/\n/g, '<br>')"></div>
+                </div>
+              </template>
             </div>
 
             <!-- 💬 自分のメッセージ -->
-<!-- ✅ 自分のメッセージ -->
-<template v-else>
-  <span class="timestamp-side">{{ formatTime(msg.timestamp) }}</span>
-
-  <!-- ✅ wrapperクラス名に mine を残す -->
-  <div class="message-wrapper mine">
-    <template v-if="msg.contentType === 'image'">
-      <img
-        :src="msg.imageUrl"
-        class="message-image"
-        @click="openImageModal(msg.imageUrl, msg.imageKey)"
-        @load="onImageLoad"
-      />
-    </template>
-    <template v-else>
-      <div class="message mine">
-        <div v-html="msg.content.replace(/\n/g, '<br>')"></div>
-      </div>
-    </template>
-
-    <!-- ✅ 自分のメッセージのリアクション → 右上表示用クラス -->
-<div
-  v-if="msg.reactions?.items?.length"
-  :class="['reaction-display', msg.mine ? 'right-corner' : 'left-corner']"
+            <div v-else>
+              <span class="timestamp-side">{{ formatTime(msg.timestamp) }}</span>
+              <template v-if="msg.contentType === 'image'">
+                <img
+                  :src="msg.imageUrl"
+                  class="message-image"
+                  @click="openImageModal(msg.imageUrl, msg.imageKey)"
+                  @load="onImageLoad"
+                />
+              </template>
+              <template v-else>
+                <div
+                  class="message mine"
 >
-  <span v-for="r in msg.reactions.items" :key="r.id || r.emoji">
-    {{ r.emoji }}
-  </span>
-</div>
-  </div>
-</template>
+                  <div v-html="msg.content.replace(/\n/g, '<br>')"></div>
+                </div>
+              </template>
+            </div>
 
             <!-- 🎉 リアクションピッカー -->
 <div
   v-if="showReactionPickerFor === msg.id && msg.senderSub !== mySub"
   class="reaction-picker"
+  :class="{ right: msg.senderSub !== mySub, left: msg.senderSub === mySub }"
 >
-  <!-- ✅ 📋 コピーアイコン -->
-  <span @click.stop="copyToClipboard(msg.content)">📋</span>
-
-  <!-- 他のリアクション -->
   <span
     v-for="emoji in ['❤️','😆','😢','😮','🥰']"
     :key="emoji"
@@ -114,6 +77,11 @@
   >
     {{ emoji }}
   </span>
+</div>
+
+            <!-- 🖼️ リアクション表示 -->
+<div v-if="msg.reactions?.items?.length" class="reaction-display">
+  <span v-for="r in msg.reactions.items" :key="r.id || r.emoji">{{ r.emoji }}</span>
 </div>
           </div>
         </template>
@@ -172,7 +140,6 @@
 </template>
 
 
-
 <script setup>
 import { ref, computed, onMounted, watchEffect, watch, nextTick, onBeforeUnmount } from 'vue'
 import { API, graphqlOperation, Auth, Storage } from 'aws-amplify'
@@ -185,12 +152,10 @@ import PhotoPickerPanel from '@/components/PhotoPickerPanel.vue'
 import ImagePreviewModal from '@/components/ImagePreviewModal.vue'
 import { listMessages, publicProfileByYamatoId } from '@/graphql/queries'
 import { createReaction } from '@/graphql/mutations'
-import { deleteReaction as deleteReactionMutation } from '@/graphql/mutations'
 
 const showImageModal = ref(false)
 const previewImageUrl = ref('')
 const previewImageKey = ref('')
-const copiableMessageId = ref(null)
 
 const selectedMessageId = ref(null)
 const showReactionPicker = ref(false)
@@ -198,8 +163,6 @@ const reactionTargetMessage = ref(null)
 
 
 const loadedImageCount = ref(0)
-
-let reactionSubscription = null
 
 function handleLongPress(message) {
   reactionTargetMessage.value = message
@@ -215,87 +178,30 @@ function startPressTimer(callback) {
   }, 600)
 }
 
-
 function clearPressTimer() {
   clearTimeout(pressTimer)
 }
 
-// 差し替え：showToast を alert にするだけ
-function copyToClipboard(text) {
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text)
-      .then(() => {
-        copiableMessageId.value = null
-        alert('コピーしました') // ← 一時対応
-      })
-      .catch(() => {
-        fallbackCopyToClipboard(text)
-      })
-  } else {
-    fallbackCopyToClipboard(text)
-  }
-}
-
-function fallbackCopyToClipboard(text) {
-  const textarea = document.createElement('textarea')
-  textarea.value = text
-  textarea.style.position = 'fixed'
-  textarea.style.opacity = '0'
-  document.body.appendChild(textarea)
-  textarea.focus()
-  textarea.select()
-
-  try {
-    const success = document.execCommand('copy')
-    if (success) {
-      alert('コピーしました（互換）')
-    } else {
-      alert('コピーできませんでした')
-    }
-  } catch (err) {
-    console.error(err)
-    alert('コピーに失敗しました')
-  }
-
-  document.body.removeChild(textarea)
-}
-
 async function selectReaction(emoji, msg) {
   const user = await Auth.currentAuthenticatedUser()
-  const mySub = user.attributes.sub
-
-  // すでに同じリアクションをつけているか判定
-  const existing = msg.reactions?.items?.find(r => r.reactorSub === mySub)
-
-  if (existing && existing.emoji === emoji) {
-    // ✅ 同じなら削除
-    await deleteReaction(existing.id)
-    msg.reactions.items = msg.reactions.items.filter(r => r.id !== existing.id)
-  } else {
-    // ✅ 上書き: まず削除
-    if (existing) {
-      await deleteReaction(existing.id)
-      msg.reactions.items = msg.reactions.items.filter(r => r.id !== existing.id)
+  const result = await API.graphql(graphqlOperation(createReaction, {
+    input: {
+      messageId: msg.id,
+      emoji,
+      reactorSub: user.attributes.sub,
+      reactorYamatoId: user.attributes['custom:yamatoId'] || '匿名'
     }
+  }))
 
-    // 追加
-    const result = await API.graphql(graphqlOperation(createReaction, {
-      input: {
-        messageId: msg.id,
-        emoji,
-        reactorSub: mySub,
-        reactorYamatoId: user.attributes['custom:yamatoId'] || '匿名'
-      }
-    }))
-
-    const newReaction = result.data?.createReaction
-    if (newReaction) {
-      if (!msg.reactions) msg.reactions = { items: [] }
-      msg.reactions.items.push(newReaction)
+  const newReaction = result.data?.createReaction
+  if (newReaction) {
+    const target = messages.value.find(m => m.id === msg.id)
+    if (target) {
+      if (!target.reactions) target.reactions = { items: [] }
+      target.reactions.items.push(newReaction)
     }
   }
 
-  // ✅ ピッカーは閉じる
   showReactionPickerFor.value = null
 }
 
@@ -312,73 +218,12 @@ async function reactToMessage(emoji) {
   showPicker.value = false
 }
 
-function subscribeToNewReactions() {
-  reactionSubscription = API.graphql(graphqlOperation(onCreateReaction)).subscribe({
-    next: ({ value }) => {
-      const newReaction = value?.data?.onCreateReaction
-      if (!newReaction?.messageId) return
-
-      const targetMsg = messages.value.find(m => m.id === newReaction.messageId)
-      if (!targetMsg) return
-
-      // リアクションが未定義なら初期化
-      if (!targetMsg.reactions) {
-        targetMsg.reactions = { items: [] }
-      }
-
-      // 同じ sender がすでにリアクションを持っているなら置き換え
-      const existingIndex = targetMsg.reactions.items.findIndex(
-        r => r.senderSub === newReaction.senderSub
-      )
-
-      if (existingIndex !== -1) {
-        targetMsg.reactions.items.splice(existingIndex, 1, newReaction)
-      } else {
-        targetMsg.reactions.items.push(newReaction)
-      }
-    },
-    error: err => console.error('❌ リアクションサブスクリプションエラー:', err)
-  })
-}
-function subscribeToReactions() {
-  reactionSubscription = API.graphql(graphqlOperation(onCreateReaction)).subscribe({
-    next: ({ value }) => {
-      const newReaction = value?.data?.onCreateReaction
-      if (!newReaction?.messageId) return
-
-      // 対象のメッセージを探して反映
-      const msgIndex = messages.value.findIndex(m => m.id === newReaction.messageId)
-      if (msgIndex !== -1) {
-        const msg = messages.value[msgIndex]
-
-        // 既に reactions.items があるか確認
-        if (!msg.reactions || !msg.reactions.items) {
-          msg.reactions = { items: [] }
-        }
-
-        // 重複チェック（同じ reactorSub の絵文字は上書き）
-        const existing = msg.reactions.items.findIndex(r => r.reactorSub === newReaction.reactorSub)
-        if (existing !== -1) {
-          msg.reactions.items.splice(existing, 1, newReaction)
-        } else {
-          msg.reactions.items.push(newReaction)
-        }
-
-        // 再描画のために Vue に通知
-        messages.value.splice(msgIndex, 1, { ...msg })
-      }
-    },
-    error: (err) => console.error('❌ リアクションサブスクエラー:', err)
-  })
-}
-
 const showReactionPickerFor = ref(null)
 let longPressTimer = null
 
 function startLongPress(messageId) {
   longPressTimer = setTimeout(() => {
-    showReactionPickerFor.value = showReactionPickerFor.value === messageId ? null : messageId
-    copiableMessageId.value = messageId // ✅ これを追加
+    showReactionPickerFor.value = messageId
   }, 500)
 }
 
@@ -389,29 +234,6 @@ function cancelLongPress() {
   }
 }
 
-
-async function deleteReaction(reactionId) {
-  try {
-    await API.graphql(graphqlOperation(deleteReactionMutation, {
-      input: { id: reactionId }
-    }))
-  } catch (e) {
-    console.error('❌ リアクション削除失敗:', e)
-  }
-}
-
-const onCreateReaction = /* GraphQL */ `
-  subscription OnCreateReaction {
-    onCreateReaction {
-      id
-      messageId
-      emoji
-      reactorSub
-      reactorYamatoId
-      createdAt
-    }
-  }
-`
 
 const messagesByRoomIdQuery = /* GraphQL */ `
   query MessagesByRoomId($roomId: ID!, $sortDirection: ModelSortDirection, $limit: Int) {
@@ -687,7 +509,6 @@ onMounted(async () => {
   const user = await Auth.currentAuthenticatedUser()
   mySub.value = user.attributes.sub
 
-  // 🔽 自分の Yamato ID を取得
   const res = await API.graphql({
     query: /* GraphQL */ `
       query GetMyProfile($id: ID!) {
@@ -700,7 +521,6 @@ onMounted(async () => {
   })
   myYamatoId.value = res.data.getPublicProfile.yamatoId
 
-  // 🔽 相手のプロフィール取得
   const profileRes = await API.graphql(graphqlOperation(publicProfileByYamatoId, {
     yamatoId: receiverYamatoId.value
   }))
@@ -718,11 +538,10 @@ onMounted(async () => {
   // ✅ メッセージ取得
   await fetchMessages()
 
-  // ✅ サブスク開始（メッセージ + リアクション）
+  // ✅ 必ずメッセージ取得後にサブスク開始
   subscribeToNewMessages()
-  subscribeToNewReactions() // ← 追加！
 
-  // ✅ 初回スクロール調整など
+  // （以下オプション）
   loadedImageCount.value = 0
   await nextTick()
 
@@ -733,8 +552,8 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   if (subscription) subscription.unsubscribe()
-  if (reactionSubscription) reactionSubscription.unsubscribe()
 })
+
 
 async function fetchMessages() {
   try {
@@ -989,27 +808,6 @@ button.disabled {
   align-self: center;
 }
 
-.text-with-time {
-  display: flex;
-  align-items: flex-end;
-  gap: 0.4rem;
-}
-
-.timestamp-right {
-  font-size: 0.75rem;
-  color: #aaa;
-  margin-left: 0.6rem; /* ← 時計とリアクションの干渉防止 */
-  white-space: nowrap;
-  align-self: flex-end;
-}
-
-.image-wrapper.text-with-time {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 0.3rem;
-}
-
 /* 日付セパレータ */
 .date-separator {
   text-align: center;
@@ -1137,23 +935,13 @@ button.disabled {
   word-break: break-word;
   white-space: pre-wrap;
   line-height: 1.5;
-  text-align: left;
+  text-align: left; /* ⭐️ これを追加する */
+
+  max-width: 80vw;
   max-width: min(80vw, 520px);
 }
 
-/* 👤 相手のメッセージ → 選択不可 */
-.message:not(.mine) {
-  user-select: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  -webkit-touch-callout: none;
-}
-
 .message.mine {
-  user-select: text;
-  -webkit-user-select: text;
-
   background-color: #274c77;
   color: #fff;
   margin-left: auto; /* 💡 自分の吹き出しは右に寄せる */
@@ -1212,112 +1000,25 @@ button:hover {
 }
 
 .reaction-picker {
-  position: absolute;
-  top: -2rem;
-  right: -0.5rem; /* ✅ 吹き出し右端を基準に内側に配置 */
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.3rem 0.6rem;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 1rem;
+  margin-top: 0.2rem;
+  user-select: none;
+  font-size: 1.2rem;
+  justify-content: flex-end; /* 🔸右寄せ */
+  max-width: 70%;
+  align-self: flex-end;
+}
+
   display: flex;
   gap: 0.4rem;
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 1.5rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  padding: 0.4rem 0.6rem;
-  font-size: 1.3rem;
-  z-index: 10;
-  white-space: nowrap;
-}
-
-.reaction-display {
-  position: absolute;
-  top: -0.6rem;
-  right: -0.6rem;
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(4px);
-  border-radius: 1rem;
-  padding: 0.2rem 0.4rem;
-  font-size: 1rem;
-  display: flex;
-  gap: 0.3rem;
+  justify-content: flex-end; /* 🔸右寄せ */
+  max-width: 70%;
+  align-self: flex-end;
   pointer-events: none;
-  z-index: 5;
-}
-.message-wrapper {
-  position: relative;
-  display: inline-block;
-
-  /* 🛡️ wrapper側にも防止を追加 */
-  user-select: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-}
-
-/* ✨ リアクション：上に一時表示（ピッカー表示時などに使う） */
-.reaction-display.over {
-  position: absolute;
-  top: -0.4rem;
-  right: 1.7rem; /* ✅ ここをマイナスからプラスへ */
-  background: transparent;
-  backdrop-filter: none;
-  border-radius: 0;
-  padding: 0;
-  font-size: 1rem;
-  display: flex;
-  gap: 0.3rem;
-  pointer-events: none;
-  z-index: 10;
-  box-shadow: none;
-}
-
-/* ✅ 通常のリアクション表示 */
-.reaction-display {
-  position: absolute;
-  z-index: 5;
-  pointer-events: none;
-  white-space: nowrap;
-  background: transparent;
-  backdrop-filter: none;
-  border-radius: 0;
-  padding: 0;
-  font-size: 1rem;
-}
-
-/* 🎯 相手からのメッセージ用（左上） */
-.left-corner {
-  left: -0.6rem;
-  transform: none;
-}
-
-/* 🎯 自分のメッセージ用（右上） */
-.right-corner {
-  top: -0.6rem;
-  right: 0.1rem; /* ← 時計には被らず、吹き出し右上にピッタリ重なる */
-  transform: none;
-}
-
-/* 🎯 各リアクション絵文字：装飾を完全除去 */
-.reaction-display span {
-  display: inline-block;
-  font-size: 1.1rem;
-  line-height: 1;
-  padding: 0;
-  background: none;
-  box-shadow: none;
-  border-radius: 0;
-  color: inherit;
-}
-
-.copy-button {
-  position: absolute;
-  top: -0.5rem;
-  right: -1.2rem;
-  background: rgba(255, 255, 255, 0.95);
-  border: none;
-  border-radius: 9999px;
-  font-size: 1rem;
-  padding: 0.2rem 0.4rem;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
-  z-index: 10;
 }
 
 </style>
-
