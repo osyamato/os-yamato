@@ -1,6 +1,6 @@
 import { ModelInit, MutableModel, __modelMeta__, ManagedIdentifier } from "@aws-amplify/datastore";
 // @ts-ignore
-import { LazyLoading, LazyLoadingDisabled } from "@aws-amplify/datastore";
+import { LazyLoading, LazyLoadingDisabled, AsyncCollection } from "@aws-amplify/datastore";
 
 
 
@@ -220,6 +220,7 @@ type EagerMessage = {
   readonly timestamp: string;
   readonly createdAt?: string | null;
   readonly expiresAt?: number | null;
+  readonly reactions?: (Reaction | null)[] | null;
   readonly updatedAt?: string | null;
 }
 
@@ -241,6 +242,7 @@ type LazyMessage = {
   readonly timestamp: string;
   readonly createdAt?: string | null;
   readonly expiresAt?: number | null;
+  readonly reactions: AsyncCollection<Reaction>;
   readonly updatedAt?: string | null;
 }
 
