@@ -7,8 +7,12 @@
       </div>
 
       <!-- 🔽 メッセージ一覧 -->
-      <div class="message-list">
-        <template v-for="(msg, index) in groupedMessages" :key="msg.id || index">
+<div
+  class="message-list"
+  @scroll.passive="handleScrollTop"
+  ref="messageListRef"
+>
+<template v-for="msg in groupedMessages" :key="msg.id">
           <div v-if="msg.isDateSeparator" class="date-separator">
             {{ msg.date }}
           </div>
@@ -17,21 +21,33 @@
             v-else
             class="message-row"
             :class="{ mine: msg.senderSub === mySub }"
-          >
+:id="`msg-${msg.id}`"          
+>
             <!-- 💬 相手メッセージ -->
             <div v-if="msg.senderSub !== mySub">
 
 <template v-if="msg.contentType === 'image'">
   <div class="message-wrapper text-with-time">
     <img
+      v-if="msg.imageUrl"
       :src="msg.imageUrl"
+:key="msg.imageUrl" 
+
       class="message-image"
       @click="openImageModal(msg.imageUrl, msg.imageKey)"
       @load="onImageLoad"
     />
+    <div
+      v-else
+      class="message-placeholder"
+      @click="loadImageOnDemand(msg)"
+    >
+      🖼️
+    </div>
+
     <span class="timestamp-right">{{ formatTime(msg.timestamp) }}</span>
 
-    <!-- ❤️ リアクション（相手メッセージ） -->
+    <!-- ❤️ リアクション -->
     <div
       v-if="msg.reactions?.items?.length"
       :class="['reaction-display', msg.senderSub === mySub ? 'right-corner' : 'left-corner']"
@@ -76,6 +92,7 @@
       <img
         :src="msg.imageUrl"
         class="message-image"
+:key="msg.imageUrl" 
         @click="openImageModal(msg.imageUrl, msg.imageKey)"
         @load="onImageLoad"
       />
@@ -196,8 +213,15 @@ const selectedMessageId = ref(null)
 const showReactionPicker = ref(false)
 const reactionTargetMessage = ref(null)
 
+const suppressAutoScroll = ref(false)
+const isRestoringScroll = ref(false)
+
 
 const loadedImageCount = ref(0)
+const imageCount = ref(0) 
+
+const pendingScrollRestore = ref(null) 
+
 
 let reactionSubscription = null
 
@@ -312,6 +336,18 @@ async function reactToMessage(emoji) {
   showPicker.value = false
 }
 
+async function loadImageOnDemand(msg) {
+  if (msg.imageUrl) return // すでに取得済みなら何もしない
+
+  try {
+    const key = msg.thumbnailKey || msg.imageKey
+    const url = await Storage.get(key, { level: 'public' })
+    msg.imageUrl = url
+  } catch (e) {
+    console.warn('❌ 画像個別取得失敗:', msg.imageKey, e)
+  }
+}
+
 function subscribeToNewReactions() {
   reactionSubscription = API.graphql(graphqlOperation(onCreateReaction)).subscribe({
     next: ({ value }) => {
@@ -414,8 +450,18 @@ const onCreateReaction = /* GraphQL */ `
 `
 
 const messagesByRoomIdQuery = /* GraphQL */ `
-  query MessagesByRoomId($roomId: ID!, $sortDirection: ModelSortDirection, $limit: Int) {
-    messagesByRoomId(roomId: $roomId, sortDirection: $sortDirection, limit: $limit) {
+  query MessagesByRoomId(
+    $roomId: ID!
+    $sortDirection: ModelSortDirection
+    $limit: Int
+    $nextToken: String
+  ) {
+    messagesByRoomId(
+      roomId: $roomId
+      sortDirection: $sortDirection
+      limit: $limit
+      nextToken: $nextToken
+    ) {
       items {
         id
         roomId
@@ -424,6 +470,7 @@ const messagesByRoomIdQuery = /* GraphQL */ `
         contentType
         imageKey
         timestamp
+        createdAt
         reactions {
           items {
             id
@@ -432,8 +479,8 @@ const messagesByRoomIdQuery = /* GraphQL */ `
             reactorYamatoId
           }
         }
-        createdAt
       }
+      nextToken  # ✅ これを必ず追加！
     }
   }
 `
@@ -441,9 +488,26 @@ const messagesByRoomIdQuery = /* GraphQL */ `
 function onImageLoad() {
   loadedImageCount.value++
 
-  // 全部読み込まれたらスクロール
-  if (loadedImageCount.value >= imageCount.value) {
-    nextTick(() => scrollToBottom(true))
+  if (
+    imageCount.value > 0 &&
+    loadedImageCount.value >= imageCount.value &&
+    pendingScrollRestore.value &&
+    messageListRef.value
+  ) {
+    const list = messageListRef.value
+    const { anchorId } = pendingScrollRestore.value
+    pendingScrollRestore.value = null
+
+    suppressAutoScroll.value = false
+
+    nextTick(() => {
+      requestAnimationFrame(() => {
+        const anchorEl = document.getElementById(anchorId)
+        if (anchorEl) {
+          anchorEl.scrollIntoView({ block: 'start' })
+        }
+      })
+    })
   }
 }
 
@@ -460,8 +524,6 @@ async function openImageModal(thumbnailUrl, fullKey) {
     showImageModal.value = true
   }
 }
-
-
 
 const chatEffect = ref(null)
 const textareaRef = ref(null)
@@ -598,7 +660,10 @@ watchEffect(() => {
   roomId.value = params.roomId || ''
   receiverYamatoId.value = params.receiverYamatoId || ''
 })
-watch(() => groupedMessages.value, async () => {
+
+
+watch(groupedMessages, async () => {
+  if (suppressAutoScroll.value) return
   await nextTick()
   scrollToBottom()
 })
@@ -674,11 +739,6 @@ function hideKeyboard() {
   if (el && typeof el.blur === 'function') el.blur()
 }
 
-const imageCount = computed(() =>
-  groupedMessages.value
-    .flatMap(group => group.messages)
-    .filter(msg => msg?.contentType === 'image').length
-)
 
 onMounted(async () => {
   await nextTick()
@@ -736,47 +796,6 @@ onBeforeUnmount(() => {
   if (reactionSubscription) reactionSubscription.unsubscribe()
 })
 
-async function fetchMessages() {
-  try {
-    if (subscription) {
-      subscription.unsubscribe()
-      subscription = null
-    }
-
-    const res = await API.graphql(graphqlOperation(messagesByRoomIdQuery, {
-      roomId: roomId.value,
-      sortDirection: "DESC",
-      limit: 30
-    }))
-
-    const items = res.data.messagesByRoomId.items || []
-
-    const sorted = items
-      .filter(msg => msg)
-      .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
-
-    const enriched = await Promise.all(sorted.map(async msg => {
-      if (msg.contentType === 'image' && msg.imageKey) {
-        try {
-          const url = await Storage.get(msg.thumbnailKey || msg.imageKey, { level: 'public' })
-          return { ...msg, imageUrl: url }
-        } catch {
-          return msg
-        }
-      }
-      return msg
-    }))
-
-    messages.value = enriched
-    await nextTick()
-    scrollToBottom()
-
-    subscribeToNewMessages()
-
-  } catch (err) {
-    console.error('❌ メッセージ取得エラー:', JSON.stringify(err, null, 2))
-  }
-}
 
 
 async function sendMessage() {
@@ -830,6 +849,160 @@ function autoResize(event) {
 function formatTime(ts) {
   const date = new Date(ts)
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+}
+
+async function fetchMessages() {
+  try {
+    if (subscription) {
+      subscription.unsubscribe()
+      subscription = null
+    }
+
+    console.log('📡 初回メッセージ取得開始 for roomId:', roomId.value)
+
+    const res = await API.graphql(graphqlOperation(messagesByRoomIdQuery, {
+      roomId: roomId.value,
+      sortDirection: "DESC",
+      limit: 30
+    }))
+
+    const items = res.data.messagesByRoomId.items || []
+    nextToken = res.data.messagesByRoomId.nextToken
+    console.log('📦 初回取得:', items.length, '📍nextToken:', nextToken)
+
+    const sorted = items
+      .filter(msg => !!msg)
+      .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
+
+    const enriched = await Promise.all(sorted.map(async msg => {
+      if (msg.contentType === 'image' && msg.imageKey) {
+        const msgDate = new Date(msg.timestamp)
+        const now = new Date()
+        const daysDiff = (now - msgDate) / (1000 * 60 * 60 * 24)
+
+        if (daysDiff <= 14) {
+          try {
+            const thumbKey = msg.thumbnailKey || msg.imageKey
+            const url = await Storage.get(thumbKey, { level: 'public' })
+            return { ...msg, imageUrl: url }
+          } catch {
+            return { ...msg, imageUrl: null }
+          }
+        } else {
+          return { ...msg, imageUrl: null } // 🔕 古い画像は表示しない
+        }
+      }
+      return msg
+    }))
+
+    messages.value = enriched
+    console.log('✅ 初回格納:', enriched.length)
+
+    await nextTick()
+    scrollToBottom()
+
+    subscribeToNewMessages()
+  } catch (err) {
+    console.error('❌ メッセージ取得エラー:', JSON.stringify(err, null, 2))
+  }
+}
+
+let nextToken = null
+const messageIds = new Set()
+
+async function fetchMoreMessages() {
+  try {
+    if (!nextToken || !messageListRef.value) return
+
+    suppressAutoScroll.value = true
+    const list = messageListRef.value
+
+    console.log('🔄 過去メッセージ取得 nextToken:', nextToken)
+
+    // GraphQLでメッセージ取得
+    const res = await API.graphql(graphqlOperation(messagesByRoomIdQuery, {
+      roomId: roomId.value,
+      sortDirection: "DESC",
+      limit: 30,
+      nextToken
+    }))
+
+    const newItems = res.data.messagesByRoomId.items || []
+    nextToken = res.data.messagesByRoomId.nextToken
+
+    // すでに表示中のメッセージIDを除外
+    const sorted = newItems
+      .filter(msg => !!msg && !messageIds.has(msg.id))
+      .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
+
+    const enriched = await Promise.all(sorted.map(async msg => {
+      messageIds.add(msg.id)
+
+      if (msg.contentType === 'image' && msg.imageKey) {
+        const msgDate = new Date(msg.timestamp)
+        const now = new Date()
+        const daysDiff = (now - msgDate) / (1000 * 60 * 60 * 24)
+
+        if (daysDiff <= 14) {
+          try {
+            const thumbKey = msg.thumbnailKey || msg.imageKey
+            const url = await Storage.get(thumbKey, { level: 'public' })
+            return { ...msg, imageUrl: url }
+          } catch {
+            return { ...msg, imageUrl: null }
+          }
+        } else {
+          return { ...msg, imageUrl: null }
+        }
+      }
+      return msg
+    }))
+
+    if (enriched.length === 0) {
+      suppressAutoScroll.value = false
+      return
+    }
+
+    // 古いメッセージを先頭に追加
+    messages.value = [...enriched, ...messages.value]
+
+    // 📌 アンカーメッセージのIDを記録（画面上で一番下に近い方）
+    const anchorMessage = enriched[enriched.length - 1]
+    imageCount.value = enriched.filter(m => m.imageUrl).length
+    loadedImageCount.value = 0
+
+    await nextTick()
+
+    if (imageCount.value === 0) {
+      // ✅ テキストのみの場合は scrollTop を即座に復元
+      const anchorEl = document.getElementById(`msg-${anchorMessage.id}`)
+      if (anchorEl) {
+        anchorEl.scrollIntoView({ block: 'start' })
+      }
+      suppressAutoScroll.value = false
+    } else {
+      // ✅ 画像がある場合は onImageLoad に委ねて scrollIntoView する
+      if (anchorMessage) {
+        pendingScrollRestore.value = {
+          anchorId: `msg-${anchorMessage.id}`
+        }
+      }
+    }
+
+  } catch (err) {
+    console.error('❌ fetchMoreMessages エラー:', JSON.stringify(err, null, 2))
+    suppressAutoScroll.value = false
+  }
+}
+
+const messageListRef = ref(null)
+
+function handleScrollTop() {
+  const el = messageListRef.value
+  if (el && el.scrollTop === 0) {
+    console.log('⬆️ スクロール先頭 - 追加取得')
+    fetchMoreMessages()
+  }
 }
 
 function subscribeToNewMessages() {
@@ -902,6 +1075,12 @@ function groupMessagesByDate(messages) {
 }
 
 function scrollToBottom(immediate = false) {
+  if (suppressAutoScroll.value) {
+    console.log('🚫 scrollToBottom suppressed')
+    suppressAutoScroll.value = false
+    return
+  }
+
   bottomOfChat.value?.scrollIntoView({ behavior: immediate ? 'auto' : 'smooth' })
 }
 
@@ -926,6 +1105,8 @@ async function tryGetUrl(key, retries = 5, delay = 1000) {
 }
 
 </script>
+
+
 
 
 <style scoped>
@@ -1317,6 +1498,18 @@ button:hover {
   padding: 0.2rem 0.4rem;
   box-shadow: 0 1px 4px rgba(0,0,0,0.2);
   z-index: 10;
+}
+
+.message-placeholder {
+  width: 120px;
+  height: 120px;
+  background-color: #eee;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  cursor: pointer;
 }
 
 </style>
