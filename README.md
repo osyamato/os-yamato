@@ -2,16 +2,11 @@ OS Yamato 🌸
 
 ![スクリーンショット 0007-07-11 0 26 47](https://github.com/user-attachments/assets/52cad7db-4356-4d0b-accd-3b72dec97cfb)
 
-Visit: https://hanaco875.com
+🔗 Visit: https://hanaco875.com
 
-A gentle operating system where data blooms, fades, and returns to the wind.
-Even the quietest message can carry the weight of a season.
+📹 Launch Video: https://www.youtube.com/watch?v=JrqwU_N5WBA
 
-<p align="center">
-  <img src="https://github.com/user-attachments/assets/f2c89d5f-f3c7-4f5a-818a-e8c3a40f4d9d" width="220" />
-</p>
-
-
+📰 Featured in KrispiTech: https://krispitech.com/os-yamato-and-the-art-of-gentle-tech-where-minimalism-meets-mindfulness/
 
 ⸻
 
@@ -25,61 +20,71 @@ This isn’t just software — it’s a philosophy of impermanence, care, and si
 🌿 Philosophy
 
 We believe digital memories, like real ones, shouldn’t last forever by default.
-OS Yamato invites you to experience a mindful, seasonal digital space:
-	•	No hoarding.
-	•	No clutter.
-	•	Just meaningful moments.
 
-Notes, photos, and messages gently fade if left untouched — and disappear after a year.
+OS Yamato invites you to experience a mindful, seasonal digital space:
+	•	No hoarding
+	•	No clutter
+	•	Just meaningful moments
+
+🕊️ Notes, photos, and messages gently fade if left untouched — and disappear after a year.
 
 ⸻
 
 🖼️ How It Works
 	•	Each data object (note, photo, contact…) includes a lastOpenedAt timestamp.
-	•	After 330 days unopened, it shows a 🥀 icon as a sign of wilting.
-	•	After 365 days, it is automatically deleted — returning to the wind.
+	•	After 330 days, it shows a 🥀 icon — a sign of digital wilting.
+	•	After 365 days, it’s automatically deleted.
+
+Let it return to the wind.
 
 ⸻
 
 🌸 Features
-	•	Diary — Entries bloom and fade like flowers.
-	•	Chat — Seasonal animations turn conversations into gentle encounters.
-	•	Memo & Contacts — Designed to wilt without revisiting.
-	•	Photos & Videos — Live 365 days unless you return.
-	•	Wind Messages — Letters that arrive months later, like whispers on the breeze.
-	•	Clock & Games — Time visualized poetically.
+	•	Diary — Entries bloom and fade like flowers
+	•	Chat — Seasonal animations turn conversations into gentle encounters
+	•	Memo & Contacts — Designed to wilt without revisiting
+	•	Photos & Videos — Live 365 days unless you return
+	•	Wind Messages — Letters that arrive months later, like whispers on the breeze
+	•	Clock & Games — Time visualized poetically
+
+🆕 Recent updates:
+	•	✅ Spanish localization 🇪🇸
+	•	✅ Chat message reactions 💬❤️
 
 ⸻
 
 ⚙️ Tech Stack
 	•	🖥️ Frontend: Vue 3 + Vite
 	•	☁️ Backend: AWS Amplify (Cognito, AppSync, DynamoDB, S3)
-	•	🧠 Lifecycle Control: TTL-based expiration with visual feedback
+	•	⏳ Lifecycle: TTL-based expiration with poetic feedback
 	•	🌍 Hosting: Amplify Hosting + Global CDN
-	•	💡 Design Ethos: Inspired by impermanence and wabi-sabi
+	•	🎨 Design: Deeply inspired by wabi-sabi and impermanence
 
 ⸻
+
 🌐 Try OS Yamato
 
-Visit: https://hanaco875.com
-Demo video: https://www.youtube.com/shorts/DqIeSdYvQ9Q
+📲 Visit: https://hanaco875.com
 
-Code: GitHub - osyamato
-Join discussions: GitHub Discussions
+📹 Demo Video: https://www.youtube.com/shorts/DqIeSdYvQ9Q
 
-You can also try using our test accounts (details in note and X posts).
+📘 Code: GitHub - https://github.com/osyamato/os-yamato　
+
+💬 Join discussions: https://github.com/osyamato/os-yamato/discussions
+
+🐦 X (Twitter)https://x.com/Yamato_OS
+
+
+Test accounts are available in pinned notes & X posts.
 
 ⸻
 
 ❤️ A Note
 
-Let it bloom. Let it fade.
+Let it bloom.
+Let it fade.
 Let it return to the wind.
+
 We’re so happy you’re here.
+
 ⸻
-
-💻 For Developers
-
-cd os-yamato
-npm install
-npm run dev
