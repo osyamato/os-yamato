@@ -28,22 +28,26 @@
 
 <template v-if="msg.contentType === 'image'">
   <div class="message-wrapper text-with-time">
+    <!-- ✅ 画像がロードされている場合 -->
     <img
       v-if="msg.imageUrl"
       :src="msg.imageUrl"
-:key="msg.imageUrl" 
-
       class="message-image"
+      :key="msg.imageUrl"
       @click="openImageModal(msg.imageUrl, msg.imageKey)"
       @load="onImageLoad"
     />
+
+    <!-- ✅ imageKey があるが URL 未取得（🖼️ボタン） -->
     <div
-      v-else
+      v-else-if="msg.imageKey"
       class="message-placeholder"
       @click="loadImageOnDemand(msg)"
     >
       🖼️
     </div>
+
+    <!-- ❌ imageKey すらない異常データは何も表示しない -->
 
     <span class="timestamp-right">{{ formatTime(msg.timestamp) }}</span>
 
@@ -81,37 +85,48 @@
 </template>
             </div>
 
-            <!-- 💬 自分のメッセージ -->
 <!-- ✅ 自分のメッセージ -->
 <template v-else>
   <span class="timestamp-side">{{ formatTime(msg.timestamp) }}</span>
 
-  <!-- ✅ wrapperクラス名に mine を残す -->
   <div class="message-wrapper mine">
+    <!-- ✅ 画像メッセージ -->
     <template v-if="msg.contentType === 'image'">
-      <img
-        :src="msg.imageUrl"
-        class="message-image"
-:key="msg.imageUrl" 
-        @click="openImageModal(msg.imageUrl, msg.imageKey)"
-        @load="onImageLoad"
-      />
+      <template v-if="msg.imageUrl">
+        <img
+          :src="msg.imageUrl"
+          class="message-image"
+          :key="msg.imageUrl"
+          @click="openImageModal(msg.imageUrl, msg.imageKey)"
+          @load="onImageLoad"
+        />
+      </template>
+      <template v-else-if="msg.imageKey">
+        <div
+          class="message-placeholder"
+          @click="loadImageOnDemand(msg)"
+        >
+          🖼️
+        </div>
+      </template>
     </template>
+
+    <!-- ✅ テキストメッセージ -->
     <template v-else>
       <div class="message mine">
         <div v-html="msg.content.replace(/\n/g, '<br>')"></div>
       </div>
     </template>
 
-    <!-- ✅ 自分のメッセージのリアクション → 右上表示用クラス -->
-<div
-  v-if="msg.reactions?.items?.length"
-  :class="['reaction-display', msg.mine ? 'right-corner' : 'left-corner']"
->
-  <span v-for="r in msg.reactions.items" :key="r.id || r.emoji">
-    {{ r.emoji }}
-  </span>
-</div>
+    <!-- ✅ リアクション -->
+    <div
+      v-if="msg.reactions?.items?.length"
+      :class="['reaction-display', msg.mine ? 'right-corner' : 'left-corner']"
+    >
+      <span v-for="r in msg.reactions.items" :key="r.id || r.emoji">
+        {{ r.emoji }}
+      </span>
+    </div>
   </div>
 </template>
 
@@ -851,6 +866,7 @@ function formatTime(ts) {
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 }
 
+
 async function fetchMessages() {
   try {
     if (subscription) {
@@ -919,7 +935,10 @@ async function fetchMoreMessages() {
 
     console.log('🔄 過去メッセージ取得 nextToken:', nextToken)
 
-    // GraphQLでメッセージ取得
+    // 取得前のスクロール位置を保存
+    const prevScrollTop = list.scrollTop
+    const prevScrollHeight = list.scrollHeight
+
     const res = await API.graphql(graphqlOperation(messagesByRoomIdQuery, {
       roomId: roomId.value,
       sortDirection: "DESC",
@@ -930,70 +949,42 @@ async function fetchMoreMessages() {
     const newItems = res.data.messagesByRoomId.items || []
     nextToken = res.data.messagesByRoomId.nextToken
 
-    // すでに表示中のメッセージIDを除外
     const sorted = newItems
       .filter(msg => !!msg && !messageIds.has(msg.id))
       .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
 
-    const enriched = await Promise.all(sorted.map(async msg => {
+    const enriched = sorted.map(msg => {
       messageIds.add(msg.id)
-
       if (msg.contentType === 'image' && msg.imageKey) {
-        const msgDate = new Date(msg.timestamp)
-        const now = new Date()
-        const daysDiff = (now - msgDate) / (1000 * 60 * 60 * 24)
-
-        if (daysDiff <= 14) {
-          try {
-            const thumbKey = msg.thumbnailKey || msg.imageKey
-            const url = await Storage.get(thumbKey, { level: 'public' })
-            return { ...msg, imageUrl: url }
-          } catch {
-            return { ...msg, imageUrl: null }
-          }
-        } else {
-          return { ...msg, imageUrl: null }
-        }
+        return { ...msg, imageUrl: null }
       }
       return msg
-    }))
+    })
 
     if (enriched.length === 0) {
       suppressAutoScroll.value = false
       return
     }
 
-    // 古いメッセージを先頭に追加
+    // 🔼 古いメッセージを前方に追加
     messages.value = [...enriched, ...messages.value]
-
-    // 📌 アンカーメッセージのIDを記録（画面上で一番下に近い方）
-    const anchorMessage = enriched[enriched.length - 1]
-    imageCount.value = enriched.filter(m => m.imageUrl).length
-    loadedImageCount.value = 0
 
     await nextTick()
 
-    if (imageCount.value === 0) {
-      // ✅ テキストのみの場合は scrollTop を即座に復元
-      const anchorEl = document.getElementById(`msg-${anchorMessage.id}`)
-      if (anchorEl) {
-        anchorEl.scrollIntoView({ block: 'start' })
-      }
-      suppressAutoScroll.value = false
-    } else {
-      // ✅ 画像がある場合は onImageLoad に委ねて scrollIntoView する
-      if (anchorMessage) {
-        pendingScrollRestore.value = {
-          anchorId: `msg-${anchorMessage.id}`
-        }
-      }
-    }
+    // ✅ 差分スクロール：スクロール位置を維持するためにずらす
+    const newScrollHeight = list.scrollHeight
+    const diff = newScrollHeight - prevScrollHeight
+    list.scrollTop = prevScrollTop + diff
 
+    suppressAutoScroll.value = false
   } catch (err) {
     console.error('❌ fetchMoreMessages エラー:', JSON.stringify(err, null, 2))
     suppressAutoScroll.value = false
   }
 }
+
+ 
+
 
 const messageListRef = ref(null)
 
@@ -1513,4 +1504,3 @@ button:hover {
 }
 
 </style>
-
