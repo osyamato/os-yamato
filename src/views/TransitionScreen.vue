@@ -1,5 +1,5 @@
 <template>
-  <div class="container" @click="goToHome">
+<div class="container">
     <div class="content-wrapper">
       <img
         src="/os_yamato01.png"
@@ -16,17 +16,31 @@
 
 <script setup>
 import { useRouter } from 'vue-router'
-import { onMounted } from 'vue'
+import { onMounted, ref } from 'vue'
+import { Auth } from 'aws-amplify'
 
 const router = useRouter()
-
-const goToHome = () => {
-  router.push('/home')
-}
+const redirected = ref(false)
 
 onMounted(() => {
-  setTimeout(() => {
-    goToHome()
+  setTimeout(async () => {
+    if (redirected.value) return
+    redirected.value = true
+
+    try {
+      // ✅ ログイン済みチェック
+      await Auth.currentAuthenticatedUser()
+
+      // 現在のパスが /home でなければ遷移
+      if (router.currentRoute.value.path !== '/home') {
+        router.replace('/home')
+      }
+    } catch {
+      // 現在のパスが /signin でなければ遷移
+      if (router.currentRoute.value.path !== '/signin') {
+        router.replace('/signin')
+      }
+    }
   }, 6000)
 })
 </script>
@@ -119,3 +133,4 @@ html, body {
 
 
 </style>
+

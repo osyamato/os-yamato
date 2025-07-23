@@ -37,6 +37,7 @@ import TimeView3 from '../views/TimeView3.vue'
 import ActivityView from '../views/ActivityView.vue'
 import GPTMiniView from '../views/GPTMiniView.vue'
 import GPTMiniChatView from '../views/GPTMiniChatView.vue'
+import { Auth } from 'aws-amplify'
 
 
 const routes = [
@@ -100,19 +101,33 @@ const router = createRouter({
 let historyStack = []
 let isBack = false
 
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
+  const publicPages = ['/signin', '/register', '/forgot-password', '/verify-email', '/about']
+  const authRequired = !publicPages.includes(to.path)
+
+  // 戻り遷移かどうかを記録（既存ロジック）
   const toIndex = historyStack.indexOf(to.fullPath)
   const fromIndex = historyStack.indexOf(from.fullPath)
 
   if (toIndex !== -1 && toIndex < fromIndex) {
-    isBack = true // ⬅️ 戻り遷移
+    isBack = true
     historyStack = historyStack.slice(0, toIndex + 1)
   } else {
     isBack = false
     historyStack.push(to.fullPath)
   }
 
-  next()
+  // 認証チェック
+  try {
+    await Auth.currentAuthenticatedUser()
+    next()
+  } catch {
+    if (authRequired) {
+      next('/signin')
+    } else {
+      next()
+    }
+  }
 })
 
 // 他ファイルで取得する用にエクスポート

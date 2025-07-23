@@ -444,7 +444,10 @@
  "gptHint": "アイコンを選んでたずねてみよう",
 "common.untitled": "(無題)",
 "gptMini.modeDescription": "モード説明",
- "gptMini.inputPlaceholder": "メッセージを入力..."
+ "gptMini.inputPlaceholder": "メッセージを入力...",
+ "common.copySuccess": "コピーしました",
+  "common.copyFailed": "コピーに失敗しました",
+ "chat.inputPlaceholder": "メッセージを入力..."
 
 
 }
