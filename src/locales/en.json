@@ -461,7 +461,12 @@
 "common.untitled": "(Untitled)",
 "gptMini.modeDescription": "Mode Description",
 
- "gptMini.inputPlaceholder": "Type your message..."
+ "gptMini.inputPlaceholder": "Type your message...",
+
+"common.copySuccess": "Copied",
+  "common.copyFailed": "Failed to copy",
+"chat.inputPlaceholder": "Type a message..."
+
 
 
 

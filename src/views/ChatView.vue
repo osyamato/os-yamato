@@ -135,17 +135,19 @@
   v-if="showReactionPickerFor === msg.id && msg.senderSub !== mySub"
   class="reaction-picker"
 >
-  <!-- ✅ 📋 コピーアイコン -->
-  <span @click.stop="copyToClipboard(msg.content)">📋</span>
+  <!-- リアクション絵文字群 -->
+  <div class="emoji-list">
+    <span
+v-for="emoji in ['❤️','😆','🥺','😮','🥰','👍']"
+      :key="emoji"
+      @click="selectReaction(emoji, msg)"
+    >
+      {{ emoji }}
+    </span>
+  </div>
 
-  <!-- 他のリアクション -->
-  <span
-    v-for="emoji in ['❤️','😆','😢','😮','🥰']"
-    :key="emoji"
-    @click="selectReaction(emoji, msg)"
-  >
-    {{ emoji }}
-  </span>
+  <!-- 📋 コピー -->
+  <span class="copy-icon" @click.stop="copyToClipboard(msg.content)">📋</span>
 </div>
           </div>
         </template>
@@ -162,7 +164,7 @@
         <textarea
           ref="textareaRef"
           v-model="newMessage"
-          placeholder="メッセージを入力..."
+ :placeholder="t('chat.inputPlaceholder')"
           rows="1"
           class="message-input"
           @input="autoResize"
@@ -219,6 +221,10 @@ import { listMessages, publicProfileByYamatoId } from '@/graphql/queries'
 import { createReaction } from '@/graphql/mutations'
 import { deleteReaction as deleteReactionMutation } from '@/graphql/mutations'
 
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
+
 const showImageModal = ref(false)
 const previewImageUrl = ref('')
 const previewImageKey = ref('')
@@ -259,44 +265,20 @@ function clearPressTimer() {
   clearTimeout(pressTimer)
 }
 
-// 差し替え：showToast を alert にするだけ
+
 function copyToClipboard(text) {
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(text)
       .then(() => {
         copiableMessageId.value = null
-        alert('コピーしました') // ← 一時対応
+        alert(t('common.copySuccess')) // ✅ ローカライズ
       })
       .catch(() => {
-        fallbackCopyToClipboard(text)
+        alert(t('common.copyFailed')) // ❌ ローカライズ
       })
   } else {
-    fallbackCopyToClipboard(text)
+    alert(t('common.copyFailed'))
   }
-}
-
-function fallbackCopyToClipboard(text) {
-  const textarea = document.createElement('textarea')
-  textarea.value = text
-  textarea.style.position = 'fixed'
-  textarea.style.opacity = '0'
-  document.body.appendChild(textarea)
-  textarea.focus()
-  textarea.select()
-
-  try {
-    const success = document.execCommand('copy')
-    if (success) {
-      alert('コピーしました（互換）')
-    } else {
-      alert('コピーできませんでした')
-    }
-  } catch (err) {
-    console.error(err)
-    alert('コピーに失敗しました')
-  }
-
-  document.body.removeChild(textarea)
 }
 
 async function selectReaction(emoji, msg) {
@@ -689,25 +671,44 @@ function maybePlayEffect(content) {
     return false
   }
 
-  // 固定正規表現で特殊エフェクト
+  // 特殊エフェクト（特定語句に反応）
   const specialPatterns = [
-    { pattern: /(i love you|愛している|愛してる)/i, effect: 'moon' },
-    { pattern: /(金閣寺|三島由紀夫|愛国|林ゆかり|倉岡剛)/, effect: 'mishima' },
-    { pattern: /(プラネタリウム|planetarium|space|宇宙|土星|saturn)/i, effect: 'saturn' },
-    { pattern: /(おめでとう|お祝い|祝|congratulations|congrats|celebrate)/i, effect: 'confetti' },
-    { pattern: /(星空|モンゴル|星|夜空|stars|starry sky|night sky|mongolia)/i, effect: 'starry' },
-    { pattern: /(シャボン玉|泡|bubble|bubbles|soap bubble)/i, effect: 'bubble' }
+    {
+      pattern: /(金閣寺|三島由紀夫|愛国|林ゆかり|倉岡剛)/,
+      effect: 'mishima'
+    },
+    {
+      pattern: /(i love you|愛している|愛してる|te amo|我爱你)/i,
+      effect: 'moon'
+    },
+    {
+      pattern: /(プラネタリウム|planetarium|space|宇宙|土星|saturn|espacio|planeta)/i,
+      effect: 'saturn'
+    },
+    {
+      pattern: /(おめでとう|お祝い|祝|congratulations|congrats|celebrate|felicidades|enhorabuena|祝贺)/i,
+      effect: 'confetti'
+    },
+    {
+      pattern: /(星空|モンゴル|星|夜空|stars|starry sky|night sky|mongolia|cielo estrellado|夜空)/i,
+      effect: 'starry'
+    },
+    {
+      pattern: /(シャボン玉|泡|bubble|bubbles|soap bubble|burbuja|泡泡)/i,
+      effect: 'bubble'
+    }
   ]
 
+  // 季節エフェクト
   const seasonalPatterns = [
-    { pattern: /(雨|rain)/i, effect: 'rain' },
-    { pattern: /(雪|snow)/i, effect: 'snow' },
-    { pattern: /(晴れ|sunny)/i, effect: 'sunny' },
-    { pattern: /(風|wind)/i, effect: 'wind' },
-    { pattern: /(春|spring)/i, effect: 'spring' },
-    { pattern: /(桜|cherry blossom)/i, effect: 'spring' },
-    { pattern: /(秋|fall|autumn)/i, effect: 'autumn' },
-    { pattern: /(冬|winter)/i, effect: 'snow' }
+    { pattern: /(雨|rain|lluvia|雨水)/i, effect: 'rain' },
+    { pattern: /(雪|snow|nieve|下雪)/i, effect: 'snow' },
+    { pattern: /(晴れ|sunny|soleado|晴天)/i, effect: 'sunny' },
+    { pattern: /(風|wind|viento|风)/i, effect: 'wind' },
+    { pattern: /(春|spring|primavera|春天)/i, effect: 'spring' },
+    { pattern: /(桜|cherry blossom|flor de cerezo|樱花)/i, effect: 'spring' },
+    { pattern: /(秋|fall|autumn|otoño|秋天)/i, effect: 'autumn' },
+    { pattern: /(冬|winter|invierno|冬天)/i, effect: 'snow' }
   ]
 
   // 特殊パターン優先
@@ -731,7 +732,7 @@ function maybePlayEffect(content) {
   }
 
   // 夏だけ特殊呼び出し
-  if (/夏|summer/i.test(content)) {
+  if (/夏|summer|verano|夏天/i.test(content)) {
     console.log('☀️ Summer pattern matched: triggerSummer')
     chatEffect.value.triggerSummer()
     hideKeyboard()
@@ -1396,6 +1397,17 @@ button:hover {
   font-size: 1.3rem;
   z-index: 10;
   white-space: nowrap;
+}
+
+
+.emoji-list {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.copy-icon {
+  margin-left: auto;
+  cursor: pointer;
 }
 
 .reaction-display {

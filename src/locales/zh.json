@@ -416,7 +416,12 @@
 "calendar.month.9": "九月",
 "calendar.month.10": "十月",
 "calendar.month.11": "十一月",
-"calendar.month.12": "十二月"
+"calendar.month.12": "十二月",
+
+"common.copySuccess": "已复制",
+  "common.copyFailed": "复制失败",
+"chat.inputPlaceholder": "输入消息..."
+
 
 
 }

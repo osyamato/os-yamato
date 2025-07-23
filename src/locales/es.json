@@ -399,7 +399,11 @@
   "gptHint": "Selecciona un ícono para preguntar",
   "common.untitled": "(Sin título)",
   "gptMini.modeDescription": "Descripción del modo",
-  "gptMini.inputPlaceholder": "Escribe un mensaje..."
+  "gptMini.inputPlaceholder": "Escribe un mensaje...",
+
+"common.copySuccess": "Copiado",
+  "common.copyFailed": "Error al copiar",
+"chat.inputPlaceholder": "Escribe un mensaje..."
 
 
 
