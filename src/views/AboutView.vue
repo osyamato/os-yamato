@@ -63,6 +63,12 @@
   <p>{{ $t('about.developer') }}: OS Yamato (Japan)</p>
   <p>Email: support-weather@hanaco875.com</p>
   <p>
+    Website:
+    <a href="https://hanaco875.com" target="_blank">
+      https://hanaco875.com
+    </a>
+  </p>
+  <p>
     GitHub:
     <a href="https://github.com/osyamato/os-yamato" target="_blank">
       osyamato/os-yamato
