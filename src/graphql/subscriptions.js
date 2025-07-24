@@ -314,8 +314,11 @@ export const onDeleteChatRoom = /* GraphQL */ `
   }
 `;
 export const onCreateMessage = /* GraphQL */ `
-  subscription OnCreateMessage($filter: ModelSubscriptionMessageFilterInput) {
-    onCreateMessage(filter: $filter) {
+  subscription OnCreateMessage(
+    $filter: ModelSubscriptionMessageFilterInput
+    $owner: String
+  ) {
+    onCreateMessage(filter: $filter, owner: $owner) {
       id
       roomId
       senderSub
@@ -329,6 +332,69 @@ export const onCreateMessage = /* GraphQL */ `
       timestamp
       createdAt
       expiresAt
+      reactions {
+        nextToken
+        __typename
+      }
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;
+export const onUpdateMessage = /* GraphQL */ `
+  subscription OnUpdateMessage(
+    $filter: ModelSubscriptionMessageFilterInput
+    $owner: String
+  ) {
+    onUpdateMessage(filter: $filter, owner: $owner) {
+      id
+      roomId
+      senderSub
+      senderYamatoId
+      receiverSub
+      receiverYamatoId
+      content
+      contentType
+      imageKey
+      thumbnailKey
+      timestamp
+      createdAt
+      expiresAt
+      reactions {
+        nextToken
+        __typename
+      }
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;
+export const onDeleteMessage = /* GraphQL */ `
+  subscription OnDeleteMessage(
+    $filter: ModelSubscriptionMessageFilterInput
+    $owner: String
+  ) {
+    onDeleteMessage(filter: $filter, owner: $owner) {
+      id
+      roomId
+      senderSub
+      senderYamatoId
+      receiverSub
+      receiverYamatoId
+      content
+      contentType
+      imageKey
+      thumbnailKey
+      timestamp
+      createdAt
+      expiresAt
+      reactions {
+        nextToken
+        __typename
+      }
+      updatedAt
       owner
       __typename
     }
@@ -381,6 +447,60 @@ export const onDeleteReaction = /* GraphQL */ `
       emoji
       reactorSub
       reactorYamatoId
+      createdAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;
+export const onCreatePublicProfile = /* GraphQL */ `
+  subscription OnCreatePublicProfile(
+    $filter: ModelSubscriptionPublicProfileFilterInput
+    $owner: String
+  ) {
+    onCreatePublicProfile(filter: $filter, owner: $owner) {
+      id
+      yamatoId
+      displayName
+      icon
+      bio
+      createdAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;
+export const onUpdatePublicProfile = /* GraphQL */ `
+  subscription OnUpdatePublicProfile(
+    $filter: ModelSubscriptionPublicProfileFilterInput
+    $owner: String
+  ) {
+    onUpdatePublicProfile(filter: $filter, owner: $owner) {
+      id
+      yamatoId
+      displayName
+      icon
+      bio
+      createdAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;
+export const onDeletePublicProfile = /* GraphQL */ `
+  subscription OnDeletePublicProfile(
+    $filter: ModelSubscriptionPublicProfileFilterInput
+    $owner: String
+  ) {
+    onDeletePublicProfile(filter: $filter, owner: $owner) {
+      id
+      yamatoId
+      displayName
+      icon
+      bio
       createdAt
       updatedAt
       owner
@@ -823,17 +943,16 @@ export const onDeleteVideo = /* GraphQL */ `
     }
   }
 `;
-export const onCreatePublicProfile = /* GraphQL */ `
-  subscription OnCreatePublicProfile(
-    $filter: ModelSubscriptionPublicProfileFilterInput
+export const onCreateGPTMiniSession = /* GraphQL */ `
+  subscription OnCreateGPTMiniSession(
+    $filter: ModelSubscriptionGPTMiniSessionFilterInput
     $owner: String
   ) {
-    onCreatePublicProfile(filter: $filter, owner: $owner) {
+    onCreateGPTMiniSession(filter: $filter, owner: $owner) {
       id
-      yamatoId
-      displayName
-      icon
-      bio
+      title
+      mode
+      lastOpenedAt
       createdAt
       updatedAt
       owner
@@ -841,17 +960,16 @@ export const onCreatePublicProfile = /* GraphQL */ `
     }
   }
 `;
-export const onUpdatePublicProfile = /* GraphQL */ `
-  subscription OnUpdatePublicProfile(
-    $filter: ModelSubscriptionPublicProfileFilterInput
+export const onUpdateGPTMiniSession = /* GraphQL */ `
+  subscription OnUpdateGPTMiniSession(
+    $filter: ModelSubscriptionGPTMiniSessionFilterInput
     $owner: String
   ) {
-    onUpdatePublicProfile(filter: $filter, owner: $owner) {
+    onUpdateGPTMiniSession(filter: $filter, owner: $owner) {
       id
-      yamatoId
-      displayName
-      icon
-      bio
+      title
+      mode
+      lastOpenedAt
       createdAt
       updatedAt
       owner
@@ -859,17 +977,127 @@ export const onUpdatePublicProfile = /* GraphQL */ `
     }
   }
 `;
-export const onDeletePublicProfile = /* GraphQL */ `
-  subscription OnDeletePublicProfile(
-    $filter: ModelSubscriptionPublicProfileFilterInput
+export const onDeleteGPTMiniSession = /* GraphQL */ `
+  subscription OnDeleteGPTMiniSession(
+    $filter: ModelSubscriptionGPTMiniSessionFilterInput
     $owner: String
   ) {
-    onDeletePublicProfile(filter: $filter, owner: $owner) {
+    onDeleteGPTMiniSession(filter: $filter, owner: $owner) {
       id
-      yamatoId
-      displayName
-      icon
-      bio
+      title
+      mode
+      lastOpenedAt
+      createdAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;
+export const onCreateGPTMiniHistory = /* GraphQL */ `
+  subscription OnCreateGPTMiniHistory(
+    $filter: ModelSubscriptionGPTMiniHistoryFilterInput
+    $owner: String
+  ) {
+    onCreateGPTMiniHistory(filter: $filter, owner: $owner) {
+      id
+      sessionId
+      prompt
+      response
+      language
+      createdAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;
+export const onUpdateGPTMiniHistory = /* GraphQL */ `
+  subscription OnUpdateGPTMiniHistory(
+    $filter: ModelSubscriptionGPTMiniHistoryFilterInput
+    $owner: String
+  ) {
+    onUpdateGPTMiniHistory(filter: $filter, owner: $owner) {
+      id
+      sessionId
+      prompt
+      response
+      language
+      createdAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;
+export const onDeleteGPTMiniHistory = /* GraphQL */ `
+  subscription OnDeleteGPTMiniHistory(
+    $filter: ModelSubscriptionGPTMiniHistoryFilterInput
+    $owner: String
+  ) {
+    onDeleteGPTMiniHistory(filter: $filter, owner: $owner) {
+      id
+      sessionId
+      prompt
+      response
+      language
+      createdAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;
+export const onCreateWeatherCity = /* GraphQL */ `
+  subscription OnCreateWeatherCity(
+    $filter: ModelSubscriptionWeatherCityFilterInput
+    $owner: String
+  ) {
+    onCreateWeatherCity(filter: $filter, owner: $owner) {
+      id
+      name
+      countryCode
+      lat
+      lon
+      lastUsedAt
+      createdAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;
+export const onUpdateWeatherCity = /* GraphQL */ `
+  subscription OnUpdateWeatherCity(
+    $filter: ModelSubscriptionWeatherCityFilterInput
+    $owner: String
+  ) {
+    onUpdateWeatherCity(filter: $filter, owner: $owner) {
+      id
+      name
+      countryCode
+      lat
+      lon
+      lastUsedAt
+      createdAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;
+export const onDeleteWeatherCity = /* GraphQL */ `
+  subscription OnDeleteWeatherCity(
+    $filter: ModelSubscriptionWeatherCityFilterInput
+    $owner: String
+  ) {
+    onDeleteWeatherCity(filter: $filter, owner: $owner) {
+      id
+      name
+      countryCode
+      lat
+      lon
+      lastUsedAt
       createdAt
       updatedAt
       owner

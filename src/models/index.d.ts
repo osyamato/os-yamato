@@ -649,3 +649,39 @@ export declare type GPTMiniHistory = LazyLoading extends LazyLoadingDisabled ? E
 export declare const GPTMiniHistory: (new (init: ModelInit<GPTMiniHistory>) => GPTMiniHistory) & {
   copyOf(source: GPTMiniHistory, mutator: (draft: MutableModel<GPTMiniHistory>) => MutableModel<GPTMiniHistory> | void): GPTMiniHistory;
 }
+
+type EagerWeatherCity = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<WeatherCity, 'id'>;
+    readOnlyFields: 'createdAt' | 'updatedAt';
+  };
+  readonly id: string;
+  readonly name: string;
+  readonly countryCode?: string | null;
+  readonly lat?: number | null;
+  readonly lon?: number | null;
+  readonly lastUsedAt?: string | null;
+  readonly createdAt?: string | null;
+  readonly updatedAt?: string | null;
+}
+
+type LazyWeatherCity = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<WeatherCity, 'id'>;
+    readOnlyFields: 'createdAt' | 'updatedAt';
+  };
+  readonly id: string;
+  readonly name: string;
+  readonly countryCode?: string | null;
+  readonly lat?: number | null;
+  readonly lon?: number | null;
+  readonly lastUsedAt?: string | null;
+  readonly createdAt?: string | null;
+  readonly updatedAt?: string | null;
+}
+
+export declare type WeatherCity = LazyLoading extends LazyLoadingDisabled ? EagerWeatherCity : LazyWeatherCity
+
+export declare const WeatherCity: (new (init: ModelInit<WeatherCity>) => WeatherCity) & {
+  copyOf(source: WeatherCity, mutator: (draft: MutableModel<WeatherCity>) => MutableModel<WeatherCity> | void): WeatherCity;
+}

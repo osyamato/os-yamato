@@ -273,3 +273,13 @@ type GPTMiniHistory
   createdAt: AWSDateTime!
   updatedAt: AWSDateTime!
 }
+
+type WeatherCity @model @auth(rules: [{ allow: owner }]) {
+  id: ID!
+  name: String!           # 都市名（例: "Tokyo"）
+  countryCode: String     # 国コード（例: "JP"）
+  lat: Float              # 緯度
+  lon: Float              # 経度
+  lastUsedAt: AWSDateTime # 最終使用日時（表示の並び替えなどに使える）
+}
+
