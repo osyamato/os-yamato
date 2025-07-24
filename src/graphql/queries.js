@@ -235,6 +235,11 @@ export const getMessage = /* GraphQL */ `
       timestamp
       createdAt
       expiresAt
+      reactions {
+        nextToken
+        __typename
+      }
+      updatedAt
       owner
       __typename
     }
@@ -261,6 +266,7 @@ export const listMessages = /* GraphQL */ `
         timestamp
         createdAt
         expiresAt
+        updatedAt
         owner
         __typename
       }
@@ -297,6 +303,44 @@ export const listReactions = /* GraphQL */ `
         emoji
         reactorSub
         reactorYamatoId
+        createdAt
+        updatedAt
+        owner
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const getPublicProfile = /* GraphQL */ `
+  query GetPublicProfile($id: ID!) {
+    getPublicProfile(id: $id) {
+      id
+      yamatoId
+      displayName
+      icon
+      bio
+      createdAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;
+export const listPublicProfiles = /* GraphQL */ `
+  query ListPublicProfiles(
+    $filter: ModelPublicProfileFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    listPublicProfiles(filter: $filter, limit: $limit, nextToken: $nextToken) {
+      items {
+        id
+        yamatoId
+        displayName
+        icon
+        bio
         createdAt
         updatedAt
         owner
@@ -605,14 +649,13 @@ export const listVideos = /* GraphQL */ `
     }
   }
 `;
-export const getPublicProfile = /* GraphQL */ `
-  query GetPublicProfile($id: ID!) {
-    getPublicProfile(id: $id) {
+export const getGPTMiniSession = /* GraphQL */ `
+  query GetGPTMiniSession($id: ID!) {
+    getGPTMiniSession(id: $id) {
       id
-      yamatoId
-      displayName
-      icon
-      bio
+      title
+      mode
+      lastOpenedAt
       createdAt
       updatedAt
       owner
@@ -620,19 +663,173 @@ export const getPublicProfile = /* GraphQL */ `
     }
   }
 `;
-export const listPublicProfiles = /* GraphQL */ `
-  query ListPublicProfiles(
-    $filter: ModelPublicProfileFilterInput
+export const listGPTMiniSessions = /* GraphQL */ `
+  query ListGPTMiniSessions(
+    $filter: ModelGPTMiniSessionFilterInput
     $limit: Int
     $nextToken: String
   ) {
-    listPublicProfiles(filter: $filter, limit: $limit, nextToken: $nextToken) {
+    listGPTMiniSessions(filter: $filter, limit: $limit, nextToken: $nextToken) {
       items {
         id
-        yamatoId
-        displayName
-        icon
-        bio
+        title
+        mode
+        lastOpenedAt
+        createdAt
+        updatedAt
+        owner
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const getGPTMiniHistory = /* GraphQL */ `
+  query GetGPTMiniHistory($id: ID!) {
+    getGPTMiniHistory(id: $id) {
+      id
+      sessionId
+      prompt
+      response
+      language
+      createdAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;
+export const listGPTMiniHistories = /* GraphQL */ `
+  query ListGPTMiniHistories(
+    $filter: ModelGPTMiniHistoryFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    listGPTMiniHistories(
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        sessionId
+        prompt
+        response
+        language
+        createdAt
+        updatedAt
+        owner
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const getWeatherCity = /* GraphQL */ `
+  query GetWeatherCity($id: ID!) {
+    getWeatherCity(id: $id) {
+      id
+      name
+      countryCode
+      lat
+      lon
+      lastUsedAt
+      createdAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;
+export const listWeatherCities = /* GraphQL */ `
+  query ListWeatherCities(
+    $filter: ModelWeatherCityFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    listWeatherCities(filter: $filter, limit: $limit, nextToken: $nextToken) {
+      items {
+        id
+        name
+        countryCode
+        lat
+        lon
+        lastUsedAt
+        createdAt
+        updatedAt
+        owner
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const messagesByRoomId = /* GraphQL */ `
+  query MessagesByRoomId(
+    $roomId: ID!
+    $timestamp: ModelStringKeyConditionInput
+    $sortDirection: ModelSortDirection
+    $filter: ModelMessageFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    messagesByRoomId(
+      roomId: $roomId
+      timestamp: $timestamp
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        roomId
+        senderSub
+        senderYamatoId
+        receiverSub
+        receiverYamatoId
+        content
+        contentType
+        imageKey
+        thumbnailKey
+        timestamp
+        createdAt
+        expiresAt
+        updatedAt
+        owner
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const reactionsByMessageIdAndCreatedAt = /* GraphQL */ `
+  query ReactionsByMessageIdAndCreatedAt(
+    $messageId: ID!
+    $createdAt: ModelStringKeyConditionInput
+    $sortDirection: ModelSortDirection
+    $filter: ModelReactionFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    reactionsByMessageIdAndCreatedAt(
+      messageId: $messageId
+      createdAt: $createdAt
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        messageId
+        emoji
+        reactorSub
+        reactorYamatoId
         createdAt
         updatedAt
         owner
@@ -664,6 +861,39 @@ export const publicProfileByYamatoId = /* GraphQL */ `
         displayName
         icon
         bio
+        createdAt
+        updatedAt
+        owner
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const historiesBySession = /* GraphQL */ `
+  query HistoriesBySession(
+    $sessionId: ID!
+    $createdAt: ModelStringKeyConditionInput
+    $sortDirection: ModelSortDirection
+    $filter: ModelGPTMiniHistoryFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    historiesBySession(
+      sessionId: $sessionId
+      createdAt: $createdAt
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        sessionId
+        prompt
+        response
+        language
         createdAt
         updatedAt
         owner
