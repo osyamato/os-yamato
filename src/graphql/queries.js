@@ -767,6 +767,46 @@ export const listWeatherCities = /* GraphQL */ `
     }
   }
 `;
+export const getWeatherProfile = /* GraphQL */ `
+  query GetWeatherProfile($id: ID!) {
+    getWeatherProfile(id: $id) {
+      id
+      sub
+      icon
+      nickname
+      yamatoId
+      bio
+      createdAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;
+export const listWeatherProfiles = /* GraphQL */ `
+  query ListWeatherProfiles(
+    $filter: ModelWeatherProfileFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    listWeatherProfiles(filter: $filter, limit: $limit, nextToken: $nextToken) {
+      items {
+        id
+        sub
+        icon
+        nickname
+        yamatoId
+        bio
+        createdAt
+        updatedAt
+        owner
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
 export const messagesByRoomId = /* GraphQL */ `
   query MessagesByRoomId(
     $roomId: ID!

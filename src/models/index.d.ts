@@ -685,3 +685,39 @@ export declare type WeatherCity = LazyLoading extends LazyLoadingDisabled ? Eage
 export declare const WeatherCity: (new (init: ModelInit<WeatherCity>) => WeatherCity) & {
   copyOf(source: WeatherCity, mutator: (draft: MutableModel<WeatherCity>) => MutableModel<WeatherCity> | void): WeatherCity;
 }
+
+type EagerWeatherProfile = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<WeatherProfile, 'id'>;
+    readOnlyFields: 'updatedAt';
+  };
+  readonly id: string;
+  readonly sub: string;
+  readonly icon?: string | null;
+  readonly nickname?: string | null;
+  readonly yamatoId?: string | null;
+  readonly bio?: string | null;
+  readonly createdAt: string;
+  readonly updatedAt?: string | null;
+}
+
+type LazyWeatherProfile = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<WeatherProfile, 'id'>;
+    readOnlyFields: 'updatedAt';
+  };
+  readonly id: string;
+  readonly sub: string;
+  readonly icon?: string | null;
+  readonly nickname?: string | null;
+  readonly yamatoId?: string | null;
+  readonly bio?: string | null;
+  readonly createdAt: string;
+  readonly updatedAt?: string | null;
+}
+
+export declare type WeatherProfile = LazyLoading extends LazyLoadingDisabled ? EagerWeatherProfile : LazyWeatherProfile
+
+export declare const WeatherProfile: (new (init: ModelInit<WeatherProfile>) => WeatherProfile) & {
+  copyOf(source: WeatherProfile, mutator: (draft: MutableModel<WeatherProfile>) => MutableModel<WeatherProfile> | void): WeatherProfile;
+}

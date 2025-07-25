@@ -1090,3 +1090,60 @@ export const deleteWeatherCity = /* GraphQL */ `
     }
   }
 `;
+export const createWeatherProfile = /* GraphQL */ `
+  mutation CreateWeatherProfile(
+    $input: CreateWeatherProfileInput!
+    $condition: ModelWeatherProfileConditionInput
+  ) {
+    createWeatherProfile(input: $input, condition: $condition) {
+      id
+      sub
+      icon
+      nickname
+      yamatoId
+      bio
+      createdAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;
+export const updateWeatherProfile = /* GraphQL */ `
+  mutation UpdateWeatherProfile(
+    $input: UpdateWeatherProfileInput!
+    $condition: ModelWeatherProfileConditionInput
+  ) {
+    updateWeatherProfile(input: $input, condition: $condition) {
+      id
+      sub
+      icon
+      nickname
+      yamatoId
+      bio
+      createdAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;
+export const deleteWeatherProfile = /* GraphQL */ `
+  mutation DeleteWeatherProfile(
+    $input: DeleteWeatherProfileInput!
+    $condition: ModelWeatherProfileConditionInput
+  ) {
+    deleteWeatherProfile(input: $input, condition: $condition) {
+      id
+      sub
+      icon
+      nickname
+      yamatoId
+      bio
+      createdAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;

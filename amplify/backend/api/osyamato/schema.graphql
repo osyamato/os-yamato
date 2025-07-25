@@ -283,3 +283,20 @@ type WeatherCity @model @auth(rules: [{ allow: owner }]) {
   lastUsedAt: AWSDateTime # 最終使用日時（表示の並び替えなどに使える）
 }
 
+
+type WeatherProfile
+  @model
+  @auth(rules: [
+    { allow: owner },
+    { allow: private, operations: [read] }
+  ])
+{
+  id: ID!
+  sub: String!         # 投稿者のCognito Sub
+  icon: String         # アイコンファイル名（例: weather.icon1.png）
+  nickname: String
+  yamatoId: String
+  bio: String          # 🌿 自由記載の紹介文
+  createdAt: AWSDateTime!
+}
+

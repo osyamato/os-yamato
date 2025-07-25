@@ -38,6 +38,7 @@ import ActivityView from '../views/ActivityView.vue'
 import GPTMiniView from '../views/GPTMiniView.vue'
 import GPTMiniChatView from '../views/GPTMiniChatView.vue'
 import Weather875View from '../views/Weather875View.vue' 
+import WeatherProfileView from '../views/WeatherProfileView.vue' // ✅ 天気プロフィール
 import { Auth } from 'aws-amplify'
 
 
@@ -51,6 +52,7 @@ const routes = [
   { path: '/contact', name: 'contact', component: ContactView },
   { path: '/home', name: 'home', component: HomeView },
   { path: '/weather875', name: 'weather875', component: Weather875View }, 
+{ path: '/weather-profile', name: 'weather-profile', component: WeatherProfileView },
   { path: '/camera', name: 'camera', component: CameraView },
   { path: '/memo', name: 'memo', component: MemoView },
   { path: '/settings', name: 'settings', component: SettingsView },
