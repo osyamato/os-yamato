@@ -1162,3 +1162,72 @@ export const onDeleteWeatherProfile = /* GraphQL */ `
     }
   }
 `;
+export const onCreateWeatherComment = /* GraphQL */ `
+  subscription OnCreateWeatherComment(
+    $filter: ModelSubscriptionWeatherCommentFilterInput
+    $owner: String
+  ) {
+    onCreateWeatherComment(filter: $filter, owner: $owner) {
+      id
+      owner
+      weather
+      temperature
+      timeOfDay
+      language
+      content
+      imageKey
+      likeCount
+      reportCount
+      replyCount
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const onUpdateWeatherComment = /* GraphQL */ `
+  subscription OnUpdateWeatherComment(
+    $filter: ModelSubscriptionWeatherCommentFilterInput
+    $owner: String
+  ) {
+    onUpdateWeatherComment(filter: $filter, owner: $owner) {
+      id
+      owner
+      weather
+      temperature
+      timeOfDay
+      language
+      content
+      imageKey
+      likeCount
+      reportCount
+      replyCount
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const onDeleteWeatherComment = /* GraphQL */ `
+  subscription OnDeleteWeatherComment(
+    $filter: ModelSubscriptionWeatherCommentFilterInput
+    $owner: String
+  ) {
+    onDeleteWeatherComment(filter: $filter, owner: $owner) {
+      id
+      owner
+      weather
+      temperature
+      timeOfDay
+      language
+      content
+      imageKey
+      likeCount
+      reportCount
+      replyCount
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;

@@ -4,7 +4,8 @@
       <div class="modal-card">
         <h2 class="modal-title">都市を検索</h2>
 
-        <div class="search-group">
+        <!-- 🔍 入力欄 + 検索ボタン（縦並び） -->
+        <div class="search-group column">
           <input
             v-model="searchQuery"
             placeholder="Tokyo, Paris, etc."
@@ -12,9 +13,12 @@
             inputmode="search"
             @keyup.enter="searchCity"
           />
-          <YamatoButton @click="searchCity">検索</YamatoButton>
+          <div class="search-button-wrapper">
+            <YamatoButton size="small" @click="searchCity">検索</YamatoButton>
+          </div>
         </div>
 
+        <!-- 🔽 検索結果 -->
         <ul class="result-list">
           <li
             v-for="(result, index) in results"
@@ -25,6 +29,7 @@
           </li>
         </ul>
 
+        <!-- 📌 保存済み -->
         <h3 class="saved-title">保存済み</h3>
         <ul class="result-list">
           <li v-for="city in savedCities" :key="city.id" @click="select(city)">
@@ -57,10 +62,8 @@ const savedCities = ref([])
 
 const apiKey = 'e83c02f476b6f1d5c91c072f651601b2'
 
-// 🌙 ダークモード判定
 const isDarkMode = window.matchMedia?.('(prefers-color-scheme: dark)')?.matches ?? true
 
-// 🎨 背景色と文字色をCSS変数で切り替え
 watchEffect(() => {
   const root = document.documentElement
   root.style.setProperty('--modal-bg', isDarkMode ? '#222' : '#fff')
@@ -169,14 +172,23 @@ onMounted(fetchSavedCities)
   padding-bottom: 4px;
 }
 
-.search-group {
+/* 🔄 修正：縦並び + 中央配置 */
+.search-group.column {
   display: flex;
-  gap: 8px;
-  margin-bottom: 12px;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.search-button-wrapper {
+  display: flex;
+  justify-content: center;
+  width: 100%;
 }
 
 .search-input {
-  flex: 1;
+  width: 100%;
   padding: 8px;
   border-radius: 6px;
   font-size: 16px;
@@ -239,3 +251,4 @@ onMounted(fetchSavedCities)
   }
 }
 </style>
+

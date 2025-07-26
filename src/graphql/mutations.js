@@ -1147,3 +1147,72 @@ export const deleteWeatherProfile = /* GraphQL */ `
     }
   }
 `;
+export const createWeatherComment = /* GraphQL */ `
+  mutation CreateWeatherComment(
+    $input: CreateWeatherCommentInput!
+    $condition: ModelWeatherCommentConditionInput
+  ) {
+    createWeatherComment(input: $input, condition: $condition) {
+      id
+      owner
+      weather
+      temperature
+      timeOfDay
+      language
+      content
+      imageKey
+      likeCount
+      reportCount
+      replyCount
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const updateWeatherComment = /* GraphQL */ `
+  mutation UpdateWeatherComment(
+    $input: UpdateWeatherCommentInput!
+    $condition: ModelWeatherCommentConditionInput
+  ) {
+    updateWeatherComment(input: $input, condition: $condition) {
+      id
+      owner
+      weather
+      temperature
+      timeOfDay
+      language
+      content
+      imageKey
+      likeCount
+      reportCount
+      replyCount
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const deleteWeatherComment = /* GraphQL */ `
+  mutation DeleteWeatherComment(
+    $input: DeleteWeatherCommentInput!
+    $condition: ModelWeatherCommentConditionInput
+  ) {
+    deleteWeatherComment(input: $input, condition: $condition) {
+      id
+      owner
+      weather
+      temperature
+      timeOfDay
+      language
+      content
+      imageKey
+      likeCount
+      reportCount
+      replyCount
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;

@@ -1,11 +1,24 @@
 <template>
   <transition name="modal">
     <div v-if="visible" class="modal-overlay" @click.self="close">
-      <div class="modal-card" @click.stop>
+      <div class="modal-card" @click.stop :class="{ dark: isDarkMode }">
         <h2>🌤️ プロフィール編集</h2>
 
         <!-- アイコン選択 -->
         <div class="icon-list">
+          <!-- 未選択時：ニックネーム頭文字 -->
+<div
+  class="icon-circle"
+  :class="{ selected: icon === '' }"
+  style="background-color: #888;"
+  @click="icon = ''"
+>
+  <span class="icon-initial" style="color: white;">
+    {{ nickname?.charAt(0) || '？' }}
+  </span>
+</div>
+
+          <!-- 画像アイコン -->
           <div
             v-for="filename in iconFilenames"
             :key="filename"
@@ -27,10 +40,11 @@
         <label>紹介文（100文字以内）</label>
         <textarea v-model="bio" maxlength="100" />
 
-        <!-- ボタン -->
-        <div class="buttons">
-          <button @click="saveProfile">保存</button>
-          <button class="cancel" @click="close">キャンセル</button>
+        <!-- 保存ボタン（中央） -->
+        <div class="buttons center">
+          <yamato-button size="small" @click="saveProfile">
+            保存
+          </yamato-button>
         </div>
       </div>
     </div>
@@ -41,6 +55,7 @@
 import { ref, watch } from 'vue'
 import { API, graphqlOperation } from 'aws-amplify'
 import { updateWeatherProfile } from '@/graphql/mutations'
+import YamatoButton from '@/components/YamatoButton.vue'
 
 const props = defineProps({
   visible: Boolean,
@@ -48,20 +63,19 @@ const props = defineProps({
 })
 const emit = defineEmits(['close', 'refresh'])
 
-// フィールド
 const icon = ref('')
 const nickname = ref('')
 const yamatoId = ref('')
 const bio = ref('')
 
-// アイコン一覧
 const iconFilenames = [
   'weather.icon1.png', 'weather.icon2.png', 'weather.icon3.png',
   'weather.icon4.png', 'weather.icon5.png', 'weather.icon6.png',
   'weather.icon7.png', 'weather.icon8.png', 'weather.icon9.png', 'weather.icon10.png'
 ]
 
-// モーダルが開いたら初期値反映
+const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches
+
 watch(() => props.visible, (newVal) => {
   if (newVal && props.profile) {
     icon.value = props.profile.icon || ''
@@ -83,11 +97,9 @@ const saveProfile = async () => {
       yamatoId: yamatoId.value,
       bio: bio.value
     }
-
     await API.graphql(graphqlOperation(updateWeatherProfile, { input }))
-    alert('✅ プロフィールを更新しました')
-    emit('refresh')  // 再読み込み通知
-    close()
+    emit('refresh') // ✅ 自動更新
+    close()         // ✅ 静かに閉じる
   } catch (error) {
     console.error('❌ 保存エラー:', error)
     alert('保存に失敗しました')
@@ -112,6 +124,12 @@ const saveProfile = async () => {
   padding: 24px;
   width: 90%;
   max-width: 400px;
+  color: black;
+}
+
+.modal-card.dark {
+  background: #222;
+  color: white;
 }
 
 .icon-list {
@@ -120,21 +138,32 @@ const saveProfile = async () => {
   gap: 10px;
   margin-bottom: 16px;
 }
+
 .icon-circle {
   width: 40px;
   height: 40px;
   border-radius: 50%;
   overflow: hidden;
-  border: 2px solid transparent;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
 }
+
 .icon-circle.selected {
-  border-color: #2196f3;
+  border: 2px solid #274c77;
 }
+
 .icon-circle img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.icon-initial {
+  font-size: 18px;
+  font-weight: bold;
 }
 
 input, textarea {
@@ -144,26 +173,14 @@ input, textarea {
   font-size: 16px;
   border-radius: 6px;
   border: 1px solid #ccc;
+  background: inherit;
+  color: inherit;
 }
 
-.buttons {
+.buttons.center {
   display: flex;
-  justify-content: space-between;
-  gap: 10px;
-}
-button {
-  padding: 10px 16px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 16px;
-}
-button.cancel {
-  background: #ccc;
-}
-button:not(.cancel) {
-  background: #2196f3;
-  color: white;
+  justify-content: center;
+  margin-top: 16px;
 }
 </style>
 

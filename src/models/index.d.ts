@@ -721,3 +721,47 @@ export declare type WeatherProfile = LazyLoading extends LazyLoadingDisabled ? E
 export declare const WeatherProfile: (new (init: ModelInit<WeatherProfile>) => WeatherProfile) & {
   copyOf(source: WeatherProfile, mutator: (draft: MutableModel<WeatherProfile>) => MutableModel<WeatherProfile> | void): WeatherProfile;
 }
+
+type EagerWeatherComment = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<WeatherComment, 'id'>;
+  };
+  readonly id: string;
+  readonly owner?: string | null;
+  readonly weather: string;
+  readonly temperature: number;
+  readonly timeOfDay: number;
+  readonly language: string;
+  readonly content: string;
+  readonly imageKey?: string | null;
+  readonly likeCount?: number | null;
+  readonly reportCount?: number | null;
+  readonly replyCount?: number | null;
+  readonly createdAt?: string | null;
+  readonly updatedAt?: string | null;
+}
+
+type LazyWeatherComment = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<WeatherComment, 'id'>;
+  };
+  readonly id: string;
+  readonly owner?: string | null;
+  readonly weather: string;
+  readonly temperature: number;
+  readonly timeOfDay: number;
+  readonly language: string;
+  readonly content: string;
+  readonly imageKey?: string | null;
+  readonly likeCount?: number | null;
+  readonly reportCount?: number | null;
+  readonly replyCount?: number | null;
+  readonly createdAt?: string | null;
+  readonly updatedAt?: string | null;
+}
+
+export declare type WeatherComment = LazyLoading extends LazyLoadingDisabled ? EagerWeatherComment : LazyWeatherComment
+
+export declare const WeatherComment: (new (init: ModelInit<WeatherComment>) => WeatherComment) & {
+  copyOf(source: WeatherComment, mutator: (draft: MutableModel<WeatherComment>) => MutableModel<WeatherComment> | void): WeatherComment;
+}
