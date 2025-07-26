@@ -1,8 +1,8 @@
-]<template>
+<template>
   <div class="profile-container" :class="{ dark: isDarkMode }">
     <div v-if="profileLoaded" class="fade-in">
       <!-- 🌤️ タイトル -->
-      <h2 class="title">🌤️ プロフィール</h2>
+      <h2 class="title">プロフィール</h2>
 
       <!-- ✏️ 編集ボタン -->
       <div class="icon-buttons">
@@ -39,6 +39,18 @@
       </div>
     </div>
 
+    <!-- 📬 投稿コメント一覧 -->
+    <div class="my-comments-section">
+      <h3>あなたの投稿</h3>
+      <div v-if="myComments.length === 0">投稿がありません</div>
+      <div v-else class="comment-list">
+        <div v-for="c in myComments" :key="c.id" class="comment-card">
+          <p><strong>天気:</strong> {{ c.weather }} / <strong>{{ c.temperature }}°C</strong> / {{ c.timeOfDay }}時</p>
+          <p>{{ c.comment }}</p>
+        </div>
+      </div>
+    </div>
+
     <!-- ✏️ 編集モーダル -->
     <EditWeatherProfileModal
       :visible="showModal"
@@ -52,7 +64,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { API, graphqlOperation, Auth } from 'aws-amplify'
-import { listWeatherProfiles } from '@/graphql/queries'
+import { listWeatherProfiles, listWeatherComments } from '@/graphql/queries'
 import EditWeatherProfileModal from '@/components/EditWeatherProfileModal.vue'
 
 const showModal = ref(false)
@@ -64,16 +76,18 @@ const profile = ref({
   yamatoId: '',
   bio: ''
 })
+const myComments = ref([])
 
 const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches
 const iconColor = ref('#274c77')
 const profileLoaded = ref(false)
 
 onMounted(async () => {
-  window.scrollTo({ top: 0, behavior: 'smooth' }) // 🧭 スクロール位置を上に
+  window.scrollTo({ top: 0, behavior: 'smooth' })
   const user = await Auth.currentAuthenticatedUser()
   iconColor.value = user.attributes['custom:iconColor'] || '#274c77'
   await fetchProfile()
+  await fetchMyComments()
 })
 
 async function fetchProfile() {
@@ -98,10 +112,23 @@ async function fetchProfile() {
         bio: ''
       }
     }
-
     profileLoaded.value = true
   } catch (e) {
     console.error('❌ プロフィール取得エラー:', e)
+  }
+}
+
+async function fetchMyComments() {
+  try {
+    const user = await Auth.currentAuthenticatedUser()
+    const sub = user.attributes.sub
+    const res = await API.graphql(graphqlOperation(listWeatherComments, {
+      filter: { owner: { eq: sub } }, // ✅ owner に修正！
+      sortDirection: 'DESC'
+    }))
+    myComments.value = res.data.listWeatherComments.items
+  } catch (e) {
+    console.error('❌ コメント取得エラー:', e)
   }
 }
 </script>
@@ -127,7 +154,7 @@ async function fetchProfile() {
 @keyframes fadeInFromTop {
   0% {
     opacity: 0;
-    transform: translateY(-20px); /* 👈 上から降りる */
+    transform: translateY(-20px);
   }
   100% {
     opacity: 1;
@@ -144,6 +171,7 @@ async function fetchProfile() {
 .icon-buttons {
   display: flex;
   justify-content: center;
+  margin-top: 16px;
   margin-bottom: 20px;
 }
 
@@ -209,5 +237,28 @@ async function fetchProfile() {
 .yamato-id {
   font-size: 15px;
   margin-top: 8px;
+}
+
+.my-comments-section {
+  margin-top: 40px;
+  text-align: left;
+  padding: 0 20px;
+}
+
+.comment-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.comment-card {
+  background: #f0f0f0;
+  padding: 12px;
+  border-radius: 10px;
+}
+
+.profile-container.dark .comment-card {
+  background: #222;
 }
 </style>
