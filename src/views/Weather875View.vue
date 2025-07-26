@@ -1,39 +1,29 @@
 <template>
   <div class="weather875-view" :class="{ dark: isDarkMode }">
-    <!-- 🌸 タイトル -->
     <h2 class="title">花子天気</h2>
 
-    <!-- 🎯 アイコンボタンたち -->
     <div class="icon-buttons">
-      <!-- 👤 プロフィール -->
       <button class="icon-button" @click="goToProfile" :style="{ backgroundColor: iconColor }">
         <span class="icon-initial" :style="{ color: iconColor === 'white' ? 'black' : 'white' }">
           {{ profile?.nickname?.charAt(0) || '👤' }}
         </span>
       </button>
 
-      <!-- ✏️ 投稿 -->
       <button class="icon-button" @click="openPostModal" :style="{ backgroundColor: iconColor }">✏️</button>
-
-      <!-- 🔍 都市検索 -->
       <button class="icon-button" @click="openCitySelector" :style="{ backgroundColor: iconColor }">🔍</button>
-
-      <!-- 🌤️ 3時間天気 -->
       <button class="icon-button" @click="getHourlyWeather" :style="{ backgroundColor: iconColor }">🌤️</button>
     </div>
 
-    <!-- 📍 選択された都市の天気 -->
     <div v-if="selectedCity && currentWeather" class="weather-info">
       <p>📍 {{ selectedCity.name }}</p>
       <p>
-        {{ weatherIcon(currentWeather.description) }}
-        {{ currentWeather.description }}
+        {{ weatherIcon(currentWeather.main) }}
+        {{ localizedDescription }}
         🌡️ {{ currentWeather.temp }}℃
       </p>
       <blockquote>“空は静かに何も語らない。”</blockquote>
     </div>
 
-    <!-- 🌦️ モーダルたち -->
     <WeatherForecastModal
       :visible="showForecastModal"
       :forecastList="forecastList"
@@ -44,29 +34,39 @@
       @close="showCitySelector = false"
       @select="handleCitySelected"
     />
-    <PostWeatherCommentModal
-      :visible="showPostModal"
-      :weather="currentWeather?.description || ''"
-      :temperature="currentWeather?.temp || 0"
-      :timeOfDay="new Date().getHours()"
-      language="ja"
-      @close="showPostModal = false"
-    />
+<PostWeatherCommentModal
+  :visible="showPostModal"
+  :weather="currentWeather?.main || ''"
+  :temperature="currentWeather?.temp || 0"
+  :timeOfDay="new Date().getHours()"
+  :language="locale"
+  @close="showPostModal = false"
+/>
+
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { API, graphqlOperation, Auth } from 'aws-amplify'
 import { listWeatherProfiles, listWeatherCities } from '@/graphql/queries'
 import WeatherForecastModal from '@/components/WeatherForecastModal.vue'
 import WeatherCitySelector from '@/components/WeatherCitySelector.vue'
 import PostWeatherCommentModal from '@/views/PostWeatherCommentModal.vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 
+const { t, locale } = useI18n()
 const router = useRouter()
 const selectedCity = ref(null)
 const currentWeather = ref(null)
+
+const localizedDescription = computed(() => {
+  const desc = currentWeather.value?.description || ''
+  const key = `weatherDescription.${desc.replace(/\s+/g, '_')}`
+  return t(key)
+})
+
 const forecastList = ref([])
 const showForecastModal = ref(false)
 const showCitySelector = ref(false)
@@ -115,6 +115,9 @@ onMounted(async () => {
 })
 
 function openPostModal() {
+  console.log("🛰️ OpenWeather レスポンス:", currentWeather.value)
+  console.log("📨 渡す main:", currentWeather.value?.main)
+
   showPostModal.value = true
 }
 
@@ -129,23 +132,38 @@ function handleCitySelected(city) {
 
 async function fetchCurrentWeather(lat, lon) {
   try {
-    const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric&lang=ja`
+    const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric&lang=en`
+    console.log('📡 天気取得URL:', url)
+
     const res = await fetch(url)
     const data = await res.json()
+
+    console.log('🛰️ OpenWeather レスポンス:', data)
+
     currentWeather.value = {
       description: data.weather[0].description,
+      main: data.weather[0].main,
       temp: Math.round(data.main.temp)
     }
+
+    console.log('✅ 現在の天気情報:', {
+      city: selectedCity.value?.name,
+      lat,
+      lon,
+      description: currentWeather.value.description,
+      main: currentWeather.value.main,
+      temp: currentWeather.value.temp
+    })
   } catch (e) {
     console.error('❌ 天気取得失敗:', e)
   }
 }
 
-function weatherIcon(desc) {
-  if (desc.includes('晴')) return '☀️'
-  if (desc.includes('曇')) return '⛅'
-  if (desc.includes('雨')) return '🌧️'
-  if (desc.includes('雪')) return '❄️'
+function weatherIcon(main) {
+  if (main === 'Clear') return '☀️'
+  if (main === 'Clouds') return '⛅'
+  if (main === 'Rain') return '🌧️'
+  if (main === 'Snow') return '❄️'
   return '🌤️'
 }
 

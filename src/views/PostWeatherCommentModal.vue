@@ -1,15 +1,27 @@
 <template>
   <Modal :visible="visible" @close="handleClose">
     <div class="modal-content">
-      <!-- ☀️ 天気情報の表示 -->
+      <!-- ☀️ 選択された天気の表示（ローカライズ） -->
       <p class="weather-info">
-        {{ weatherIcon(weather) }} {{ weather }}（{{ temperature }}℃）
+        {{ weatherIcon(selectedWeather) }} {{ t(`weatherMain.${selectedWeather}`) }}（{{ temperature }}℃）
       </p>
+
+      <!-- 🌤️ 天気ピッカー -->
+      <select v-model="selectedWeather" class="weather-select">
+        <option disabled value="">{{ t('selectWeather') }}</option>
+        <option
+          v-for="weather in weatherOptions"
+          :key="weather"
+          :value="weather"
+        >
+          {{ t(`weatherMain.${weather}`) }}
+        </option>
+      </select>
 
       <!-- 📝 コメント入力欄 -->
       <textarea
         v-model="content"
-        placeholder="空を見て、ひとこと..."
+        :placeholder="t('weatherPlaceholder')"
         maxlength="120"
         class="comment-input"
       ></textarea>
@@ -18,22 +30,25 @@
       <input type="file" accept="image/*" @change="handleImage" />
 
       <!-- ✅ 投稿ボタン -->
-      <button class="submit-button" @click="submitComment" :disabled="loading">
-        {{ loading ? '投稿中...' : '投稿する' }}
+      <button class="submit-button" @click="submitComment" :disabled="loading || !selectedWeather">
+        {{ loading ? t('submitting') : t('submit') }}
       </button>
     </div>
   </Modal>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { API, graphqlOperation, Storage, Auth } from 'aws-amplify'
 import { createWeatherComment } from '@/graphql/mutations'
 import Modal from '@/components/Modal.vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const props = defineProps({
   visible: Boolean,
-  weather: String,
+  weather: String, // 例: "Clear"
   temperature: Number,
   timeOfDay: Number,
   language: String
@@ -43,6 +58,33 @@ const emit = defineEmits(['close', 'submitted'])
 const content = ref('')
 const imageFile = ref(null)
 const loading = ref(false)
+const selectedWeather = ref('')
+
+// ✅ props.weather を監視して selectedWeather を初期化
+watch(
+  () => props.weather,
+  (newWeather) => {
+    if (newWeather) {
+      selectedWeather.value = newWeather
+    }
+  },
+  { immediate: true }
+)
+
+const weatherOptions = [
+  "Clear", "Clouds", "Rain", "Snow", "Thunderstorm", "Mist"
+]
+
+function weatherIcon(main) {
+  if (!main) return '❔'
+  if (main === 'Clear') return '☀️'
+  if (main === 'Clouds') return '⛅'
+  if (main === 'Rain') return '🌧️'
+  if (main === 'Snow') return '❄️'
+  if (main === 'Thunderstorm') return '⚡'
+  if (main === 'Mist') return '🌫️'
+  return '🌤️'
+}
 
 function handleClose() {
   emit('close')
@@ -55,16 +97,8 @@ function handleImage(event) {
   }
 }
 
-function weatherIcon(desc) {
-  if (desc.includes('晴')) return '☀️'
-  if (desc.includes('曇')) return '⛅'
-  if (desc.includes('雨')) return '🌧️'
-  if (desc.includes('雪')) return '❄️'
-  return '🌤️'
-}
-
 async function submitComment() {
-  if (!content.value.trim()) return
+  if (!content.value.trim() || !selectedWeather.value) return
   loading.value = true
 
   try {
@@ -72,7 +106,6 @@ async function submitComment() {
     const owner = user.username
     let imageKey = null
 
-    // ✅ 画像があればアップロード
     if (imageFile.value) {
       const filename = `weather/${Date.now()}_${imageFile.value.name}`
       await Storage.put(filename, imageFile.value, {
@@ -81,11 +114,10 @@ async function submitComment() {
       imageKey = filename
     }
 
-    // ✅ DynamoDBに登録
     await API.graphql(graphqlOperation(createWeatherComment, {
       input: {
         owner,
-        weather: props.weather,
+        weather: selectedWeather.value,
         temperature: props.temperature,
         timeOfDay: props.timeOfDay,
         language: props.language,
@@ -101,6 +133,7 @@ async function submitComment() {
     emit('close')
     content.value = ''
     imageFile.value = null
+    selectedWeather.value = ''
   } catch (error) {
     console.error('❌ 投稿エラー:', error)
   } finally {
@@ -111,33 +144,29 @@ async function submitComment() {
 
 <style scoped>
 .modal-content {
-  padding: 16px;
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 .weather-info {
-  margin-bottom: 12px;
-  font-size: 16px;
+  font-size: 1.2rem;
+}
+.weather-select {
+  padding: 0.5em;
+  font-size: 1rem;
 }
 .comment-input {
   width: 100%;
-  height: 80px;
-  margin-bottom: 10px;
-  padding: 8px;
-  font-size: 14px;
-  resize: none;
+  height: 100px;
+  padding: 0.5em;
+  font-size: 1rem;
 }
 .submit-button {
-  padding: 8px 16px;
-  background-color: #274c77;
+  background-color: #4CAF50;
   color: white;
+  padding: 0.6em 1.2em;
+  font-size: 1rem;
   border: none;
-  border-radius: 6px;
-  font-weight: bold;
-  cursor: pointer;
-}
-.submit-button[disabled] {
-  background-color: gray;
-  cursor: not-allowed;
+  border-radius: 4px;
 }
 </style>
-
