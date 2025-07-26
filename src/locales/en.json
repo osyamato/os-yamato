@@ -515,7 +515,9 @@
   "weatherMain.Sand": "Sand",
   "weatherMain.Ash": "Volcanic Ash",
   "weatherMain.Squall": "Squall",
-  "weatherMain.Tornado": "Tornado"
+  "weatherMain.Tornado": "Tornado",
+
+"weather.title": "Send Your Weather Words on the Wind"
 
 
 }

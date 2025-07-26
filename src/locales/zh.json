@@ -469,9 +469,10 @@
   "weatherMain.Sand": "沙尘暴",
   "weatherMain.Ash": "火山灰",
   "weatherMain.Squall": "狂风",
-  "weatherMain.Tornado": "龙卷风"
+  "weatherMain.Tornado": "龙卷风",
 
 
+"weather.title": "将天气的语言托付于风"
 
 
 }
