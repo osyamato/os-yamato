@@ -807,6 +807,54 @@ export const listWeatherProfiles = /* GraphQL */ `
     }
   }
 `;
+export const getWeatherComment = /* GraphQL */ `
+  query GetWeatherComment($id: ID!) {
+    getWeatherComment(id: $id) {
+      id
+      owner
+      weather
+      temperature
+      timeOfDay
+      language
+      content
+      imageKey
+      likeCount
+      reportCount
+      replyCount
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const listWeatherComments = /* GraphQL */ `
+  query ListWeatherComments(
+    $filter: ModelWeatherCommentFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    listWeatherComments(filter: $filter, limit: $limit, nextToken: $nextToken) {
+      items {
+        id
+        owner
+        weather
+        temperature
+        timeOfDay
+        language
+        content
+        imageKey
+        likeCount
+        reportCount
+        replyCount
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
 export const messagesByRoomId = /* GraphQL */ `
   query MessagesByRoomId(
     $roomId: ID!

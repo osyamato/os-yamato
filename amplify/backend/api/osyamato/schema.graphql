@@ -300,3 +300,23 @@ type WeatherProfile
   createdAt: AWSDateTime!
 }
 
+type WeatherComment
+  @model
+  @auth(rules: [
+    { allow: owner },
+    { allow: private, operations: [read, update] }
+  ]) {
+  id: ID!
+  owner: String
+  weather: String!
+  temperature: Float!
+  timeOfDay: Float!
+  language: String!
+  content: String!
+  imageKey: String
+  likeCount: Int
+  reportCount: Int
+  replyCount: Int
+  createdAt: AWSDateTime
+  updatedAt: AWSDateTime
+}
