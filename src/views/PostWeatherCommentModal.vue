@@ -1,38 +1,60 @@
 <template>
   <Modal :visible="visible" @close="handleClose">
-    <div class="modal-content">
-      <!-- ☀️ 選択された天気の表示（ローカライズ） -->
-      <p class="weather-info">
-        {{ weatherIcon(selectedWeather) }} {{ t(`weatherMain.${selectedWeather}`) }}（{{ temperature }}℃）
-      </p>
+    <div class="scrollable-modal-content">
+      <h2 class="weather-title">{{ t('weather.title') }}</h2>
 
-      <!-- 🌤️ 天気ピッカー -->
-      <select v-model="selectedWeather" class="weather-select">
-        <option disabled value="">{{ t('selectWeather') }}</option>
-        <option
-          v-for="weather in weatherOptions"
-          :key="weather"
-          :value="weather"
-        >
-          {{ t(`weatherMain.${weather}`) }}
-        </option>
-      </select>
+      <!-- 🌤️ 天気 & 🌡️ 気温 & 🕒 時間 ピッカー -->
+      <div class="row-pickers">
+        <select v-model="selectedWeather" class="yamato-select">
+          <option disabled value="">{{ t('selectWeather') }}</option>
+          <option v-for="weather in weatherOptions" :key="weather" :value="weather">
+            {{ t(`weatherMain.${weather}`) }}
+          </option>
+        </select>
 
-      <!-- 📝 コメント入力欄 -->
+        <select v-model="selectedTemperature" class="yamato-select">
+          <option disabled value="">{{ t('selectTemperature') }}</option>
+          <option v-for="temp in temperatureOptions" :key="temp" :value="temp">
+            {{ temp }}℃
+          </option>
+        </select>
+
+<select v-model="selectedHour" class="yamato-select">
+  <option disabled value="">{{ t('selectHour') }}</option>
+  <option v-for="hour in 24" :key="hour - 1" :value="hour - 1">
+    {{ hour - 1 }}:00
+  </option>
+</select>
+      </div>
+
+      <!-- 📝 コメント -->
       <textarea
         v-model="content"
         :placeholder="t('weatherPlaceholder')"
-        maxlength="120"
-        class="comment-input"
+        maxlength="200"
+        class="yamato-textarea"
       ></textarea>
 
-      <!-- 📸 写真アップロード -->
-      <input type="file" accept="image/*" @change="handleImage" />
+      <!-- 📸 プレビュー -->
+      <div v-if="previewUrl" class="image-preview">
+        <img :src="previewUrl" alt="preview" />
+        <button class="remove-image" @click="removeImage">✖️</button>
+      </div>
+
+      <!-- 📷 写真ボタン -->
+      <button v-if="!previewUrl" class="image-button" @click="triggerFileInput">📷</button>
+      <input ref="fileInput" type="file" accept="image/*" @change="handleImage" class="hidden-file" />
 
       <!-- ✅ 投稿ボタン -->
-      <button class="submit-button" @click="submitComment" :disabled="loading || !selectedWeather">
-        {{ loading ? t('submitting') : t('submit') }}
-      </button>
+      <div class="submit-wrapper">
+<YamatoButton
+  color="green"
+  :disabled="loading || !selectedWeather || content.trim().length < 10"
+  @click="submitComment"
+>
+  {{ loading ? t('submitting') : t('submit') }}
+</YamatoButton>
+      </div>
     </div>
   </Modal>
 </template>
@@ -42,13 +64,13 @@ import { ref, watch } from 'vue'
 import { API, graphqlOperation, Storage, Auth } from 'aws-amplify'
 import { createWeatherComment } from '@/graphql/mutations'
 import Modal from '@/components/Modal.vue'
+import YamatoButton from '@/components/YamatoButton.vue'
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
-
 const props = defineProps({
   visible: Boolean,
-  weather: String, // 例: "Clear"
+  weather: String,
   temperature: Number,
   timeOfDay: Number,
   language: String
@@ -57,44 +79,67 @@ const emit = defineEmits(['close', 'submitted'])
 
 const content = ref('')
 const imageFile = ref(null)
+const previewUrl = ref(null)
 const loading = ref(false)
+const fileInput = ref(null)
+
 const selectedWeather = ref('')
+const selectedTemperature = ref(0)
+const selectedHour = ref(new Date().getHours())
 
-// ✅ props.weather を監視して selectedWeather を初期化
-watch(
-  () => props.weather,
-  (newWeather) => {
-    if (newWeather) {
-      selectedWeather.value = newWeather
-    }
-  },
-  { immediate: true }
-)
+const weatherOptions = ['Clear', 'Clouds', 'Rain', 'Snow', 'Thunderstorm', 'Mist']
+const temperatureOptions = Array.from({ length: 51 }, (_, i) => i - 10)
 
-const weatherOptions = [
-  "Clear", "Clouds", "Rain", "Snow", "Thunderstorm", "Mist"
-]
+watch(() => props.weather, (w) => {
+  if (w) selectedWeather.value = w
+}, { immediate: true })
 
-function weatherIcon(main) {
-  if (!main) return '❔'
-  if (main === 'Clear') return '☀️'
-  if (main === 'Clouds') return '⛅'
-  if (main === 'Rain') return '🌧️'
-  if (main === 'Snow') return '❄️'
-  if (main === 'Thunderstorm') return '⚡'
-  if (main === 'Mist') return '🌫️'
-  return '🌤️'
-}
+watch(() => props.temperature, (t) => {
+  if (typeof t === 'number') selectedTemperature.value = t
+}, { immediate: true })
 
 function handleClose() {
   emit('close')
 }
 
-function handleImage(event) {
-  const file = event.target.files[0]
+function triggerFileInput() {
+  fileInput.value?.click()
+}
+
+function handleImage(e) {
+  const file = e.target.files[0]
   if (file) {
-    imageFile.value = file
+    resizeImage(file, 640).then((resizedBlob) => {
+      const sanitizedName = file.name.replace(/[^\w.-]/g, '_')
+      imageFile.value = new File([resizedBlob], sanitizedName, { type: resizedBlob.type })
+      previewUrl.value = URL.createObjectURL(resizedBlob)
+    })
   }
+}
+
+function resizeImage(file, maxWidth) {
+  return new Promise((resolve) => {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const img = new Image()
+      img.onload = () => {
+        const scale = maxWidth / img.width
+        const canvas = document.createElement('canvas')
+        canvas.width = maxWidth
+        canvas.height = img.height * scale
+        const ctx = canvas.getContext('2d')
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+        canvas.toBlob((blob) => resolve(blob), 'image/jpeg', 0.85)
+      }
+      img.src = e.target.result
+    }
+    reader.readAsDataURL(file)
+  })
+}
+
+function removeImage() {
+  imageFile.value = null
+  previewUrl.value = null
 }
 
 async function submitComment() {
@@ -107,7 +152,8 @@ async function submitComment() {
     let imageKey = null
 
     if (imageFile.value) {
-      const filename = `weather/${Date.now()}_${imageFile.value.name}`
+      const extension = imageFile.value.name.split('.').pop()
+      const filename = `weather/${Date.now()}.${extension}`
       await Storage.put(filename, imageFile.value, {
         contentType: imageFile.value.type
       })
@@ -118,8 +164,8 @@ async function submitComment() {
       input: {
         owner,
         weather: selectedWeather.value,
-        temperature: props.temperature,
-        timeOfDay: props.timeOfDay,
+        temperature: selectedTemperature.value,
+        timeOfDay: selectedHour.value,
         language: props.language,
         content: content.value,
         imageKey,
@@ -132,10 +178,12 @@ async function submitComment() {
     emit('submitted')
     emit('close')
     content.value = ''
-    imageFile.value = null
+    removeImage()
     selectedWeather.value = ''
-  } catch (error) {
-    console.error('❌ 投稿エラー:', error)
+    selectedTemperature.value = 0
+    selectedHour.value = new Date().getHours()
+  } catch (err) {
+    console.error('❌ 投稿エラー:', err)
   } finally {
     loading.value = false
   }
@@ -143,30 +191,113 @@ async function submitComment() {
 </script>
 
 <style scoped>
-.modal-content {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
+.weather-title {
+  font-size: 1.3rem;
+  text-align: center;
+  margin-bottom: 1rem;
+  color: #444;
 }
-.weather-info {
-  font-size: 1.2rem;
+@media (prefers-color-scheme: dark) {
+  .weather-title {
+    color: #eee;
+  }
 }
-.weather-select {
-  padding: 0.5em;
+.yamato-select {
+  width: 100%;
+  margin-bottom: 1rem;
+  padding: 0.6em 1em;
   font-size: 1rem;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  background-color: #f9f9f9;
+  appearance: none;
+  outline: none;
 }
-.comment-input {
+.yamato-select:focus {
+  border-color: #4CAF50;
+}
+.yamato-textarea {
   width: 100%;
   height: 100px;
-  padding: 0.5em;
+  padding: 0.75em;
   font-size: 1rem;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  background: #fff;
+  resize: vertical;
+  margin-bottom: 1rem;
 }
-.submit-button {
-  background-color: #4CAF50;
-  color: white;
-  padding: 0.6em 1.2em;
-  font-size: 1rem;
+.image-button {
+  background: none;
   border: none;
-  border-radius: 4px;
+  font-size: 1.5rem;
+  margin: 0 auto;
+  display: block;
+  cursor: pointer;
+}
+.hidden-file {
+  display: none;
+}
+.image-preview {
+  position: relative;
+  margin: 1rem auto;
+  max-width: 100%;
+  max-height: 160px;
+  overflow: hidden;
+  border-radius: 8px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #f4f4f4;
+}
+.image-preview img {
+  max-height: 160px;
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
+  border-radius: 8px;
+}
+.remove-image {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: rgba(0, 0, 0, 0.5);
+  border: none;
+  color: white;
+  font-size: 1.1rem;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+}
+.submit-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-top: 1.5rem;
+}
+@media (prefers-color-scheme: dark) {
+  .yamato-select,
+  .yamato-textarea {
+    background-color: #2e2e2e;
+    color: #fff;
+    border: 1px solid #555;
+  }
+  .yamato-select option {
+    background-color: #2e2e2e;
+  }
+}
+.row-pickers {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+.row-pickers .yamato-select {
+  flex: 1;
+}
+.scrollable-modal-content {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-right: 6px;
+  max-height: 70vh;
 }
 </style>

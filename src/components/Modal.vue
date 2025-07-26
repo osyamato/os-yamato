@@ -52,7 +52,9 @@ function handleBackgroundClick() {
   width: 90%;
   max-width: 560px;
   max-height: 85vh;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* 内部スクロールに任せる */
   position: relative;
   z-index: 1001;
 }

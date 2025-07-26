@@ -452,7 +452,10 @@
   "weatherMain.Sand": "Tormenta de arena",
   "weatherMain.Ash": "Ceniza volcánica",
   "weatherMain.Squall": "Chubasco",
-  "weatherMain.Tornado": "Tornado"
+  "weatherMain.Tornado": "Tornado",
+
+"weather.title": "Envía tus palabras del clima con el viento"
+
 
 }
 
