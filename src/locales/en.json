@@ -517,7 +517,8 @@
   "weatherMain.Squall": "Squall",
   "weatherMain.Tornado": "Tornado",
 
-"weather.title": "Send Your Weather Words on the Wind"
+"weather.title": "Send Your Weather Words on the Wind",
+"weather.showComments": "Find words for this weather"
 
 
 }

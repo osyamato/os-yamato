@@ -2001,6 +2001,20 @@ export const schema = {
                     "isRequired": false,
                     "attributes": []
                 },
+                "ownerNickname": {
+                    "name": "ownerNickname",
+                    "isArray": false,
+                    "type": "String",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "icon": {
+                    "name": "icon",
+                    "isArray": false,
+                    "type": "String",
+                    "isRequired": false,
+                    "attributes": []
+                },
                 "weather": {
                     "name": "weather",
                     "isArray": false,
@@ -2040,6 +2054,20 @@ export const schema = {
                     "name": "imageKey",
                     "isArray": false,
                     "type": "String",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "thumbnailKey": {
+                    "name": "thumbnailKey",
+                    "isArray": false,
+                    "type": "String",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "profileView": {
+                    "name": "profileView",
+                    "isArray": false,
+                    "type": "Boolean",
                     "isRequired": false,
                     "attributes": []
                 },
@@ -2118,5 +2146,5 @@ export const schema = {
     "enums": {},
     "nonModels": {},
     "codegenVersion": "3.4.4",
-    "version": "eab9c804401392f4dbbff792982a42a3"
+    "version": "ef02795fd8a8cd6ed52531978399e0f6"
 };

@@ -771,7 +771,6 @@ export const getWeatherProfile = /* GraphQL */ `
   query GetWeatherProfile($id: ID!) {
     getWeatherProfile(id: $id) {
       id
-      sub
       icon
       nickname
       yamatoId
@@ -792,7 +791,6 @@ export const listWeatherProfiles = /* GraphQL */ `
     listWeatherProfiles(filter: $filter, limit: $limit, nextToken: $nextToken) {
       items {
         id
-        sub
         icon
         nickname
         yamatoId
@@ -812,12 +810,16 @@ export const getWeatherComment = /* GraphQL */ `
     getWeatherComment(id: $id) {
       id
       owner
+      ownerNickname
+      icon
       weather
       temperature
       timeOfDay
       language
       content
       imageKey
+      thumbnailKey
+      profileView
       likeCount
       reportCount
       replyCount
@@ -837,12 +839,16 @@ export const listWeatherComments = /* GraphQL */ `
       items {
         id
         owner
+        ownerNickname
+        icon
         weather
         temperature
         timeOfDay
         language
         content
         imageKey
+        thumbnailKey
+        profileView
         likeCount
         reportCount
         replyCount

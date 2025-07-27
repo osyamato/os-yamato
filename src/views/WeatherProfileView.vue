@@ -15,8 +15,13 @@
         </button>
       </div>
 
+      <!-- ✅ 未登録時のメッセージ -->
+      <div v-if="!profile.nickname" class="unregistered-message">
+        <p>未登録です。右上の✏️マークからプロフィールを作成しましょう。</p>
+      </div>
+
       <!-- 🧑‍ 左: アイコン | 右: テキスト情報 -->
-      <div class="profile-layout">
+      <div class="profile-layout" v-else>
         <!-- 左：アイコン -->
         <div class="profile-icon-wrapper">
           <img
@@ -40,48 +45,50 @@
     </div>
 
     <!-- 📬 投稿コメント一覧 -->
-<h4 class="my-comments-title">あなたの投稿</h4>
-<div class="comment-list">
-  <div
-    v-for="comment in myComments"
-    :key="comment.id"
-    class="comment-card"
-  >
-    <!-- 本文（上に表示） -->
-    <p class="comment-content">{{ comment.content }}</p>
+    <h4 class="my-comments-title">あなたの投稿</h4>
+    <div class="comment-list">
+      <div
+        v-for="comment in myComments"
+        :key="comment.id"
+        class="comment-card"
+      >
+        <!-- 本文（上に表示） -->
+        <p class="comment-content">{{ comment.content }}</p>
 
-    <!-- 📷 アイコン（画像がある場合のみ） -->
-    <span
-      v-if="comment.imageUrl"
-      class="photo-icon"
-      @click="openImageModal(comment.imageUrl)"
-    >
-      📷
-    </span>
+        <!-- 📷 アイコン（画像がある場合のみ） -->
+        <span
+          v-if="comment.imageUrl"
+          class="photo-icon"
+          @click="openImageModal(comment.imageUrl)"
+        >
+          📷
+        </span>
 
-    <!-- メタ情報 -->
-    <p class="comment-meta">
-      {{ comment.weather }} / {{ comment.temperature }}°C /
-      {{ formatHour(comment.timeOfDay) }}時 / {{ getLangName(comment.language) }}
-    </p>
+        <!-- メタ情報 -->
+        <p class="comment-meta">
+          {{ comment.weather }} / {{ comment.temperature }}°C /
+          {{ formatHour(comment.timeOfDay) }}時 / {{ getLangName(comment.language) }}
+        </p>
 
-    <!-- ⋯ 削除アイコン（右下に配置） -->
-    <span class="more-icon" @click="openDeleteDialog(comment)">⋯</span>
-  </div>
-</div>
+        <!-- ⋯ 削除アイコン（右下に配置） -->
+        <span class="more-icon" @click="openDeleteDialog(comment)">⋯</span>
+      </div>
+    </div>
 
-<ImageModal
-  :visible="showImageModal"
-  :imageUrl="selectedImageUrl"
-  @close="showImageModal = false"
-/>
+    <!-- 画像モーダル -->
+    <ImageModal
+      :visible="showImageModal"
+      :imageUrl="selectedImageUrl"
+      @close="showImageModal = false"
+    />
 
-<ConfirmDialog
-  :visible="showConfirmDialog"
-  message="このコメントを削除しますか？"
-  @confirm="deleteComment"
-  @cancel="showConfirmDialog = false"
-/>
+    <!-- 確認ダイアログ -->
+    <ConfirmDialog
+      :visible="showConfirmDialog"
+      message="このコメントを削除しますか？"
+      @confirm="deleteComment"
+      @cancel="showConfirmDialog = false"
+    />
 
     <!-- ✏️ 編集モーダル -->
     <EditWeatherProfileModal
@@ -93,37 +100,20 @@
   </div>
 </template>
 
+
 <script setup>
 import { ref, onMounted } from 'vue'
-import { API, graphqlOperation, Auth } from 'aws-amplify'
-import { listWeatherProfiles, listWeatherComments } from '@/graphql/queries'
+import { API, graphqlOperation, Auth, Storage } from 'aws-amplify'
+import { getWeatherProfile, listWeatherComments } from '@/graphql/queries'
+import { deleteWeatherComment } from '@/graphql/mutations'
 import EditWeatherProfileModal from '@/components/EditWeatherProfileModal.vue'
-import { Storage } from 'aws-amplify'
 import ImageModal from '@/components/ImageModal.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
-import { deleteWeatherComment } from '@/graphql/mutations'
 
-
-const showConfirmDialog = ref(false)
-const commentToDelete = ref(null)
-
-function openDeleteDialog(comment) {
-  commentToDelete.value = comment
-  showConfirmDialog.value = true
-}
-
-async function deleteComment() {
-  try {
-    await API.graphql(graphqlOperation(deleteWeatherComment, {
-      input: { id: commentToDelete.value.id }
-    }))
-    myComments.value = myComments.value.filter(c => c.id !== commentToDelete.value.id)
-    showConfirmDialog.value = false
-  } catch (e) {
-    console.error('❌ 削除失敗:', e)
-  }
-}
+// ✏️ 編集モーダルの表示状態
 const showModal = ref(false)
+
+// 📄 プロフィールデータ
 const profile = ref({
   id: '',
   sub: '',
@@ -132,12 +122,24 @@ const profile = ref({
   yamatoId: '',
   bio: ''
 })
-const myComments = ref([])
-
-const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches
-const iconColor = ref('#274c77')
 const profileLoaded = ref(false)
 
+// 📝 投稿コメント一覧
+const myComments = ref([])
+
+// 🖼️ 画像モーダル
+const showImageModal = ref(false)
+const selectedImageUrl = ref('')
+
+// 🗑️ 削除確認モーダル
+const showConfirmDialog = ref(false)
+const commentToDelete = ref(null)
+
+// 🎨 テーマ色
+const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches
+const iconColor = ref('#274c77')
+
+// 🌱 初期化処理
 onMounted(async () => {
   window.scrollTo({ top: 0, behavior: 'smooth' })
   const user = await Auth.currentAuthenticatedUser()
@@ -146,19 +148,21 @@ onMounted(async () => {
   await fetchMyComments()
 })
 
+// 🔍 プロフィール取得（id=sub 構成）
 async function fetchProfile() {
   try {
     const user = await Auth.currentAuthenticatedUser()
     const sub = user.attributes.sub
 
-    const res = await API.graphql(graphqlOperation(listWeatherProfiles, {
-      filter: { sub: { eq: sub } }
+    const res = await API.graphql(graphqlOperation(getWeatherProfile, {
+      id: sub
     }))
+    const item = res.data.getWeatherProfile
 
-    const items = res.data.listWeatherProfiles.items
-    if (items.length > 0) {
-      profile.value = items[0]
+    if (item) {
+      profile.value = item
     } else {
+      // 登録なし → 空のプロファイルを用意
       profile.value = {
         id: '',
         sub,
@@ -170,14 +174,17 @@ async function fetchProfile() {
     }
     profileLoaded.value = true
   } catch (e) {
-    console.error('❌ プロフィール取得エラー:', e)
+    console.error('❌ プロフィール取得失敗:', e)
+    profileLoaded.value = true
   }
 }
 
+// 📝 コメント取得
 async function fetchMyComments() {
   try {
     const user = await Auth.currentAuthenticatedUser()
     const sub = user.attributes.sub
+
     const res = await API.graphql(graphqlOperation(listWeatherComments, {
       filter: { owner: { eq: sub } },
       sortDirection: 'DESC'
@@ -185,7 +192,7 @@ async function fetchMyComments() {
 
     const items = res.data.listWeatherComments.items
 
-    // 🔁 imageKey がある場合は URL を取得
+    // 画像がある場合は URL を取得
     for (const item of items) {
       if (item.imageKey) {
         try {
@@ -198,14 +205,16 @@ async function fetchMyComments() {
 
     myComments.value = items
   } catch (e) {
-    console.error('❌ コメント取得エラー:', e)
+    console.error('❌ コメント取得失敗:', e)
   }
 }
 
+// 🕒 時間整形
 function formatHour(hour) {
   return Math.floor(hour)
 }
 
+// 🌐 言語名変換
 function getLangName(code) {
   switch (code) {
     case 'ja': return '日本語'
@@ -216,16 +225,32 @@ function getLangName(code) {
   }
 }
 
-
-const showImageModal = ref(false)
-const selectedImageUrl = ref('')
-
+// 🖼️ モーダルを開く
 function openImageModal(url) {
   selectedImageUrl.value = url
   showImageModal.value = true
 }
 
+// 🗑️ コメント削除確認
+function openDeleteDialog(comment) {
+  commentToDelete.value = comment
+  showConfirmDialog.value = true
+}
+
+// 🗑️ コメント削除処理
+async function deleteComment() {
+  try {
+    await API.graphql(graphqlOperation(deleteWeatherComment, {
+      input: { id: commentToDelete.value.id }
+    }))
+    myComments.value = myComments.value.filter(c => c.id !== commentToDelete.value.id)
+    showConfirmDialog.value = false
+  } catch (e) {
+    console.error('❌ 削除失敗:', e)
+  }
+}
 </script>
+
 
 <style scoped>
 .profile-container {
@@ -431,6 +456,15 @@ function openImageModal(url) {
 
 .profile-container.dark .more-icon {
   color: #aaa;
+}
+
+.no-profile-msg {
+  font-size: 15px;
+  margin-top: 12px;
+  color: #666;
+}
+.profile-container.dark .no-profile-msg {
+  color: #ccc;
 }
 
 </style>

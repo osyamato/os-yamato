@@ -1112,7 +1112,6 @@ export const onCreateWeatherProfile = /* GraphQL */ `
   ) {
     onCreateWeatherProfile(filter: $filter, owner: $owner) {
       id
-      sub
       icon
       nickname
       yamatoId
@@ -1131,7 +1130,6 @@ export const onUpdateWeatherProfile = /* GraphQL */ `
   ) {
     onUpdateWeatherProfile(filter: $filter, owner: $owner) {
       id
-      sub
       icon
       nickname
       yamatoId
@@ -1150,7 +1148,6 @@ export const onDeleteWeatherProfile = /* GraphQL */ `
   ) {
     onDeleteWeatherProfile(filter: $filter, owner: $owner) {
       id
-      sub
       icon
       nickname
       yamatoId
@@ -1170,12 +1167,16 @@ export const onCreateWeatherComment = /* GraphQL */ `
     onCreateWeatherComment(filter: $filter, owner: $owner) {
       id
       owner
+      ownerNickname
+      icon
       weather
       temperature
       timeOfDay
       language
       content
       imageKey
+      thumbnailKey
+      profileView
       likeCount
       reportCount
       replyCount
@@ -1193,12 +1194,16 @@ export const onUpdateWeatherComment = /* GraphQL */ `
     onUpdateWeatherComment(filter: $filter, owner: $owner) {
       id
       owner
+      ownerNickname
+      icon
       weather
       temperature
       timeOfDay
       language
       content
       imageKey
+      thumbnailKey
+      profileView
       likeCount
       reportCount
       replyCount
@@ -1216,12 +1221,16 @@ export const onDeleteWeatherComment = /* GraphQL */ `
     onDeleteWeatherComment(filter: $filter, owner: $owner) {
       id
       owner
+      ownerNickname
+      icon
       weather
       temperature
       timeOfDay
       language
       content
       imageKey
+      thumbnailKey
+      profileView
       likeCount
       reportCount
       replyCount
