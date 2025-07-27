@@ -40,16 +40,48 @@
     </div>
 
     <!-- 📬 投稿コメント一覧 -->
-    <div class="my-comments-section">
-      <h3>あなたの投稿</h3>
-      <div v-if="myComments.length === 0">投稿がありません</div>
-      <div v-else class="comment-list">
-        <div v-for="c in myComments" :key="c.id" class="comment-card">
-          <p><strong>天気:</strong> {{ c.weather }} / <strong>{{ c.temperature }}°C</strong> / {{ c.timeOfDay }}時</p>
-          <p>{{ c.comment }}</p>
-        </div>
-      </div>
-    </div>
+<h4 class="my-comments-title">あなたの投稿</h4>
+<div class="comment-list">
+  <div
+    v-for="comment in myComments"
+    :key="comment.id"
+    class="comment-card"
+  >
+    <!-- 本文（上に表示） -->
+    <p class="comment-content">{{ comment.content }}</p>
+
+    <!-- 📷 アイコン（画像がある場合のみ） -->
+    <span
+      v-if="comment.imageUrl"
+      class="photo-icon"
+      @click="openImageModal(comment.imageUrl)"
+    >
+      📷
+    </span>
+
+    <!-- メタ情報 -->
+    <p class="comment-meta">
+      {{ comment.weather }} / {{ comment.temperature }}°C /
+      {{ formatHour(comment.timeOfDay) }}時 / {{ getLangName(comment.language) }}
+    </p>
+
+    <!-- ⋯ 削除アイコン（右下に配置） -->
+    <span class="more-icon" @click="openDeleteDialog(comment)">⋯</span>
+  </div>
+</div>
+
+<ImageModal
+  :visible="showImageModal"
+  :imageUrl="selectedImageUrl"
+  @close="showImageModal = false"
+/>
+
+<ConfirmDialog
+  :visible="showConfirmDialog"
+  message="このコメントを削除しますか？"
+  @confirm="deleteComment"
+  @cancel="showConfirmDialog = false"
+/>
 
     <!-- ✏️ 編集モーダル -->
     <EditWeatherProfileModal
@@ -66,7 +98,31 @@ import { ref, onMounted } from 'vue'
 import { API, graphqlOperation, Auth } from 'aws-amplify'
 import { listWeatherProfiles, listWeatherComments } from '@/graphql/queries'
 import EditWeatherProfileModal from '@/components/EditWeatherProfileModal.vue'
+import { Storage } from 'aws-amplify'
+import ImageModal from '@/components/ImageModal.vue'
+import ConfirmDialog from '@/components/ConfirmDialog.vue'
+import { deleteWeatherComment } from '@/graphql/mutations'
 
+
+const showConfirmDialog = ref(false)
+const commentToDelete = ref(null)
+
+function openDeleteDialog(comment) {
+  commentToDelete.value = comment
+  showConfirmDialog.value = true
+}
+
+async function deleteComment() {
+  try {
+    await API.graphql(graphqlOperation(deleteWeatherComment, {
+      input: { id: commentToDelete.value.id }
+    }))
+    myComments.value = myComments.value.filter(c => c.id !== commentToDelete.value.id)
+    showConfirmDialog.value = false
+  } catch (e) {
+    console.error('❌ 削除失敗:', e)
+  }
+}
 const showModal = ref(false)
 const profile = ref({
   id: '',
@@ -123,14 +179,52 @@ async function fetchMyComments() {
     const user = await Auth.currentAuthenticatedUser()
     const sub = user.attributes.sub
     const res = await API.graphql(graphqlOperation(listWeatherComments, {
-      filter: { owner: { eq: sub } }, // ✅ owner に修正！
+      filter: { owner: { eq: sub } },
       sortDirection: 'DESC'
     }))
-    myComments.value = res.data.listWeatherComments.items
+
+    const items = res.data.listWeatherComments.items
+
+    // 🔁 imageKey がある場合は URL を取得
+    for (const item of items) {
+      if (item.imageKey) {
+        try {
+          item.imageUrl = await Storage.get(item.imageKey)
+        } catch (e) {
+          console.warn('⚠️ 画像取得失敗:', item.imageKey)
+        }
+      }
+    }
+
+    myComments.value = items
   } catch (e) {
     console.error('❌ コメント取得エラー:', e)
   }
 }
+
+function formatHour(hour) {
+  return Math.floor(hour)
+}
+
+function getLangName(code) {
+  switch (code) {
+    case 'ja': return '日本語'
+    case 'en': return 'English'
+    case 'zh': return '中文'
+    case 'es': return 'Español'
+    default: return code
+  }
+}
+
+
+const showImageModal = ref(false)
+const selectedImageUrl = ref('')
+
+function openImageModal(url) {
+  selectedImageUrl.value = url
+  showImageModal.value = true
+}
+
 </script>
 
 <style scoped>
@@ -139,7 +233,6 @@ async function fetchMyComments() {
   text-align: center;
   color: black;
   background-color: white;
-  animation: none;
 }
 
 .profile-container.dark {
@@ -239,8 +332,10 @@ async function fetchMyComments() {
   margin-top: 8px;
 }
 
-.my-comments-section {
+.my-comments-title {
+  font-size: 1.2rem;
   margin-top: 40px;
+  margin-bottom: 12px;
   text-align: left;
   padding: 0 20px;
 }
@@ -249,16 +344,96 @@ async function fetchMyComments() {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  margin-top: 12px;
+  padding: 0 20px;
+  align-items: center; /* 中央揃え */
 }
 
 .comment-card {
-  background: #f0f0f0;
-  padding: 12px;
-  border-radius: 10px;
+  position: relative;
+  padding: 0.6rem 0.8rem;
+  background: #fdfdfd; /* 柔らかい白 */
+  border: 1px solid #bbb; /* 見えやすい枠線 */
+  border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05); /* やや浮かせる */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+  font-size: 0.9rem;
+  color: #000;
+  cursor: default;
+  width: 330px;
+  min-height: 90px;
+  box-sizing: border-box;
+  word-wrap: break-word;
+  overflow: hidden;
+  margin: 0 auto;
+}
+
+@media (min-width: 768px) {
+  .comment-card {
+    width: 400px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .comment-card {
+    width: 480px;
+  }
+}
+
+.profile-container.dark .comment-card {
+  background: #2c2c2c;
+  color: #f5f5f5;
+  border: 1px solid #555;
+  box-shadow: none; /* ダークでは影を控えめに */
+}
+
+.comment-content {
+  font-size: 15px;
+  line-height: 1.6;
+  word-break: break-word;
+  margin-bottom: 6px; /* ✅ メタ情報との余白 */
+}
+
+.comment-meta {
+  font-size: 13px;
+  color: #555;
 }
 
 .profile-container.dark .comment-card {
   background: #222;
+  color: white;
 }
+
+.profile-container.dark .comment-content {
+  color: white;
+}
+
+.profile-container.dark .comment-meta {
+  color: #ccc;
+}
+
+.photo-icon {
+  margin: 4px 0 6px;
+  font-size: 17px;
+  cursor: pointer;
+}
+
+.more-icon {
+  position: absolute;
+  right: 10px;
+  bottom: 8px;
+  font-size: 20px;
+  cursor: pointer;
+  color: #888;
+}
+
+.profile-container.dark .more-icon {
+  color: #aaa;
+}
+
 </style>
+
+
+

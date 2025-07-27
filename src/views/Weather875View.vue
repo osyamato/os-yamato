@@ -14,15 +14,19 @@
       <button class="icon-button" @click="getHourlyWeather" :style="{ backgroundColor: iconColor }">🌤️</button>
     </div>
 
-    <div v-if="selectedCity && currentWeather" class="weather-info">
-      <p>📍 {{ selectedCity.name }}</p>
-      <p>
-        {{ weatherIcon(currentWeather.main) }}
-        {{ localizedDescription }}
-        🌡️ {{ currentWeather.temp }}℃
-      </p>
-      <blockquote>“空は静かに何も語らない。”</blockquote>
-    </div>
+<div v-if="selectedCity && currentWeather" class="weather-info">
+  <p>📍 {{ selectedCity.name }}</p>
+  <p>
+    {{ weatherIcon(currentWeather.main) }}
+    {{ localizedDescription }}
+    🌡️ {{ currentWeather.temp }}℃
+  </p>
+
+  <!-- 🌸 コメント表示ボタン -->
+  <button class="comment-button" @click="fetchMatchingComments">
+    {{ t('weather.showComments') }}
+  </button>
+</div>
 
     <WeatherForecastModal
       :visible="showForecastModal"
@@ -197,6 +201,39 @@ async function getHourlyWeather() {
     console.error('❌ 3時間天気取得失敗:', e)
   }
 }
+
+const matchedComments = ref([])
+
+async function fetchMatchingComments() {
+  if (!currentWeather.value) return
+
+  try {
+    const res = await API.graphql(graphqlOperation(listWeatherComments, {
+      filter: {
+        weather: { eq: currentWeather.value.main },
+        language: { eq: locale.value }
+      }
+    }))
+
+    let items = res.data.listWeatherComments.items
+
+    for (const item of items) {
+      if (item.imageKey) {
+        try {
+          item.imageUrl = await Storage.get(item.imageKey)
+        } catch {
+          console.warn('📷 画像取得失敗:', item.imageKey)
+        }
+      }
+    }
+
+    matchedComments.value = items.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    console.log('✅ コメント取得:', matchedComments.value)
+  } catch (e) {
+    console.error('❌ コメント取得失敗:', e)
+  }
+}
+
 </script>
 
 <style scoped>
@@ -259,5 +296,21 @@ async function getHourlyWeather() {
     opacity: 1;
   }
 }
+
+.comment-button {
+  margin-top: 12px;
+  background-color: #274c77;
+  color: white;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+.comment-button:hover {
+  background-color: #1f3a5a;
+}
+
 </style>
 
