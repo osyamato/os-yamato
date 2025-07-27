@@ -60,12 +60,15 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import { API, graphqlOperation, Storage, Auth } from 'aws-amplify'
 import { createWeatherComment } from '@/graphql/mutations'
+import { listWeatherProfiles } from '@/graphql/queries'
 import Modal from '@/components/Modal.vue'
 import YamatoButton from '@/components/YamatoButton.vue'
 import { useI18n } from 'vue-i18n'
+import { getCachedProfile } from '@/utils/weatherProfileCache'
+
 
 const { t } = useI18n()
 const props = defineProps({
@@ -90,6 +93,9 @@ const selectedHour = ref(new Date().getHours())
 const weatherOptions = ['Clear', 'Clouds', 'Rain', 'Snow', 'Thunderstorm', 'Mist']
 const temperatureOptions = Array.from({ length: 51 }, (_, i) => i - 10)
 
+const originalFile = ref(null)
+const thumbnailBlob = ref(null)
+
 watch(() => props.weather, (w) => {
   if (w) selectedWeather.value = w
 }, { immediate: true })
@@ -104,17 +110,6 @@ function handleClose() {
 
 function triggerFileInput() {
   fileInput.value?.click()
-}
-
-function handleImage(e) {
-  const file = e.target.files[0]
-  if (file) {
-    resizeImage(file, 640).then((resizedBlob) => {
-      const sanitizedName = file.name.replace(/[^\w.-]/g, '_')
-      imageFile.value = new File([resizedBlob], sanitizedName, { type: resizedBlob.type })
-      previewUrl.value = URL.createObjectURL(resizedBlob)
-    })
-  }
 }
 
 function resizeImage(file, maxWidth) {
@@ -137,6 +132,20 @@ function resizeImage(file, maxWidth) {
   })
 }
 
+function handleImage(event) {
+  const file = event.target.files[0]
+  if (!file) return
+
+  imageFile.value = file
+  originalFile.value = file
+  previewUrl.value = URL.createObjectURL(file)
+
+  // サムネイル生成（300px幅）
+  resizeImage(file, 300).then(blob => {
+    thumbnailBlob.value = blob
+  })
+}
+
 function removeImage() {
   imageFile.value = null
   previewUrl.value = null
@@ -148,27 +157,49 @@ async function submitComment() {
 
   try {
     const user = await Auth.currentAuthenticatedUser()
-    const owner = user.username
-    let imageKey = null
+    const sub = user.attributes.sub
 
-    if (imageFile.value) {
-      const extension = imageFile.value.name.split('.').pop()
-      const filename = `weather/${Date.now()}.${extension}`
-      await Storage.put(filename, imageFile.value, {
+    // ✅ キャッシュ対応で最適化された取得
+    const profile = await getCachedProfile()
+
+    const owner = sub
+    const ownerNickname = profile?.nickname || ''
+    const icon = profile?.icon || ''
+
+    let imageKey = null
+    let thumbnailKey = null
+
+    if (imageFile.value && thumbnailBlob.value) {
+      const ext = imageFile.value.name.split('.').pop()
+      const baseName = `weather/${Date.now()}`
+      const imageFileName = `${baseName}.${ext}`
+      const thumbFileName = `${baseName}_thumb.${ext}`
+
+      await Storage.put(imageFileName, imageFile.value, {
         contentType: imageFile.value.type
       })
-      imageKey = filename
+
+      await Storage.put(thumbFileName, thumbnailBlob.value, {
+        contentType: thumbnailBlob.value.type
+      })
+
+      imageKey = imageFileName
+      thumbnailKey = thumbFileName
     }
 
     await API.graphql(graphqlOperation(createWeatherComment, {
       input: {
         owner,
+        ownerNickname,
+        icon,
         weather: selectedWeather.value,
         temperature: selectedTemperature.value,
         timeOfDay: selectedHour.value,
         language: props.language,
         content: content.value,
         imageKey,
+        thumbnailKey,
+        profileView: true,
         likeCount: 0,
         reportCount: 0,
         replyCount: 0
@@ -183,12 +214,13 @@ async function submitComment() {
     selectedTemperature.value = 0
     selectedHour.value = new Date().getHours()
   } catch (err) {
-    console.error('❌ 投稿エラー:', err)
+    console.error('❌ 投稿エラー:', JSON.stringify(err, null, 2))
   } finally {
     loading.value = false
   }
 }
 </script>
+
 
 <style scoped>
 .weather-title {

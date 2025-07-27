@@ -53,8 +53,8 @@
 
 <script setup>
 import { ref, watch } from 'vue'
-import { API, graphqlOperation } from 'aws-amplify'
-import { updateWeatherProfile } from '@/graphql/mutations'
+import { API, graphqlOperation, Auth } from 'aws-amplify'
+import { createWeatherProfile, updateWeatherProfile } from '@/graphql/mutations'
 import YamatoButton from '@/components/YamatoButton.vue'
 
 const props = defineProps({
@@ -77,11 +77,11 @@ const iconFilenames = [
 const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches
 
 watch(() => props.visible, (newVal) => {
-  if (newVal && props.profile) {
-    icon.value = props.profile.icon || ''
-    nickname.value = props.profile.nickname || ''
-    yamatoId.value = props.profile.yamatoId || ''
-    bio.value = props.profile.bio || ''
+  if (newVal) {
+    icon.value = props.profile?.icon || ''
+    nickname.value = props.profile?.nickname || ''
+    yamatoId.value = props.profile?.yamatoId || ''
+    bio.value = props.profile?.bio || ''
   }
 })
 
@@ -89,23 +89,36 @@ const close = () => emit('close')
 
 const saveProfile = async () => {
   try {
+    const user = await Auth.currentAuthenticatedUser()
+    const sub = user.attributes.sub
+
+    const isUpdate = !!props.profile?.__typename // すでに存在するなら更新
+
     const input = {
-      id: props.profile.id,
-      sub: props.profile.sub,
+      id: isUpdate ? props.profile.id : sub, // 作成時のみ sub を使用
       icon: icon.value,
       nickname: nickname.value,
       yamatoId: yamatoId.value,
       bio: bio.value
     }
-    await API.graphql(graphqlOperation(updateWeatherProfile, { input }))
-    emit('refresh') // ✅ 自動更新
-    close()         // ✅ 静かに閉じる
+
+    const mutation = isUpdate ? updateWeatherProfile : createWeatherProfile
+    const mutationKey = isUpdate ? 'updateWeatherProfile' : 'createWeatherProfile'
+
+    const res = await API.graphql(graphqlOperation(mutation, { input }))
+    const result = res.data?.[mutationKey]
+
+    if (!result) throw new Error('null mutation result')
+
+    emit('refresh')
+    close()
   } catch (error) {
-    console.error('❌ 保存エラー:', error)
+    console.error('❌ 保存エラー:', JSON.stringify(error, null, 2))
     alert('保存に失敗しました')
   }
 }
 </script>
+
 
 <style scoped>
 .modal-overlay {

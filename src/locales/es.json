@@ -454,7 +454,8 @@
   "weatherMain.Squall": "Chubasco",
   "weatherMain.Tornado": "Tornado",
 
-"weather.title": "Envía tus palabras del clima con el viento"
+"weather.title": "Envía tus palabras del clima con el viento",
+"weather.showComments": "Busca palabras sobre el clima"
 
 
 }

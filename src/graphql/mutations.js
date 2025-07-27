@@ -1097,7 +1097,6 @@ export const createWeatherProfile = /* GraphQL */ `
   ) {
     createWeatherProfile(input: $input, condition: $condition) {
       id
-      sub
       icon
       nickname
       yamatoId
@@ -1116,7 +1115,6 @@ export const updateWeatherProfile = /* GraphQL */ `
   ) {
     updateWeatherProfile(input: $input, condition: $condition) {
       id
-      sub
       icon
       nickname
       yamatoId
@@ -1135,7 +1133,6 @@ export const deleteWeatherProfile = /* GraphQL */ `
   ) {
     deleteWeatherProfile(input: $input, condition: $condition) {
       id
-      sub
       icon
       nickname
       yamatoId
@@ -1155,12 +1152,16 @@ export const createWeatherComment = /* GraphQL */ `
     createWeatherComment(input: $input, condition: $condition) {
       id
       owner
+      ownerNickname
+      icon
       weather
       temperature
       timeOfDay
       language
       content
       imageKey
+      thumbnailKey
+      profileView
       likeCount
       reportCount
       replyCount
@@ -1178,12 +1179,16 @@ export const updateWeatherComment = /* GraphQL */ `
     updateWeatherComment(input: $input, condition: $condition) {
       id
       owner
+      ownerNickname
+      icon
       weather
       temperature
       timeOfDay
       language
       content
       imageKey
+      thumbnailKey
+      profileView
       likeCount
       reportCount
       replyCount
@@ -1201,12 +1206,16 @@ export const deleteWeatherComment = /* GraphQL */ `
     deleteWeatherComment(input: $input, condition: $condition) {
       id
       owner
+      ownerNickname
+      icon
       weather
       temperature
       timeOfDay
       language
       content
       imageKey
+      thumbnailKey
+      profileView
       likeCount
       reportCount
       replyCount
