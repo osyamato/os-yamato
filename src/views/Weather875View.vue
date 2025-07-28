@@ -9,74 +9,80 @@
         </span>
       </button>
 
-      <button class="icon-button" @click="openPostModal" :style="{ backgroundColor: iconColor }">✏️</button>
+<button class="icon-button" @click="checkBeforePost" :style="{ backgroundColor: iconColor }">✏️</button>
       <button class="icon-button" @click="openCitySelector" :style="{ backgroundColor: iconColor }">🔍</button>
       <button class="icon-button" @click="getHourlyWeather" :style="{ backgroundColor: iconColor }">🌤️</button>
     </div>
 
-<div v-if="selectedCity && currentWeather" class="weather-info">
-  <p>📍 {{ selectedCity.name }}</p>
-  <p>
-    {{ weatherIcon(currentWeather.main) }}
-    {{ localizedDescription }}
-    🌡️ {{ currentWeather.temp }}℃
-  </p>
+    <div v-if="selectedCity && currentWeather" class="weather-info">
+      <p>📍 {{ selectedCity.name }}</p>
+      <p>
+        {{ weatherIcon(currentWeather.main) }}
+        {{ localizedDescription }}
+        🌡️ {{ currentWeather.temp }}℃
+      </p>
 
-  <!-- 🌸 コメント表示ボタン -->
-<YamatoButton size="medium" @click="fetchMatchingComments">
-{{ t('weather.showComments') }}
-</YamatoButton>
-</div>
-
-<div v-if="matchedComments.length > 0" class="comment-list-section">
-  <h4 class="matched-comments-title">{{ t('weather.matchedCommentsTitle') }}</h4>
-
-<div class="comment-list">
-  <div
-    v-for="comment in matchedComments"
-    :key="comment.id"
-    class="comment-card"
-  >
-    <!-- 👤 プロフィール（アイコン + ニックネーム） -->
-    <div class="profile-row">
-      <img
-        class="comment-icon"
-        :src="getIconUrl(comment.icon)"
-        alt="icon"
-      />
-      <span class="comment-nickname">
-        {{ comment.ownerNickname || 'Anonymous' }}
-      </span>
+      <!-- 🌸 コメント表示ボタン -->
+      <YamatoButton size="medium" class="comment-button" @click="fetchMatchingComments">
+        {{ t('weather.showComments') }}
+      </YamatoButton>
     </div>
 
-    <!-- 📝 本文 -->
-    <p class="comment-content">{{ comment.content }}</p>
-
-    <!-- 📷 サムネイル -->
-    <img
-      v-if="comment.imageUrl"
-      class="comment-thumbnail"
-      :src="comment.imageUrl"
-      alt="Image"
-      @click="openImageModal(comment.imageUrl)"
-    />
-
-    <!-- 🌤️ メタ情報 -->
-    <p class="comment-meta">
-      {{ comment.weather }} / {{ comment.temperature }}°C /
-      {{ formatHour(comment.timeOfDay) }}時 / {{ getLangName(comment.language) }}
+    <!-- ❌ 修正: ボタン押下後かつ0件時のみ表示 -->
+    <p v-if="matchedComments.length === 0 && hasFetched" class="no-comments-text">
+      {{ t('weather.noMatchedComments') }}
     </p>
-  </div>
-</div>
 
-  <!-- 画像モーダル -->
-  <ImageModal
-    v-if="showImageModal"
-    :imageUrl="modalImageUrl"
-    @close="closeImageModal"
-  />
-</div>
+    <!-- ✅ 修正: コメントがあるときだけ表示 -->
+    <div v-if="matchedComments.length > 0" class="comment-list-section">
+      <h4 class="matched-comments-title">
+        {{ t('weather.matchedCommentsTitle') }}
+      </h4>
 
+      <div class="comment-list">
+        <div
+          v-for="(comment, index) in matchedComments"
+          :key="comment.id"
+          class="comment-card fade-up"
+          :style="{ animationDelay: `${index * 120}ms` }"
+        >
+          <div class="profile-row">
+            <template v-if="comment.source === 'ios'">
+              <div class="text-icon">花</div>
+            </template>
+            <template v-else>
+              <img
+                class="comment-icon"
+                :src="getIconUrl(comment.icon)"
+                alt="icon"
+              />
+            </template>
+
+            <span class="comment-nickname">
+              {{ comment.ownerNickname || (comment.source === 'ios' ? '花子天気(iOS)より' : 'Anonymous') }}
+            </span>
+          </div>
+
+          <p class="comment-content">{{ comment.content }}</p>
+
+          <img
+            v-if="comment.imageUrl"
+            class="comment-thumbnail"
+            :src="comment.imageUrl"
+            alt="Image"
+            @click="openImageModal(comment.imageUrl)"
+          />
+        </div>
+      </div>
+
+      <ImageModal
+        v-if="showImageModal"
+        :imageUrl="modalImageUrl"
+        @close="closeImageModal"
+      />
+    </div>
+
+    <!-- その他のモーダル -->
     <WeatherForecastModal
       :visible="showForecastModal"
       :forecastList="forecastList"
@@ -87,19 +93,18 @@
       @close="showCitySelector = false"
       @select="handleCitySelected"
     />
-<PostWeatherCommentModal
-  :visible="showPostModal"
-  :weather="currentWeather?.main || ''"
-  :temperature="currentWeather?.temp || 0"
-  :timeOfDay="new Date().getHours()"
-  :language="locale"
-  @close="showPostModal = false"
-/>
-
+    <PostWeatherCommentModal
+      :visible="showPostModal"
+      :weather="currentWeather?.main || ''"
+      :temperature="currentWeather?.temp || 0"
+      :timeOfDay="new Date().getHours()"
+      :language="locale"
+      @close="showPostModal = false"
+    />
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { API, graphqlOperation, Auth, Storage } from 'aws-amplify'
 import {
@@ -107,6 +112,8 @@ import {
   listWeatherCities,
   listWeatherComments
 } from '@/graphql/queries'
+import type { WeatherComment } from '@/API'
+
 import WeatherForecastModal from '@/components/WeatherForecastModal.vue'
 import WeatherCitySelector from '@/components/WeatherCitySelector.vue'
 import PostWeatherCommentModal from '@/views/PostWeatherCommentModal.vue'
@@ -115,6 +122,8 @@ import YamatoButton from '@/components/YamatoButton.vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { getWeatherProfile } from '@/graphql/queries'
+const matchedComments = ref<WeatherComment[]>([])
+const hasFetched = ref(false) 
 
 
 const { t, locale } = useI18n()
@@ -129,11 +138,15 @@ const showPostModal = ref(false)
 const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches
 const iconColor = ref('#274c77')
 const profile = ref(null)
-const matchedComments = ref([])
 const showImageModal = ref(false)
 const modalImageUrl = ref('')
 
 const API_KEY = 'e83c02f476b6f1d5c91c072f651601b2'
+
+const iosGraphQLUrl = 'https://mu4wobom7jcazmpazk3hpxnjc4.appsync-api.ap-northeast-1.amazonaws.com/graphql'
+const iosApiKey = 'da2-tuututuweneyrdykwh4vw3yfbm'
+
+
 
 const localizedDescription = computed(() => {
   const desc = currentWeather.value?.description || ''
@@ -250,31 +263,122 @@ async function getHourlyWeather() {
   }
 }
 
-async function fetchMatchingComments() {
-  if (!currentWeather.value) return
 
-  try {
-    const res = await API.graphql(graphqlOperation(listWeatherComments, {
-      filter: {
-        weather: { eq: currentWeather.value.main },
-        language: { eq: locale.value }
+async function fetchIOSPosts() {
+  const query = `
+    query ListPosts {
+      listPosts {
+        items {
+          owner
+          id
+          content
+          temperature
+          weather
+          timeOfDay
+          language
+          createdAt
+        }
       }
-    }))
-
-    let items = res.data.listWeatherComments.items
-    for (const item of items) {
-if (item.thumbnailKey) {
+    }
+  `
   try {
-    item.imageUrl = await Storage.get(item.thumbnailKey)
-  } catch {
-    console.warn('📷 サムネイル取得失敗:', item.thumbnailKey)
+    const res = await fetch(iosGraphQLUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': iosApiKey,
+      },
+      body: JSON.stringify({ query }),
+    })
+
+    const json = await res.json()
+    return json.data?.listPosts?.items ?? []
+  } catch (e) {
+    console.error('❌ iOS投稿取得失敗:', e)
+    return []
   }
 }
+
+async function fetchMatchingComments() {
+  hasFetched.value = true
+  const weather = currentWeather.value.main
+  const temp = currentWeather.value.temp
+  const hour = new Date().getHours()
+  const lang = locale.value
+
+  const minTemp = temp - 3
+  const maxTemp = temp + 3
+  const minHour = Math.floor(hour - 1.5)
+  const maxHour = Math.floor(hour + 1.5)
+
+  try {
+    // ✅ Yamato側のDynamoDBコメント取得
+    const result = await API.graphql({
+      query: listWeatherComments,
+      authMode: 'AMAZON_COGNITO_USER_POOLS',
+    })
+
+    const items = result?.data?.listWeatherComments?.items || []
+
+    const filteredYamato = await Promise.all(
+      items.map(async item => {
+        if (
+          item.weather?.toLowerCase().includes(weather.toLowerCase()) &&
+          item.language === lang &&
+          item.temperature >= minTemp &&
+          item.temperature <= maxTemp &&
+          item.timeOfDay >= minHour &&
+          item.timeOfDay <= maxHour
+        ) {
+          return {
+            ...item,
+            source: 'yamato',
+            imageUrl: item.imageKey ? await Storage.get(item.imageKey) : '',
+            createdAtMs: new Date(item.createdAt).getTime(),
+          }
+        }
+        return null
+      })
+    )
+    const filteredMain = filteredYamato.filter(Boolean) as WeatherComment[]
+    const sortedMain = filteredMain.sort((a, b) => b.createdAtMs - a.createdAtMs)
+
+    // ✅ iOS側のAPIコメント取得
+    const iosPosts = await fetchIOSPosts()
+
+    const filteredIOS = iosPosts
+      .filter(post =>
+        post.weather?.toLowerCase().includes(weather.toLowerCase()) &&
+        post.language === lang &&
+        post.temperature >= minTemp &&
+        post.temperature <= maxTemp &&
+        post.timeOfDay >= minHour &&
+        post.timeOfDay <= maxHour
+      )
+      .map(post => ({
+        ...post,
+        source: 'ios',
+        nickname: '花子天気(iOS)より',
+        imageUrl: '',
+        createdAtMs: new Date(post.createdAt).getTime(),
+      }))
+
+    // ✅ ランダムシャッフル関数
+    function shuffle<T>(array: T[]): T[] {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1))
+        ;[array[i], array[j]] = [array[j], array[i]]
+      }
+      return array
     }
-    matchedComments.value = items.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-    console.log('✅ コメント取得:', matchedComments.value)
-  } catch (e) {
-    console.error('❌ コメント取得失敗:', e)
+
+    const randomIOS = shuffle(filteredIOS).slice(0, 5)
+
+    // ✅ 結合（Yamato上位、iOSはランダム）
+    matchedComments.value = [...sortedMain, ...randomIOS]
+
+  } catch (err) {
+    console.error('💥 fetchMatchingComments failed:', err)
   }
 }
 
@@ -304,6 +408,14 @@ function getLangName(code) {
   if (code === 'zh') return '中文'
   if (code === 'es') return 'Español'
   return code
+}
+
+function checkBeforePost() {
+  if (!profile) {
+    alert(t('weather.requireProfile')) // 今後 ConfirmDialog に差し替え可
+    return
+  }
+  openPostModal()
 }
 
 </script>
@@ -401,10 +513,11 @@ function getLangName(code) {
 }
 
 .comment-icon {
-  width: 28px;
-  height: 28px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   object-fit: cover;
+  margin-right: 8px;
 }
 
 .comment-nickname {
@@ -477,5 +590,51 @@ function getLangName(code) {
     opacity: 1;
   }
 }
+
+.text-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: #e0e0e0; /* 薄いグレー */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 18px;
+  color: #1a73e8; /* Googleブルーに近い青 */
+  margin-right: 8px;
+}
+
+.comment-card.fade-up {
+  opacity: 0;
+  transform: translateY(-15px); /* 上から */
+  animation: fadeDown 0.8s ease-out forwards;
+}
+
+@keyframes fadeDown {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.no-comments-text {
+  margin-top: 1rem;
+  text-align: center;
+  opacity: 0;
+  transform: translateY(-10px);
+  animation: fadeDown 0.6s ease-out forwards;
+  animation-delay: 0.2s;
+  white-space: pre-line; /* ← \n を効かせる */
+  color: #888; /* 任意で見やすさ向上 */
+}
+
+@keyframes fadeDown {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 </style>
 

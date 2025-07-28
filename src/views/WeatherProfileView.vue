@@ -44,36 +44,36 @@
       </div>
     </div>
 
-    <!-- 📬 投稿コメント一覧 -->
-    <h4 class="my-comments-title">あなたの投稿</h4>
-    <div class="comment-list">
-      <div
-        v-for="comment in myComments"
-        :key="comment.id"
-        class="comment-card"
-      >
-        <!-- 本文（上に表示） -->
-        <p class="comment-content">{{ comment.content }}</p>
+<!-- 📬 投稿コメント一覧 -->
+<div class="comment-list fade-in">
+  <div
+    v-for="(comment, index) in myComments"
+    :key="comment.id"
+    class="comment-card"
+    :style="{ animationDelay: `${index * 0.1}s` }"
+  >
+    <!-- 本文（上に表示） -->
+    <p class="comment-content">{{ comment.content }}</p>
 
-        <!-- 📷 アイコン（画像がある場合のみ） -->
-        <span
-          v-if="comment.imageUrl"
-          class="photo-icon"
-          @click="openImageModal(comment.imageUrl)"
-        >
-          📷
-        </span>
+    <!-- 📷 アイコン（画像がある場合のみ） -->
+    <span
+      v-if="comment.imageUrl"
+      class="photo-icon"
+      @click="openImageModal(comment.imageUrl)"
+    >
+      📷
+    </span>
 
-        <!-- メタ情報 -->
-        <p class="comment-meta">
-          {{ comment.weather }} / {{ comment.temperature }}°C /
-          {{ formatHour(comment.timeOfDay) }}時 / {{ getLangName(comment.language) }}
-        </p>
+    <!-- メタ情報 -->
+    <p class="comment-meta">
+      {{ comment.weather }} / {{ comment.temperature }}°C /
+      {{ formatHour(comment.timeOfDay) }}時 / {{ getLangName(comment.language) }}
+    </p>
 
-        <!-- ⋯ 削除アイコン（右下に配置） -->
-        <span class="more-icon" @click="openDeleteDialog(comment)">⋯</span>
-      </div>
-    </div>
+    <!-- ⋯ 削除アイコン（右下に配置） -->
+    <span class="more-icon" @click="openDeleteDialog(comment)">⋯</span>
+  </div>
+</div>
 
     <!-- 画像モーダル -->
     <ImageModal

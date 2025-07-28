@@ -455,7 +455,9 @@
   "weatherMain.Tornado": "Tornado",
 
 "weather.title": "Envía tus palabras del clima con el viento",
-"weather.showComments": "Busca palabras sobre el clima"
+"weather.showComments": "Busca palabras sobre el clima",
+
+"weather.noMatchedComments": "Aún no se han encontrado comentarios para este clima.\nPrueba a escribir uno con el ícono ✏️."
 
 
 }
