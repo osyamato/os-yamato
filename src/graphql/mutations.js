@@ -332,6 +332,11 @@ export const createMessage = /* GraphQL */ `
       timestamp
       createdAt
       expiresAt
+      reactions {
+        nextToken
+        __typename
+      }
+      updatedAt
       owner
       __typename
     }
@@ -356,6 +361,11 @@ export const updateMessage = /* GraphQL */ `
       timestamp
       createdAt
       expiresAt
+      reactions {
+        nextToken
+        __typename
+      }
+      updatedAt
       owner
       __typename
     }
@@ -380,6 +390,11 @@ export const deleteMessage = /* GraphQL */ `
       timestamp
       createdAt
       expiresAt
+      reactions {
+        nextToken
+        __typename
+      }
+      updatedAt
       owner
       __typename
     }
@@ -907,6 +922,306 @@ export const deleteVideo = /* GraphQL */ `
       videoTakenAt
       isFavorite
       lastOpenedAt
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const createGPTMiniSession = /* GraphQL */ `
+  mutation CreateGPTMiniSession(
+    $input: CreateGPTMiniSessionInput!
+    $condition: ModelGPTMiniSessionConditionInput
+  ) {
+    createGPTMiniSession(input: $input, condition: $condition) {
+      id
+      title
+      mode
+      lastOpenedAt
+      createdAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;
+export const updateGPTMiniSession = /* GraphQL */ `
+  mutation UpdateGPTMiniSession(
+    $input: UpdateGPTMiniSessionInput!
+    $condition: ModelGPTMiniSessionConditionInput
+  ) {
+    updateGPTMiniSession(input: $input, condition: $condition) {
+      id
+      title
+      mode
+      lastOpenedAt
+      createdAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;
+export const deleteGPTMiniSession = /* GraphQL */ `
+  mutation DeleteGPTMiniSession(
+    $input: DeleteGPTMiniSessionInput!
+    $condition: ModelGPTMiniSessionConditionInput
+  ) {
+    deleteGPTMiniSession(input: $input, condition: $condition) {
+      id
+      title
+      mode
+      lastOpenedAt
+      createdAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;
+export const createGPTMiniHistory = /* GraphQL */ `
+  mutation CreateGPTMiniHistory(
+    $input: CreateGPTMiniHistoryInput!
+    $condition: ModelGPTMiniHistoryConditionInput
+  ) {
+    createGPTMiniHistory(input: $input, condition: $condition) {
+      id
+      sessionId
+      prompt
+      response
+      language
+      createdAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;
+export const updateGPTMiniHistory = /* GraphQL */ `
+  mutation UpdateGPTMiniHistory(
+    $input: UpdateGPTMiniHistoryInput!
+    $condition: ModelGPTMiniHistoryConditionInput
+  ) {
+    updateGPTMiniHistory(input: $input, condition: $condition) {
+      id
+      sessionId
+      prompt
+      response
+      language
+      createdAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;
+export const deleteGPTMiniHistory = /* GraphQL */ `
+  mutation DeleteGPTMiniHistory(
+    $input: DeleteGPTMiniHistoryInput!
+    $condition: ModelGPTMiniHistoryConditionInput
+  ) {
+    deleteGPTMiniHistory(input: $input, condition: $condition) {
+      id
+      sessionId
+      prompt
+      response
+      language
+      createdAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;
+export const createWeatherCity = /* GraphQL */ `
+  mutation CreateWeatherCity(
+    $input: CreateWeatherCityInput!
+    $condition: ModelWeatherCityConditionInput
+  ) {
+    createWeatherCity(input: $input, condition: $condition) {
+      id
+      name
+      countryCode
+      lat
+      lon
+      lastUsedAt
+      createdAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;
+export const updateWeatherCity = /* GraphQL */ `
+  mutation UpdateWeatherCity(
+    $input: UpdateWeatherCityInput!
+    $condition: ModelWeatherCityConditionInput
+  ) {
+    updateWeatherCity(input: $input, condition: $condition) {
+      id
+      name
+      countryCode
+      lat
+      lon
+      lastUsedAt
+      createdAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;
+export const deleteWeatherCity = /* GraphQL */ `
+  mutation DeleteWeatherCity(
+    $input: DeleteWeatherCityInput!
+    $condition: ModelWeatherCityConditionInput
+  ) {
+    deleteWeatherCity(input: $input, condition: $condition) {
+      id
+      name
+      countryCode
+      lat
+      lon
+      lastUsedAt
+      createdAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;
+export const createWeatherProfile = /* GraphQL */ `
+  mutation CreateWeatherProfile(
+    $input: CreateWeatherProfileInput!
+    $condition: ModelWeatherProfileConditionInput
+  ) {
+    createWeatherProfile(input: $input, condition: $condition) {
+      id
+      icon
+      nickname
+      yamatoId
+      bio
+      homepage
+      createdAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;
+export const updateWeatherProfile = /* GraphQL */ `
+  mutation UpdateWeatherProfile(
+    $input: UpdateWeatherProfileInput!
+    $condition: ModelWeatherProfileConditionInput
+  ) {
+    updateWeatherProfile(input: $input, condition: $condition) {
+      id
+      icon
+      nickname
+      yamatoId
+      bio
+      homepage
+      createdAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;
+export const deleteWeatherProfile = /* GraphQL */ `
+  mutation DeleteWeatherProfile(
+    $input: DeleteWeatherProfileInput!
+    $condition: ModelWeatherProfileConditionInput
+  ) {
+    deleteWeatherProfile(input: $input, condition: $condition) {
+      id
+      icon
+      nickname
+      yamatoId
+      bio
+      homepage
+      createdAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;
+export const createWeatherComment = /* GraphQL */ `
+  mutation CreateWeatherComment(
+    $input: CreateWeatherCommentInput!
+    $condition: ModelWeatherCommentConditionInput
+  ) {
+    createWeatherComment(input: $input, condition: $condition) {
+      id
+      owner
+      ownerNickname
+      icon
+      weather
+      temperature
+      timeOfDay
+      language
+      content
+      imageKey
+      thumbnailKey
+      profileView
+      likeCount
+      reportCount
+      replyCount
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const updateWeatherComment = /* GraphQL */ `
+  mutation UpdateWeatherComment(
+    $input: UpdateWeatherCommentInput!
+    $condition: ModelWeatherCommentConditionInput
+  ) {
+    updateWeatherComment(input: $input, condition: $condition) {
+      id
+      owner
+      ownerNickname
+      icon
+      weather
+      temperature
+      timeOfDay
+      language
+      content
+      imageKey
+      thumbnailKey
+      profileView
+      likeCount
+      reportCount
+      replyCount
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const deleteWeatherComment = /* GraphQL */ `
+  mutation DeleteWeatherComment(
+    $input: DeleteWeatherCommentInput!
+    $condition: ModelWeatherCommentConditionInput
+  ) {
+    deleteWeatherComment(input: $input, condition: $condition) {
+      id
+      owner
+      ownerNickname
+      icon
+      weather
+      temperature
+      timeOfDay
+      language
+      content
+      imageKey
+      thumbnailKey
+      profileView
+      likeCount
+      reportCount
+      replyCount
       createdAt
       updatedAt
       __typename

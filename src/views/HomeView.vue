@@ -40,7 +40,7 @@
       <button @click="goTo('time0')" class="icon-button" style="background-image: url('/clock.png')"></button>
 
       <!-- ✅ 天気 -->
-      <button @click="goTo('weather')" class="icon-button" style="background-image: url('/weather.icon.png')"></button>
+      <button @click="goTo('weather875')" class="icon-button" style="background-image: url('/weather.icon.png')"></button>
 
       <!-- ✅ ヒント -->
       <button @click="goToIconGuide()" class="icon-button" style="background-image: url('/icon.2.png')"></button>

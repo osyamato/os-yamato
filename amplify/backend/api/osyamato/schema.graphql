@@ -273,3 +273,54 @@ type GPTMiniHistory
   createdAt: AWSDateTime!
   updatedAt: AWSDateTime!
 }
+
+type WeatherCity @model @auth(rules: [{ allow: owner }]) {
+  id: ID!
+  name: String!           # 都市名（例: "Tokyo"）
+  countryCode: String     # 国コード（例: "JP"）
+  lat: Float              # 緯度
+  lon: Float              # 経度
+  lastUsedAt: AWSDateTime # 最終使用日時（表示の並び替えなどに使える）
+}
+
+
+type WeatherProfile
+  @model
+  @auth(rules: [
+    { allow: owner },
+    { allow: private, operations: [read] }
+  ]) {
+  id: ID!                                # ← Cognito Sub を直接入れる（PK）
+  icon: String                           # 例: weather.icon1.png
+  nickname: String
+  yamatoId: String                       # インデックス削除（任意として扱う）
+  bio: String                            # 🌿 自由記述の紹介文
+  homepage: String                       # 🌐 ← 新しく追加
+  createdAt: AWSDateTime!
+}
+
+type WeatherComment
+  @model
+  @auth(rules: [
+    { allow: owner },
+    { allow: private, operations: [read, update] }
+  ]) {
+  id: ID!
+  owner: String
+  ownerNickname: String       
+  icon: String               
+  weather: String!
+  temperature: Float!
+  timeOfDay: Float!
+  language: String!
+  content: String!
+  imageKey: String
+  thumbnailKey: String
+  profileView: Boolean
+  likeCount: Int
+  reportCount: Int
+  replyCount: Int
+  createdAt: AWSDateTime
+  updatedAt: AWSDateTime
+}
+
