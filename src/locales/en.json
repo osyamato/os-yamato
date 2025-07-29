@@ -519,7 +519,37 @@
 
 "weather.title": "Send Your Weather Words on the Wind",
 "weather.showComments": "Find words for this weather",
+  "weather.requireProfile": "To post, let's create a simple profile. You can register from the 👤 button.",
 
-"weather.noMatchedComments": "No comments have been found for this weather.\nTry posting one using the ✏️ icon."
+"weather.noMatchedComments": "No comments have been found for this weather.\nTry posting one using the ✏️ icon.",
+
+"weather.unregisteredMessage": "Not registered yet. Tap the 👤 button to create a simple profile.",
+
+"weather.unregistered": "Not registered.\nTap the 👤 button to create your profile.",
+
+  "selectWeather": "Select weather",
+  "selectTemperature": "Select temperature",
+  "selectHour": "Select hour",
+"weatherPlaceholder": "Please enter at least 10 characters",
+  "submit": "Submit",
+
+  "weather.citySearchTitle": "Place Search",
+  "weather.searchPlaceholder": "Kyoto, Kumamoto, etc.",
+  "weather.searchButton": "Search",
+  "weather.savedCities": "Saved Cities",
+"weather.yamatoId": "Your Yamato ID (optional)",
+"weather.fromIos": "from hanaco Weather (iOS)",
+"weather.anonymous": "Anonymous",
+"weather.title": "hanaco Weather",
+
+  "weather.forecastTitle": "Upcoming Weather",
+  "weather.today": "Today",
+  "weather.later": "Later Days",
+
+"weather.editProfileTitle": "Edit Profile",
+"weather.nickname": "Nickname",
+"weather.bioLabel": "Bio",
+"weather.bioPlaceholder": "Write a short bio (max 100 characters)"
+
 
 }

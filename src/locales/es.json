@@ -456,8 +456,36 @@
 
 "weather.title": "Envía tus palabras del clima con el viento",
 "weather.showComments": "Busca palabras sobre el clima",
+"weather.requireProfile": "Para publicar, crea un perfil sencillo. Puedes registrarte desde el botón 👤.",
+"weather.noMatchedComments": "Aún no se han encontrado comentarios para este clima.\nPrueba a escribir uno con el ícono ✏️.",
+"weather.unregisteredMessage": "Aún no estás registrado. Toca el botón 👤 para crear un perfil sencillo.",
 
-"weather.noMatchedComments": "Aún no se han encontrado comentarios para este clima.\nPrueba a escribir uno con el ícono ✏️."
+"weather.unregistered": "No registrado.\nPulsa el botón 👤 para crear tu perfil.",
+
+  "selectWeather": "Selecciona el clima",
+  "selectTemperature": "Selecciona la temperatura",
+  "selectHour": "Selecciona la hora",
+"weatherPlaceholder": "Introduce al menos 10 caracteres",
+  "submit": "Enviar",
+
+"weather.citySearchTitle": "Búsqueda de lugares",
+  "weather.searchButton": "Buscar",
+"weather.citySearchPlaceholder": "Kioto, Kumamoto, etc.",
+  "weather.savedCities": "Ciudades guardadas",
+"weather.yamatoId": "Tu Yamato ID (opcional)",
+"weather.fromIos": "de hanaco Clima (iOS)",
+"weather.anonymous": "Anónimo",
+"weather.title": "Clima de hanaco",
+
+ "weather.forecastTitle": "Clima Próximo",
+  "weather.today": "Hoy",
+  "weather.later": "Días siguientes",
+
+"weather.searchPlaceholder": "Buscar por clima o temperatura...",
+"weather.editProfileTitle": "Editar perfil",
+"weather.nickname": "Apodo",
+"weather.bioLabel": "Biografía",
+"weather.bioPlaceholder": "Escribe una breve biografía (máx. 100 caracteres)"
 
 
 }

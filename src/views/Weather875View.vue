@@ -1,6 +1,6 @@
 <template>
   <div class="weather875-view" :class="{ dark: isDarkMode }">
-    <h2 class="title">花子天気</h2>
+<h2 class="title">{{ t('weather.title') }}</h2>
 
     <div class="icon-buttons">
       <button class="icon-button" @click="goToProfile" :style="{ backgroundColor: iconColor }">
@@ -29,15 +29,15 @@
     </div>
 
     <!-- ❌ 修正: ボタン押下後かつ0件時のみ表示 -->
-    <p v-if="matchedComments.length === 0 && hasFetched" class="no-comments-text">
-      {{ t('weather.noMatchedComments') }}
-    </p>
+<p
+  v-if="!isLoadingComments && hasFetched && matchedComments.length === 0"
+  class="no-comments-text"
+>
+  {{ t('weather.noMatchedComments') }}
+</p>
 
     <!-- ✅ 修正: コメントがあるときだけ表示 -->
     <div v-if="matchedComments.length > 0" class="comment-list-section">
-      <h4 class="matched-comments-title">
-        {{ t('weather.matchedCommentsTitle') }}
-      </h4>
 
       <div class="comment-list">
         <div
@@ -58,9 +58,9 @@
               />
             </template>
 
-            <span class="comment-nickname">
-              {{ comment.ownerNickname || (comment.source === 'ios' ? '花子天気(iOS)より' : 'Anonymous') }}
-            </span>
+<span class="comment-nickname">
+  {{ comment.ownerNickname || (comment.source === 'ios' ? t('weather.fromIos') : t('weather.anonymous')) }}
+</span>
           </div>
 
           <p class="comment-content">{{ comment.content }}</p>
@@ -105,7 +105,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, onActivated, computed } from 'vue'
 import { API, graphqlOperation, Auth, Storage } from 'aws-amplify'
 import {
   listWeatherProfiles,
@@ -123,6 +123,7 @@ import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { getWeatherProfile } from '@/graphql/queries'
 const matchedComments = ref<WeatherComment[]>([])
+const isLoadingComments = ref(false)
 const hasFetched = ref(false) 
 
 
@@ -239,8 +240,17 @@ function goToProfile() {
 
 async function getHourlyWeather() {
   if (!selectedCity.value) return
+
   try {
-    const url = `https://api.openweathermap.org/data/2.5/forecast?lat=${selectedCity.value.lat}&lon=${selectedCity.value.lon}&appid=${API_KEY}&units=metric&lang=ja`
+    const langMap = {
+      ja: 'ja',
+      en: 'en',
+      es: 'es',
+      zh: 'zh_cn'
+    }
+    const apiLang = langMap[locale.value] || 'en'
+
+    const url = `https://api.openweathermap.org/data/2.5/forecast?lat=${selectedCity.value.lat}&lon=${selectedCity.value.lon}&appid=${API_KEY}&units=metric&lang=${apiLang}`
     const res = await fetch(url)
     const data = await res.json()
 
@@ -299,8 +309,16 @@ async function fetchIOSPosts() {
   }
 }
 
+// 🔍 天気のゆるい一致（単語単位、大小無視）
+function looseWeatherMatch(a = '', b = '') {
+  const keywordsA = a.toLowerCase().split(/\s+/)
+  const keywordsB = b.toLowerCase().split(/\s+/)
+  return keywordsA.some(word => keywordsB.includes(word))
+}
+
 async function fetchMatchingComments() {
-  hasFetched.value = true
+  isLoadingComments.value = true
+
   const weather = currentWeather.value.main
   const temp = currentWeather.value.temp
   const hour = new Date().getHours()
@@ -312,7 +330,7 @@ async function fetchMatchingComments() {
   const maxHour = Math.floor(hour + 1.5)
 
   try {
-    // ✅ Yamato側のDynamoDBコメント取得
+    // ✅ Yamatoのコメント取得
     const result = await API.graphql({
       query: listWeatherComments,
       authMode: 'AMAZON_COGNITO_USER_POOLS',
@@ -340,30 +358,30 @@ async function fetchMatchingComments() {
         return null
       })
     )
+
     const filteredMain = filteredYamato.filter(Boolean) as WeatherComment[]
     const sortedMain = filteredMain.sort((a, b) => b.createdAtMs - a.createdAtMs)
 
-    // ✅ iOS側のAPIコメント取得
+    // ✅ iOS投稿取得
     const iosPosts = await fetchIOSPosts()
 
     const filteredIOS = iosPosts
       .filter(post =>
-        post.weather?.toLowerCase().includes(weather.toLowerCase()) &&
+        looseWeatherMatch(post.weather, weather) &&
         post.language === lang &&
-        post.temperature >= minTemp &&
-        post.temperature <= maxTemp &&
-        post.timeOfDay >= minHour &&
-        post.timeOfDay <= maxHour
+        post.temperature >= temp - 5 &&
+        post.temperature <= temp + 5 &&
+        post.timeOfDay >= Math.max(0, hour - 3) &&
+        post.timeOfDay <= Math.min(23, hour + 3)
       )
       .map(post => ({
         ...post,
         source: 'ios',
-        nickname: '花子天気(iOS)より',
         imageUrl: '',
         createdAtMs: new Date(post.createdAt).getTime(),
       }))
 
-    // ✅ ランダムシャッフル関数
+    // ✅ シャッフル関数
     function shuffle<T>(array: T[]): T[] {
       for (let i = array.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1))
@@ -374,13 +392,20 @@ async function fetchMatchingComments() {
 
     const randomIOS = shuffle(filteredIOS).slice(0, 5)
 
-    // ✅ 結合（Yamato上位、iOSはランダム）
-    matchedComments.value = [...sortedMain, ...randomIOS]
+    // ✅ マージ
+    const combined = [...sortedMain, ...randomIOS]
+    matchedComments.value = combined
 
+    // ✅ コメント取得済み & ヒットなしを検出
+    hasFetched.value = sortedMain.length === 0 && randomIOS.length === 0
   } catch (err) {
     console.error('💥 fetchMatchingComments failed:', err)
+    hasFetched.value = true // エラー時も表示対象とする
+  } finally {
+    isLoadingComments.value = false
   }
 }
+
 
 function openImageModal(url) {
   modalImageUrl.value = url
@@ -411,12 +436,21 @@ function getLangName(code) {
 }
 
 function checkBeforePost() {
-  if (!profile) {
-    alert(t('weather.requireProfile')) // 今後 ConfirmDialog に差し替え可
+  const noProfile = !profile.value || !profile.value.nickname
+  if (noProfile) {
+    alert(t('weather.requireProfile'))
     return
   }
   openPostModal()
 }
+
+onMounted(() => {
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+})
+
+onActivated(() => {
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+})
 
 </script>
 

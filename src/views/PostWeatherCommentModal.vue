@@ -96,6 +96,14 @@ const temperatureOptions = Array.from({ length: 51 }, (_, i) => i - 10)
 const originalFile = ref(null)
 const thumbnailBlob = ref(null)
 
+watch(() => props.visible, (newVal) => {
+  if (newVal) {
+    if (props.weather) selectedWeather.value = props.weather
+    if (typeof props.temperature === 'number') selectedTemperature.value = props.temperature
+    if (typeof props.timeOfDay === 'number') selectedHour.value = props.timeOfDay
+  }
+})
+
 watch(() => props.weather, (w) => {
   if (w) selectedWeather.value = w
 }, { immediate: true })

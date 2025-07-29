@@ -2,19 +2,23 @@
   <transition name="weather-transition">
     <div v-if="visible" class="modal-overlay" @click.self="close">
       <div class="modal-card">
-        <h2 class="modal-title">都市を検索</h2>
+<h2 class="modal-title">{{ t('weather.citySearchTitle') }}</h2>
 
         <!-- 🔍 入力欄 + 検索ボタン（縦並び） -->
         <div class="search-group column">
-          <input
-            v-model="searchQuery"
-            placeholder="Tokyo, Paris, etc."
-            class="search-input"
-            inputmode="search"
-            @keyup.enter="searchCity"
-          />
+
+<input
+  v-model="searchQuery"
+  :placeholder="t('weather.searchPlaceholder')"
+  class="search-input"
+  inputmode="search"
+  @keyup.enter="searchCity"
+/>
+
           <div class="search-button-wrapper">
-            <YamatoButton size="small" @click="searchCity">検索</YamatoButton>
+<YamatoButton size="small" @click="searchCity">
+  {{ t('weather.searchButton') }}
+</YamatoButton>
           </div>
         </div>
 
@@ -30,7 +34,7 @@
         </ul>
 
         <!-- 📌 保存済み -->
-        <h3 class="saved-title">保存済み</h3>
+<h3 class="saved-title">{{ t('weather.savedCities') }}</h3>
         <ul class="result-list">
           <li v-for="city in savedCities" :key="city.id" @click="select(city)">
             {{ city.name }}（{{ city.countryCode }}）
@@ -52,6 +56,11 @@ import {
 } from '@/graphql/mutations'
 import { listWeatherCities } from '@/graphql/queries'
 import YamatoButton from '@/components/YamatoButton.vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
+
+
 
 const props = defineProps({ visible: Boolean })
 const emit = defineEmits(['close', 'select'])

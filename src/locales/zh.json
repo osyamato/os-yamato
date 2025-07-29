@@ -475,7 +475,34 @@
 "weather.title": "将天气的语言托付于风",
  "weather.showComments": "寻找有关天气的话语",
 
-"weather.noMatchedComments": "还没有关于此天气的评论。\n点击 ✏️ 图标试着发表一条评论吧。"
+  "weather.requireProfile": "要发布评论，请先创建一个简单的个人资料。点击👤按钮即可。",
+"weather.noMatchedComments": "还没有关于此天气的评论。\n点击 ✏️ 图标试着发表一条评论吧。",
+"weather.unregisteredMessage": "尚未注册。请点击👤按钮创建一个简单的个人资料。",
+"weather.unregistered": "尚未注册。\n请点击 👤 按钮创建个人资料。",
+
+  "selectWeather": "请选择天气",
+  "selectTemperature": "请选择温度",
+  "selectHour": "请选择时间",
+"weatherPlaceholder": "请输入至少10个字符",
+  "submit": "提交",
+
+"weather.citySearchTitle": "地名搜索",
+"weather.searchPlaceholder": "例如：京都、熊本",
+  "weather.searchButton": "搜索",
+  "weather.savedCities": "已保存城市",
+"weather.yamatoId": "你的 Yamato ID（可选）",
+"weather.fromIos": "来自花子天气 (iOS)",
+"weather.anonymous": "匿名",
+"weather.title": "花子天气",
+
+  "weather.forecastTitle": "未来天气",
+  "weather.today": "今天",
+  "weather.later": "明天以后",
+
+"weather.editProfileTitle": "编辑个人资料",
+  "weather.nickname": "昵称",
+  "weather.bioLabel": "简介（最多100个字）",
+  "weather.bioPlaceholder": "例如：我喜欢阅读！"
 
 
 }

@@ -501,7 +501,34 @@
 "weather.title": "天気の言葉を風にのせて",
 "weather.showComments": "天気の言葉を探そう",
 
-"weather.noMatchedComments": "この天気へのコメントはまだ見つかりません。\n✏️アイコンからつぶやいてみましょう。"
+"weather.requireProfile": "投稿するには、簡単なプロフィールを作成しましょう。👤ボタンから登録できます。",
+"weather.noMatchedComments": "この天気へのコメントはまだ見つかりません。\n✏️アイコンからつぶやいてみましょう。",
+
+"weather.unregistered": "未登録です。\n👤ボタンからプロフィールを作成しましょう。",
+
+  "selectWeather": "天気を選んでください",
+  "selectTemperature": "気温を選んでください",
+  "selectHour": "時間を選んでください",
+"weatherPlaceholder": "10文字以上で入力してください",
+  "submit": "投稿",
+  "weather.citySearchTitle": "地名を検索",
+"weather.searchPlaceholder": "京都、熊本 など",
+  "weather.searchButton": "検索",
+  "weather.savedCities": "保存済み",
+"weather.editProfileTitle": "プロフィール編集",
+"weather.nickname": "ニックネーム",
+"weather.yamatoId": "あなたのYamato ID（任意）",
+"weather.bioLabel": "紹介文（100文字以内）",
+"weather.bioPlaceholder": "例：読書が大好き！！",
+
+"weather.fromIos": "花子天気(iOS)より",
+"weather.anonymous": "匿名",
+"weather.title": "花子天気",
+
+"weather.forecastTitle": "これからの天気",
+  "weather.today": "今日",
+  "weather.later": "明日以降"
+
 
 
 }
