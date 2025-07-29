@@ -520,6 +520,8 @@
 "weather.yamatoId": "あなたのYamato ID（任意）",
 "weather.bioLabel": "紹介文（100文字以内）",
 "weather.bioPlaceholder": "例：読書が大好き！！",
+  "weather.homepageLabel": "ホームページ（任意）",
+  "common.save": "保存",
 
 "weather.fromIos": "花子天気(iOS)より",
 "weather.anonymous": "匿名",
@@ -527,7 +529,10 @@
 
 "weather.forecastTitle": "これからの天気",
   "weather.today": "今日",
-  "weather.later": "明日以降"
+  "weather.later": "明日以降",
+"weather.hourSuffix": "時",
+"profile.title": "プロフィール",
+"weather.timeSuffix": "時"
 
 
 

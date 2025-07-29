@@ -502,7 +502,13 @@
 "weather.editProfileTitle": "编辑个人资料",
   "weather.nickname": "昵称",
   "weather.bioLabel": "简介（最多100个字）",
-  "weather.bioPlaceholder": "例如：我喜欢阅读！"
+  "weather.bioPlaceholder": "例如：我喜欢阅读！",
+"weather.homepageLabel": "主页（可选）",
+"common.save": "保存",
+"weather.hourSuffix": "点",
+"profile.title": "个人资料",
+"weather.timeSuffix": "时"
+
 
 
 }

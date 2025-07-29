@@ -485,7 +485,13 @@
 "weather.editProfileTitle": "Editar perfil",
 "weather.nickname": "Apodo",
 "weather.bioLabel": "Biografía",
-"weather.bioPlaceholder": "Escribe una breve biografía (máx. 100 caracteres)"
+"weather.bioPlaceholder": "Escribe una breve biografía (máx. 100 caracteres)",
+"weather.homepageLabel": "Página web (opcional)",
+"common.save": "Guardar",
+"profile.title": "Perfil",
+"weather.hourSuffix": " h",
+"weather.timeSuffix": "h"
+
 
 
 }

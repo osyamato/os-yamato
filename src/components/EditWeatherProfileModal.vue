@@ -2,21 +2,21 @@
   <transition name="modal">
     <div v-if="visible" class="modal-overlay" @click.self="close">
       <div class="modal-card" @click.stop :class="{ dark: isDarkMode }">
-<h2>{{ t('weather.editProfileTitle') }}</h2>
+        <h2>{{ t('weather.editProfileTitle') }}</h2>
 
-        <!-- アイコン選択 -->
+        <!-- 🌐 アイコン選択 -->
         <div class="icon-list">
-          <!-- 未選択時：ニックネーム頭文字 -->
-<div
-  class="icon-circle"
-  :class="{ selected: icon === '' }"
-  style="background-color: #888;"
-  @click="icon = ''"
->
-  <span class="icon-initial" style="color: white;">
-    {{ nickname?.charAt(0) || '？' }}
-  </span>
-</div>
+          <!-- テキストアイコン（未選択） -->
+          <div
+            class="icon-circle"
+            :class="{ selected: icon === '' }"
+            style="background-color: #888;"
+            @click="icon = ''"
+          >
+            <span class="icon-initial" style="color: white;">
+              {{ nickname?.charAt(0) || '？' }}
+            </span>
+          </div>
 
           <!-- 画像アイコン -->
           <div
@@ -30,22 +30,32 @@
           </div>
         </div>
 
-        <!-- 入力項目 -->
-<label>{{ t('weather.nickname') }}</label>
-<input v-model="nickname" />
+        <!-- 📝 入力欄 -->
+        <label>{{ t('weather.nickname') }}</label>
+        <input v-model="nickname" />
 
-<label>{{ t('weather.yamatoId') }}</label>
-<input v-model="yamatoId" />
+        <label>{{ t('weather.yamatoId') }}</label>
+        <input v-model="yamatoId" />
 
+        <label>{{ t('weather.bioLabel') }}</label>
+        <textarea
+          v-model="bio"
+          maxlength="100"
+          :placeholder="t('weather.bioPlaceholder')"
+        />
 
-<label>{{ t('weather.bioLabel') }}</label>
-<textarea v-model="bio" maxlength="100" :placeholder="t('weather.bioPlaceholder')" />
+        <label>{{ t('weather.homepageLabel') }}</label>
+        <input v-model="homepage" type="url" placeholder="https://example.com" />
 
-        <!-- 保存ボタン（中央） -->
+        <!-- 💾 保存ボタン -->
         <div class="buttons center">
-          <yamato-button size="small" @click="saveProfile">
-            保存
-          </yamato-button>
+<yamato-button
+  size="small"
+  @click="saveProfile"
+  :disabled="!nickname || bio.length > 100"
+>
+  {{ t('common.save') }}
+</yamato-button>
         </div>
       </div>
     </div>
@@ -71,6 +81,7 @@ const icon = ref('')
 const nickname = ref('')
 const yamatoId = ref('')
 const bio = ref('')
+const homepage = ref('')
 
 const iconFilenames = [
   'weather.icon1.png', 'weather.icon2.png', 'weather.icon3.png',
@@ -86,6 +97,7 @@ watch(() => props.visible, (newVal) => {
     nickname.value = props.profile?.nickname || ''
     yamatoId.value = props.profile?.yamatoId || ''
     bio.value = props.profile?.bio || ''
+    homepage.value = props.profile?.homepage || ''
   }
 })
 
@@ -96,14 +108,15 @@ const saveProfile = async () => {
     const user = await Auth.currentAuthenticatedUser()
     const sub = user.attributes.sub
 
-    const isUpdate = !!props.profile?.__typename // すでに存在するなら更新
+    const isUpdate = !!props.profile?.__typename
 
     const input = {
-      id: isUpdate ? props.profile.id : sub, // 作成時のみ sub を使用
+      id: isUpdate ? props.profile.id : sub,
       icon: icon.value,
       nickname: nickname.value,
       yamatoId: yamatoId.value,
-      bio: bio.value
+      bio: bio.value,
+      homepage: homepage.value
     }
 
     const mutation = isUpdate ? updateWeatherProfile : createWeatherProfile
@@ -122,7 +135,6 @@ const saveProfile = async () => {
   }
 }
 </script>
-
 
 <style scoped>
 .modal-overlay {
@@ -194,9 +206,14 @@ input, textarea {
   color: inherit;
 }
 
+input[type="url"] {
+  word-break: break-all;
+}
+
 .buttons.center {
   display: flex;
   justify-content: center;
   margin-top: 16px;
 }
 </style>
+

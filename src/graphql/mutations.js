@@ -1101,6 +1101,7 @@ export const createWeatherProfile = /* GraphQL */ `
       nickname
       yamatoId
       bio
+      homepage
       createdAt
       updatedAt
       owner
@@ -1119,6 +1120,7 @@ export const updateWeatherProfile = /* GraphQL */ `
       nickname
       yamatoId
       bio
+      homepage
       createdAt
       updatedAt
       owner
@@ -1137,6 +1139,7 @@ export const deleteWeatherProfile = /* GraphQL */ `
       nickname
       yamatoId
       bio
+      homepage
       createdAt
       updatedAt
       owner

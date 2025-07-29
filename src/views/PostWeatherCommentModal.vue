@@ -1,30 +1,39 @@
 <template>
   <Modal :visible="visible" @close="handleClose">
     <div class="scrollable-modal-content">
+      <!-- 🌤️ タイトル -->
       <h2 class="weather-title">{{ t('weather.title') }}</h2>
 
       <!-- 🌤️ 天気 & 🌡️ 気温 & 🕒 時間 ピッカー -->
       <div class="row-pickers">
         <select v-model="selectedWeather" class="yamato-select">
           <option disabled value="">{{ t('selectWeather') }}</option>
-          <option v-for="weather in weatherOptions" :key="weather" :value="weather">
+          <option
+            v-for="weather in weatherOptions"
+            :key="weather"
+            :value="weather"
+          >
             {{ t(`weatherMain.${weather}`) }}
           </option>
         </select>
 
         <select v-model="selectedTemperature" class="yamato-select">
           <option disabled value="">{{ t('selectTemperature') }}</option>
-          <option v-for="temp in temperatureOptions" :key="temp" :value="temp">
+          <option
+            v-for="temp in temperatureOptions"
+            :key="temp"
+            :value="temp"
+          >
             {{ temp }}℃
           </option>
         </select>
 
-<select v-model="selectedHour" class="yamato-select">
-  <option disabled value="">{{ t('selectHour') }}</option>
-  <option v-for="hour in 24" :key="hour - 1" :value="hour - 1">
-    {{ hour - 1 }}:00
-  </option>
-</select>
+        <select v-model="selectedHour" class="yamato-select">
+          <option disabled value="">{{ t('selectHour') }}</option>
+          <option v-for="hour in 24" :key="hour" :value="hour">
+            {{ hour }}:00
+          </option>
+        </select>
       </div>
 
       <!-- 📝 コメント -->
@@ -42,18 +51,30 @@
       </div>
 
       <!-- 📷 写真ボタン -->
-      <button v-if="!previewUrl" class="image-button" @click="triggerFileInput">📷</button>
-      <input ref="fileInput" type="file" accept="image/*" @change="handleImage" class="hidden-file" />
+      <button
+        v-if="!previewUrl"
+        class="image-button"
+        @click="triggerFileInput"
+      >
+        📷
+      </button>
+      <input
+        ref="fileInput"
+        type="file"
+        accept="image/*"
+        @change="handleImage"
+        class="hidden-file"
+      />
 
       <!-- ✅ 投稿ボタン -->
       <div class="submit-wrapper">
-<YamatoButton
-  color="green"
-  :disabled="loading || !selectedWeather || content.trim().length < 10"
-  @click="submitComment"
->
-  {{ loading ? t('submitting') : t('submit') }}
-</YamatoButton>
+        <YamatoButton
+          color="green"
+          :disabled="loading || !selectedWeather || content.trim().length < 10"
+          @click="submitComment"
+        >
+          {{ t('submit') }}
+        </YamatoButton>
       </div>
     </div>
   </Modal>
@@ -290,6 +311,13 @@ async function submitComment() {
   align-items: center;
   background: #f4f4f4;
 }
+
+@media (prefers-color-scheme: dark) {
+  .image-preview {
+    background: #1c1c1c;
+  }
+}
+
 .image-preview img {
   max-height: 160px;
   width: auto;
@@ -301,14 +329,17 @@ async function submitComment() {
   position: absolute;
   top: 4px;
   right: 4px;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.5); /* ← ❌ これが丸背景 */
   border: none;
   color: white;
-  font-size: 1.1rem;
-  border-radius: 50%;
-  width: 24px;
-  height: 24px;
+  font-size: 1.4rem;
+  width: auto;
+  height: auto;
+  padding: 0;
+  line-height: 1;
   cursor: pointer;
+  background: none;     /* ✅ 修正：背景を消す */
+  border-radius: 0;     /* ✅ 修正：丸くしない */
 }
 .submit-wrapper {
   display: flex;
