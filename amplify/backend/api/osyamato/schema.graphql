@@ -295,6 +295,7 @@ type WeatherProfile
   nickname: String
   yamatoId: String                       # インデックス削除（任意として扱う）
   bio: String                            # 🌿 自由記述の紹介文
+  homepage: String                       # 🌐 ← 新しく追加
   createdAt: AWSDateTime!
 }
 

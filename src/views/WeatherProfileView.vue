@@ -2,25 +2,26 @@
   <div class="profile-container" :class="{ dark: isDarkMode }">
     <div v-if="profileLoaded" class="fade-in">
       <!-- 🌤️ タイトル -->
-      <h2 class="title">プロフィール</h2>
+<h2 class="title">{{ t('profile.title') }}</h2>
 
-      <div class="icon-buttons">
+      <!-- ✏️ 編集ボタン -->
+   <div class="icon-buttons">
         <button
           class="edit-icon"
           @click="showModal = true"
           :style="{ backgroundColor: iconColor }"
         >
-          👤        </button>
+          👤
+        </button>
       </div>
 
-      <!-- ✅ 未登録時のメッセージ -->
-  <div v-if="!profile.nickname" class="unregistered-message">
-<p class="unregistered-message-text">{{ t('weather.unregistered') }}</p>
+      <!-- 未登録時メッセージ -->
+      <div v-if="!profile.nickname" class="unregistered-message">
+        <p class="unregistered-message-text">{{ t('weather.unregistered') }}</p>
       </div>
 
-
-      <!-- 🧑‍ 左: アイコン | 右: テキスト情報 -->
-      <div class="profile-layout" v-else>
+      <!-- ✅ 登録済みプロフィール -->
+      <div v-else class="profile-top">
         <!-- 左：アイコン -->
         <div class="profile-icon-wrapper">
           <img
@@ -34,45 +35,47 @@
           </div>
         </div>
 
-        <!-- 右：名前・紹介文・ID -->
-        <div class="profile-info">
-          <h3>{{ profile.nickname || '（未設定）' }}</h3>
-          <p class="bio-text">{{ profile.bio || '（未設定）' }}</p>
-          <p class="yamato-id"><strong>Yamato ID:</strong> {{ profile.yamatoId || '（未設定）' }}</p>
-        </div>
+        <!-- 中央：ニックネーム -->
+        <h3 class="nickname">{{ profile.nickname }}</h3>
+      </div>
+
+      <!-- 🔤 自己紹介・ID・HP -->
+      <div class="profile-info">
+        <p v-if="profile.bio" class="bio-text">{{ profile.bio }}</p>
+        <p v-if="profile.yamatoId" class="yamato-id">
+          <strong>Yamato ID:</strong> {{ profile.yamatoId }}
+        </p>
+        <p v-if="profile.homepage" class="homepage">
+          🔗 <a :href="profile.homepage" target="_blank" rel="noopener">{{ profile.homepage }}</a>
+        </p>
       </div>
     </div>
 
-<!-- 📬 投稿コメント一覧 -->
-<div class="comment-list fade-in">
-  <div
-    v-for="(comment, index) in myComments"
-    :key="comment.id"
-    class="comment-card"
-    :style="{ animationDelay: `${index * 0.1}s` }"
-  >
-    <!-- 本文（上に表示） -->
-    <p class="comment-content">{{ comment.content }}</p>
-
-    <!-- 📷 アイコン（画像がある場合のみ） -->
-    <span
-      v-if="comment.imageUrl"
-      class="photo-icon"
-      @click="openImageModal(comment.imageUrl)"
-    >
-      📷
-    </span>
-
-    <!-- メタ情報 -->
-    <p class="comment-meta">
-      {{ comment.weather }} / {{ comment.temperature }}°C /
-      {{ formatHour(comment.timeOfDay) }}時 / {{ getLangName(comment.language) }}
-    </p>
-
-    <!-- ⋯ 削除アイコン（右下に配置） -->
-    <span class="more-icon" @click="openDeleteDialog(comment)">⋯</span>
-  </div>
-</div>
+    <!-- 📬 投稿コメント一覧 -->
+    <div class="comment-list fade-in">
+      <div
+        v-for="(comment, index) in myComments"
+        :key="comment.id"
+        class="comment-card"
+        :style="{ animationDelay: `${index * 0.1}s` }"
+      >
+        <p class="comment-content">{{ comment.content }}</p>
+        <span
+          v-if="comment.imageUrl"
+          class="photo-icon"
+          @click="openImageModal(comment.imageUrl)"
+        >
+          📷
+        </span>
+        <p class="comment-meta">
+          {{ t(`weatherMain.${comment.weather}`) }} /
+          {{ comment.temperature }}°C /
+          {{ formatHour(comment.timeOfDay) }}{{ t('weather.timeSuffix') }} /
+          {{ getLangName(comment.language) }}
+        </p>
+        <span class="more-icon" @click="openDeleteDialog(comment)">⋯</span>
+      </div>
+    </div>
 
     <!-- 画像モーダル -->
     <ImageModal
@@ -81,15 +84,15 @@
       @close="showImageModal = false"
     />
 
-    <!-- 確認ダイアログ -->
+    <!-- 削除確認 -->
     <ConfirmDialog
       :visible="showConfirmDialog"
-      message="このコメントを削除しますか？"
+      :message="t('confirm.delete')"
       @confirm="deleteComment"
       @cancel="showConfirmDialog = false"
     />
 
-    <!-- ✏️ 編集モーダル -->
+    <!-- 編集モーダル -->
     <EditWeatherProfileModal
       :visible="showModal"
       :profile="profile"
@@ -123,8 +126,10 @@ const profile = ref({
   icon: '',
   nickname: '',
   yamatoId: '',
-  bio: ''
+  bio: '',
+  homepage: ''   // ✅ 追加
 })
+
 const profileLoaded = ref(false)
 
 // 📝 投稿コメント一覧
@@ -166,14 +171,15 @@ async function fetchProfile() {
       profile.value = item
     } else {
       // 登録なし → 空のプロファイルを用意
-      profile.value = {
-        id: '',
-        sub,
-        icon: '',
-        nickname: '',
-        yamatoId: '',
-        bio: ''
-      }
+profile.value = {
+  id: '',
+  sub,
+  icon: '',
+  nickname: '',
+  yamatoId: '',
+  bio: '',
+  homepage: ''   // ✅ 追加
+}
     }
     profileLoaded.value = true
   } catch (e) {
@@ -292,13 +298,12 @@ async function deleteComment() {
 .icon-buttons {
   display: flex;
   justify-content: center;
-  margin-top: 16px;
-  margin-bottom: 20px;
+  margin: 16px 0 20px;
 }
 
 .edit-icon {
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   border: none;
   font-size: 24px;
@@ -309,13 +314,12 @@ async function deleteComment() {
   justify-content: center;
 }
 
-.profile-layout {
+.profile-top {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 24px;
-  flex-wrap: wrap;
-  margin-top: 24px;
+  gap: 14px;
+  margin-top: 20px;
   margin-bottom: 16px;
 }
 
@@ -326,17 +330,17 @@ async function deleteComment() {
 }
 
 .profile-icon {
-  width: 72px;
-  height: 72px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   object-fit: cover;
 }
 
 .profile-placeholder {
-  width: 72px;
-  height: 72px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
-  font-size: 28px;
+  font-size: 20px;
   color: white;
   background-color: #888;
   display: flex;
@@ -344,9 +348,16 @@ async function deleteComment() {
   justify-content: center;
 }
 
+.nickname {
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin: 0;
+}
+
 .profile-info {
-  text-align: left;
-  max-width: 260px;
+  text-align: center;
+  max-width: 300px;
+  margin: 0 auto 20px;
 }
 
 .bio-text {
@@ -360,40 +371,43 @@ async function deleteComment() {
   margin-top: 8px;
 }
 
-.my-comments-title {
-  font-size: 1.2rem;
-  margin-top: 40px;
-  margin-bottom: 12px;
-  text-align: left;
-  padding: 0 20px;
+.homepage {
+  margin-top: 8px;
+  font-size: 0.9rem;
+  color: var(--link-color, #007acc);
+  word-break: break-all;
 }
 
+.homepage a {
+  text-decoration: underline;
+  color: inherit;
+}
+
+/* コメントカード */
 .comment-list {
   display: flex;
   flex-direction: column;
   gap: 12px;
   padding: 0 20px;
-  align-items: center; /* 中央揃え */
+  align-items: center;
 }
 
 .comment-card {
   position: relative;
   padding: 0.6rem 0.8rem;
-  background: #fdfdfd; /* 柔らかい白 */
-  border: 1px solid #bbb; /* 見えやすい枠線 */
+  background: #fdfdfd;
+  border: 1px solid #bbb;
   border-radius: 6px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05); /* やや浮かせる */
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   align-items: flex-start;
   font-size: 0.9rem;
   color: #000;
-  cursor: default;
   width: 330px;
   min-height: 90px;
   box-sizing: border-box;
-  word-wrap: break-word;
   overflow: hidden;
   margin: 0 auto;
 }
@@ -414,24 +428,18 @@ async function deleteComment() {
   background: #2c2c2c;
   color: #f5f5f5;
   border: 1px solid #555;
-  box-shadow: none; /* ダークでは影を控えめに */
 }
 
 .comment-content {
   font-size: 15px;
   line-height: 1.6;
   word-break: break-word;
-  margin-bottom: 6px; /* ✅ メタ情報との余白 */
+  margin-bottom: 6px;
 }
 
 .comment-meta {
   font-size: 13px;
   color: #555;
-}
-
-.profile-container.dark .comment-card {
-  background: #222;
-  color: white;
 }
 
 .profile-container.dark .comment-content {
@@ -459,15 +467,6 @@ async function deleteComment() {
 
 .profile-container.dark .more-icon {
   color: #aaa;
-}
-
-.no-profile-msg {
-  font-size: 15px;
-  margin-top: 12px;
-  color: #666;
-}
-.profile-container.dark .no-profile-msg {
-  color: #ccc;
 }
 
 .unregistered-message-text {

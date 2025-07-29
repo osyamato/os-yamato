@@ -58,7 +58,10 @@
               />
             </template>
 
-<span class="comment-nickname">
+<span
+  class="comment-nickname clickable"
+  @click="openProfile(comment.owner)"
+>
   {{ comment.ownerNickname || (comment.source === 'ios' ? t('weather.fromIos') : t('weather.anonymous')) }}
 </span>
           </div>
@@ -75,11 +78,6 @@
         </div>
       </div>
 
-      <ImageModal
-        v-if="showImageModal"
-        :imageUrl="modalImageUrl"
-        @close="closeImageModal"
-      />
     </div>
 
     <!-- その他のモーダル -->
@@ -101,6 +99,18 @@
       :language="locale"
       @close="showPostModal = false"
     />
+<ImageModal
+  :visible="showImageModal"
+  :imageUrl="modalImageUrl"
+  @close="closeImageModal"
+/>
+
+<WeatherProfileModal
+  :userSub="selectedUserSub"
+  :visible="showProfileModal"
+  @close="showProfileModal = false"
+/>
+
   </div>
 </template>
 
@@ -113,6 +123,8 @@ import {
   listWeatherComments
 } from '@/graphql/queries'
 import type { WeatherComment } from '@/API'
+import WeatherProfileModal from '@/components/WeatherProfileModal.vue'
+import Modal from '@/components/Modal.vue'
 
 import WeatherForecastModal from '@/components/WeatherForecastModal.vue'
 import WeatherCitySelector from '@/components/WeatherCitySelector.vue'
@@ -141,6 +153,8 @@ const iconColor = ref('#274c77')
 const profile = ref(null)
 const showImageModal = ref(false)
 const modalImageUrl = ref('')
+const showProfileModal = ref(false)
+const selectedUserSub = ref('')
 
 const API_KEY = 'e83c02f476b6f1d5c91c072f651601b2'
 
@@ -160,6 +174,11 @@ const iconFilenames = [
   'weather.icon4.png', 'weather.icon5.png', 'weather.icon6.png',
   'weather.icon7.png', 'weather.icon8.png', 'weather.icon9.png', 'weather.icon10.png'
 ]
+
+function openProfile(userSub: string) {
+  selectedUserSub.value = userSub
+  showProfileModal.value = true
+}
 
 
 onMounted(async () => {
@@ -407,7 +426,7 @@ async function fetchMatchingComments() {
 }
 
 
-function openImageModal(url) {
+function openImageModal(url: string) {
   modalImageUrl.value = url
   showImageModal.value = true
 }
@@ -483,8 +502,8 @@ onActivated(() => {
 }
 
 .icon-button {
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   border: none;
   font-size: 22px;
@@ -497,7 +516,7 @@ onActivated(() => {
 }
 
 .icon-initial {
-  font-size: 18px;
+  font-size: 19px;
   font-weight: bold;
 }
 
@@ -519,7 +538,7 @@ onActivated(() => {
   width: 330px;
   padding: 0.6rem 0.8rem;
   background: white;
-  border-bottom: 1px solid #ccc;
+  border-bottom: 1px solid #888; /* ← 枠を濃く */
   border-radius: 8px;
   font-size: 0.9rem;
   color: #000;
@@ -530,13 +549,18 @@ onActivated(() => {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+
+  /* ✅ シャドウ追加 */
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
 
 .weather875-view.dark .comment-card {
-  background: #2c2c2c;
+  background: #1e1e1e;
   color: #f5f5f5;
-  border-bottom: 1px solid #555;
+  border-bottom: 1px solid #444;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4); /* ダーク側も少し浮かせる */
 }
+
 
 /* 👤 プロフィール行 */
 .profile-row {

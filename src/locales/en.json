@@ -549,7 +549,12 @@
 "weather.editProfileTitle": "Edit Profile",
 "weather.nickname": "Nickname",
 "weather.bioLabel": "Bio",
-"weather.bioPlaceholder": "Write a short bio (max 100 characters)"
+"weather.bioPlaceholder": "Write a short bio (max 100 characters)",
+"weather.homepageLabel": "Homepage (optional)",
+"common.save": "Save",
+"profile.title": "Profile",
+"weather.hourSuffix": " o'clock",
+"weather.timeSuffix": "h"
 
 
 }
