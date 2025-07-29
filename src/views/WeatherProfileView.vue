@@ -4,21 +4,20 @@
       <!-- 🌤️ タイトル -->
       <h2 class="title">プロフィール</h2>
 
-      <!-- ✏️ 編集ボタン -->
       <div class="icon-buttons">
         <button
           class="edit-icon"
           @click="showModal = true"
           :style="{ backgroundColor: iconColor }"
         >
-          ✏️
-        </button>
+          👤        </button>
       </div>
 
       <!-- ✅ 未登録時のメッセージ -->
-      <div v-if="!profile.nickname" class="unregistered-message">
-        <p>未登録です。右上の✏️マークからプロフィールを作成しましょう。</p>
+  <div v-if="!profile.nickname" class="unregistered-message">
+<p class="unregistered-message-text">{{ t('weather.unregistered') }}</p>
       </div>
+
 
       <!-- 🧑‍ 左: アイコン | 右: テキスト情報 -->
       <div class="profile-layout" v-else>
@@ -109,6 +108,10 @@ import { deleteWeatherComment } from '@/graphql/mutations'
 import EditWeatherProfileModal from '@/components/EditWeatherProfileModal.vue'
 import ImageModal from '@/components/ImageModal.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
+
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 // ✏️ 編集モーダルの表示状態
 const showModal = ref(false)
@@ -465,6 +468,10 @@ async function deleteComment() {
 }
 .profile-container.dark .no-profile-msg {
   color: #ccc;
+}
+
+.unregistered-message-text {
+  white-space: pre-line;
 }
 
 </style>

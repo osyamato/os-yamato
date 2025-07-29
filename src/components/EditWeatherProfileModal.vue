@@ -2,7 +2,7 @@
   <transition name="modal">
     <div v-if="visible" class="modal-overlay" @click.self="close">
       <div class="modal-card" @click.stop :class="{ dark: isDarkMode }">
-        <h2>🌤️ プロフィール編集</h2>
+<h2>{{ t('weather.editProfileTitle') }}</h2>
 
         <!-- アイコン選択 -->
         <div class="icon-list">
@@ -31,14 +31,15 @@
         </div>
 
         <!-- 入力項目 -->
-        <label>ニックネーム</label>
-        <input v-model="nickname" />
+<label>{{ t('weather.nickname') }}</label>
+<input v-model="nickname" />
 
-        <label>Yamato ID</label>
-        <input v-model="yamatoId" />
+<label>{{ t('weather.yamatoId') }}</label>
+<input v-model="yamatoId" />
 
-        <label>紹介文（100文字以内）</label>
-        <textarea v-model="bio" maxlength="100" />
+
+<label>{{ t('weather.bioLabel') }}</label>
+<textarea v-model="bio" maxlength="100" :placeholder="t('weather.bioPlaceholder')" />
 
         <!-- 保存ボタン（中央） -->
         <div class="buttons center">
@@ -56,6 +57,9 @@ import { ref, watch } from 'vue'
 import { API, graphqlOperation, Auth } from 'aws-amplify'
 import { createWeatherProfile, updateWeatherProfile } from '@/graphql/mutations'
 import YamatoButton from '@/components/YamatoButton.vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const props = defineProps({
   visible: Boolean,

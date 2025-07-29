@@ -2,18 +2,18 @@
   <transition name="weather-transition">
     <div v-if="visible" class="forecast-modal" @click.self="close">
       <div class="forecast-card">
-        <h3 class="forecast-title">🌤️ 今後の天気</h3>
+        <h3 class="forecast-title">🌤️ {{ t('weather.forecastTitle') }}</h3>
 
         <!-- 今日 -->
         <div v-if="todayList.length" class="section">
-          <div class="section-title">今日</div>
+          <div class="section-title">{{ t('weather.today') }}</div>
           <div class="forecast-list">
             <div
               v-for="(item, index) in todayList"
               :key="'today-' + index"
               class="forecast-row"
             >
-              <span class="forecast-time">{{ item.time }}</span>
+              <span class="forecast-time">{{ formatHour(item.time) }}</span>
               <span class="forecast-weather">{{ item.weather }}</span>
               <span class="forecast-temp">{{ item.temp }}℃</span>
             </div>
@@ -22,7 +22,7 @@
 
         <!-- 明日以降 -->
         <div v-if="laterList.length" class="section">
-          <div class="section-title">明日以降</div>
+          <div class="section-title">{{ t('weather.later') }}</div>
           <div class="forecast-list">
             <div
               v-for="(item, index) in laterList"
@@ -42,29 +42,44 @@
 
 <script setup>
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 
-// props と emit
+const { t, locale } = useI18n()
+
 const props = defineProps({
   visible: Boolean,
-  forecastList: Array // [{ date: 'YYYY-MM-DD', time: '0時', weather, temp }]
+  forecastList: {
+    type: Array,
+    default: () => []
+  }
 })
 const emit = defineEmits(['close'])
+
 function close() {
   emit('close')
 }
 
-// 日付フォーマッター（例: 2025-07-25 → 7月25日）
 function formatDate(dateStr) {
   const date = new Date(dateStr)
-  return `${date.getMonth() + 1}月${date.getDate()}日`
+  const month = date.getMonth() + 1
+  const day = date.getDate()
+  return `${month}/${day}`
 }
 
-// 時間の数値化（例: "3時" → 3）
+function formatHour(time) {
+  const h = parseInt(String(time).replace(/\D/g, ''), 10)
+
+  if (locale.value.startsWith('en')) return `${h} o'clock`
+  if (locale.value.startsWith('es')) return `${h} h`
+  if (locale.value.startsWith('zh')) return `${h}点`
+  return `${h}時`
+}
+
 function parseHour(timeStr) {
-  return parseInt(timeStr.replace('時', ''), 10)
+  if (!timeStr) return 0
+  return parseInt(String(timeStr).replace(/\D/g, ''), 10) || 0
 }
 
-// 今日の日時（ローカルタイム）
 function getLocalDateStr(date = new Date()) {
   const year = date.getFullYear()
   const month = String(date.getMonth() + 1).padStart(2, '0')
@@ -72,23 +87,26 @@ function getLocalDateStr(date = new Date()) {
   return `${year}-${month}-${day}`
 }
 
-// ✅ 今日：現在時刻以降のデータのみ
 const todayList = computed(() => {
   const now = new Date()
   const todayStr = getLocalDateStr(now)
   const currentHour = now.getHours()
 
-  return props.forecastList.filter(item => {
-    return item.date === todayStr && parseHour(item.time) >= currentHour
-  })
+  return props.forecastList?.filter(item => {
+    return (
+      item?.date === todayStr &&
+      parseHour(item?.time) >= currentHour &&
+      typeof item?.temp === 'number'
+    )
+  }) || []
 })
 
-// ✅ 明日以降：今日以降のデータを日別にまとめる（過去は含めない）
 const laterList = computed(() => {
   const todayStr = getLocalDateStr()
   const grouped = {}
 
-  props.forecastList.forEach(item => {
+  props.forecastList?.forEach(item => {
+    if (!item || !item.date || typeof item.temp !== 'number' || !item.weather) return
     if (item.date > todayStr) {
       if (!grouped[item.date]) grouped[item.date] = { temps: [], weather: [] }
       grouped[item.date].temps.push(item.temp)
@@ -97,22 +115,22 @@ const laterList = computed(() => {
   })
 
   return Object.entries(grouped).map(([date, data]) => {
-    const min = Math.min(...data.temps)
-    const max = Math.max(...data.temps)
+    const min = data.temps.length ? Math.min(...data.temps) : 0
+    const max = data.temps.length ? Math.max(...data.temps) : 0
     const mostFrequent = getMostFrequent(data.weather)
     return { date, min, max, weather: mostFrequent }
   })
 })
 
-// 最頻出の天気を取得（例: 晴れが最も多ければそれを返す）
 function getMostFrequent(array) {
   const counts = {}
   array.forEach(item => {
     counts[item] = (counts[item] || 0) + 1
   })
-  return Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0]
+  return Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] || ''
 }
 </script>
+
 
 <style scoped>
 .forecast-modal {
