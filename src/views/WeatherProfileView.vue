@@ -351,7 +351,12 @@ async function deleteComment() {
 .nickname {
   font-size: 1.2rem;
   font-weight: bold;
-  margin: 0;
+  margin: 0.5rem 0;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 220px;
 }
 
 .profile-info {
