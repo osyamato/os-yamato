@@ -1,8 +1,8 @@
 <template>
   <Modal :visible="visible" @close="handleClose">
     <div class="scrollable-modal-content">
-      <!-- 🌤️ タイトル -->
-      <h2 class="weather-title">{{ t('weather.title') }}</h2>
+
+     <h2 class="weather-title">{{ t('weather.post.title') }}</h2>
 
       <!-- 🌤️ 天気 & 🌡️ 気温 & 🕒 時間 ピッカー -->
       <div class="row-pickers">
