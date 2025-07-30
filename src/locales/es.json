@@ -454,7 +454,7 @@
   "weatherMain.Squall": "Chubasco",
   "weatherMain.Tornado": "Tornado",
 
-"weather.title": "Envía tus palabras del clima con el viento",
+"weather.post.title": "Envía tus palabras del clima con el viento",
 "weather.showComments": "Busca palabras sobre el clima",
 "weather.requireProfile": "Para publicar, crea un perfil sencillo. Puedes registrarte desde el botón 👤.",
 "weather.noMatchedComments": "Aún no se han encontrado comentarios para este clima.\nPrueba a escribir uno con el ícono ✏️.",
