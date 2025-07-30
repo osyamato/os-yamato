@@ -1,6 +1,6 @@
 <template>
   <div class="weather875-view" :class="{ dark: isDarkMode }">
-<h2 class="title">{{ t('weather.title') }}</h2>
+    <h2 class="title">{{ t('weather.title') }}</h2>
 
     <div class="icon-buttons">
       <button class="icon-button" @click="goToProfile" :style="{ backgroundColor: iconColor }">
@@ -9,7 +9,7 @@
         </span>
       </button>
 
-<button class="icon-button" @click="checkBeforePost" :style="{ backgroundColor: iconColor }">✏️</button>
+      <button class="icon-button" @click="checkBeforePost" :style="{ backgroundColor: iconColor }">✏️</button>
       <button class="icon-button" @click="openCitySelector" :style="{ backgroundColor: iconColor }">🔍</button>
       <button class="icon-button" @click="getHourlyWeather" :style="{ backgroundColor: iconColor }">🌤️</button>
     </div>
@@ -22,23 +22,19 @@
         🌡️ {{ currentWeather.temp }}℃
       </p>
 
-      <!-- 🌸 コメント表示ボタン -->
       <YamatoButton size="medium" class="comment-button" @click="fetchMatchingComments">
         {{ t('weather.showComments') }}
       </YamatoButton>
     </div>
 
-    <!-- ❌ 修正: ボタン押下後かつ0件時のみ表示 -->
-<p
-  v-if="!isLoadingComments && hasFetched && matchedComments.length === 0"
-  class="no-comments-text"
->
-  {{ t('weather.noMatchedComments') }}
-</p>
+    <p
+      v-if="!isLoadingComments && hasFetched && matchedComments.length === 0"
+      class="no-comments-text"
+    >
+      {{ t('weather.noMatchedComments') }}
+    </p>
 
-    <!-- ✅ 修正: コメントがあるときだけ表示 -->
     <div v-if="matchedComments.length > 0" class="comment-list-section">
-
       <div class="comment-list">
         <div
           v-for="(comment, index) in matchedComments"
@@ -49,21 +45,24 @@
           <div class="profile-row">
             <template v-if="comment.source === 'ios'">
               <div class="text-icon">花</div>
+              <span class="comment-nickname">
+                {{ t('weather.fromIos') }}
+              </span>
             </template>
             <template v-else>
               <img
-                class="comment-icon"
+                class="comment-icon clickable"
                 :src="getIconUrl(comment.icon)"
                 alt="icon"
+                @click="openProfile(comment.owner)"
               />
+              <span
+                class="comment-nickname clickable"
+                @click="openProfile(comment.owner)"
+              >
+                {{ comment.ownerNickname || t('weather.anonymous') }}
+              </span>
             </template>
-
-<span
-  class="comment-nickname clickable"
-  @click="openProfile(comment.owner)"
->
-  {{ comment.ownerNickname || (comment.source === 'ios' ? t('weather.fromIos') : t('weather.anonymous')) }}
-</span>
           </div>
 
           <p class="comment-content">{{ comment.content }}</p>
@@ -77,10 +76,9 @@
           />
         </div>
       </div>
-
     </div>
 
-    <!-- その他のモーダル -->
+    <!-- モーダル群 -->
     <WeatherForecastModal
       :visible="showForecastModal"
       :forecastList="forecastList"
@@ -99,18 +97,16 @@
       :language="locale"
       @close="showPostModal = false"
     />
-<ImageModal
-  :visible="showImageModal"
-  :imageUrl="modalImageUrl"
-  @close="closeImageModal"
-/>
-
-<WeatherProfileModal
-  :userSub="selectedUserSub"
-  :visible="showProfileModal"
-  @close="showProfileModal = false"
-/>
-
+    <ImageModal
+      :visible="showImageModal"
+      :imageUrl="modalImageUrl"
+      @close="closeImageModal"
+    />
+    <WeatherProfileModal
+      :userSub="selectedUserSub"
+      :visible="showProfileModal"
+      @close="showProfileModal = false"
+    />
   </div>
 </template>
 
@@ -328,17 +324,25 @@ async function fetchIOSPosts() {
   }
 }
 
-// 🔍 天気のゆるい一致（単語単位、大小無視）
+
 function looseWeatherMatch(a = '', b = '') {
-  const keywordsA = a.toLowerCase().split(/\s+/)
-  const keywordsB = b.toLowerCase().split(/\s+/)
-  return keywordsA.some(word => keywordsB.includes(word))
+  const normalize = (str: string) =>
+    str.toLowerCase().replace(/[^a-z]/g, ' ').split(/\s+/).filter(Boolean)
+
+  const aWords = normalize(a)
+  const bWords = normalize(b)
+
+  return aWords.some(word => bWords.includes(word))
 }
 
 async function fetchMatchingComments() {
   isLoadingComments.value = true
 
-  const weather = currentWeather.value.main
+  // ✅ 天気情報を整える
+  const weatherMain = currentWeather.value.main || ''
+  const weatherDesc = currentWeather.value.description || ''
+  const weather = `${weatherMain} ${weatherDesc}`.toLowerCase()
+
   const temp = currentWeather.value.temp
   const hour = new Date().getHours()
   const lang = locale.value
@@ -349,7 +353,7 @@ async function fetchMatchingComments() {
   const maxHour = Math.floor(hour + 1.5)
 
   try {
-    // ✅ Yamatoのコメント取得
+    // ✅ Yamatoコメント取得
     const result = await API.graphql({
       query: listWeatherComments,
       authMode: 'AMAZON_COGNITO_USER_POOLS',
@@ -360,7 +364,7 @@ async function fetchMatchingComments() {
     const filteredYamato = await Promise.all(
       items.map(async item => {
         if (
-          item.weather?.toLowerCase().includes(weather.toLowerCase()) &&
+          item.weather?.toLowerCase().includes(weatherMain.toLowerCase()) &&
           item.language === lang &&
           item.temperature >= minTemp &&
           item.temperature <= maxTemp &&
@@ -381,18 +385,18 @@ async function fetchMatchingComments() {
     const filteredMain = filteredYamato.filter(Boolean) as WeatherComment[]
     const sortedMain = filteredMain.sort((a, b) => b.createdAtMs - a.createdAtMs)
 
-    // ✅ iOS投稿取得
+    // ✅ iOSコメント取得
     const iosPosts = await fetchIOSPosts()
 
     const filteredIOS = iosPosts
-      .filter(post =>
-        looseWeatherMatch(post.weather, weather) &&
-        post.language === lang &&
-        post.temperature >= temp - 5 &&
-        post.temperature <= temp + 5 &&
-        post.timeOfDay >= Math.max(0, hour - 3) &&
-        post.timeOfDay <= Math.min(23, hour + 3)
-      )
+      .filter(post => {
+        const weatherMatch = looseWeatherMatch(post.weather, weather)
+        const tempMatch = post.temperature >= temp - 5 && post.temperature <= temp + 5
+        const timeMatch = post.timeOfDay >= Math.max(0, hour - 4) && post.timeOfDay <= Math.min(23, hour + 4)
+        const langMatch = post.language === lang
+
+        return weatherMatch && tempMatch && timeMatch && langMatch
+      })
       .map(post => ({
         ...post,
         source: 'ios',
@@ -400,8 +404,7 @@ async function fetchMatchingComments() {
         createdAtMs: new Date(post.createdAt).getTime(),
       }))
 
-    // ✅ シャッフル関数
-    function shuffle<T>(array: T[]): T[] {
+    const shuffle = <T,>(array: T[]): T[] => {
       for (let i = array.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1))
         ;[array[i], array[j]] = [array[j], array[i]]
@@ -411,15 +414,11 @@ async function fetchMatchingComments() {
 
     const randomIOS = shuffle(filteredIOS).slice(0, 5)
 
-    // ✅ マージ
-    const combined = [...sortedMain, ...randomIOS]
-    matchedComments.value = combined
-
-    // ✅ コメント取得済み & ヒットなしを検出
+    matchedComments.value = [...sortedMain, ...randomIOS]
     hasFetched.value = sortedMain.length === 0 && randomIOS.length === 0
   } catch (err) {
     console.error('💥 fetchMatchingComments failed:', err)
-    hasFetched.value = true // エラー時も表示対象とする
+    hasFetched.value = true
   } finally {
     isLoadingComments.value = false
   }
@@ -470,6 +469,7 @@ onMounted(() => {
 onActivated(() => {
   window.scrollTo({ top: 0, behavior: 'smooth' })
 })
+
 
 </script>
 
