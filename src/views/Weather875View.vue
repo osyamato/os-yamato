@@ -36,45 +36,54 @@
 
     <div v-if="matchedComments.length > 0" class="comment-list-section">
       <div class="comment-list">
-        <div
-          v-for="(comment, index) in matchedComments"
-          :key="comment.id"
-          class="comment-card fade-up"
-          :style="{ animationDelay: `${index * 120}ms` }"
-        >
-          <div class="profile-row">
-            <template v-if="comment.source === 'ios'">
-              <div class="text-icon">花</div>
-              <span class="comment-nickname">
-                {{ t('weather.fromIos') }}
-              </span>
-            </template>
-            <template v-else>
-              <img
-                class="comment-icon clickable"
-                :src="getIconUrl(comment.icon)"
-                alt="icon"
-                @click="openProfile(comment.owner)"
-              />
-              <span
-                class="comment-nickname clickable"
-                @click="openProfile(comment.owner)"
-              >
-                {{ comment.ownerNickname || t('weather.anonymous') }}
-              </span>
-            </template>
-          </div>
 
-          <p class="comment-content">{{ comment.content }}</p>
+<div
+  v-for="(comment, index) in matchedComments"
+  :key="comment.id"
+  class="comment-card fade-up"
+  :style="{ animationDelay: `${index * 120}ms` }"
+>
+<button
+  class="like-button"
+  @click="likeComment(comment)"
+  :title="t('weather.likeThis')"
+>
+  ♡
+</button>
+  <div class="profile-row">
+    <template v-if="comment.source === 'ios'">
+      <div class="text-icon">花</div>
+      <span class="comment-nickname">
+        {{ t('weather.fromIos') }}
+      </span>
+    </template>
+    <template v-else>
+      <img
+        class="comment-icon clickable"
+        :src="getIconUrl(comment.icon)"
+        alt="icon"
+        @click="openProfile(comment.owner)"
+      />
+      <span
+        class="comment-nickname clickable"
+        @click="openProfile(comment.owner)"
+      >
+        {{ comment.ownerNickname || t('weather.anonymous') }}
+      </span>
+    </template>
+  </div>
 
-          <img
-            v-if="comment.imageUrl"
-            class="comment-thumbnail"
-            :src="comment.imageUrl"
-            alt="Image"
-            @click="openImageModal(comment.imageUrl)"
-          />
-        </div>
+  <p class="comment-content">{{ comment.content }}</p>
+
+  <img
+    v-if="comment.imageUrl"
+    class="comment-thumbnail"
+    :src="comment.imageUrl"
+    alt="Image"
+    @click="openImageModal(comment.imageUrl)"
+  />
+</div>
+
       </div>
     </div>
 
@@ -470,6 +479,18 @@ onActivated(() => {
   window.scrollTo({ top: 0, behavior: 'smooth' })
 })
 
+async function likeComment(comment) {
+  const updated = await API.graphql(graphqlOperation(updateWeatherComment, {
+    input: {
+      id: comment.id,
+      likeCount: (comment.likeCount || 0) + 1
+    }
+  }))
+
+  // 表示更新（手動で更新 or fetchMatchingComments を再実行）
+  fetchMatchingComments()
+}
+
 
 </script>
 
@@ -694,5 +715,16 @@ onActivated(() => {
   }
 }
 
+.like-button {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  background: transparent;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: #ff6688;
+  text-shadow: 0 0 2px white;
+}
 </style>
 
