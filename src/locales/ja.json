@@ -498,7 +498,7 @@
   "weatherMain.Ash": "火山灰",
   "weatherMain.Squall": "スコール",
   "weatherMain.Tornado": "竜巻",
-"weather.title": "天気の言葉を風にのせて",
+"weather.post.title": "天気の言葉を風にのせて",
 "weather.showComments": "天気の言葉を探そう",
 
 "weather.requireProfile": "投稿するには、簡単なプロフィールを作成しましょう。👤ボタンから登録できます。",
