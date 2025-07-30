@@ -54,6 +54,17 @@ Let it return to the wind.
 
 ⸻
 
+🌤️ New: hanaco Weather Integration
+Your weather becomes part of your memory.
+
+Now you can:
+	•	Post weather-based comments that bloom like seasonal thoughts
+	•	See your location’s weather reflected in your profile
+	•	Feel the sky — not just observe it
+
+This gentle feature merges meteorology with memory, making each sunny day or gentle rain part of your digital poetry.
+
+
 ⚙️ Tech Stack
 	•	🖥️ Frontend: Vue 3 + Vite
 	•	☁️ Backend: AWS Amplify (Cognito, AppSync, DynamoDB, S3)
