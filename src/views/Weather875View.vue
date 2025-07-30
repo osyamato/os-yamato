@@ -43,13 +43,16 @@
   class="comment-card fade-up"
   :style="{ animationDelay: `${index * 120}ms` }"
 >
+<!-- ♡ ハートボタン（iOS以外のときだけ表示） -->
 <button
+  v-if="comment.source !== 'ios'"
   class="like-button"
-  @click="likeComment(comment)"
-  :title="t('weather.likeThis')"
+  :class="{ liked: comment.liked }"
+  @click="toggleLike(comment)"
 >
   ♡
 </button>
+
   <div class="profile-row">
     <template v-if="comment.source === 'ios'">
       <div class="text-icon">花</div>
@@ -129,6 +132,7 @@ import {
 } from '@/graphql/queries'
 import type { WeatherComment } from '@/API'
 import WeatherProfileModal from '@/components/WeatherProfileModal.vue'
+import { updateWeatherComment } from '@/graphql/mutations'
 import Modal from '@/components/Modal.vue'
 
 import WeatherForecastModal from '@/components/WeatherForecastModal.vue'
@@ -479,16 +483,23 @@ onActivated(() => {
   window.scrollTo({ top: 0, behavior: 'smooth' })
 })
 
-async function likeComment(comment) {
-  const updated = await API.graphql(graphqlOperation(updateWeatherComment, {
-    input: {
-      id: comment.id,
-      likeCount: (comment.likeCount || 0) + 1
-    }
-  }))
+async function toggleLike(comment) {
+  if (comment.liked) return // 一度だけに制限（再度押せない）
 
-  // 表示更新（手動で更新 or fetchMatchingComments を再実行）
-  fetchMatchingComments()
+  try {
+    await API.graphql(graphqlOperation(updateWeatherComment, {
+      input: {
+        id: comment.id,
+        likeCount: (comment.likeCount || 0) + 1
+      }
+    }))
+
+    // フロント表示を即時更新
+    comment.likeCount = (comment.likeCount || 0) + 1
+    comment.liked = true
+  } catch (error) {
+    console.error('Like failed:', error)
+  }
 }
 
 
@@ -721,10 +732,29 @@ async function likeComment(comment) {
   right: 10px;
   background: transparent;
   border: none;
-  font-size: 1.2rem;
+  font-size: 1.4rem;
   cursor: pointer;
-  color: #ff6688;
-  text-shadow: 0 0 2px white;
+  color: gray;
+  transition: color 0.4s ease;
 }
+
+.like-button.liked {
+  color: #f8a8b5; /* 淡いピンク */
+  animation: pop 0.5s ease;
+}
+
+/* ゆっくり大きく膨らんで戻る */
+@keyframes pop {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.8); /* さらに大きく */
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
 </style>
 

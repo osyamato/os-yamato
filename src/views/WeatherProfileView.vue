@@ -59,6 +59,12 @@
         class="comment-card"
         :style="{ animationDelay: `${index * 0.1}s` }"
       >
+
+<div class="like-display">
+  <span class="like-icon">♡</span>
+  <span class="like-count">{{ comment.likeCount || 0 }}</span>
+</div>
+
         <p class="comment-content">{{ comment.content }}</p>
         <span
           v-if="comment.imageUrl"
@@ -429,6 +435,27 @@ async function deleteComment() {
   }
 }
 
+
+.like-display {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.like-icon {
+  color: #ff6688;
+  font-size: 1.2rem;
+  text-shadow: 0 0 1px white;
+}
+
+.like-count {
+  font-size: 0.9rem;
+  color: #ddd;
+}
+
 .profile-container.dark .comment-card {
   background: #2c2c2c;
   color: #f5f5f5;
@@ -440,6 +467,7 @@ async function deleteComment() {
   line-height: 1.6;
   word-break: break-word;
   margin-bottom: 6px;
+  padding-right: 40px; /* 💡追加：ハートとの重なりを防ぐ */
 }
 
 .comment-meta {

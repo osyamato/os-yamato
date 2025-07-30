@@ -1,7 +1,7 @@
 <template>
   <div class="confirm-overlay" v-if="visible">
     <div class="confirm-box">
-      <p class="confirm-message">{{ t(message) }}</p>
+<p class="confirm-message">{{ message }}</p>
       <div class="button-row">
         <YamatoButton @click="cancel">{{ t('common.cancel') }}</YamatoButton>
         <YamatoButton type="danger" @click="confirm">{{ t('common.delete') }}</YamatoButton>
