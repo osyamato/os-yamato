@@ -43,15 +43,25 @@
   class="comment-card fade-up"
   :style="{ animationDelay: `${index * 120}ms` }"
 >
-<!-- ♡ ハートボタン（iOS以外のときだけ表示） -->
-<button
+<!-- 💭 吹き出し + ♡ ハート -->
+<div
   v-if="comment.source !== 'ios'"
-  class="like-button"
-  :class="{ liked: comment.liked }"
-  @click="toggleLike(comment)"
+  class="action-buttons"
 >
-  ♡
-</button>
+ <button
+    class="reply-button"
+    @click="openReplyModal(comment.id)"
+  >
+    💭
+  </button>
+  <button
+    class="like-button"
+    :class="{ liked: comment.liked }"
+    @click="toggleLike(comment)"
+  >
+    ♡
+  </button>
+</div>
 
   <div class="profile-row">
     <template v-if="comment.source === 'ios'">
@@ -119,6 +129,12 @@
       :visible="showProfileModal"
       @close="showProfileModal = false"
     />
+<WeatherReplyModal
+  :visible="showReplyModal"
+  :commentId="replyingToCommentId"
+  @close="closeReplyModal"
+/>
+
   </div>
 </template>
 
@@ -134,6 +150,8 @@ import type { WeatherComment } from '@/API'
 import WeatherProfileModal from '@/components/WeatherProfileModal.vue'
 import { updateWeatherComment } from '@/graphql/mutations'
 import Modal from '@/components/Modal.vue'
+
+import WeatherReplyModal from '@/components/WeatherReplyModal.vue'
 
 import WeatherForecastModal from '@/components/WeatherForecastModal.vue'
 import WeatherCitySelector from '@/components/WeatherCitySelector.vue'
@@ -502,6 +520,18 @@ async function toggleLike(comment) {
   }
 }
 
+const showReplyModal = ref(false)
+const replyingToCommentId = ref(null)
+
+function openReplyModal(commentId) {
+  replyingToCommentId.value = commentId
+  showReplyModal.value = true
+}
+function closeReplyModal() {
+  showReplyModal.value = false
+  replyingToCommentId.value = null
+}
+
 
 </script>
 
@@ -726,11 +756,27 @@ async function toggleLike(comment) {
   }
 }
 
-.like-button {
+/* 💭 + ♡ 配置：右上に並ぶように絶対配置 */
+.action-buttons {
   position: absolute;
   top: 8px;
   right: 10px;
-  background: transparent;
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* 💭 吹き出しボタン */
+.reply-button {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: gray;
+}
+
+/* ♡ ハートボタン（未いいね状態） */
+.like-button {
+  background: none;
   border: none;
   font-size: 1.4rem;
   cursor: pointer;
@@ -738,18 +784,19 @@ async function toggleLike(comment) {
   transition: color 0.4s ease;
 }
 
+/* ♡ いいね状態のとき */
 .like-button.liked {
   color: #f8a8b5; /* 淡いピンク */
   animation: pop 0.5s ease;
 }
 
-/* ゆっくり大きく膨らんで戻る */
+/* ゆっくり大きく膨らんで戻るアニメーション */
 @keyframes pop {
   0% {
     transform: scale(1);
   }
   40% {
-    transform: scale(1.8); /* さらに大きく */
+    transform: scale(1.8);
   }
   100% {
     transform: scale(1);
