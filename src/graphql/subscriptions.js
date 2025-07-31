@@ -1183,6 +1183,7 @@ export const onCreateWeatherComment = /* GraphQL */ `
       likeCount
       reportCount
       replyCount
+      replyAllowed
       createdAt
       updatedAt
       __typename
@@ -1210,6 +1211,7 @@ export const onUpdateWeatherComment = /* GraphQL */ `
       likeCount
       reportCount
       replyCount
+      replyAllowed
       createdAt
       updatedAt
       __typename
@@ -1237,6 +1239,70 @@ export const onDeleteWeatherComment = /* GraphQL */ `
       likeCount
       reportCount
       replyCount
+      replyAllowed
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const onCreateWeatherReply = /* GraphQL */ `
+  subscription OnCreateWeatherReply(
+    $filter: ModelSubscriptionWeatherReplyFilterInput
+    $owner: String
+  ) {
+    onCreateWeatherReply(filter: $filter, owner: $owner) {
+      id
+      commentId
+      owner
+      ownerNickname
+      icon
+      content
+      language
+      reported
+      reportReason
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const onUpdateWeatherReply = /* GraphQL */ `
+  subscription OnUpdateWeatherReply(
+    $filter: ModelSubscriptionWeatherReplyFilterInput
+    $owner: String
+  ) {
+    onUpdateWeatherReply(filter: $filter, owner: $owner) {
+      id
+      commentId
+      owner
+      ownerNickname
+      icon
+      content
+      language
+      reported
+      reportReason
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const onDeleteWeatherReply = /* GraphQL */ `
+  subscription OnDeleteWeatherReply(
+    $filter: ModelSubscriptionWeatherReplyFilterInput
+    $owner: String
+  ) {
+    onDeleteWeatherReply(filter: $filter, owner: $owner) {
+      id
+      commentId
+      owner
+      ownerNickname
+      icon
+      content
+      language
+      reported
+      reportReason
       createdAt
       updatedAt
       __typename

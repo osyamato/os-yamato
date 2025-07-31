@@ -307,8 +307,8 @@ type WeatherComment
   ]) {
   id: ID!
   owner: String
-  ownerNickname: String       
-  icon: String               
+  ownerNickname: String
+  icon: String
   weather: String!
   temperature: Float!
   timeOfDay: Float!
@@ -320,6 +320,26 @@ type WeatherComment
   likeCount: Int
   reportCount: Int
   replyCount: Int
+  replyAllowed: Boolean     # 💬 リプライ可否（デフォルト true 想定）
+  createdAt: AWSDateTime
+  updatedAt: AWSDateTime
+}
+
+type WeatherReply
+  @model
+  @auth(rules: [
+    { allow: owner },
+    { allow: private, operations: [read, update] }
+  ]) {
+  id: ID!
+  commentId: ID!
+  owner: String
+  ownerNickname: String
+  icon: String
+  content: String!
+  language: String!
+  reported: Boolean
+  reportReason: String       # 📝 通報理由（任意・最大文字数は制限すると良い）
   createdAt: AWSDateTime
   updatedAt: AWSDateTime
 }
