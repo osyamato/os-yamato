@@ -1,58 +1,59 @@
 <template>
   <Modal :visible="visible" @close="handleClose">
     <div class="weather-reply-modal">
-      <!-- 💬 親コメント -->
-      <div class="parent-comment" v-if="parentComment">
-        <p class="parent-text">{{ parentComment.content }}</p>
-      </div>
+      <!-- 🌪️ スクロール領域 -->
+      <div class="modal-scroll-area">
+        <!-- 💬 親コメント -->
+        <div class="parent-comment" v-if="parentComment">
+          <p class="parent-text">{{ parentComment.content }}</p>
+        </div>
 
-      <!-- 💬 既存リプライ一覧 -->
-      <div class="reply-list" v-if="replies.length > 0">
-        <div v-for="reply in replies" :key="reply.id" class="reply-item">
-          <div class="reply-icon">
-            <span class="icon-initial">
-              {{ reply.ownerNickname?.charAt(0) || '❓' }}
-            </span>
-          </div>
-          <div class="reply-body">
-            <div class="nickname">{{ reply.ownerNickname }}</div>
-            <p class="reply-text">{{ reply.content }}</p>
+        <!-- 💬 既存リプライ一覧 -->
+        <div class="reply-list" v-if="replies.length > 0">
+          <div v-for="reply in replies" :key="reply.id" class="reply-item">
+            <div class="reply-icon">
+              <span class="icon-initial">
+                {{ reply.ownerNickname?.charAt(0) || '❓' }}
+              </span>
+            </div>
+            <div class="reply-body">
+              <div class="nickname">{{ reply.ownerNickname }}</div>
+              <p class="reply-text">{{ reply.content }}</p>
+            </div>
           </div>
         </div>
+        <div v-else class="no-reply">{{ t('weather.noReplies') }}</div>
       </div>
-      <div v-else class="no-reply">{{ t('weather.noReplies') }}</div>
 
       <!-- ✍️ 新規リプライ入力 -->
-      <textarea
-        v-model="replyContent"
-        class="reply-textarea"
-        :placeholder="t('weather.enterReply')"
-        rows="3"
-      />
-
-      <div class="modal-actions">
-        <YamatoButton
-          @click="submitReply"
+      <div class="input-row">
+        <textarea
+          v-model="replyContent"
+          ref="textareaRef"
+          class="chat-textarea"
+          :placeholder="t('weather.enterReply')"
+          rows="1"
+          @input="autoResize"
+        />
+        <button
+          class="send-button"
           :disabled="!replyContent.trim() || !profileLoaded"
+          @click="submitReply"
         >
-          {{ t('common.submit') }}
-        </YamatoButton>
-        <YamatoButton type="secondary" @click="handleClose">
-          {{ t('common.cancel') }}
-        </YamatoButton>
+          ⇧
+        </button>
       </div>
     </div>
   </Modal>
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import { API, graphqlOperation, Auth } from 'aws-amplify'
-import { createWeatherReply } from '@/graphql/mutations'
-import { listWeatherReplies, getWeatherComment, getWeatherProfile } from '@/graphql/queries'
 import { useI18n } from 'vue-i18n'
 import Modal from '@/components/Modal.vue'
-import YamatoButton from '@/components/YamatoButton.vue'
+import { createWeatherReply } from '@/graphql/mutations'
+import { listWeatherReplies, getWeatherComment, getWeatherProfile } from '@/graphql/queries'
 
 const props = defineProps({
   visible: Boolean,
@@ -66,12 +67,20 @@ const ownerNickname = ref('名無し')
 const profileLoaded = ref(false)
 const replies = ref([])
 const parentComment = ref(null)
+const textareaRef = ref(null)
 
 function handleClose() {
   replyContent.value = ''
   replies.value = []
   parentComment.value = null
   emit('close')
+}
+
+function autoResize() {
+  const el = textareaRef.value
+  if (!el) return
+  el.style.height = 'auto'
+  el.style.height = el.scrollHeight + 'px'
 }
 
 async function fetchProfileInfo() {
@@ -145,6 +154,7 @@ watch(
 </script>
 
 <style scoped>
+
 .weather-reply-modal {
   padding: 1rem;
 }
@@ -156,22 +166,28 @@ watch(
   margin-bottom: 1.2rem;
 }
 
-.reply-list {
+.modal-scroll-area {
   max-height: 300px;
   overflow-y: auto;
+  margin-bottom: 1rem;
+  padding-right: 4px; /* スクロールバー余白 */
+}
+
+.reply-list {
   margin-bottom: 1rem;
 }
 
 .reply-item {
   display: flex;
   align-items: flex-start;
-  margin-bottom: 0.8rem;
+  margin-bottom: 1.2rem;
 }
 
 .reply-icon {
   width: 2rem;
   height: 2rem;
-  margin-right: 0.6rem;
+  margin-right: 0.5rem;
+  flex-shrink: 0;
 }
 
 .icon-initial {
@@ -195,6 +211,9 @@ watch(
 }
 
 .reply-body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
   flex: 1;
 }
 
@@ -203,6 +222,7 @@ watch(
   font-weight: bold;
   color: #333;
   margin-bottom: 0.2rem;
+  text-align: left;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -213,25 +233,9 @@ watch(
 
 .reply-text {
   font-size: 1rem;
-}
-
-.reply-textarea {
-  width: 100%;
-  padding: 0.6rem;
-  border-radius: 8px;
-  border: 1px solid #ccc;
-  resize: none;
-  background: #fff;
-  font-size: 1rem;
-  margin-bottom: 1rem;
-}
-
-@media (prefers-color-scheme: dark) {
-  .reply-textarea {
-    background: #222;
-    color: #eee;
-    border: 1px solid #555;
-  }
+  text-align: left;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 .no-reply {
@@ -241,9 +245,57 @@ watch(
   color: #888;
 }
 
-.modal-actions {
+/* ✅ 入力行と送信ボタン（⇧） */
+.input-row {
   display: flex;
-  justify-content: space-between;
-  gap: 1rem;
+  align-items: flex-end;
+  gap: 0.5rem;
 }
+
+.chat-textarea {
+  flex: 1;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 0.6rem;
+  resize: none;
+  font-size: 1rem;
+  background: #fff;
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+.send-button {
+  background-color: #2d4a77;
+  border: none;
+  font-size: 1.4rem;
+  cursor: pointer;
+  color: white;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.3s;
+}
+
+.send-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background-color: #999;
+}
+
+@media (prefers-color-scheme: dark) {
+  .chat-textarea {
+    background: #222;
+    color: #eee;
+    border-color: #555;
+  }
+
+  .send-button {
+    color: #eee;
+  }
+}
+
 </style>
+ 
