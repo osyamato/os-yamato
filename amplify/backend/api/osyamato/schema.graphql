@@ -332,14 +332,16 @@ type WeatherReply
     { allow: private, operations: [read, update] }
   ]) {
   id: ID!
-  commentId: ID!
-  owner: String
-  ownerNickname: String
-  icon: String
-  content: String!
-  language: String!
-  reported: Boolean
-  reportReason: String       # 📝 通報理由（任意・最大文字数は制限すると良い）
+  commentId: ID!          # 親コメントのID（WeatherComment）
+  owner: String!          # 投稿者のsub（Cognito ID）
+  ownerNickname: String   # 投稿時のニックネーム（変更されても影響なし）
+  icon: String            # 投稿時のアイコンファイル名（表示補助）
+  content: String!        # 本文
+  language: String!       # 言語
+  reported: Boolean       # 通報済みか
+  reportReason: String    # 通報理由（任意）
+
+  hiddenByCommentOwner: Boolean # ← 🔒 コメント主によって非表示にされたか
   createdAt: AWSDateTime
   updatedAt: AWSDateTime
 }

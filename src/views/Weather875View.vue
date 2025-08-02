@@ -48,12 +48,9 @@
   v-if="comment.source !== 'ios'"
   class="action-buttons"
 >
- <button
-    class="reply-button"
-    @click="openReplyModal(comment.id)"
-  >
-    💭
-  </button>
+<button class="reply-button" @click="openReplyModal(comment.id)">
+  💭
+</button>
   <button
     class="like-button"
     :class="{ liked: comment.liked }"
@@ -100,46 +97,46 @@
       </div>
     </div>
 
-    <!-- モーダル群 -->
-    <WeatherForecastModal
-      :visible="showForecastModal"
-      :forecastList="forecastList"
-      @close="showForecastModal = false"
-    />
-    <WeatherCitySelector
-      :visible="showCitySelector"
-      @close="showCitySelector = false"
-      @select="handleCitySelected"
-    />
-    <PostWeatherCommentModal
-      :visible="showPostModal"
-      :weather="currentWeather?.main || ''"
-      :temperature="currentWeather?.temp || 0"
-      :timeOfDay="new Date().getHours()"
-      :language="locale"
-      @close="showPostModal = false"
-    />
-    <ImageModal
-      :visible="showImageModal"
-      :imageUrl="modalImageUrl"
-      @close="closeImageModal"
-    />
-    <WeatherProfileModal
-      :userSub="selectedUserSub"
-      :visible="showProfileModal"
-      @close="showProfileModal = false"
-    />
+<WeatherForecastModal
+  :visible="showForecastModal"
+  :forecastList="forecastList"
+  @close="showForecastModal = false" />
+
+<WeatherCitySelector
+  :visible="showCitySelector"
+  @close="showCitySelector = false"
+  @select="handleCitySelected" />
+
+<PostWeatherCommentModal
+  :visible="showPostModal"
+  :weather="currentWeather?.main || ''"
+  :temperature="currentWeather?.temp || 0"
+  :timeOfDay="new Date().getHours()"
+  :language="locale"
+  @close="showPostModal = false" />
+
+<ImageModal
+  :visible="showImageModal"
+  :imageUrl="modalImageUrl"
+  @close="closeImageModal" />
+
+<WeatherProfileModal
+  :userSub="selectedUserSub"
+  :visible="showProfileModal"
+  @close="handleCloseProfile" />
+
 <WeatherReplyModal
+  v-show="showReplyModal"
   :visible="showReplyModal"
-  :commentId="replyingToCommentId"
+  :comment-id="replyingToCommentId"
   @close="closeReplyModal"
-/>
+  @open-profile="(userSub, fromReply) => openProfile(userSub, fromReply)" />
 
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onActivated, computed } from 'vue'
+import { ref, nextTick, onMounted, onActivated, computed } from 'vue'
 import { API, graphqlOperation, Auth, Storage } from 'aws-amplify'
 import {
   listWeatherProfiles,
@@ -202,11 +199,37 @@ const iconFilenames = [
   'weather.icon7.png', 'weather.icon8.png', 'weather.icon9.png', 'weather.icon10.png'
 ]
 
-function openProfile(userSub: string) {
-  selectedUserSub.value = userSub
-  showProfileModal.value = true
+function openProfile(userSub: string, fromReply = false) {
+  if (fromReply) {
+    showReplyModal.value = false
+    returnToReplyModal.value = true
+  } else {
+    returnToReplyModal.value = false
+  }
+
+  nextTick(() => {
+    selectedUserSub.value = userSub
+    showProfileModal.value = true
+  })
 }
 
+function handleProfileOpen(sub) {
+  selectedUserSub.value = sub
+  showReplyModal.value = false
+  showProfileModal.value = true
+}
+function handleCloseProfile() {
+  showProfileModal.value = false
+
+  // リプライモーダルに戻る条件付き
+  if (returnToReplyModal.value) {
+    nextTick(() => {
+      showReplyModal.value = true
+    })
+  }
+
+  returnToReplyModal.value = false
+}
 
 onMounted(async () => {
   window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -522,11 +545,13 @@ async function toggleLike(comment) {
 
 const showReplyModal = ref(false)
 const replyingToCommentId = ref(null)
+const returnToReplyModal = ref(false)
 
 function openReplyModal(commentId) {
   replyingToCommentId.value = commentId
   showReplyModal.value = true
 }
+
 function closeReplyModal() {
   showReplyModal.value = false
   replyingToCommentId.value = null

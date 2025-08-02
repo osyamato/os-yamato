@@ -1,5 +1,5 @@
 <template>
-  <Modal :visible="visible" @close="close">
+  <Modal :visible="visible" @close="close" @after-leave="handleAfterLeave">
     <transition name="fade-in">
       <div v-if="loaded" class="profile-modal" :class="{ dark: isDarkMode }">
         <!-- 👤 アイコン＋ニックネーム横並び -->
@@ -46,7 +46,7 @@ const props = defineProps({
   userSub: String,
   visible: Boolean
 })
-const emit = defineEmits(['close'])
+const emit = defineEmits(['close', 'back']) // ✅ 追加
 
 const profile = ref({})
 const loaded = ref(false)
@@ -84,6 +84,11 @@ async function fetchProfile() {
 
 function close() {
   emit('close')
+}
+
+// ✅ モーダル閉じた直後に "back" を emit
+function handleAfterLeave() {
+  emit('back')
 }
 </script>
 

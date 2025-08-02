@@ -1261,6 +1261,7 @@ export const onCreateWeatherReply = /* GraphQL */ `
       language
       reported
       reportReason
+      hiddenByCommentOwner
       createdAt
       updatedAt
       __typename
@@ -1282,6 +1283,7 @@ export const onUpdateWeatherReply = /* GraphQL */ `
       language
       reported
       reportReason
+      hiddenByCommentOwner
       createdAt
       updatedAt
       __typename
@@ -1303,6 +1305,7 @@ export const onDeleteWeatherReply = /* GraphQL */ `
       language
       reported
       reportReason
+      hiddenByCommentOwner
       createdAt
       updatedAt
       __typename
