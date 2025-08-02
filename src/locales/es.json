@@ -490,7 +490,13 @@
 "common.save": "Guardar",
 "profile.title": "Perfil",
 "weather.hourSuffix": " h",
-"weather.timeSuffix": "h"
+"weather.timeSuffix": "h",
+"weather.enterReply": "Susurra tus palabras con suavidad...",
+"weather.noRepliesPoetic": "Aún no hay respuestas. Esperar también es parte de la alegría.",
+
+ "weather.noRepliesPoetic1": "Aún no hay respuestas.",
+  "weather.noRepliesPoetic2": "Esperar también puede ser un momento hermoso.",
+"weather.hideConfirm": "Esta respuesta será ocultada. Esta acción no se puede deshacer. ¿Estás seguro?"
 
 
 

@@ -43,15 +43,22 @@
   class="comment-card fade-up"
   :style="{ animationDelay: `${index * 120}ms` }"
 >
-<!-- ♡ ハートボタン（iOS以外のときだけ表示） -->
-<button
+<!-- 💭 吹き出し + ♡ ハート -->
+<div
   v-if="comment.source !== 'ios'"
-  class="like-button"
-  :class="{ liked: comment.liked }"
-  @click="toggleLike(comment)"
+  class="action-buttons"
 >
-  ♡
+<button class="reply-button" @click="openReplyModal(comment.id)">
+  💭
 </button>
+  <button
+    class="like-button"
+    :class="{ liked: comment.liked }"
+    @click="toggleLike(comment)"
+  >
+    ♡
+  </button>
+</div>
 
   <div class="profile-row">
     <template v-if="comment.source === 'ios'">
@@ -90,40 +97,46 @@
       </div>
     </div>
 
-    <!-- モーダル群 -->
-    <WeatherForecastModal
-      :visible="showForecastModal"
-      :forecastList="forecastList"
-      @close="showForecastModal = false"
-    />
-    <WeatherCitySelector
-      :visible="showCitySelector"
-      @close="showCitySelector = false"
-      @select="handleCitySelected"
-    />
-    <PostWeatherCommentModal
-      :visible="showPostModal"
-      :weather="currentWeather?.main || ''"
-      :temperature="currentWeather?.temp || 0"
-      :timeOfDay="new Date().getHours()"
-      :language="locale"
-      @close="showPostModal = false"
-    />
-    <ImageModal
-      :visible="showImageModal"
-      :imageUrl="modalImageUrl"
-      @close="closeImageModal"
-    />
-    <WeatherProfileModal
-      :userSub="selectedUserSub"
-      :visible="showProfileModal"
-      @close="showProfileModal = false"
-    />
+<WeatherForecastModal
+  :visible="showForecastModal"
+  :forecastList="forecastList"
+  @close="showForecastModal = false" />
+
+<WeatherCitySelector
+  :visible="showCitySelector"
+  @close="showCitySelector = false"
+  @select="handleCitySelected" />
+
+<PostWeatherCommentModal
+  :visible="showPostModal"
+  :weather="currentWeather?.main || ''"
+  :temperature="currentWeather?.temp || 0"
+  :timeOfDay="new Date().getHours()"
+  :language="locale"
+  @close="showPostModal = false" />
+
+<ImageModal
+  :visible="showImageModal"
+  :imageUrl="modalImageUrl"
+  @close="closeImageModal" />
+
+<WeatherProfileModal
+  :userSub="selectedUserSub"
+  :visible="showProfileModal"
+  @close="handleCloseProfile" />
+
+<WeatherReplyModal
+  v-show="showReplyModal"
+  :visible="showReplyModal"
+  :comment-id="replyingToCommentId"
+  @close="closeReplyModal"
+  @open-profile="(userSub, fromReply) => openProfile(userSub, fromReply)" />
+
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onActivated, computed } from 'vue'
+import { ref, nextTick, onMounted, onActivated, computed } from 'vue'
 import { API, graphqlOperation, Auth, Storage } from 'aws-amplify'
 import {
   listWeatherProfiles,
@@ -134,6 +147,8 @@ import type { WeatherComment } from '@/API'
 import WeatherProfileModal from '@/components/WeatherProfileModal.vue'
 import { updateWeatherComment } from '@/graphql/mutations'
 import Modal from '@/components/Modal.vue'
+
+import WeatherReplyModal from '@/components/WeatherReplyModal.vue'
 
 import WeatherForecastModal from '@/components/WeatherForecastModal.vue'
 import WeatherCitySelector from '@/components/WeatherCitySelector.vue'
@@ -184,11 +199,37 @@ const iconFilenames = [
   'weather.icon7.png', 'weather.icon8.png', 'weather.icon9.png', 'weather.icon10.png'
 ]
 
-function openProfile(userSub: string) {
-  selectedUserSub.value = userSub
-  showProfileModal.value = true
+function openProfile(userSub: string, fromReply = false) {
+  if (fromReply) {
+    showReplyModal.value = false
+    returnToReplyModal.value = true
+  } else {
+    returnToReplyModal.value = false
+  }
+
+  nextTick(() => {
+    selectedUserSub.value = userSub
+    showProfileModal.value = true
+  })
 }
 
+function handleProfileOpen(sub) {
+  selectedUserSub.value = sub
+  showReplyModal.value = false
+  showProfileModal.value = true
+}
+function handleCloseProfile() {
+  showProfileModal.value = false
+
+  // リプライモーダルに戻る条件付き
+  if (returnToReplyModal.value) {
+    nextTick(() => {
+      showReplyModal.value = true
+    })
+  }
+
+  returnToReplyModal.value = false
+}
 
 onMounted(async () => {
   window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -502,6 +543,20 @@ async function toggleLike(comment) {
   }
 }
 
+const showReplyModal = ref(false)
+const replyingToCommentId = ref(null)
+const returnToReplyModal = ref(false)
+
+function openReplyModal(commentId) {
+  replyingToCommentId.value = commentId
+  showReplyModal.value = true
+}
+
+function closeReplyModal() {
+  showReplyModal.value = false
+  replyingToCommentId.value = null
+}
+
 
 </script>
 
@@ -726,11 +781,27 @@ async function toggleLike(comment) {
   }
 }
 
-.like-button {
+/* 💭 + ♡ 配置：右上に並ぶように絶対配置 */
+.action-buttons {
   position: absolute;
   top: 8px;
   right: 10px;
-  background: transparent;
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* 💭 吹き出しボタン */
+.reply-button {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: gray;
+}
+
+/* ♡ ハートボタン（未いいね状態） */
+.like-button {
+  background: none;
   border: none;
   font-size: 1.4rem;
   cursor: pointer;
@@ -738,18 +809,19 @@ async function toggleLike(comment) {
   transition: color 0.4s ease;
 }
 
+/* ♡ いいね状態のとき */
 .like-button.liked {
   color: #f8a8b5; /* 淡いピンク */
   animation: pop 0.5s ease;
 }
 
-/* ゆっくり大きく膨らんで戻る */
+/* ゆっくり大きく膨らんで戻るアニメーション */
 @keyframes pop {
   0% {
     transform: scale(1);
   }
   40% {
-    transform: scale(1.8); /* さらに大きく */
+    transform: scale(1.8);
   }
   100% {
     transform: scale(1);

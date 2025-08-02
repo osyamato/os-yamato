@@ -825,6 +825,7 @@ export const getWeatherComment = /* GraphQL */ `
       likeCount
       reportCount
       replyCount
+      replyAllowed
       createdAt
       updatedAt
       __typename
@@ -854,6 +855,53 @@ export const listWeatherComments = /* GraphQL */ `
         likeCount
         reportCount
         replyCount
+        replyAllowed
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const getWeatherReply = /* GraphQL */ `
+  query GetWeatherReply($id: ID!) {
+    getWeatherReply(id: $id) {
+      id
+      commentId
+      owner
+      ownerNickname
+      icon
+      content
+      language
+      reported
+      reportReason
+      hiddenByCommentOwner
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const listWeatherReplies = /* GraphQL */ `
+  query ListWeatherReplies(
+    $filter: ModelWeatherReplyFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    listWeatherReplies(filter: $filter, limit: $limit, nextToken: $nextToken) {
+      items {
+        id
+        commentId
+        owner
+        ownerNickname
+        icon
+        content
+        language
+        reported
+        reportReason
+        hiddenByCommentOwner
         createdAt
         updatedAt
         __typename

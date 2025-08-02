@@ -532,7 +532,12 @@
   "weather.later": "明日以降",
 "weather.hourSuffix": "時",
 "profile.title": "プロフィール",
-"weather.timeSuffix": "時"
+"weather.timeSuffix": "時",
+
+"weather.enterReply": "そっと言葉を添えてください…",
+ "weather.noRepliesPoetic1": "まだ返信がありません。",
+  "weather.noRepliesPoetic2": "待つのも楽しい時間です。",
+"weather.hideConfirm": "このコメントを非表示にします。現在、取り消しはできません。本当によろしいですか？"
 
 
 

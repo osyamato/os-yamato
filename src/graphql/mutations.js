@@ -1168,6 +1168,7 @@ export const createWeatherComment = /* GraphQL */ `
       likeCount
       reportCount
       replyCount
+      replyAllowed
       createdAt
       updatedAt
       __typename
@@ -1195,6 +1196,7 @@ export const updateWeatherComment = /* GraphQL */ `
       likeCount
       reportCount
       replyCount
+      replyAllowed
       createdAt
       updatedAt
       __typename
@@ -1222,6 +1224,73 @@ export const deleteWeatherComment = /* GraphQL */ `
       likeCount
       reportCount
       replyCount
+      replyAllowed
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const createWeatherReply = /* GraphQL */ `
+  mutation CreateWeatherReply(
+    $input: CreateWeatherReplyInput!
+    $condition: ModelWeatherReplyConditionInput
+  ) {
+    createWeatherReply(input: $input, condition: $condition) {
+      id
+      commentId
+      owner
+      ownerNickname
+      icon
+      content
+      language
+      reported
+      reportReason
+      hiddenByCommentOwner
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const updateWeatherReply = /* GraphQL */ `
+  mutation UpdateWeatherReply(
+    $input: UpdateWeatherReplyInput!
+    $condition: ModelWeatherReplyConditionInput
+  ) {
+    updateWeatherReply(input: $input, condition: $condition) {
+      id
+      commentId
+      owner
+      ownerNickname
+      icon
+      content
+      language
+      reported
+      reportReason
+      hiddenByCommentOwner
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const deleteWeatherReply = /* GraphQL */ `
+  mutation DeleteWeatherReply(
+    $input: DeleteWeatherReplyInput!
+    $condition: ModelWeatherReplyConditionInput
+  ) {
+    deleteWeatherReply(input: $input, condition: $condition) {
+      id
+      commentId
+      owner
+      ownerNickname
+      icon
+      content
+      language
+      reported
+      reportReason
+      hiddenByCommentOwner
       createdAt
       updatedAt
       __typename

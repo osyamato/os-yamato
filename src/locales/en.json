@@ -554,7 +554,13 @@
 "common.save": "Save",
 "profile.title": "Profile",
 "weather.hourSuffix": " o'clock",
-"weather.timeSuffix": "h"
+"weather.timeSuffix": "h",
+"weather.enterReply": "Whisper your words gently...",
+  "weather.noRepliesPoetic": "No replies yet. Waiting is part of the joy.",
+
+"weather.noRepliesPoetic1": "No replies yet.",
+  "weather.noRepliesPoetic2": "Waiting can be a beautiful time.",
+"weather.hideConfirm": "This reply will be hidden. This action cannot be undone. Are you sure?"
 
 
 }

@@ -307,8 +307,8 @@ type WeatherComment
   ]) {
   id: ID!
   owner: String
-  ownerNickname: String       
-  icon: String               
+  ownerNickname: String
+  icon: String
   weather: String!
   temperature: Float!
   timeOfDay: Float!
@@ -320,6 +320,28 @@ type WeatherComment
   likeCount: Int
   reportCount: Int
   replyCount: Int
+  replyAllowed: Boolean     # 💬 リプライ可否（デフォルト true 想定）
+  createdAt: AWSDateTime
+  updatedAt: AWSDateTime
+}
+
+type WeatherReply
+  @model
+  @auth(rules: [
+    { allow: owner },
+    { allow: private, operations: [read, update] }
+  ]) {
+  id: ID!
+  commentId: ID!          # 親コメントのID（WeatherComment）
+  owner: String!          # 投稿者のsub（Cognito ID）
+  ownerNickname: String   # 投稿時のニックネーム（変更されても影響なし）
+  icon: String            # 投稿時のアイコンファイル名（表示補助）
+  content: String!        # 本文
+  language: String!       # 言語
+  reported: Boolean       # 通報済みか
+  reportReason: String    # 通報理由（任意）
+
+  hiddenByCommentOwner: Boolean # ← 🔒 コメント主によって非表示にされたか
   createdAt: AWSDateTime
   updatedAt: AWSDateTime
 }
