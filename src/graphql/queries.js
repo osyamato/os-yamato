@@ -877,6 +877,7 @@ export const getWeatherReply = /* GraphQL */ `
       language
       reported
       reportReason
+      hiddenByCommentOwner
       createdAt
       updatedAt
       __typename
@@ -900,6 +901,7 @@ export const listWeatherReplies = /* GraphQL */ `
         language
         reported
         reportReason
+        hiddenByCommentOwner
         createdAt
         updatedAt
         __typename

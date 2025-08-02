@@ -507,7 +507,12 @@
 "common.save": "保存",
 "weather.hourSuffix": "点",
 "profile.title": "个人资料",
-"weather.timeSuffix": "时"
+"weather.timeSuffix": "时",
+ "weather.enterReply": "轻轻地留下你的话语……",
+"weather.noRepliesPoetic": "还没有回复，等待也是一种美好的时光。",
+  "weather.noRepliesPoetic1": "暂时还没有回复。",
+  "weather.noRepliesPoetic2": "等待本身也是一段美好的时光。",
+"weather.hideConfirm": "该回复将被隐藏，此操作无法撤销。您确定吗？"
 
 
 
