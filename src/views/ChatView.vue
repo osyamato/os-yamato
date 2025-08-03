@@ -824,9 +824,18 @@ onBeforeUnmount(() => {
 const isShaking = ref(false)
 
 function handleSendClick(event) {
-  if (isComposing.value && isJapaneseInput.value) {
-    event.preventDefault()
-    event.stopPropagation()
+  // ✅ 変換中または直後で未確定文字の可能性があるときは送信させない
+  if (isComposing.value || isJapaneseInput.value) {
+    event?.preventDefault()
+    event?.stopPropagation()
+
+    // 🌪️ 揺らす（変換中でも押されたら揺らす）
+    isShaking.value = true
+    setTimeout(() => {
+      isShaking.value = false
+    }, 300)
+
+    // フォーカスを戻す
     setTimeout(() => {
       textareaRef.value?.focus()
     }, 0)
@@ -834,7 +843,7 @@ function handleSendClick(event) {
   }
 
   if (!newMessage.value.trim()) {
-    // 🌪️ 揺らす！
+    // 🌪️ 空白は揺らす
     isShaking.value = true
     setTimeout(() => {
       isShaking.value = false
@@ -842,9 +851,11 @@ function handleSendClick(event) {
     return
   }
 
-  // 送信
+  // ✅ 明示的にフラグをリセット
   isComposing.value = false
   isJapaneseInput.value = false
+
+  // 🚀 実際の送信処理
   sendMessage()
 }
 
@@ -1430,14 +1441,20 @@ button:hover {
 
 @keyframes shake {
   0% { transform: translateX(0); }
-  25% { transform: translateX(-2px); }
-  50% { transform: translateX(2px); }
-  75% { transform: translateX(-2px); }
+  10% { transform: translateX(-4px); }
+  20% { transform: translateX(4px); }
+  30% { transform: translateX(-4px); }
+  40% { transform: translateX(4px); }
+  50% { transform: translateX(-3px); }
+  60% { transform: translateX(3px); }
+  70% { transform: translateX(-2px); }
+  80% { transform: translateX(2px); }
+  90% { transform: translateX(-1px); }
   100% { transform: translateX(0); }
 }
 
 .shake {
-  animation: shake 0.3s ease;
+  animation: shake 0.6s ease;
 }
 
 .circle-button:disabled {
