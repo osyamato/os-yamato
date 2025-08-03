@@ -17,14 +17,18 @@
             class="reply-item-row"
           >
             <!-- 🖼️ アイコン -->
-            <div class="reply-icon">
-              <img v-if="reply.icon" :src="`/${reply.icon}`" />
-              <div v-else class="icon-initial">{{ reply.ownerNickname?.[0] || '？' }}</div>
-            </div>
+<div class="reply-icon" @click.stop="openProfile(reply)">
+  <img v-if="reply.icon" :src="`/${reply.icon}`" />
+  <div v-else class="icon-initial">
+    {{ reply.ownerNickname?.[0] || '？' }}
+  </div>
+</div>
 
-            <!-- 💬 内容 -->
-            <div class="reply-body" @click="toggleVisibility(reply)">
-              <div class="nickname">{{ reply.ownerNickname }}</div>
+            <!-- 📝 本文とニックネーム -->
+            <div class="reply-body">
+<span class="nickname" @click.stop="openProfile(reply)">
+  {{ reply.ownerNickname }}
+</span>
               <div class="reply-text">{{ reply.content }}</div>
             </div>
 
@@ -37,16 +41,18 @@
           </div>
         </div>
 
-<transition name="fade">
-  <div v-show="showNoReplyMessage" class="no-reply">
-    {{ t('weather.noRepliesPoetic1') }}<br />
-    {{ t('weather.noRepliesPoetic2') }}
-  </div>
-</transition>
+        <!-- 🪶 詩的なメッセージ（返信がないとき） -->
+        <transition name="fade">
+          <div v-show="showNoReplyMessage" class="no-reply">
+            {{ t('weather.noRepliesPoetic1') }}<br />
+            {{ t('weather.noRepliesPoetic2') }}
+          </div>
+        </transition>
       </div>
     </div>
   </Modal>
 </template>
+
 
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
@@ -57,6 +63,7 @@ import { useI18n } from 'vue-i18n'
 import { onMounted, onBeforeUnmount } from 'vue'
 
 import Modal from '@/components/Modal.vue'
+import WeatherProfileModal from '@/components/WeatherProfileModal.vue'
 
 const { t } = useI18n()
 
@@ -66,13 +73,18 @@ const props = defineProps({
   parentComment: Object,
 })
 
-const emit = defineEmits(['close'])
 
 const replies = ref([])
 
 const visibleReplies = computed(() =>
   replies.value.filter(r => !r.hiddenByCommentOwner)
 )
+const emit = defineEmits(['close', 'open-profile'])
+
+function openProfile(reply) {
+  if (!reply.owner) return
+  emit('open-profile', reply.owner)
+}
 
 const showNoReplyMessage = ref(false)
 let noReplyTimeout: ReturnType<typeof setTimeout> | null = null
@@ -100,7 +112,6 @@ onBeforeUnmount(() => {
 watch(
   () => [props.visible, props.commentId],
   async ([visible, commentId]) => {
-    console.log('👀 props changed:', { visible, commentId })
     if (visible && commentId) {
       await fetchReplies()
     }
@@ -115,7 +126,6 @@ async function fetchReplies() {
       return
     }
 
-    console.log('📡 Fetching replies for commentId:', props.commentId)
 
     const res = await API.graphql(graphqlOperation(listWeatherReplies, {
       filter: { commentId: { eq: props.commentId } }
@@ -123,7 +133,6 @@ async function fetchReplies() {
     
     const items = res.data.listWeatherReplies.items
     replies.value = items
-    console.log('✅ Replies fetched:', items)
   } catch (e) {
     console.error('❌ Failed to fetch replies', e)
   }
@@ -141,7 +150,6 @@ async function toggleHidden(reply) {
     }
     await API.graphql(graphqlOperation(updateWeatherReply, { input: updated }))
     reply.hiddenByCommentOwner = !reply.hiddenByCommentOwner
-    console.log('🔁 Updated visibility for reply:', reply.id)
   } catch (e) {
     console.error('❌ Failed to update visibility', e)
   }
@@ -158,7 +166,19 @@ function close() {
 
 <style scoped>
 .weather-reply-modal {
+  min-height: 200px;
+  max-height: 70vh; /* 📱スマホで画面の70%までに制限 */
+  overflow-y: auto;
+  transition: min-height 0.3s ease;
   padding: 1rem;
+  box-sizing: border-box;
+  border-radius: 1rem;
+}
+
+@media (max-width: 600px) {
+  .weather-reply-modal {
+    max-height: 60vh; /* スマホではより控えめに */
+  }
 }
 
 .parent-comment {
@@ -182,7 +202,7 @@ function close() {
 .reply-item-row {
   display: flex;
   align-items: flex-start;
-  justify-content: space-between;
+  gap: 0.6rem; /* ✅ アイコンと本文の間に余白 */
   padding: 0.5rem 0;
   position: relative;
 }
@@ -221,7 +241,10 @@ function close() {
   }
 }
 
+
 .reply-body {
+  display: flex;
+  flex-direction: column;
   flex-grow: 1;
   max-width: calc(100% - 4rem); /* アイコンと削除ボタン分 */
   cursor: pointer;
@@ -231,7 +254,7 @@ function close() {
   font-size: 0.9rem;
   font-weight: bold;
   color: #333;
-  margin-bottom: 0.2rem;
+  margin-bottom: 0.3rem; /* ✅ 少し余白を増やす */
   text-align: left;
 }
 @media (prefers-color-scheme: dark) {

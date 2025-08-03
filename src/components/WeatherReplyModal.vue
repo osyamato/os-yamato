@@ -162,9 +162,9 @@ async function fetchReplies() {
         filter: { commentId: { eq: props.commentId } }
       })
     )
-    replies.value = res.data.listWeatherReplies.items.sort(
-      (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
-    )
+    replies.value = res.data.listWeatherReplies.items
+      .filter(item => !item.hiddenByCommentOwner) // ✅ 非表示リプライを除外
+      .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
   } catch (err) {
     console.error('❌ Failed to fetch replies:', err)
   }
@@ -242,6 +242,25 @@ watch(
 <style scoped>
 .weather-reply-modal {
   padding: 1rem;
+  min-height: 200px;        /* 📏 初期高さ */
+  max-height: 70vh;         /* 📱 スマホ対応の最大高さ */
+  overflow-y: auto;         /* ✅ スクロール対応 */
+  transition: min-height 0.3s ease;
+  box-sizing: border-box;
+  border-radius: 1rem;
+  background-color: #fff;
+}
+
+@media (prefers-color-scheme: dark) {
+  .weather-reply-modal {
+    background-color: #1e1e1e;
+  }
+}
+
+@media (max-width: 600px) {
+  .weather-reply-modal {
+    max-height: 60vh; /* スマホで高さを抑える */
+  }
 }
 
 .parent-comment {
@@ -331,7 +350,7 @@ watch(
 .input-row {
   display: flex;
   align-items: flex-end;
-  gap: 0.5rem;
+  gap: 1rem; /* ← ここを調整してみて！ */
 }
 
 .chat-textarea {
@@ -366,7 +385,10 @@ watch(
   align-items: center;
   justify-content: center;
   transition: background-color 0.3s;
+
+  margin-left: 0.5rem; /* ← ここを追加！ */
 }
+
 .send-button:disabled {
   opacity: 0.4;
   cursor: not-allowed;
@@ -408,7 +430,7 @@ watch(
 
 .reply-body {
   flex-grow: 1;
-  max-width: calc(100% - 4rem); /* アイコンと削除ボタン分 */
+  max-width: calc(100% - 3rem); /* ← 今より少し広く */
   cursor: pointer;
 }
 
