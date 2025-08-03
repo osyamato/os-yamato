@@ -170,16 +170,19 @@ v-for="emoji in ['❤️','😆','🥺','😮','🥰','👍']"
           @input="autoResize"
           @compositionstart="handleCompositionStart"
           @compositionend="handleCompositionEnd"
-        ></textarea>
-        <button
-          type="button"
-          :disabled="!newMessage.trim() || (isComposing && isJapaneseInput)"
-          :class="['circle-button', { disabled: isComposing && isJapaneseInput }]"
-          @mousedown.prevent
-          @click="sendMessage"
-        >
-          ⇧
-        </button>
+  @focus="handleInputFocus"       
+ ></textarea>
+<button
+  type="button"
+  class="circle-button"
+  :class="{ shake: isShaking }"
+  :disabled="isSendButtonDisabled"
+  @mousedown.prevent="handleSendClick"
+  @touchstart.prevent="handleSendClick"
+>
+  ⇧
+</button>
+
       </div>
     </div>
 
@@ -541,14 +544,20 @@ const isMobile = ref(false)
 
 const isJapaneseInput = ref(false)
 
-const handleCompositionStart = (e) => {
+function handleCompositionStart(e) {
   isComposing.value = true
   isJapaneseInput.value = /[ぁ-んァ-ン]/.test(e.data || '')
 }
 
-const handleCompositionEnd = () => {
+const forceUpdateTrigger = ref(0)
+
+function handleCompositionEnd() {
   isComposing.value = false
   isJapaneseInput.value = false
+
+  nextTick(() => {
+    forceUpdateTrigger.value++  // 🔁 再評価を明示
+  })
 }
 
 
@@ -812,6 +821,32 @@ onBeforeUnmount(() => {
   if (reactionSubscription) reactionSubscription.unsubscribe()
 })
 
+const isShaking = ref(false)
+
+function handleSendClick(event) {
+  if (isComposing.value && isJapaneseInput.value) {
+    event.preventDefault()
+    event.stopPropagation()
+    setTimeout(() => {
+      textareaRef.value?.focus()
+    }, 0)
+    return
+  }
+
+  if (!newMessage.value.trim()) {
+    // 🌪️ 揺らす！
+    isShaking.value = true
+    setTimeout(() => {
+      isShaking.value = false
+    }, 300)
+    return
+  }
+
+  // 送信
+  isComposing.value = false
+  isJapaneseInput.value = false
+  sendMessage()
+}
 
 
 async function sendMessage() {
@@ -1096,8 +1131,18 @@ async function tryGetUrl(key, retries = 5, delay = 1000) {
   return null
 }
 
+function handleInputFocus() {
+  if (!isMobile.value) return
+
+  // ソフトキーボード表示直後にスクロール
+  setTimeout(() => {
+    scrollToBottom(true) // 即座にジャンプ
+  }, 300) // モバイルでの keyboard 開くタイミングに合わせて微調整
+}
+
 </script>
 
+ 
 
 
 
@@ -1375,13 +1420,38 @@ button:hover {
   transition: background-color 0.2s ease;
 }
 
-.circle-button:hover {
-  background-color: #e0e0e0;
+.circle-button:disabled {
+  background-color: #274c77;  /* 通常と同じ色 */
+  color: white;
+  opacity: 1;                 /* 半透明を防止 */
+  cursor: default;            /* or keep as 'pointer' */
 }
 
-.circle-button.disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+
+@keyframes shake {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(-2px); }
+  50% { transform: translateX(2px); }
+  75% { transform: translateX(-2px); }
+  100% { transform: translateX(0); }
+}
+
+.shake {
+  animation: shake 0.3s ease;
+}
+
+.circle-button:disabled {
+  background-color: #274c77 !important;
+  color: white !important;
+  opacity: 1 !important;
+  cursor: default !important;
+}
+
+.circle-button:disabled:hover {
+  background-color: #274c77 !important;
+  color: white !important;
+  opacity: 1 !important;
+  cursor: default !important;
 }
 
 .reaction-picker {
