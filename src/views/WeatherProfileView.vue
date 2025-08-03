@@ -106,12 +106,21 @@
       @close="showModal = false"
       @refresh="fetchProfile"
     />
-<!-- ✉️ リプライモーダル -->
+
+<WeatherProfileModal
+  :userSub="selectedUserSub"
+  :visible="showUserProfileModal"
+  @close="showUserProfileModal = false"
+  @back="showReplyModal = true"
+/>
+
+
 <MyWeatherReplyModal
   v-if="showReplyModal"
   :visible="showReplyModal"
   :comment-id="replyingToCommentId"
   @close="closeReplyModal"
+  @open-profile="openUserProfile"
 />
 
   </div>
@@ -128,6 +137,7 @@ import EditWeatherProfileModal from '@/components/EditWeatherProfileModal.vue'
 import ImageModal from '@/components/ImageModal.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import MyWeatherReplyModal from '@/components/MyWeatherReplyModal.vue'
+import WeatherProfileModal from '@/components/WeatherProfileModal.vue'
 
 import { useI18n } from 'vue-i18n'
 
@@ -241,7 +251,6 @@ const showReplyModal = ref(false)
 const replyingToCommentId = ref<string | null>(null)
 
 function openReplyModal(comment) {
-  console.log('📨 Opening reply modal for commentId:', comment.id)
   replyingToCommentId.value = comment.id
   showReplyModal.value = true
 }
@@ -291,6 +300,19 @@ async function deleteComment() {
     console.error('❌ 削除失敗:', e)
   }
 }
+
+const showUserProfileModal = ref(false) // ←これに変更
+const selectedUserSub = ref('')
+
+function openUserProfile(userSub) {
+  showReplyModal.value = false // ✅ これを必ず先に閉じる
+  selectedUserSub.value = userSub
+  showUserProfileModal.value = true
+}
+
+
+defineExpose({ openUserProfile })
+
 </script>
 
 
@@ -436,7 +458,6 @@ async function deleteComment() {
   background: #fdfdfd;
   border: 1px solid #bbb;
   border-radius: 6px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -448,6 +469,23 @@ async function deleteComment() {
   box-sizing: border-box;
   overflow: hidden;
   margin: 0 auto;
+
+  /* ✅ ライトモードでは outline を削除、シャドウを柔らかく */
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.04),
+    0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.profile-container.dark .comment-card {
+  background: #2c2c2c;
+  color: #f5f5f5;
+  border: 1px solid #555;
+
+  /* ✅ ダークモードは明るめの outline を維持しつつ浮かせる */
+  box-shadow:
+    0 0 4px rgba(255, 255, 255, 0.05),
+    0 4px 14px rgba(0, 0, 0, 0.6);
+  outline: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 @media (min-width: 768px) {
@@ -483,11 +521,6 @@ async function deleteComment() {
   color: #ddd;
 }
 
-.profile-container.dark .comment-card {
-  background: #2c2c2c;
-  color: #f5f5f5;
-  border: 1px solid #555;
-}
 
 .comment-content {
   font-size: 15px;
