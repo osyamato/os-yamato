@@ -6,10 +6,12 @@
 "about.japanese": "日本語",
 "about.english": "English",
 "about.chinese": "中文",
+
 "chinese": "中国語",
 "spanish": "スペイン語",
-
-
+"french": "フランス語",
+"japanese": "日本語",
+"english": "英語",
 
  "title": "設定",
   "languageLabel": "言語を選択:",
@@ -30,8 +32,6 @@
   "green": "緑",
   "purple": "紫",
   "preview": "選択中のプレビュー:",
-  "japanese": "日本語",
-  "english": "英語",
   "saveMessage": "設定を保存しました！",
   "account": "アカウント",
 "about": "OS Yamatoについて",
@@ -426,7 +426,6 @@
   "activity.contact": "連絡先",
 
 "gpt.title": "風にたずねる",
-  "gpt.hint": "アイコンを選んでたずねてみよう",
   "gpt.mode": "モード",
   "gpt.noSessions": "このモードのセッションはありません。",
   "gpt.updated": "更新",

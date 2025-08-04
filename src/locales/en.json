@@ -6,8 +6,11 @@
 "about.japanese": "Japanese",
 "about.english": "English",
 "about.chinese": "Chinese",
+"japanese": "Japanese",
+"english": "English",
+"chinese": "Chinese",
 "spanish": "Spanish",
-
+"french": "French",
 
   "title": "Settings",
   "languageLabel": "Select Language:",
@@ -32,9 +35,6 @@
   "saveMessage": "Settings saved!",
 "add": "Add",
 "tagInputPlaceholder": "New tag…",
-  "japanese": "Japanese",
-  "english": "English",
-"chinese": "Chinese",
   "account": "Account",
 "about": "About OS Yamato",
 
@@ -442,7 +442,6 @@
   "activity.contact": "Contacts",
 
 "gpt.title": "Ask the Wind",
-  "gpt.hint": "Select an icon and ask your question",
   "gpt.mode": "Mode",
   "gpt.noSessions": "No sessions in this mode.",
   "gpt.updated": "Updated",
