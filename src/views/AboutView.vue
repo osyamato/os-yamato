@@ -17,10 +17,11 @@
 <div class="lang-picker">
   <label for="language">🌐 {{ $t('about.language') }}</label>
   <select id="language" v-model="currentLang" @change="changeLanguage">
-  <option value="ja">{{ $t('japanese') }}</option>
-  <option value="en">{{ $t('english') }}</option>
-  <option value="es">{{ $t('spanish') }}</option>   <!-- 🇪🇸 追加 -->
-  <option value="zh">{{ $t('chinese') }}</option>
+    <option value="ja">{{ $t('japanese') }}</option>
+    <option value="en">{{ $t('english') }}</option>
+    <option value="es">{{ $t('spanish') }}</option>   <!-- 🇪🇸 -->
+    <option value="zh">{{ $t('chinese') }}</option>
+    <option value="fr">{{ $t('french') }}</option>    <!-- 🇫🇷 追加 -->
   </select>
 </div>
 

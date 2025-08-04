@@ -70,10 +70,14 @@
   "account": "Cuenta",
   "about": "Acerca de OS Yamato",
 
-  "japanese": "Japonés",
-  "english": "Inglés",
-  "chinese": "Chino",
-  "spanish": "Español",
+
+"japanese": "Japonés",
+"english": "Inglés",
+"chinese": "Chino",
+"spanish": "Español",
+"french": "Francés",
+
+
 "auth.language": "Idioma",
 
 
@@ -381,7 +385,6 @@
   
 
   "gpt.title": "Consultar al viento",
-  "gpt.hint": "Selecciona un ícono para preguntar",
   "gpt.mode": "Modo",
   "gpt.noSessions": "No hay sesiones en este modo.",
   "gpt.updated": "Actualizado",
