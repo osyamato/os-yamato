@@ -81,7 +81,7 @@
 
     <!-- ✅ 新規・編集モーダル -->
     <transition name="modal">
-<Modal v-if="showModal" :visible="showModal" @close="closeModal" customClass="compact">
+<Modal v-if="showModal" :visible="showModal" @close="closeModal" customClass="wide-modal">
         <div style="display: flex; justify-content: space-between; align-items: center">
           <h3 class="modal-title-icon-only">
             <span class="flower-icon-small">{{ getLifeStageIcon(selectedMemo) }}</span>
@@ -755,6 +755,23 @@ margin-top: 0;
   position: relative;
   z-index: 1001;
 }
+
+.modal-inner-card.wide-modal {
+  width: 95vw;             /* ✅ ← PCでは幅を画面の95%に拡張 */
+  max-width: 880px;
+  max-height: 92vh;
+  padding: 2.2rem;
+}
+
+@media (max-width: 1023px) {
+  .modal-inner-card.wide-modal {
+    width: 90%;            /* モバイルでは90%のまま */
+    max-width: 600px;
+    max-height: 85vh;
+    padding: 1.6rem;
+  }
+}
+
 .modal-title-icon-only {
   color: #111; /* ← ライトモード用：黒文字にする */
   margin-bottom: 1rem;
@@ -879,6 +896,19 @@ font-size: 16px;
 
 .memo-list {
   margin: 1rem 1rem 0;
+  opacity: 0;
+  animation: fadeInMemoList 0.3s ease-out forwards;
+  animation-delay: 150ms; /* ← 必要に応じて短く調整OK */
+}
+@keyframes fadeInMemoList {
+  from {
+    opacity: 0;
+    transform: translateY(-6px); /* 🔽 上から下に降りる */
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);    /* 🎯 元の位置 */
+  }
 }
 
 .name-with-icon {
@@ -944,7 +974,6 @@ font-size: 16px;
     width: 480px; /* PCでさらに広く */
   }
 }
-
 
 .memo-dates {
   font-size: 0.75rem;
