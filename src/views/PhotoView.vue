@@ -1,9 +1,11 @@
 <template>
   <div class="photo-view drop-animation">
+    <!-- 🌸 ヘッダー -->
     <div class="photo-header">
-<h2 class="header-title">{{ t('photo.title') }}</h2>
+      <h2 class="header-title">{{ t('photo.title') }}</h2>
     </div>
 
+    <!-- 🎛️ アクションボタン -->
     <div class="header-actions">
       <IconButton :color="iconColor" @click="triggerFileInput">＋</IconButton>
       <input
@@ -14,97 +16,107 @@
         @change="handleFileUpload"
         hidden
       />
-      <IconButton :color="iconColor" :class="{ 'selected-icon': filterFavoritesOnly }" @click="toggleHeartFilter">♡</IconButton>
-      <IconButton :color="iconColor" :class="{ 'selected-icon': isSelectionMode }" @click="toggleSelectionMode">☑️</IconButton>
-
 <IconButton
   :color="iconColor"
-  :class="{ 'selected-icon': filterChatPhotosOnly }"
-  @click="toggleChatPhotoFilter"
->🎞️</IconButton>
-
+  :class="{ 'selected-icon': filterFavoritesOnly }"
+  @click="toggleHeartFilter"
+>
+  ♡
+</IconButton>
+      <IconButton :color="iconColor" :class="{ 'selected-icon': isSelectionMode }" @click="toggleSelectionMode">☑️</IconButton>
+      <IconButton :color="iconColor" :class="{ 'selected-icon': filterChatPhotosOnly }" @click="toggleChatPhotoFilter">🎞️</IconButton>
       <IconButton :color="iconColor" :class="{ 'selected-icon': filterWiltingOnly }" @click="toggleWiltFilter">🥀</IconButton>
     </div>
 
+    <!-- 🌱 アップロード中 or 削除中 -->
     <div v-if="(isLoading || isDeleting) && iconStage" class="upload-life-cycle">
       <span :class="'icon-seedling ' + iconStage">{{ lifeIcon }}</span>
     </div>
 
+    <!-- ☑️ 選択中の操作 -->
     <div v-if="isSelectionMode" class="floating-delete">
       <IconButton :color="iconColor" @click.stop="downloadSelectedPhotos">↓</IconButton>
       <IconButton :color="iconColor" @click.stop="promptDeleteSelectedPhotos">🗑</IconButton>
     </div>
 
- <p v-if="filterWiltingOnly" class="wilted-message">
+    <!-- 🥀 メッセージ表示 -->
+    <p v-if="filterWiltingOnly" class="wilted-message">
       {{ t('message.memoryFlower') }}
     </p>
-<p v-if="filterChatPhotosOnly" class="wilted-message">
-  {{ t('message.chatPhotoMemory') }}
-</p>
+    <p v-if="filterChatPhotosOnly" class="wilted-message">
+      {{ t('message.chatPhotoMemory') }}
+    </p>
 
-    <div class="photo-grid">
-      <div
-        v-for="photo in photoList"
-        :key="photo.id"
-        class="photo-card"
-        :class="{ selected: isSelectionMode && selectedPhotoIds.includes(photo.id) }"
-        @click="isSelectionMode ? toggleSelection(photo.id) : openModal(photo)"
-      >
-        <img :src="photo.thumbnailUrl" class="photo-thumbnail" style="cursor: pointer" />
-        <span v-if="isWilting(photo)" class="wilt-icon">🥀</span>
-        <div v-if="isSelectionMode && selectedPhotoIds.includes(photo.id)" class="check-overlay">☑️</div>
-        <div class="photo-info">
-          <p class="filename">📷 {{ photo.fileName }}<span v-if="isWilting(photo)">🥀</span></p>
-          <p class="timestamp">撮影日時: {{ formatDate(photo.photoTakenAt) }}</p>
+    <!-- 📸 スクロール可能な写真リスト -->
+    <div class="photo-list" @scroll.passive="handleScroll">
+      <div class="photo-grid">
+        <div
+          v-for="photo in photoList"
+          :key="photo.id"
+          class="photo-card"
+          :class="{ selected: isSelectionMode && selectedPhotoIds.includes(photo.id) }"
+          @click="isSelectionMode ? toggleSelection(photo.id) : openModal(photo)"
+        >
+<img :src="photo.thumbnailUrl" class="photo-thumbnail" style="cursor: pointer" />
+          <span v-if="isWilting(photo)" class="wilt-icon">🥀</span>
+          <div v-if="isSelectionMode && selectedPhotoIds.includes(photo.id)" class="check-overlay">☑️</div>
+          <div class="photo-info">
+            <p class="filename">📷 {{ photo.fileName }}<span v-if="isWilting(photo)">🥀</span></p>
+            <p class="timestamp">撮影日時: {{ formatDate(photo.photoTakenAt) }}</p>
+          </div>
         </div>
       </div>
     </div>
 
-<!-- 🌕 モーダル -->
-<div
-  v-if="modalVisible"
-  class="modal-overlay"
-  :class="{ closing: modalClosing }"
-  @click="startModalClose"
-  @touchstart="handleTouchStart"
-  @touchend="handleTouchEnd"
->
-  <div class="modal-content-wrapper" @click.stop>
-    <div v-if="isImageLoaded" class="modal-toolbar-centered">
-      <span class="modal-download-icon" @click.stop="downloadCurrentPhoto">↓</span>
-      <span class="modal-favorite-icon" :class="{ active: currentPhoto?.isFavorite }" @click.stop="toggleFavorite(currentPhoto)">♡</span>
-      <span class="modal-date-text" v-if="currentPhoto?.photoTakenAt">{{ formatDate(currentPhoto.photoTakenAt) }}</span>
-      <button class="modal-delete-button-above" @click.stop.prevent="promptDeletePhoto(currentPhoto)">🗑</button>
-    </div>
+    <!-- 🌕 モーダル -->
+    <div
+      v-if="modalVisible"
+      class="modal-overlay"
+      :class="{ closing: modalClosing }"
+      @click="startModalClose"
+      @touchstart="handleTouchStart"
+      @touchend="handleTouchEnd"
+    >
+      <div class="modal-content-wrapper" @click.stop>
+        <div v-if="isImageLoaded" class="modal-toolbar-centered">
+          <span class="modal-download-icon" @click.stop="downloadCurrentPhoto">↓</span>
+          <span
+            class="modal-favorite-icon"
+            :class="{ active: currentPhoto?.isFavorite }"
+            @click.stop="toggleFavorite(currentPhoto)"
+          >♡</span>
+          <span class="modal-date-text" v-if="currentPhoto?.photoTakenAt">
+            {{ formatDate(currentPhoto.photoTakenAt) }}
+          </span>
+          <button class="modal-delete-button-above" @click.stop.prevent="promptDeletePhoto(currentPhoto)">🗑</button>
+        </div>
 
-    <div class="modal-content">
-<div v-if="!isImageLoaded" class="modal-loading-overlay">
-  <span class="modal-loading-icon">🌱</span>
-</div>
-
-      <!-- ✅ 1枚のみ表示・読み込み検知＋フェード -->
-      <div class="modal-image-wrapper fade-in-image">
-        <img
-          :src="fullImageUrl"
-          class="full-image"
-          @load="isImageLoaded = true"
-          v-show="isImageLoaded"
-        />
+        <div class="modal-content">
+          <div v-if="!isImageLoaded" class="modal-loading-overlay">
+            <span class="modal-loading-icon">🌱</span>
+          </div>
+          <div class="modal-image-wrapper fade-in-image">
+            <img
+              :src="fullImageUrl"
+              class="full-image"
+              @load="isImageLoaded = true"
+              v-show="isImageLoaded"
+            />
+          </div>
+        </div>
       </div>
     </div>
-  </div>
-  </div>
-  <!-- 📝 削除確認モーダル -->
-<ConfirmDialog
-  v-if="showConfirm"
-  :visible="showConfirm"
-  :message="confirmMessage"
-  @confirm="handleConfirmedDelete"
-  @cancel="cancelDelete"
-/>
-</div>
-</template>
 
+    <!-- 📝 削除確認モーダル -->
+    <ConfirmDialog
+      v-if="showConfirm"
+      :visible="showConfirm"
+      :message="confirmMessage"
+      @confirm="handleConfirmedDelete"
+      @cancel="cancelDelete"
+    />
+  </div>
+</template>
 
 
 <script setup>
@@ -118,7 +130,13 @@ import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import { useI18n } from 'vue-i18n'
 import Tesseract from 'tesseract.js'
 
+
+
 const { t } = useI18n()
+
+const pageLimit = 50
+const nextToken = ref(null)
+const allPhotosLoaded = ref(false)
 
 
 const ocrText = ref('')
@@ -182,6 +200,21 @@ function toggleChatPhotoFilter() {
   filterChatPhotosOnly.value = !filterChatPhotosOnly.value
 }
 
+async function toggleFavorite(photo) {
+  try {
+    const updated = {
+      id: photo.id,
+      isFavorite: !photo.isFavorite
+    }
+    await API.graphql(graphqlOperation(updatePhoto, { input: updated }))
+    photo.isFavorite = !photo.isFavorite
+    currentPhoto.value = { ...photo }
+    await fetchPhotos()
+  } catch (err) {
+    console.error('❤️ お気に入り切り替え失敗:', err)
+  }
+}
+
 
 function promptDeletePhoto(photo) {
   confirmMessage.value = t('confirm.deleteSingle')
@@ -215,6 +248,62 @@ function promptDeleteSelectedPhotos() {
   }, 0)
 }
 
+async function attachThumbnailAndSort(items) {
+  const updatedItems = await Promise.all(
+    items.map(async (item) => {
+      try {
+        const signedThumbUrl = await Storage.get(item.thumbnailFileName, { level: 'protected' })
+        return { ...item, thumbnailUrl: signedThumbUrl }
+      } catch (e) {
+        console.warn(`🔸 URL取得失敗: ${item.thumbnailFileName}`, e)
+        return item
+      }
+    })
+  )
+
+  return updatedItems.sort((a, b) => {
+    const dateA = new Date(a.photoTakenAt || a.createdAt)
+    const dateB = new Date(b.photoTakenAt || b.createdAt)
+    const diff = dateB - dateA
+    return diff !== 0 ? diff : a.id.localeCompare(b.id)
+  })
+}
+
+async function fetchAllFavoritePhotos() {
+  isLoading.value = true
+  nextToken.value = null
+  allPhotosLoaded.value = false
+  photoList.value = [] // ❤️ 最初にリスト初期化
+
+  try {
+    const allItems = []
+    let token = null
+
+    do {
+      const result = await API.graphql(graphqlOperation(listPhotos, {
+        limit: pageLimit,
+        nextToken: token,
+        filter: {
+          isFavorite: { eq: true }
+        }
+      }))
+      const items = result.data.listPhotos.items
+      token = result.data.listPhotos.nextToken
+
+      allItems.push(...items)
+    } while (token)
+
+    // 🌱 サムネイル取得＋ソート
+    const updatedItems = await attachThumbnailAndSort(allItems)
+    photoList.value = updatedItems
+    allPhotosLoaded.value = true
+
+  } catch (e) {
+    console.error('❌ お気に入り写真 全件取得エラー:', e)
+  } finally {
+    isLoading.value = false
+  }
+}
 
 async function handleConfirmedDelete() {
   isDeleting.value = true
@@ -270,11 +359,6 @@ function triggerFileInput() {
   fileInput.value?.click()
 }
 
-function toggleHeartFilter() {
-  filterWiltingOnly.value = false
-  isSelectionMode.value = false
-  filterFavoritesOnly.value = !filterFavoritesOnly.value
-}
 
 function toggleSelectionMode() {
   filterFavoritesOnly.value = false
@@ -298,13 +382,16 @@ function toggleSelection(photoId) {
   }
 }
 
-watch([filterFavoritesOnly, filterWiltingOnly, filterChatPhotosOnly], () => {
-  console.log('🎞️ フィルター状態:', {
-    favorite: filterFavoritesOnly.value,
-    wilt: filterWiltingOnly.value,
-    chat: filterChatPhotosOnly.value
-  })
+function resetAndFetchPhotos() {
+  photoList.value = []
+  nextToken.value = null
+  allPhotosLoaded.value = false
   fetchPhotos()
+}
+
+watch([filterFavoritesOnly, filterWiltingOnly, filterChatPhotosOnly], () => {
+  console.log('🎞️ フィルター変更 → リセット')
+  resetAndFetchPhotos()
 })
 
 
@@ -494,10 +581,43 @@ function isWilting(photo) {
   const days = (Date.now() - new Date(photo.lastOpenedAt)) / (1000 * 60 * 60 * 24)
   return days >= 330
 }
+
+// 並列制限付き実行ユーティリティ（p-limit不要）
+async function runWithConcurrencyLimit(tasks, limit = 5) {
+  const results = []
+  let index = 0
+
+  async function runner() {
+    while (index < tasks.length) {
+      const currentIndex = index++
+      try {
+        results[currentIndex] = await tasks[currentIndex]()
+      } catch (e) {
+        console.warn('❌ サムネイル取得失敗', e)
+        results[currentIndex] = null
+      }
+    }
+  }
+
+  const runners = Array.from({ length: limit }, runner)
+  await Promise.all(runners)
+  return results
+}
+
+// メイン関数
 async function fetchPhotos() {
+  if (allPhotosLoaded.value) return
+  isLoading.value = true
+
   try {
-    const result = await API.graphql(graphqlOperation(listPhotos))
+    const result = await API.graphql(graphqlOperation(listPhotos, {
+      limit: pageLimit,
+      nextToken: nextToken.value
+    }))
+
     let items = result.data.listPhotos.items
+    nextToken.value = result.data.listPhotos.nextToken
+    allPhotosLoaded.value = !nextToken.value
 
     // ❤️ お気に入りのみ
     if (filterFavoritesOnly.value) {
@@ -513,47 +633,58 @@ async function fetchPhotos() {
       })
     }
 
-    // 🎞️ チャット写真のみ（fileNameに 'chat/' を含む）
+    // 🎞️ チャット写真のみ
     if (filterChatPhotosOnly.value) {
       items = items.filter(item => item.fileName?.includes('chat/'))
     }
 
-    const updatedItems = await Promise.all(
-      items.map(async (item) => {
-        try {
-          const signedThumbUrl = await Storage.get(item.thumbnailFileName, { level: 'protected' })
-          return { ...item, thumbnailUrl: signedThumbUrl }
-        } catch (e) {
-          console.warn(`🔸 URL取得失敗: ${item.thumbnailFileName}`, e)
-          return item
-        }
-      })
-    )
+    // 📸 安定ソート（非同期前に実行）
+    items = items.sort((a, b) => {
+      const dateA = new Date(a.photoTakenAt || a.createdAt)
+      const dateB = new Date(b.photoTakenAt || b.createdAt)
+      const diff = dateB - dateA
+      if (diff !== 0) return diff
+      return a.id.localeCompare(b.id)
+    })
 
-    photoList.value = updatedItems.sort(
-      (a, b) => new Date(b.photoTakenAt || b.createdAt) - new Date(a.photoTakenAt || a.createdAt)
-    )
+    // 🌱 サムネイル取得（最大5並列に制限）
+    const tasks = items.map(item => async () => {
+      try {
+        const signedThumbUrl = await Storage.get(item.thumbnailFileName, { level: 'protected' })
+        return { ...item, thumbnailUrl: signedThumbUrl }
+      } catch (e) {
+        console.warn(`🔸 URL取得失敗: ${item.thumbnailFileName}`, e)
+        return item
+      }
+    })
+
+    const updatedItems = await runWithConcurrencyLimit(tasks, 5)
+
+    // ✅ 重複除去（同じ ID は1つだけにする）
+    const merged = [...photoList.value, ...updatedItems]
+    const uniquePhotos = Array.from(new Map(merged.map(p => [p.id, p])).values())
+
+    // ⛔ ソート不要（すでにソート済みの状態で追加されている）
+    photoList.value = uniquePhotos
+
   } catch (e) {
     console.error('❌ 写真取得エラー:', e)
+  } finally {
+    isLoading.value = false
   }
 }
 
+function toggleHeartFilter() {
+  filterFavoritesOnly.value = !filterFavoritesOnly.value
+  filterWiltingOnly.value = false
+  isSelectionMode.value = false
 
-async function toggleFavorite(photo) {
-  try {
-    const updated = {
-      id: photo.id,
-      isFavorite: !photo.isFavorite
-    }
-    await API.graphql(graphqlOperation(updatePhoto, { input: updated }))
-    photo.isFavorite = !photo.isFavorite
-    currentPhoto.value = { ...photo }
-    await fetchPhotos()
-  } catch (err) {
-    console.error('❤️ お気に入り切り替え失敗:', err)
+  if (filterFavoritesOnly.value) {
+    fetchAllFavoritePhotos()
+  } else {
+    resetAndFetchPhotos()
   }
 }
-
 
 async function openModal(photo) {
   try {
@@ -671,6 +802,13 @@ function handleKeydown(e) {
   if (e.key === 'Escape') startModalClose()
 }
 
+function handleScroll(e) {
+  const el = e.target
+  if (el.scrollTop + el.clientHeight >= el.scrollHeight - 200) {
+    fetchPhotos()
+  }
+}
+
 </script>
 
 
@@ -706,8 +844,7 @@ function handleKeydown(e) {
 .photo-grid {
   display: grid;
   gap: 0.5rem;
-  justify-content: center;
-  grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
 }
 
 @media (max-width: 430px) {
@@ -1137,6 +1274,26 @@ function handleKeydown(e) {
   white-space: pre-wrap;
   font-size: 0.9rem;
   line-height: 1.4;
+}
+
+.photo-list {
+  height: calc(100vh - 220px); /* ヘッダー＋フィルターボタン分を除く */
+  overflow-y: auto;
+  padding: 1rem;
+}
+.photo-thumbnail-placeholder {
+  width: 100%;
+  padding-top: 100%; /* 正方形の比率を保つ */
+  background: linear-gradient(135deg, #e0e0e0, #f8f8f8);
+  border-radius: 12px;
+  animation: pulse 1.5s ease-in-out infinite;
+  position: relative;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.6; }
 }
 
 </style>
