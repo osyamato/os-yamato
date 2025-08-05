@@ -11,9 +11,9 @@
   <option disabled value="">{{ t('selectLanguage') }}</option>
   <option value="ja">{{ t('japanese') }}</option>
   <option value="en">{{ t('english') }}</option>
-  <option value="zh">{{ t('chinese') }}</option> <!-- ✅ 追加 -->
-  <option value="es">{{ t('spanish') }}</option> 
-
+  <option value="zh">{{ t('chinese') }}</option>
+  <option value="es">{{ t('spanish') }}</option>
+  <option value="fr">{{ t('french') }}</option> <!-- ✅ フランス語を追加 -->
 </select>
     </div>
 

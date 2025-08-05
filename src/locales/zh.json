@@ -10,10 +10,13 @@
 "auth.registerHere": "点此注册",
 "about.linkText": "关于 Yamato（条款与政策）",
 "auth.language": "语言",
+
 "japanese": "日语",
 "english": "英语",
 "chinese": "中文",
 "spanish": "西班牙语",
+"french": "法语",
+
 
 "about.language": "语言",
 "about.japanese": "日语",
@@ -345,7 +348,6 @@
   "activity.contact": "联系人",
 
   "gpt.title": "向风请教",
-  "gpt.hint": "选择图标进行提问",
   "gpt.mode": "模式",
   "gpt.noSessions": "此模式暂无会话。",
   "gpt.updated": "已更新",
@@ -512,7 +514,11 @@
 "weather.noRepliesPoetic": "还没有回复，等待也是一种美好的时光。",
   "weather.noRepliesPoetic1": "暂时还没有回复。",
   "weather.noRepliesPoetic2": "等待本身也是一段美好的时光。",
-"weather.hideConfirm": "该回复将被隐藏，此操作无法撤销。您确定吗？"
+"weather.hideConfirm": "该回复将被隐藏，此操作无法撤销。您确定吗？",
+
+"game.bestTimeTitle": "最佳时间",
+"game.noRecords": "没有记录",
+"game.loading": "加载中……"
 
 
 

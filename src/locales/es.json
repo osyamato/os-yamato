@@ -70,10 +70,14 @@
   "account": "Cuenta",
   "about": "Acerca de OS Yamato",
 
-  "japanese": "Japonés",
-  "english": "Inglés",
-  "chinese": "Chino",
-  "spanish": "Español",
+
+"japanese": "Japonés",
+"english": "Inglés",
+"chinese": "Chino",
+"spanish": "Español",
+"french": "Francés",
+
+
 "auth.language": "Idioma",
 
 
@@ -381,7 +385,6 @@
   
 
   "gpt.title": "Consultar al viento",
-  "gpt.hint": "Selecciona un ícono para preguntar",
   "gpt.mode": "Modo",
   "gpt.noSessions": "No hay sesiones en este modo.",
   "gpt.updated": "Actualizado",
@@ -496,7 +499,17 @@
 
  "weather.noRepliesPoetic1": "Aún no hay respuestas.",
   "weather.noRepliesPoetic2": "Esperar también puede ser un momento hermoso.",
-"weather.hideConfirm": "Esta respuesta será ocultada. Esta acción no se puede deshacer. ¿Estás seguro?"
+"weather.hideConfirm": "Esta respuesta será ocultada. Esta acción no se puede deshacer. ¿Estás seguro?",
+
+"game.bestTimeTitle": "Mejor tiempo",
+"game.noRecords": "Sin registros",
+"game.loading": "Cargando...",
+
+"activity.photo": "Foto",
+"activity.video": "Vídeo",
+"activity.message": "Mensaje",
+"activity.memo": "Nota",
+"activity.contact": "Contacto"
 
 
 
