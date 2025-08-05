@@ -514,7 +514,11 @@
 "weather.noRepliesPoetic": "还没有回复，等待也是一种美好的时光。",
   "weather.noRepliesPoetic1": "暂时还没有回复。",
   "weather.noRepliesPoetic2": "等待本身也是一段美好的时光。",
-"weather.hideConfirm": "该回复将被隐藏，此操作无法撤销。您确定吗？"
+"weather.hideConfirm": "该回复将被隐藏，此操作无法撤销。您确定吗？",
+
+"game.bestTimeTitle": "最佳时间",
+"game.noRecords": "没有记录",
+"game.loading": "加载中……"
 
 
 

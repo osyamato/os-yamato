@@ -327,7 +327,6 @@ onUnmounted(() => {
     })
   }
 
-  console.log('✅ GlobeView cleaned up')
 })
 
 // ⭐ Star / Meteor

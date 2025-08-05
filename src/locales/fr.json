@@ -519,7 +519,20 @@
 
 "weather.noRepliesPoetic1": "Aucune réponse pour l’instant.",
 "weather.noRepliesPoetic2": "Attendre peut aussi être un beau moment.",
-"weather.hideConfirm": "Cette réponse sera masquée. Cette action est irréversible. Es-tu sûr ?"
+"weather.hideConfirm": "Cette réponse sera masquée. Cette action est irréversible. Es-tu sûr ?",
+
+"clock.wabisabi": "Wabi-Sabi",
+"clock.fourseasons": "Quatre saisons",
+
+"game.bestTimeTitle": "Meilleur temps",
+"game.noRecords": "Aucun enregistrement",
+"game.loading": "Chargement...",
+
+"activity.photo": "Photo",
+"activity.video": "Vidéo",
+"activity.message": "Message",
+"activity.memo": "Mémo",
+"activity.contact": "Contact"
 
 
 
