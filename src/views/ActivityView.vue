@@ -203,7 +203,6 @@ onUnmounted(() => {
   if (flowerTexture?.dispose) flowerTexture.dispose()
   flowerTexture = null
 
-  console.log("✅ ActivityView cleaned up completely")
 })
 
 function initScene() {
