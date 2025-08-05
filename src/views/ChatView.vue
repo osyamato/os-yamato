@@ -1,5 +1,5 @@
 <template>
-<div class="view-wrapper" @click="dismissKeyboard">
+<div class="view-wrapper" @click="handleOuterClick">
     <div class="chat-container">
       <!-- 🔼 ヘッダー -->
       <div class="chat-header">
@@ -133,12 +133,14 @@
             <!-- 🎉 リアクションピッカー -->
 <div
   v-if="showReactionPickerFor === msg.id && msg.senderSub !== mySub"
+  ref="reactionPickerRef"
   class="reaction-picker"
+  @click.stop
 >
   <!-- リアクション絵文字群 -->
   <div class="emoji-list">
     <span
-v-for="emoji in ['❤️','😆','🥺','😮','🥰','👍']"
+v-for="emoji in ['❤️','😆','🥺','😮','😂','🥰','👍']"
       :key="emoji"
       @click="selectReaction(emoji, msg)"
     >
@@ -236,6 +238,7 @@ const copiableMessageId = ref(null)
 const selectedMessageId = ref(null)
 const showReactionPicker = ref(false)
 const reactionTargetMessage = ref(null)
+const reactionPickerRef = ref(null) 
 
 const suppressAutoScroll = ref(false)
 const isRestoringScroll = ref(false)
@@ -757,6 +760,33 @@ watch(messages, () => {
   const lastMsg = messages.value[messages.value.length - 1]
   if (!lastMsg || lastMsg.senderSub === mySub.value) return
   maybePlayEffect(lastMsg.content)
+})
+
+function dismissKeyboard() {
+  const activeElement = document.activeElement
+  if (activeElement && typeof activeElement.blur === 'function') {
+    activeElement.blur()
+  }
+}
+
+function handleOuterClick(event) {
+  const target = event.target
+
+  const isClickInsideTextarea = textareaRef.value?.contains(target)
+  const isClickInsidePicker = reactionPickerRef.value?.contains?.(target)
+
+  if (isClickInsideTextarea || isClickInsidePicker) {
+    return
+  }
+
+  // 外側をクリックしたら閉じる
+  showReactionPickerFor.value = null
+  dismissKeyboard()
+}
+
+// 送信ボタンの活性化条件（空白のみなら非活性）
+const isSendButtonDisabled = computed(() => {
+  return newMessage.value.trim() === ''
 })
 
 function hideKeyboard() {
