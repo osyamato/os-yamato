@@ -951,7 +951,6 @@ async function fetchMessages() {
       subscription = null
     }
 
-    console.log('📡 初回メッセージ取得開始 for roomId:', roomId.value)
 
     const res = await API.graphql(graphqlOperation(messagesByRoomIdQuery, {
       roomId: roomId.value,
@@ -961,7 +960,6 @@ async function fetchMessages() {
 
     const items = res.data.messagesByRoomId.items || []
     nextToken = res.data.messagesByRoomId.nextToken
-    console.log('📦 初回取得:', items.length, '📍nextToken:', nextToken)
 
     const sorted = items
       .filter(msg => !!msg)
@@ -989,7 +987,6 @@ async function fetchMessages() {
     }))
 
     messages.value = enriched
-    console.log('✅ 初回格納:', enriched.length)
 
     await nextTick()
     scrollToBottom()
@@ -1068,7 +1065,6 @@ const messageListRef = ref(null)
 function handleScrollTop() {
   const el = messageListRef.value
   if (el && el.scrollTop === 0) {
-    console.log('⬆️ スクロール先頭 - 追加取得')
     fetchMoreMessages()
   }
 }
