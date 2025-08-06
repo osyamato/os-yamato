@@ -28,27 +28,29 @@
 
 <template v-if="msg.contentType === 'image'">
   <div class="message-wrapper text-with-time">
-    <!-- ✅ 画像がロードされている場合 -->
-    <img
-      v-if="msg.imageUrl"
-      :src="msg.imageUrl"
-      class="message-image"
-      :key="msg.imageUrl"
-      @click="openImageModal(msg.imageUrl, msg.imageKey)"
-      @load="onImageLoad"
-    />
+    <!-- ✅ サイズ固定のラッパーで画像・🖼️を統一 -->
+    <div class="image-wrapper">
+      <!-- ✅ 画像がロードされている場合 -->
+      <img
+        v-if="msg.imageUrl"
+        :src="msg.imageUrl"
+        class="message-image"
+        :key="msg.imageUrl"
+        @click="openImageModal(msg.imageUrl, msg.imageKey)"
+        @load="onImageLoad"
+      />
 
-    <!-- ✅ imageKey があるが URL 未取得（🖼️ボタン） -->
-    <div
-      v-else-if="msg.imageKey"
-      class="message-placeholder"
-      @click="loadImageOnDemand(msg)"
-    >
-      🖼️
+      <!-- ✅ imageKey があるが URL 未取得（🖼️ボタン） -->
+      <div
+        v-else-if="msg.imageKey"
+        class="message-placeholder"
+        @click="loadImageOnDemand(msg)"
+      >
+        🖼️
+      </div>
     </div>
 
-    <!-- ❌ imageKey すらない異常データは何も表示しない -->
-
+    <!-- 🕒 タイムスタンプ -->
     <span class="timestamp-right">{{ formatTime(msg.timestamp) }}</span>
 
     <!-- ❤️ リアクション -->
@@ -56,7 +58,9 @@
       v-if="msg.reactions?.items?.length"
       :class="['reaction-display', msg.senderSub === mySub ? 'right-corner' : 'left-corner']"
     >
-      <span v-for="r in msg.reactions.items" :key="r.id || r.emoji">{{ r.emoji }}</span>
+      <span v-for="r in msg.reactions.items" :key="r.id || r.emoji">
+        {{ r.emoji }}
+      </span>
     </div>
   </div>
 </template>
@@ -85,30 +89,33 @@
 </template>
             </div>
 
-<!-- ✅ 自分のメッセージ -->
 <template v-else>
+  <!-- ⏰ タイムスタンプ -->
   <span class="timestamp-side">{{ formatTime(msg.timestamp) }}</span>
 
   <div class="message-wrapper mine">
     <!-- ✅ 画像メッセージ -->
     <template v-if="msg.contentType === 'image'">
-      <template v-if="msg.imageUrl">
+      <div class="image-wrapper">
+        <!-- ✅ サムネイルがある場合 -->
         <img
+          v-if="msg.imageUrl"
           :src="msg.imageUrl"
           class="message-image"
           :key="msg.imageUrl"
           @click="openImageModal(msg.imageUrl, msg.imageKey)"
           @load="onImageLoad"
         />
-      </template>
-      <template v-else-if="msg.imageKey">
+
+        <!-- ✅ 🖼️ プレースホルダ -->
         <div
+          v-else-if="msg.imageKey"
           class="message-placeholder"
           @click="loadImageOnDemand(msg)"
         >
           🖼️
         </div>
-      </template>
+      </div>
     </template>
 
     <!-- ✅ テキストメッセージ -->
@@ -118,7 +125,7 @@
       </div>
     </template>
 
-    <!-- ✅ リアクション -->
+    <!-- ❤️ リアクション -->
     <div
       v-if="msg.reactions?.items?.length"
       :class="['reaction-display', msg.mine ? 'right-corner' : 'left-corner']"
@@ -951,7 +958,6 @@ async function fetchMessages() {
       subscription = null
     }
 
-
     const res = await API.graphql(graphqlOperation(messagesByRoomIdQuery, {
       roomId: roomId.value,
       sortDirection: "DESC",
@@ -965,36 +971,48 @@ async function fetchMessages() {
       .filter(msg => !!msg)
       .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
 
-    const enriched = await Promise.all(sorted.map(async msg => {
-      if (msg.contentType === 'image' && msg.imageKey) {
-        const msgDate = new Date(msg.timestamp)
-        const now = new Date()
-        const daysDiff = (now - msgDate) / (1000 * 60 * 60 * 24)
-
-        if (daysDiff <= 14) {
-          try {
-            const thumbKey = msg.thumbnailKey || msg.imageKey
-            const url = await Storage.get(thumbKey, { level: 'public' })
-            return { ...msg, imageUrl: url }
-          } catch {
-            return { ...msg, imageUrl: null }
-          }
-        } else {
-          return { ...msg, imageUrl: null } // 🔕 古い画像は表示しない
-        }
-      }
-      return msg
+    // ✅ STEP 1: まずは imageUrl: null で代入
+    messages.value = sorted.map(msg => ({
+      ...msg,
+      imageUrl: null
     }))
-
-    messages.value = enriched
 
     await nextTick()
     scrollToBottom()
+
+    // ✅ STEP 2: 遅延して画像を取得・差し替える
+    setTimeout(() => {
+      loadImageUrls(messages.value)
+    }, 500) // 500ms ほど遅らせるのが自然です
 
     subscribeToNewMessages()
   } catch (err) {
     console.error('❌ メッセージ取得エラー:', JSON.stringify(err, null, 2))
   }
+}
+
+async function loadImageUrls(messageList) {
+  const now = new Date()
+
+  for (let msg of messageList) {
+    if (msg.contentType === 'image' && msg.imageKey && msg.imageUrl === null) {
+      const msgDate = new Date(msg.timestamp)
+      const daysDiff = (now - msgDate) / (1000 * 60 * 60 * 24)
+
+      if (daysDiff <= 14) {
+        try {
+          const thumbKey = msg.thumbnailKey || msg.imageKey
+          const url = await Storage.get(thumbKey, { level: 'public' })
+          msg.imageUrl = url
+        } catch {
+          msg.imageUrl = null
+        }
+      }
+    }
+  }
+
+  // Vue の再描画を促す（必須）
+  messages.value = [...messageList]
 }
 
 let nextToken = null
@@ -1295,26 +1313,13 @@ button.disabled {
   font-size: 1rem;
   border-radius: 18px;
   border: 1px solid #ccc;
-  background: #1e1e1e;
-  color: #fff;
+  background-color: #fff; /* 通常モードでは白 */
+  color: #000;
   overflow-y: auto;
   resize: none;
   max-height: 150px;
   min-height: 40px;
   transition: height 0.1s ease-out;
-  box-sizing: border-box;
-}
-
-
-
-.message-input {
-  background-color: #fff; /* 通常モードでは白 */
-  color: #000;
-  border: 1px solid #ccc;
-  border-radius: 18px;
-  padding: 0.6rem 1rem;
-  font-size: 1rem;
-  resize: none;
   box-sizing: border-box;
 }
 
@@ -1364,18 +1369,6 @@ button.disabled {
 
 }
 
-.message-image {
-  max-width: 220px;
-  max-height: 220px;
-  border-radius: 12px;
-  object-fit: cover;
-}
-
-/* styleタグ内に追加 */
-.message-image.temp {
-  opacity: 0.4;
-  filter: blur(1px);
-}
 
 .message-row.mine {
   justify-content: flex-end;
@@ -1625,6 +1618,44 @@ button:hover {
   align-items: center;
   justify-content: center;
   font-size: 2rem;
+  cursor: pointer;
+}
+
+.image-wrapper {
+  width: 220px;
+  height: 220px;
+  border-radius: 12px;
+  overflow: hidden;
+  background-color: #eee;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.message-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 12px;
+}
+
+/* 一時的な画像（例：アップロード中） */
+.message-image.temp {
+  opacity: 0.4;
+  filter: blur(1px);
+}
+
+.message-placeholder {
+  width: 100%;
+  height: 100%;
+  background-color: #eee;
+  border-radius: 10px;
+  font-size: 2rem;
+  color: #999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
 }
 
