@@ -618,12 +618,11 @@ margin-bottom: 0.3rem;
 
 .contact-card {
   width: 330px;
-  height: 50px; /* 👈 高さを固定 */
-  overflow: hidden; /* 👈 はみ出しを防ぐ */
-  padding: 0.6rem 0.8rem 0.8rem 2.4rem; /* 👈 左パディングを追加（重要） */
+  min-height: 60px;
+  padding: 0.6rem 0.8rem 0.8rem 2.4rem;
   margin-bottom: 0.3rem;
-  background: white;
-  border-bottom: 1px solid #ccc;
+  background: #fdfdfd;
+  border: 1px solid #bbb;
   border-radius: 6px;
   display: flex;
   flex-direction: column;
@@ -634,8 +633,13 @@ margin-bottom: 0.3rem;
   cursor: pointer;
   box-sizing: border-box;
   word-wrap: break-word;
+  overflow: hidden;
   position: relative;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.04),
+    0 4px 10px rgba(0, 0, 0, 0.1);
 }
+
 
 @media (min-width: 768px) {
   .contact-card {
@@ -793,9 +797,10 @@ textarea {
   }
 
   .contact-card {
-    background: var(--yamato-secondary);
-    color: var(--yamato-text-dark);
-    border-bottom: 1px solid var(--yamato-border);
+ background: #2c2c2c;
+    color: #f5f5f5;
+    border: 1px solid transparent; /* ✅ 見えないがレイアウト維持用 */
+    box-shadow: none; /* ← 陰影もなしにするなら */
   }
 
   .contact-name {

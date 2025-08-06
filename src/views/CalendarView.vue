@@ -912,10 +912,10 @@ async function confirmAndDeleteMonth() {
   content: '';
   position: absolute;
   top: 2px;
-  right: 2px;
+  right: -1px; /* ← さらに右へ2px移動 */
   width: 24px;
   height: 24px;
-  background: rgba(255, 0, 0, 0.15);
+  background: rgba(255, 50, 50, 0.4); /* 鮮やかな赤で強調 */
   border-radius: 50%;
   z-index: 0;
 }
