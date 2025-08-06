@@ -63,13 +63,12 @@
       </div>
     </transition>
 
-    <!-- 🔽 確認ダイアログ -->
-    <ConfirmDialog
-      :visible="showConfirm"
-      message="account.confirmDelete"
-      @confirm="confirmDelete"
-      @cancel="cancelDelete"
-    />
+<ConfirmDialog
+  :visible="showConfirm"
+  :message="t('confirm.delete')"
+  @confirm="confirmDelete"
+  @cancel="cancelDelete"
+/>
   </div>
 </template>
 

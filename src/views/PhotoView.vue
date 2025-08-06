@@ -24,8 +24,13 @@
   ♡
 </IconButton>
       <IconButton :color="iconColor" :class="{ 'selected-icon': isSelectionMode }" @click="toggleSelectionMode">☑️</IconButton>
-      <IconButton :color="iconColor" :class="{ 'selected-icon': filterChatPhotosOnly }" @click="toggleChatPhotoFilter">🎞️</IconButton>
-      <IconButton :color="iconColor" :class="{ 'selected-icon': filterWiltingOnly }" @click="toggleWiltFilter">🥀</IconButton>
+<IconButton
+  :color="iconColor"
+  :class="{ 'selected-icon': filterWiltingOnly }"
+  @click="toggleWiltingFilter"
+>
+  🥀
+</IconButton>
     </div>
 
     <!-- 🌱 アップロード中 or 削除中 -->
@@ -42,9 +47,6 @@
     <!-- 🥀 メッセージ表示 -->
     <p v-if="filterWiltingOnly" class="wilted-message">
       {{ t('message.memoryFlower') }}
-    </p>
-    <p v-if="filterChatPhotosOnly" class="wilted-message">
-      {{ t('message.chatPhotoMemory') }}
     </p>
 
     <!-- 📸 スクロール可能な写真リスト -->
@@ -191,14 +193,7 @@ const showConfirm = ref(false)
 const confirmMessage = ref('')
 const pendingDeletePhotos = ref([]) // 1枚 or 複数保持用
 
-const filterChatPhotosOnly = ref(false)
 
-function toggleChatPhotoFilter() {
-  filterFavoritesOnly.value = false
-  filterWiltingOnly.value = false
-  isSelectionMode.value = false
-  filterChatPhotosOnly.value = !filterChatPhotosOnly.value
-}
 
 async function toggleFavorite(photo) {
   try {
@@ -215,6 +210,57 @@ async function toggleFavorite(photo) {
   }
 }
 
+
+function toggleWiltingFilter() {
+  filterWiltingOnly.value = !filterWiltingOnly.value
+  filterFavoritesOnly.value = false
+
+  photoList.value = []
+  nextToken.value = null
+  allPhotosLoaded.value = false
+
+  if (filterWiltingOnly.value) {
+    fetchWiltingPhotos()
+  } else {
+    fetchPhotos()
+  }
+}
+
+async function fetchWiltingPhotos() {
+  isLoading.value = true
+  let allItems = []
+  let nextTokenLocal = null
+
+  try {
+    do {
+      const result = await API.graphql(graphqlOperation(listPhotos, {
+        limit: 100, // 必要に応じて調整
+        nextToken: nextTokenLocal
+      }))
+      const items = result.data.listPhotos.items
+      allItems.push(...items)
+      nextTokenLocal = result.data.listPhotos.nextToken
+    } while (nextTokenLocal)
+
+    // ✅ 330日以上未開封 or lastOpenedAt が null かつ createdAt から330日以上
+    const wiltingItems = allItems.filter(item => {
+      const baseDate = item.lastOpenedAt || item.createdAt
+      if (!baseDate) return false
+      const days = (Date.now() - new Date(baseDate)) / (1000 * 60 * 60 * 24)
+      return days >= 330
+    })
+
+    const updatedItems = await attachThumbnailAndSort(wiltingItems)
+    photoList.value = updatedItems
+    allPhotosLoaded.value = true
+    nextToken.value = null
+
+  } catch (e) {
+    console.error('❌ 🥀写真全件取得失敗:', e)
+  } finally {
+    isLoading.value = false
+  }
+}
 
 function promptDeletePhoto(photo) {
   confirmMessage.value = t('confirm.deleteSingle')
@@ -305,6 +351,29 @@ async function fetchAllFavoritePhotos() {
   }
 }
 
+
+const displayedPhotos = computed(() => {
+  let filtered = [...photoList.value]
+
+  if (filterFavoritesOnly.value) {
+    filtered = filtered.filter(p => p.isFavorite)
+  }
+
+  if (filterWiltingOnly.value) {
+    filtered = filtered.filter(p => {
+      if (!p.lastOpenedAt) return false
+      const days = (Date.now() - new Date(p.lastOpenedAt)) / (1000 * 60 * 60 * 24)
+      return days >= 330
+    })
+  }
+
+  if (filterChatPhotosOnly.value) {
+    filtered = filtered.filter(p => p.fileName?.includes('chat/'))
+  }
+
+  return filtered
+})
+
 async function handleConfirmedDelete() {
   isDeleting.value = true
   try {
@@ -389,8 +458,7 @@ function resetAndFetchPhotos() {
   fetchPhotos()
 }
 
-watch([filterFavoritesOnly, filterWiltingOnly, filterChatPhotosOnly], () => {
-  console.log('🎞️ フィルター変更 → リセット')
+watch([filterFavoritesOnly, filterWiltingOnly], () => {
   resetAndFetchPhotos()
 })
 
@@ -604,7 +672,6 @@ async function runWithConcurrencyLimit(tasks, limit = 5) {
   return results
 }
 
-// メイン関数
 async function fetchPhotos() {
   if (allPhotosLoaded.value) return
   isLoading.value = true
@@ -619,12 +686,12 @@ async function fetchPhotos() {
     nextToken.value = result.data.listPhotos.nextToken
     allPhotosLoaded.value = !nextToken.value
 
-    // ❤️ お気に入りのみ
+    // ❤️ フィルター：お気に入り
     if (filterFavoritesOnly.value) {
       items = items.filter(item => item.isFavorite)
     }
 
-    // 🥀 枯れかけ（330日以上未開封）
+    // 🥀 フィルター：330日以上未開封
     if (filterWiltingOnly.value) {
       items = items.filter(item => {
         if (!item.lastOpenedAt) return false
@@ -633,12 +700,7 @@ async function fetchPhotos() {
       })
     }
 
-    // 🎞️ チャット写真のみ
-    if (filterChatPhotosOnly.value) {
-      items = items.filter(item => item.fileName?.includes('chat/'))
-    }
-
-    // 📸 安定ソート（非同期前に実行）
+    // 📸 安定ソート（フィルター後に実行）
     items = items.sort((a, b) => {
       const dateA = new Date(a.photoTakenAt || a.createdAt)
       const dateB = new Date(b.photoTakenAt || b.createdAt)
@@ -647,7 +709,7 @@ async function fetchPhotos() {
       return a.id.localeCompare(b.id)
     })
 
-    // 🌱 サムネイル取得（最大5並列に制限）
+    // 🌱 サムネイル取得（最大5並列）
     const tasks = items.map(item => async () => {
       try {
         const signedThumbUrl = await Storage.get(item.thumbnailFileName, { level: 'protected' })
@@ -660,11 +722,9 @@ async function fetchPhotos() {
 
     const updatedItems = await runWithConcurrencyLimit(tasks, 5)
 
-    // ✅ 重複除去（同じ ID は1つだけにする）
+    // ✅ 重複除去（IDでユニークに）
     const merged = [...photoList.value, ...updatedItems]
     const uniquePhotos = Array.from(new Map(merged.map(p => [p.id, p])).values())
-
-    // ⛔ ソート不要（すでにソート済みの状態で追加されている）
     photoList.value = uniquePhotos
 
   } catch (e) {
