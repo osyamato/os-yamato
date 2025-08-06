@@ -9,9 +9,14 @@
         </span>
       </button>
 
-      <button class="icon-button" @click="checkBeforePost" :style="{ backgroundColor: iconColor }">✏️</button>
-      <button class="icon-button" @click="openCitySelector" :style="{ backgroundColor: iconColor }">🔍</button>
-      <button class="icon-button" @click="getHourlyWeather" :style="{ backgroundColor: iconColor }">🌤️</button>
+<!-- ✏️ 投稿 -->
+<button class="icon-button" @click="checkBeforePost('post')" :style="{ backgroundColor: iconColor }">✏️</button>
+
+<!-- 🔍 都市選択 -->
+<button class="icon-button" @click="checkBeforePost('city')" :style="{ backgroundColor: iconColor }">🔍</button>
+
+<!-- 🌤️ 天気取得 -->
+<button class="icon-button" @click="checkBeforePost('weather')" :style="{ backgroundColor: iconColor }">🌤️</button>
     </div>
 
     <div v-if="selectedCity && currentWeather" class="weather-info">
@@ -507,13 +512,20 @@ function getLangName(code) {
   return code
 }
 
-function checkBeforePost() {
+function checkBeforePost(action: 'post' | 'city' | 'weather' = 'post') {
   const noProfile = !profile.value || !profile.value.nickname
   if (noProfile) {
-    alert(t('weather.requireProfile'))
+    alert(t('weather.requireProfile')) // ✅ ローカライズキーは後で変更
     return
   }
-  openPostModal()
+
+  if (action === 'post') {
+    openPostModal()
+  } else if (action === 'city') {
+    showCitySelector.value = true
+  } else if (action === 'weather') {
+    getHourlyWeather()
+  }
 }
 
 onMounted(() => {
