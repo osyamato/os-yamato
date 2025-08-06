@@ -939,23 +939,29 @@ font-size: 16px;
   position: relative;
   padding: 0.6rem 0.8rem;
   margin-bottom: 0.3rem;
-  background: white;
-  border-bottom: 1px solid #ccc;
+  background: #fdfdfd; /* ほんのり柔らかい白に変更 */
+  border: 1px solid #bbb; /* 枠線追加で浮かせ感 */
   border-radius: 6px;
   display: flex;
   flex-direction: column;
-  justify-content: space-between; /* 📌 内容を上下に整える */
+  justify-content: space-between;
   align-items: flex-start;
   font-size: 0.9rem;
   color: #000;
   cursor: pointer;
 
-  width: 330px;     /* 📏 横幅固定 */
-  height: 90px;     /* 📏 高さ固定 */
+  width: 330px;
+  height: 90px;
   box-sizing: border-box;
   word-wrap: break-word;
-  overflow: hidden; /* 📌 はみ出しを防止 */
+  overflow: hidden;
+
+  /* ✅ 柔らかい影で立体感を演出 */
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.04),
+    0 4px 10px rgba(0, 0, 0, 0.1);
 }
+
 
 .memo-dates {
   font-size: 0.75rem;
@@ -996,10 +1002,11 @@ font-size: 16px;
 
 
 @media (prefers-color-scheme: dark) {
-  .memo-card {
-    background: #2c2c2c; /* 暗めの背景色 */
-    color: #f5f5f5;       /* 文字色は白系に */
-    border-bottom: 1px solid #555;
+ .memo-card {
+    background: #2c2c2c;
+    color: #f5f5f5;
+    border: 1px solid transparent; /* ✅ 見えないがレイアウト維持用 */
+    box-shadow: none; /* ← 陰影もなしにするなら */
   }
 
   .memo-content {
