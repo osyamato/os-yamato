@@ -232,6 +232,8 @@ import ImagePreviewModal from '@/components/ImagePreviewModal.vue'
 import { listMessages, publicProfileByYamatoId } from '@/graphql/queries'
 import { createReaction } from '@/graphql/mutations'
 import { deleteReaction as deleteReactionMutation } from '@/graphql/mutations'
+import { useChatEffects } from '@/composables/useChatEffects'
+
 
 import { useI18n } from 'vue-i18n'
 
@@ -527,7 +529,6 @@ async function openImageModal(thumbnailUrl, fullKey) {
     previewImageUrl.value = fullUrl
     previewImageKey.value = fullKey // ✅ これを追加
   } catch (e) {
-    console.warn('❌ フル画像取得に失敗。代わりにサムネイルを表示:', e)
     previewImageUrl.value = thumbnailUrl
     previewImageKey.value = fullKey // ✅ fallback 用にも key を渡す
   } finally {
@@ -684,83 +685,13 @@ watch(groupedMessages, async () => {
   scrollToBottom()
 })
 
-function maybePlayEffect(content) {
-  if (!chatEffect.value) {
-    console.log('🚨 chatEffect is not ready')
-    return false
-  }
+const { maybePlayEffect } = useChatEffects(chatEffect)
 
-  // 特殊エフェクト（特定語句に反応）
-  const specialPatterns = [
-    {
-      pattern: /(金閣寺|三島由紀夫|愛国|林ゆかり|倉岡剛)/,
-      effect: 'mishima'
-    },
-    {
-      pattern: /(i love you|愛している|愛してる|te amo|我爱你)/i,
-      effect: 'moon'
-    },
-    {
-      pattern: /(プラネタリウム|planetarium|space|宇宙|土星|saturn|espacio|planeta)/i,
-      effect: 'saturn'
-    },
-    {
-      pattern: /(おめでとう|お祝い|祝|congratulations|congrats|celebrate|felicidades|enhorabuena|祝贺)/i,
-      effect: 'confetti'
-    },
-    {
-      pattern: /(星空|モンゴル|星|夜空|stars|starry sky|night sky|mongolia|cielo estrellado|夜空)/i,
-      effect: 'starry'
-    },
-    {
-      pattern: /(シャボン玉|泡|bubble|bubbles|soap bubble|burbuja|泡泡)/i,
-      effect: 'bubble'
-    }
-  ]
-
-  // 季節エフェクト
-  const seasonalPatterns = [
-    { pattern: /(雨|rain|lluvia|雨水)/i, effect: 'rain' },
-    { pattern: /(雪|snow|nieve|下雪)/i, effect: 'snow' },
-    { pattern: /(晴れ|sunny|soleado|晴天)/i, effect: 'sunny' },
-    { pattern: /(風|wind|viento|风)/i, effect: 'wind' },
-    { pattern: /(春|spring|primavera|春天)/i, effect: 'spring' },
-    { pattern: /(桜|cherry blossom|flor de cerezo|樱花)/i, effect: 'spring' },
-    { pattern: /(秋|fall|autumn|otoño|秋天)/i, effect: 'autumn' },
-    { pattern: /(冬|winter|invierno|冬天)/i, effect: 'snow' }
-  ]
-
-  // 特殊パターン優先
-  for (const { pattern, effect } of specialPatterns) {
-    if (pattern.test(content)) {
-      console.log('🎇 Special pattern matched:', effect)
-      chatEffect.value.playEffect(effect)
-      hideKeyboard()
-      return true
-    }
-  }
-
-  // 季節パターン
-  for (const { pattern, effect } of seasonalPatterns) {
-    if (pattern.test(content)) {
-      console.log('🍃 Seasonal pattern matched:', effect)
-      chatEffect.value.playEffect(effect)
-      hideKeyboard()
-      return true
-    }
-  }
-
-  // 夏だけ特殊呼び出し
-  if (/夏|summer|verano|夏天/i.test(content)) {
-    console.log('☀️ Summer pattern matched: triggerSummer')
-    chatEffect.value.triggerSummer()
-    hideKeyboard()
-    return true
-  }
-
-  console.log('❌ No effect matched')
-  return false
-}
+watch(messages, () => {
+  const lastMsg = messages.value[messages.value.length - 1]
+  if (!lastMsg || lastMsg.senderSub === mySub.value) return
+  maybePlayEffect(lastMsg.content)
+})
 
 
 watch(messages, () => {
