@@ -26,15 +26,25 @@
         <p class="profile-homepage" v-if="homepageUrl">
           🔗 <a :href="homepageUrl" target="_blank">{{ homepageUrl }}</a>
         </p>
+
+        <!-- ☁️ ブロック / 解除 ボタン -->
+        <div v-if="props.userSub && props.userSub !== mySub" class="block-button-wrapper">
+<button class="block-button" @click="toggleBlock">
+  ☁️
+</button>
+        </div>
       </div>
     </transition>
   </Modal>
 </template>
 
+
 <script setup>
 import { ref, watch, computed } from 'vue'
 import { API, graphqlOperation } from 'aws-amplify'
 import { getWeatherProfile } from '@/graphql/queries'
+import { updateWeatherProfile } from '@/graphql/mutations'
+import { Auth } from 'aws-amplify'
 import Modal from '@/components/Modal.vue'
 import { useWallpaper } from '@/composables/useWallpaper'
 import { useI18n } from 'vue-i18n'
@@ -42,19 +52,26 @@ import { useI18n } from 'vue-i18n'
 const { isDarkMode } = useWallpaper()
 const { t } = useI18n()
 
+// Props & Emits
 const props = defineProps({
   userSub: String,
   visible: Boolean
 })
-const emit = defineEmits(['close', 'back']) // ✅ 追加
+const emit = defineEmits(['close', 'back'])
 
+// プロフィール情報
 const profile = ref({})
 const loaded = ref(false)
+const mySub = ref('')
+const isBlocked = ref(false)
+const blockedSubs = ref([])
 
+// アイコンURL
 const iconUrl = computed(() => {
   return profile.value.icon ? `/${profile.value.icon}` : ''
 })
 
+// ホームページURLを整形
 const homepageUrl = computed(() => {
   const raw = profile.value.homepage?.trim()
   if (!raw) return null
@@ -63,14 +80,28 @@ const homepageUrl = computed(() => {
     : `https://${raw}`
 })
 
+// モーダルが開かれたときにプロフ取得＆ブロック状態確認
 watch(() => props.visible, async (newVal) => {
   if (newVal) {
     loaded.value = false
+    await fetchMySub()
     await fetchProfile()
+    await checkBlocked()
     loaded.value = true
   }
 })
 
+// 自分のSubを取得
+async function fetchMySub() {
+  try {
+    const user = await Auth.currentAuthenticatedUser()
+    mySub.value = user.attributes.sub
+  } catch (e) {
+    console.error('自分のSub取得エラー:', e)
+  }
+}
+
+// プロフィールを取得（対象ユーザーの）
 async function fetchProfile() {
   if (props.userSub) {
     try {
@@ -82,15 +113,67 @@ async function fetchProfile() {
   }
 }
 
+// ブロック状態確認（自分のプロフィールを取得して照合）
+async function checkBlocked() {
+  try {
+    const res = await API.graphql(graphqlOperation(getWeatherProfile, { id: mySub.value }))
+    const myProfile = res.data.getWeatherProfile
+    blockedSubs.value = myProfile?.blockedSubs || []
+    isBlocked.value = blockedSubs.value.includes(props.userSub)
+  } catch (e) {
+    console.error('ブロック状態確認エラー:', e)
+    isBlocked.value = false
+  }
+}
+
+// ブロック切り替え
+function toggleBlock() {
+  const name = profile.value.nickname || 'このユーザー'
+  const action = isBlocked.value
+    ? 'このユーザーを雲から戻しますか？（ブロック解除）'
+    : 'このユーザーを雲にかくしますか？（ブロック）'
+
+  const confirmed = confirm(`${name} を${action}`)
+  if (!confirmed) return
+
+  if (isBlocked.value) {
+    // 解除
+    blockedSubs.value = blockedSubs.value.filter(sub => sub !== props.userSub)
+    isBlocked.value = false
+  } else {
+    // ブロック
+    blockedSubs.value.push(props.userSub)
+    isBlocked.value = true
+  }
+
+  updateProfile()
+}
+
+// 自分のプロフィールを更新（blockedSubsだけ）
+async function updateProfile() {
+  try {
+    await API.graphql(graphqlOperation(updateWeatherProfile, {
+      input: {
+        id: mySub.value,
+        blockedSubs: blockedSubs.value
+      }
+    }))
+  } catch (e) {
+    console.error('プロフィール更新エラー:', e)
+  }
+}
+
+// モーダル閉じる
 function close() {
   emit('close')
 }
 
-// ✅ モーダル閉じた直後に "back" を emit
+// モーダル閉じたあとに back emit
 function handleAfterLeave() {
   emit('back')
 }
 </script>
+
 
 <style scoped>
 .fade-in-enter-active {
@@ -193,6 +276,25 @@ function handleAfterLeave() {
   align-items: center;
 
   z-index: 9999; /* ✅ 追加して前面に出す！ */
+}
+
+.block-button-wrapper {
+  text-align: center;
+  margin-top: 12px;
+}
+
+.block-button {
+  padding: 6px 12px;
+  background-color: #eee;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.profile-modal.dark .block-button {
+  background-color: #555;
+  color: white;
 }
 
 </style>
