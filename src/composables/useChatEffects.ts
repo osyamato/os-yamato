@@ -1,16 +1,32 @@
-import { ref } from 'vue'
+import { Ref } from 'vue'
 
 interface EffectPattern {
   pattern: RegExp
   effect: string
 }
 
-export function useChatEffects(chatEffect: any) {
-  const hideKeyboard = () => {
-    // OS Yamato 特有のキーボード非表示処理があるならここに書く
-    // 例: window.dispatchEvent(new Event('hideKeyboard'))
+// 💡 キーボードを強制的に閉じる（iOS対応あり）
+function hideKeyboard() {
+  const activeElement = document.activeElement as HTMLElement
+  if (activeElement && typeof activeElement.blur === 'function') {
+    activeElement.blur()
   }
 
+  const dummy = document.createElement('input')
+  dummy.type = 'text'
+  dummy.style.position = 'absolute'
+  dummy.style.opacity = '0'
+  dummy.style.height = '0'
+  dummy.style.fontSize = '16px'
+  document.body.appendChild(dummy)
+  dummy.focus()
+  setTimeout(() => {
+    dummy.blur()
+    document.body.removeChild(dummy)
+  }, 50)
+}
+
+export function useChatEffects(chatEffect: Ref<any>) {
   const specialPatterns: EffectPattern[] = [
     { pattern: /(金閣寺|三島由紀夫|愛国|林ゆかり|倉岡剛)/, effect: 'mishima' },
     { pattern: /(i love you|愛している|愛してる|te amo|我爱你)/i, effect: 'moon' },
@@ -32,9 +48,7 @@ export function useChatEffects(chatEffect: any) {
   ]
 
   function maybePlayEffect(content: string): boolean {
-    if (!chatEffect?.value) {
-      return false
-    }
+    if (!chatEffect?.value) return false
 
     for (const { pattern, effect } of specialPatterns) {
       if (pattern.test(content)) {
@@ -65,3 +79,4 @@ export function useChatEffects(chatEffect: any) {
     maybePlayEffect
   }
 }
+

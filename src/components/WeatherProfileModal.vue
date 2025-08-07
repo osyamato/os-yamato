@@ -279,22 +279,19 @@ function handleAfterLeave() {
 }
 
 .block-button-wrapper {
-  text-align: center;
-  margin-top: 12px;
+  position: absolute;
+  bottom: -5px; /* ← 0でもOK。もっとギリにしたいなら -2px とかもあり */
+  left: -5px;   /* ← 必要に応じて 0〜6px の間で */
+  z-index: 10;
 }
 
 .block-button {
-  padding: 6px 12px;
-  background-color: #eee;
+  background: none;
   border: none;
-  border-radius: 8px;
-  font-size: 0.9rem;
+  font-size: 1.6rem;
   cursor: pointer;
-}
-
-.profile-modal.dark .block-button {
-  background-color: #555;
-  color: white;
+  padding: 0;
+  margin: 0;
 }
 
 </style>
