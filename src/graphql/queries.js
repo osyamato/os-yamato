@@ -776,6 +776,7 @@ export const getWeatherProfile = /* GraphQL */ `
       yamatoId
       bio
       homepage
+      blockedSubs
       createdAt
       updatedAt
       owner
@@ -797,6 +798,7 @@ export const listWeatherProfiles = /* GraphQL */ `
         yamatoId
         bio
         homepage
+        blockedSubs
         createdAt
         updatedAt
         owner

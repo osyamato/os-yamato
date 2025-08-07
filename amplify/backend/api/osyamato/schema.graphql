@@ -293,9 +293,10 @@ type WeatherProfile
   id: ID!                                # ← Cognito Sub を直接入れる（PK）
   icon: String                           # 例: weather.icon1.png
   nickname: String
-  yamatoId: String                       # インデックス削除（任意として扱う）
+  yamatoId: String                       # 任意の Yamato ID
   bio: String                            # 🌿 自由記述の紹介文
-  homepage: String                       # 🌐 ← 新しく追加
+  homepage: String                       # 🌐 外部サイトなど
+  blockedSubs: [String]                 # 🚫 ブロックしたユーザーの sub 一覧
   createdAt: AWSDateTime!
 }
 
