@@ -5,15 +5,25 @@
 <h2 class="title">{{ t('profile.title') }}</h2>
 
       <!-- ✏️ 編集ボタン -->
-   <div class="icon-buttons">
-        <button
-          class="edit-icon"
-          @click="showModal = true"
-          :style="{ backgroundColor: iconColor }"
-        >
-          👤
-        </button>
-      </div>
+<div class="icon-buttons">
+  <!-- ☁️ ブロックリスト -->
+  <button
+    class="block-icon"
+    @click="showBlockModal = true"
+    :style="{ backgroundColor: iconColor }"
+  >
+    ☁️
+  </button>
+
+  <!-- 👤 編集 -->
+  <button
+    class="edit-icon"
+    @click="showModal = true"
+    :style="{ backgroundColor: iconColor }"
+  >
+    👤
+  </button>
+</div>
 
       <!-- 未登録時メッセージ -->
       <div v-if="!profile.nickname" class="unregistered-message">
@@ -122,14 +132,22 @@
   @close="closeReplyModal"
   @open-profile="openUserProfile"
 />
+<BlockedUsersModal
+  :visible="showBlockModal"
+  :blocked-users="blockedUsers"
+  @close="showBlockModal = false"
+/>
 
   </div>
 </template>
 
 
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 
-import { ref, onMounted } from 'vue'
+const { t } = useI18n()
+
+import { ref, computed, onMounted, watch } from 'vue'
 import { API, graphqlOperation, Auth, Storage } from 'aws-amplify'
 import { getWeatherProfile, listWeatherComments } from '@/graphql/queries'
 import { deleteWeatherComment } from '@/graphql/mutations'
@@ -138,15 +156,14 @@ import ImageModal from '@/components/ImageModal.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import MyWeatherReplyModal from '@/components/MyWeatherReplyModal.vue'
 import WeatherProfileModal from '@/components/WeatherProfileModal.vue'
-
-import { useI18n } from 'vue-i18n'
-
-const { t } = useI18n()
+import BlockedUsersModal from '@/components/BlockedUsersModal.vue'
 
 const selectedComment = ref(null)
 
 // ✏️ 編集モーダルの表示状態
 const showModal = ref(false)
+
+const showBlockModal = ref(false)
 
 // 📄 プロフィールデータ
 const profile = ref({
@@ -313,6 +330,13 @@ function openUserProfile(userSub) {
 
 defineExpose({ openUserProfile })
 
+
+const blockedUsers = computed(() =>
+  profile.blockedSubs
+    ?.map(sub => userMap.value[sub])
+    .filter(user => !!user) || []
+)
+
 </script>
 
 
@@ -352,11 +376,14 @@ defineExpose({ openUserProfile })
 
 .icon-buttons {
   display: flex;
-  justify-content: center;
+  justify-content: center; /* 中央寄せ */
+  align-items: center;
+  gap: 16px; /* ボタン同士の間隔 */
   margin: 16px 0 20px;
 }
 
-.edit-icon {
+.edit-icon,
+.block-icon {
   width: 40px;
   height: 40px;
   border-radius: 50%;
@@ -367,6 +394,7 @@ defineExpose({ openUserProfile })
   display: flex;
   align-items: center;
   justify-content: center;
+  background-color: #888; /* または iconColor を style で渡す */
 }
 
 .profile-top {
