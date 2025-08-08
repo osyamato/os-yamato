@@ -206,19 +206,37 @@ const fetchMyProfile = async () => {
   }
 }
 
-onMounted(() => {
-  fetchBlockedSubs()
+onMounted(async () => {
   window.scrollTo({ top: 0, behavior: 'smooth' })
-})
 
-watch(
-  () => [profile.value, currentWeather.value],
-  ([profileVal, weatherVal]) => {
-    if (profileVal && weatherVal) {
-      fetchMatchingComments()
-    }
+  try {
+    // 🔐 ブロック情報の取得
+    await fetchBlockedSubs()
+
+    // 👤 ユーザープロフィール取得
+    const user = await Auth.currentAuthenticatedUser()
+    iconColor.value = user.attributes['custom:iconColor'] || '#274c77'
+    await fetchMyProfile()
+  } catch (e) {
+    console.error('❌ プロフィール取得エラー:', e)
   }
-)
+
+  try {
+    // 🗺️ 都市一覧から直近の都市を使って現在の天気を取得
+    const res = await API.graphql(graphqlOperation(listWeatherCities))
+    const cities = res.data.listWeatherCities.items
+    const sorted = cities
+      .filter(c => c.lastUsedAt)
+      .sort((a, b) => new Date(b.lastUsedAt) - new Date(a.lastUsedAt))
+
+    if (sorted.length > 0) {
+      selectedCity.value = sorted[0]
+      await fetchCurrentWeather(sorted[0].lat, sorted[0].lon)
+    }
+  } catch (e) {
+    console.error('❌ 天気の初期ロード失敗:', e)
+  }
+})
 
 
 const localizedDescription = computed(() => {
@@ -286,18 +304,11 @@ onMounted(async () => {
     const user = await Auth.currentAuthenticatedUser()
     iconColor.value = user.attributes['custom:iconColor'] || '#274c77'
 
-    // ✅ プロフィールと blockedSubs を取得
     await fetchMyProfile()
-
-    // ✅ 天気情報とプロフィールが揃っていればマッチング
-    if (profile.value && currentWeather.value) {
-      await fetchMatchingComments()
-    }
   } catch (e) {
     console.error('❌ プロフィール取得エラー:', e)
   }
 
-  // ✅ 都市と天気情報の取得
   try {
     const res = await API.graphql(graphqlOperation(listWeatherCities))
     const cities = res.data.listWeatherCities.items
@@ -309,6 +320,7 @@ onMounted(async () => {
       selectedCity.value = sorted[0]
       await fetchCurrentWeather(sorted[0].lat, sorted[0].lon)
     }
+
   } catch (e) {
     console.error('❌ 初期ロード失敗:', e)
   }
@@ -514,7 +526,9 @@ async function fetchMatchingComments() {
     const randomIOS = shuffle(filteredIOS).slice(0, 5)
 
     matchedComments.value = [...sortedMain, ...randomIOS]
-    hasFetched.value = sortedMain.length === 0 && randomIOS.length === 0
+
+    // ✅ 修正: マッチ件数に関係なく、フェッチは完了したので true にする
+    hasFetched.value = true
   } catch (err) {
     console.error('💥 fetchMatchingComments failed:', err)
     hasFetched.value = true
