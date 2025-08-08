@@ -126,14 +126,14 @@ async function checkBlocked() {
   }
 }
 
-// ブロック切り替え
 function toggleBlock() {
-  const name = profile.value.nickname || 'このユーザー'
-  const action = isBlocked.value
-    ? 'このユーザーを雲から戻しますか？（ブロック解除）'
-    : 'このユーザーを雲にかくしますか？（ブロック）'
+  const name = profile.value.nickname || t('profile.unknownUser')
 
-  const confirmed = confirm(`${name} を${action}`)
+  const message = isBlocked.value
+    ? t('profile.confirmUnblock', { name })
+    : t('profile.confirmBlock', { name })
+
+  const confirmed = confirm(message)
   if (!confirmed) return
 
   if (isBlocked.value) {

@@ -559,7 +559,13 @@
 
 "weather.noRepliesPoetic1": "No replies yet.",
   "weather.noRepliesPoetic2": "Waiting can be a beautiful time.",
-"weather.hideConfirm": "This reply will be hidden. This action cannot be undone. Are you sure?"
+"weather.hideConfirm": "This reply will be hidden. This action cannot be undone. Are you sure?",
+"profile.blockedUsersTitle": "Blocked Users",
+"profile.noBlockedUsers": "No blocked users",
 
+"profile.confirmBlock": "Hide {name} in the clouds? (Block)",
+"profile.confirmUnblock": "Bring {name} back from the clouds? (Unblock)",
+"profile.confirmUnblock": "Do you want to bring {name} back from the clouds? (Unblock)",
+"profile.unknownUser": "this user"
 
 }
