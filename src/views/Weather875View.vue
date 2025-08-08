@@ -141,7 +141,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, nextTick, onMounted, onActivated, computed } from 'vue'
+import { ref, nextTick, onMounted, onActivated, computed, watch } from 'vue'
 import { API, graphqlOperation, Auth, Storage } from 'aws-amplify'
 import {
   listWeatherProfiles,
@@ -190,6 +190,35 @@ const API_KEY = 'e83c02f476b6f1d5c91c072f651601b2'
 const iosGraphQLUrl = 'https://mu4wobom7jcazmpazk3hpxnjc4.appsync-api.ap-northeast-1.amazonaws.com/graphql'
 const iosApiKey = 'da2-tuututuweneyrdykwh4vw3yfbm'
 
+const blockedSubs = ref<string[]>([])
+
+
+const fetchMyProfile = async () => {
+  try {
+    const user = await Auth.currentAuthenticatedUser()
+    const { data } = await API.graphql(
+      graphqlOperation(getWeatherProfile, { id: user.attributes.sub })
+    ) as any
+    profile.value = data.getWeatherProfile
+    blockedSubs.value = profile.value?.blockedSubs || []
+  } catch (_) {
+    // ログなしで静かに失敗を無視
+  }
+}
+
+onMounted(() => {
+  fetchBlockedSubs()
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+})
+
+watch(
+  () => [profile.value, currentWeather.value],
+  ([profileVal, weatherVal]) => {
+    if (profileVal && weatherVal) {
+      fetchMatchingComments()
+    }
+  }
+)
 
 
 const localizedDescription = computed(() => {
@@ -236,26 +265,39 @@ function handleCloseProfile() {
   returnToReplyModal.value = false
 }
 
-onMounted(async () => {
-  window.scrollTo({ top: 0, behavior: 'smooth' })
-  const user = await Auth.currentAuthenticatedUser()
-  const sub = user.attributes.sub
-  iconColor.value = user.attributes['custom:iconColor'] || '#274c77'
+const fetchBlockedSubs = async () => {
+  try {
+    const user = await Auth.currentAuthenticatedUser()
+    const { data } = await API.graphql(
+      graphqlOperation(getWeatherProfile, { id: user.attributes.sub })
+    ) as any
+    const profile = data.getWeatherProfile
 
-try {
-  const user = await Auth.currentAuthenticatedUser()
-  const sub = user.attributes.sub
-  iconColor.value = user.attributes['custom:iconColor'] || '#274c77'
-
-  const res = await API.graphql(graphqlOperation(getWeatherProfile, { id: sub }))
-  profile.value = res.data.getWeatherProfile
-  if (!profile.value) {
-    console.log('⚠️ プロフィール未作成')
+    blockedSubs.value = profile?.blockedSubs || []
+  } catch (_) {
+    // ログなしで黙って失敗を無視
   }
-} catch (e) {
-  console.error('❌ プロフィール取得エラー:', e)
 }
 
+onMounted(async () => {
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+
+  try {
+    const user = await Auth.currentAuthenticatedUser()
+    iconColor.value = user.attributes['custom:iconColor'] || '#274c77'
+
+    // ✅ プロフィールと blockedSubs を取得
+    await fetchMyProfile()
+
+    // ✅ 天気情報とプロフィールが揃っていればマッチング
+    if (profile.value && currentWeather.value) {
+      await fetchMatchingComments()
+    }
+  } catch (e) {
+    console.error('❌ プロフィール取得エラー:', e)
+  }
+
+  // ✅ 都市と天気情報の取得
   try {
     const res = await API.graphql(graphqlOperation(listWeatherCities))
     const cities = res.data.listWeatherCities.items
@@ -397,12 +439,11 @@ function looseWeatherMatch(a = '', b = '') {
 async function fetchMatchingComments() {
   isLoadingComments.value = true
 
-  // ✅ 天気情報を整える
-  const weatherMain = currentWeather.value.main || ''
-  const weatherDesc = currentWeather.value.description || ''
+  const weatherMain = currentWeather.value?.main || ''
+  const weatherDesc = currentWeather.value?.description || ''
   const weather = `${weatherMain} ${weatherDesc}`.toLowerCase()
 
-  const temp = currentWeather.value.temp
+  const temp = currentWeather.value?.temp
   const hour = new Date().getHours()
   const lang = locale.value
 
@@ -412,39 +453,39 @@ async function fetchMatchingComments() {
   const maxHour = Math.floor(hour + 1.5)
 
   try {
-    // ✅ Yamatoコメント取得
     const result = await API.graphql({
       query: listWeatherComments,
       authMode: 'AMAZON_COGNITO_USER_POOLS',
     })
 
     const items = result?.data?.listWeatherComments?.items || []
+    const blockedList = blockedSubs.value || []
 
     const filteredYamato = await Promise.all(
       items.map(async item => {
-        if (
-          item.weather?.toLowerCase().includes(weatherMain.toLowerCase()) &&
-          item.language === lang &&
-          item.temperature >= minTemp &&
-          item.temperature <= maxTemp &&
-          item.timeOfDay >= minHour &&
-          item.timeOfDay <= maxHour
-        ) {
-          return {
-            ...item,
-            source: 'yamato',
-            imageUrl: item.imageKey ? await Storage.get(item.imageKey) : '',
-            createdAtMs: new Date(item.createdAt).getTime(),
-          }
+        const ownerSub = item?.owner?.trim?.()
+        if (!ownerSub || blockedList.includes(ownerSub)) return null
+
+        const weatherMatch = item.weather?.toLowerCase().includes(weatherMain.toLowerCase())
+        const langMatch = item.language === lang
+        const tempMatch = item.temperature >= minTemp && item.temperature <= maxTemp
+        const timeMatch = item.timeOfDay >= minHour && item.timeOfDay <= maxHour
+
+        const isMatch = weatherMatch && langMatch && tempMatch && timeMatch
+        if (!isMatch) return null
+
+        return {
+          ...item,
+          source: 'yamato',
+          imageUrl: item.imageKey ? await Storage.get(item.imageKey) : '',
+          createdAtMs: new Date(item.createdAt).getTime(),
         }
-        return null
       })
     )
 
     const filteredMain = filteredYamato.filter(Boolean) as WeatherComment[]
     const sortedMain = filteredMain.sort((a, b) => b.createdAtMs - a.createdAtMs)
 
-    // ✅ iOSコメント取得
     const iosPosts = await fetchIOSPosts()
 
     const filteredIOS = iosPosts
@@ -453,7 +494,6 @@ async function fetchMatchingComments() {
         const tempMatch = post.temperature >= temp - 5 && post.temperature <= temp + 5
         const timeMatch = post.timeOfDay >= Math.max(0, hour - 4) && post.timeOfDay <= Math.min(23, hour + 4)
         const langMatch = post.language === lang
-
         return weatherMatch && tempMatch && timeMatch && langMatch
       })
       .map(post => ({
