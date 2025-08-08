@@ -134,7 +134,7 @@
 />
 <BlockedUsersModal
   :visible="showBlockModal"
-  :blocked-users="blockedUsers"
+  :blocked-users="profile.blockedSubs || []"
   @close="showBlockModal = false"
 />
 
@@ -331,11 +331,6 @@ function openUserProfile(userSub) {
 defineExpose({ openUserProfile })
 
 
-const blockedUsers = computed(() =>
-  profile.blockedSubs
-    ?.map(sub => userMap.value[sub])
-    .filter(user => !!user) || []
-)
 
 </script>
 

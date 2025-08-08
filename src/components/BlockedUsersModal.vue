@@ -1,24 +1,16 @@
 <template>
   <Modal :visible="visible" @close="$emit('close')" customClass="blocked-users-modal">
-    <div class="modal-content">
+    <div class="blocked-users-wrapper">
       <h2 class="modal-title">☁️ {{ t('profile.blockedUsersTitle') }}</h2>
 
       <p v-if="!profiles.length" class="empty-text">
         {{ t('profile.noBlockedUsers') }}
       </p>
 
-      <ul v-else class="blocked-list">
-        <li v-for="(user, index) in profiles" :key="index" class="blocked-user">
-          <img
-            v-if="user.iconUrl"
-            :src="user.iconUrl"
-            class="user-icon"
-            :alt="user.nickname"
-          />
-          <div v-else class="user-placeholder">
-            {{ user.nickname?.charAt(0) || '？' }}
-          </div>
-          <span class="user-name">{{ user.nickname }}</span>
+      <ul v-else class="user-list">
+        <li v-for="(user, index) in profiles" :key="index" class="user-name">
+          <button class="unblock-button" @click="confirmUnblock(user.sub)">☀️</button>
+          {{ user.nickname }}
         </li>
       </ul>
     </div>
@@ -27,59 +19,105 @@
 
 <script setup>
 import Modal from '@/components/Modal.vue'
-import { ref, watch, computed } from 'vue'
+import { ref, watch } from 'vue'
+import { API, graphqlOperation, Auth } from 'aws-amplify'
 import { useI18n } from 'vue-i18n'
-import { getWeatherProfile } from '@/graphql/queries'
-import { API, graphqlOperation, Storage } from 'aws-amplify'
+import { getWeatherProfile, listWeatherProfiles } from '@/graphql/queries'
+import { updateWeatherProfile } from '@/graphql/mutations'
 
 const { t } = useI18n()
 
 const props = defineProps({
-  visible: Boolean,
-  blockedUsers: {
-    type: Array,
-    default: () => []
-  }
+  visible: Boolean
 })
+const emit = defineEmits(['close'])
 
 const profiles = ref([])
+const mySub = ref('')
+const blockedSubs = ref([])
 
-// ✅ 非同期取得関数
-async function fetchProfiles(subs) {
-  const result = []
-  for (const sub of subs) {
-    try {
-      const res = await API.graphql(graphqlOperation(getWeatherProfile, { id: sub }))
-      const profile = res.data.getWeatherProfile
-      if (profile) {
-        let iconUrl = null
-        if (profile.icon) {
-          try {
-            iconUrl = await Storage.get(profile.icon)
-          } catch (e) {
-            console.warn('アイコン取得失敗:', e)
-          }
-        }
-
-        result.push({
-          sub: profile.id,
-          nickname: profile.nickname || '匿名',
-          iconUrl
-        })
-      }
-    } catch (err) {
-      console.warn('プロフィール取得失敗:', err)
-    }
+// 自分のsubを取得
+async function fetchMySub() {
+  try {
+    const user = await Auth.currentAuthenticatedUser()
+    mySub.value = user.attributes.sub
+  } catch (e) {
+    console.error('❌ 自分のsub取得失敗:', e)
   }
-  profiles.value = result
 }
 
-// ✅ `visible` + `blockedUsers` の変更を同時に監視
+// 自分のプロフィール（ブロック状態）取得
+async function fetchMyProfile() {
+  try {
+    const res = await API.graphql(graphqlOperation(getWeatherProfile, { id: mySub.value }))
+    const myProfile = res.data.getWeatherProfile
+    blockedSubs.value = myProfile?.blockedSubs || []
+  } catch (e) {
+    console.error('❌ プロフィール取得失敗:', e)
+    blockedSubs.value = []
+  }
+}
+
+// ブロックしているユーザーのプロフィール取得
+async function fetchProfiles() {
+  if (!blockedSubs.value.length) {
+    profiles.value = []
+    return
+  }
+
+  try {
+    const res = await API.graphql(graphqlOperation(listWeatherProfiles, {
+      filter: {
+        or: blockedSubs.value.map(sub => ({ id: { eq: sub } }))
+      }
+    }))
+    profiles.value = res.data.listWeatherProfiles.items.map(item => ({
+      sub: item.id,
+      nickname: item.nickname || '匿名'
+    }))
+  } catch (e) {
+    console.error('❌ プロフィール一覧取得失敗:', e)
+  }
+}
+
+// ブロック解除確認
+async function confirmUnblock(targetSub) {
+  const user = profiles.value.find(p => p.sub === targetSub)
+  const name = user?.nickname || 'このユーザー'
+  const confirmed = confirm(`${name} をそっと戻しますか？`)
+  if (!confirmed) return
+
+  await removeFromBlocked(targetSub)
+}
+
+// ブロック解除処理
+async function removeFromBlocked(subToRemove) {
+  try {
+    const updatedBlocked = blockedSubs.value.filter(sub => sub !== subToRemove)
+
+    await API.graphql(graphqlOperation(updateWeatherProfile, {
+      input: {
+        id: mySub.value,
+        blockedSubs: updatedBlocked
+      }
+    }))
+
+    blockedSubs.value = updatedBlocked
+    profiles.value = profiles.value.filter(p => p.sub !== subToRemove)
+  } catch (e) {
+    console.error('❌ ブロック解除失敗:', e)
+  }
+}
+
+// モーダルが開いたら常に再取得
 watch(
-  () => [props.visible, props.blockedUsers],
-  async ([visible, blockedUsers]) => {
-    if (visible && blockedUsers.length) {
-      await fetchProfiles(blockedUsers)
+  () => props.visible,
+  async (visible) => {
+    if (visible) {
+      profiles.value = []
+      await fetchMySub()
+      await fetchMyProfile()
+      await fetchProfiles()
     }
   },
   { immediate: true }
@@ -87,61 +125,52 @@ watch(
 </script>
 
 <style scoped>
-.modal-content {
+.blocked-users-wrapper {
   text-align: center;
-  padding: 1rem;
+  padding: 1.5rem 1rem;
 }
 
 .modal-title {
   font-size: 1.2rem;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
 }
 
-.blocked-list {
+.empty-text {
+  color: #888;
+  font-size: 0.9rem;
+}
+
+.user-list {
   list-style: none;
   padding: 0;
   margin: 0;
 }
 
-.blocked-user {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 8px;
-  border-bottom: 1px solid #ccc;
-}
-
-.user-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
-.user-placeholder {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background-color: #aaa;
-  color: white;
-  font-weight: bold;
+.user-name {
   font-size: 1rem;
+  padding: 0.6rem 0;
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 0.5rem;
+  border-bottom: 1px solid #666;
 }
 
-.user-name {
+.unblock-button {
+  background: none;
+  border: none;
   font-size: 1rem;
+  cursor: pointer;
 }
 
-/* 🌙 ダークモード対応 */
-.blocked-users-modal.dark .modal-content {
-  background-color: #222;
+/* 🌙 ダークモード */
+.blocked-users-modal.dark .blocked-users-wrapper {
+  background-color: transparent;
   color: white;
 }
-.blocked-users-modal.dark .user-placeholder {
-  background-color: #555;
+.blocked-users-modal.dark .user-name {
+  border-color: #444;
 }
 </style>
 

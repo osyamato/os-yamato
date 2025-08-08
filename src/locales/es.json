@@ -509,7 +509,14 @@
 "activity.video": "Vídeo",
 "activity.message": "Mensaje",
 "activity.memo": "Nota",
-"activity.contact": "Contacto"
+"activity.contact": "Contacto",
+
+"profile.blockedUsersTitle": "Usuarios bloqueados",
+"profile.noBlockedUsers": "No hay usuarios bloqueados",
+"profile.confirmUnblock": "¿Quieres traer de vuelta a {name} desde las nubes? (Desbloquear)",
+"profile.confirmBlock": "¿Ocultar a {name} entre las nubes? (Bloquear)",
+"profile.confirmUnblock": "¿Traer de vuelta a {name} desde las nubes? (Desbloquear)",
+"profile.unknownUser": "este usuario"
 
 
 

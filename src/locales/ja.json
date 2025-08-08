@@ -536,7 +536,15 @@
 "weather.enterReply": "そっと言葉を添えてください…",
  "weather.noRepliesPoetic1": "まだ返信がありません。",
   "weather.noRepliesPoetic2": "待つのも楽しい時間です。",
-"weather.hideConfirm": "このコメントを非表示にします。現在、取り消しはできません。本当によろしいですか？"
+"weather.hideConfirm": "このコメントを非表示にします。現在、取り消しはできません。本当によろしいですか？",
+
+"profile.blockedUsersTitle": "雲にかくしたユーザー",
+"profile.noBlockedUsers": "雲にかくしたユーザーはいません",
+
+"profile.confirmBlock": "{name} を雲にかくしますか？（ブロック）",
+"profile.confirmUnblock": "{name} を雲から戻しますか？（ブロック解除）",
+"profile.unknownUser": "このユーザー"
+
 
 
 
