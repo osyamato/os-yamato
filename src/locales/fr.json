@@ -532,7 +532,15 @@
 "activity.video": "Vidéo",
 "activity.message": "Message",
 "activity.memo": "Mémo",
-"activity.contact": "Contact"
+"activity.contact": "Contact",
+
+"profile.blockedUsersTitle": "Utilisateurs bloqués",
+"profile.noBlockedUsers": "Aucun utilisateur bloqué",
+
+"profile.confirmBlock": "Masquer {name} dans les nuages ? (Bloquer)",
+"profile.confirmUnblock": "Ramener {name} des nuages ? (Débloquer)",
+"profile.unknownUser": "cet utilisateur",
+"profile.confirmUnblock": "Souhaitez-vous ramener {name} des nuages ? (Débloquer)"
 
 
 

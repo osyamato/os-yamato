@@ -518,7 +518,16 @@
 
 "game.bestTimeTitle": "最佳时间",
 "game.noRecords": "没有记录",
-"game.loading": "加载中……"
+"game.loading": "加载中……",
+
+"profile.blockedUsersTitle": "被屏蔽的用户",
+"profile.noBlockedUsers": "没有被屏蔽的用户",
+
+"profile.confirmBlock": "要将 {name} 隐藏在云中吗？（封锁）",
+"profile.confirmUnblock": "要将 {name} 从云中恢复吗？（解除封锁）",
+"profile.unknownUser": "该用户",
+"profile.confirmUnblock": "要将 {name} 从云中恢复吗？（解除封锁）"
+
 
 
 
