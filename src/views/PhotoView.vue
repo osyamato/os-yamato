@@ -700,6 +700,12 @@ async function fetchPhotos() {
       })
     }
 
+items = items.filter(item => {
+  if (!item.lastOpenedAt) return true
+  const days = (Date.now() - new Date(item.lastOpenedAt)) / (1000 * 60 * 60 * 24)
+  return days < 365
+})
+
     // 📸 安定ソート（フィルター後に実行）
     items = items.sort((a, b) => {
       const dateA = new Date(a.photoTakenAt || a.createdAt)
