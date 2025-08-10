@@ -516,7 +516,18 @@
 "profile.confirmUnblock": "¿Quieres traer de vuelta a {name} desde las nubes? (Desbloquear)",
 "profile.confirmBlock": "¿Ocultar a {name} entre las nubes? (Bloquear)",
 "profile.confirmUnblock": "¿Traer de vuelta a {name} desde las nubes? (Desbloquear)",
-"profile.unknownUser": "este usuario"
+"profile.unknownUser": "este usuario",
+
+ "photo.allAlbums": "Todos los álbumes",
+
+  "album.title": "📁 Seleccionar álbum",
+  "album.selectExisting": "Seleccionar un álbum existente",
+  "album.selectPlaceholder": "Elegir un álbum",
+  "album.newInputLabel": "Ingresar un nuevo nombre de álbum",
+  "album.newInputPlaceholder": "Nuevo nombre de álbum",
+  "album.save": "Guardar",
+  "album.delete": "Eliminar"
+
 
 
 

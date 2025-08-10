@@ -5,33 +5,64 @@
       <h2 class="header-title">{{ t('photo.title') }}</h2>
     </div>
 
-    <!-- 🎛️ アクションボタン -->
-    <div class="header-actions">
-      <IconButton :color="iconColor" @click="triggerFileInput">＋</IconButton>
-      <input
-        ref="fileInput"
-        type="file"
-        accept="image/*"
-        multiple
-        @change="handleFileUpload"
-        hidden
-      />
-<IconButton
-  :color="iconColor"
-  :class="{ 'selected-icon': filterFavoritesOnly }"
-  @click="toggleHeartFilter"
->
-  ♡
-</IconButton>
-      <IconButton :color="iconColor" :class="{ 'selected-icon': isSelectionMode }" @click="toggleSelectionMode">☑️</IconButton>
-<IconButton
-  :color="iconColor"
-  :class="{ 'selected-icon': filterWiltingOnly }"
-  @click="toggleWiltingFilter"
->
-  🥀
-</IconButton>
-    </div>
+<!-- 🎛️ アクションボタン -->
+<div class="header-actions">
+  <IconButton :color="iconColor" @click="triggerFileInput">＋</IconButton>
+  <input
+    ref="fileInput"
+    type="file"
+    accept="image/*"
+    multiple
+    @change="handleFileUpload"
+    hidden
+  />
+
+  <IconButton
+    :color="iconColor"
+    :class="{ 'selected-icon': filterFavoritesOnly }"
+    @click="toggleHeartFilter"
+  >
+    ♡
+  </IconButton>
+
+<div class="icon-with-picker">
+  <!-- 📁 ピッカートグル -->
+  <IconButton :color="iconColor" @click="toggleAlbumPicker">📁</IconButton>
+
+  <!-- 🔽 ピッカー -->
+  <div v-if="showAlbumPicker" class="inline-album-picker">
+    <select
+      class="custom-picker"
+      v-model="selectedAlbum"
+    >
+      <option value="">{{ t('photo.allAlbums') }}</option>
+      <option
+	v-for="album in uniqueAlbumNames"
+        :key="album"
+        :value="album"
+      >
+       	{{ album }}
+      </option>
+    </select>
+  </div>
+</div>
+
+  <IconButton
+    :color="iconColor"
+    :class="{ 'selected-icon': isSelectionMode }"
+    @click="toggleSelectionMode"
+  >
+    ☑️
+  </IconButton>
+
+  <IconButton
+    :color="iconColor"
+    :class="{ 'selected-icon': filterWiltingOnly }"
+    @click="toggleWiltingFilter"
+  >
+    🥀
+  </IconButton>
+</div>
 
     <!-- 🌱 アップロード中 or 削除中 -->
     <div v-if="(isLoading || isDeleting) && iconStage" class="upload-life-cycle">
@@ -59,7 +90,12 @@
           :class="{ selected: isSelectionMode && selectedPhotoIds.includes(photo.id) }"
           @click="isSelectionMode ? toggleSelection(photo.id) : openModal(photo)"
         >
-<img :src="photo.thumbnailUrl" class="photo-thumbnail" style="cursor: pointer" />
+<img
+  :src="photo.thumbnailUrl"
+  class="photo-thumbnail"
+  loading="lazy"
+  style="cursor: pointer"
+/>
           <span v-if="isWilting(photo)" class="wilt-icon">🥀</span>
           <div v-if="isSelectionMode && selectedPhotoIds.includes(photo.id)" class="check-overlay">☑️</div>
           <div class="photo-info">
@@ -80,18 +116,28 @@
       @touchend="handleTouchEnd"
     >
       <div class="modal-content-wrapper" @click.stop>
-        <div v-if="isImageLoaded" class="modal-toolbar-centered">
-          <span class="modal-download-icon" @click.stop="downloadCurrentPhoto">↓</span>
-          <span
-            class="modal-favorite-icon"
-            :class="{ active: currentPhoto?.isFavorite }"
-            @click.stop="toggleFavorite(currentPhoto)"
-          >♡</span>
-          <span class="modal-date-text" v-if="currentPhoto?.photoTakenAt">
-            {{ formatDate(currentPhoto.photoTakenAt) }}
-          </span>
-          <button class="modal-delete-button-above" @click.stop.prevent="promptDeletePhoto(currentPhoto)">🗑</button>
-        </div>
+<div v-if="isImageLoaded" class="modal-toolbar-centered">
+  <!-- ダウンロード ↓ -->
+  <span class="modal-download-icon" @click.stop="downloadCurrentPhoto">↓</span>
+
+  <!-- お気に入り ♡ -->
+  <span
+    class="modal-favorite-icon"
+    :class="{ active: currentPhoto?.isFavorite }"
+    @click.stop="toggleFavorite(currentPhoto)"
+  >♡</span>
+
+  <!-- 撮影日 📅 -->
+  <span class="modal-date-text" v-if="currentPhoto?.photoTakenAt">
+    {{ formatDate(currentPhoto.photoTakenAt) }}
+  </span>
+
+  <!-- アルバム 📁 -->
+<span class="modal-album-icon" @click.stop="openAlbumModal(photo)">📁</span>
+
+  <!-- 削除 🗑️ -->
+  <button class="modal-delete-button-above" @click.stop.prevent="promptDeletePhoto(currentPhoto)">🗑</button>
+</div>
 
         <div class="modal-content">
           <div v-if="!isImageLoaded" class="modal-loading-overlay">
@@ -117,11 +163,20 @@
       @confirm="handleConfirmedDelete"
       @cancel="cancelDelete"
     />
+
+<AlbumSelectorModal
+  :visible="showAlbumModal"
+  :photo="currentPhoto"
+  :allPhotos="photoList" 
+  @close="showAlbumModal = false"
+  @updated="refreshPhotoList"
+/>
+
   </div>
 </template>
 
+<script setup lang="ts">
 
-<script setup>
 import { ref, onMounted, watch, computed, onBeforeUnmount } from 'vue'
 import { Storage, API, graphqlOperation, Auth } from 'aws-amplify'
 import { createPhoto, updatePhoto, deletePhoto as deletePhotoMutation } from '@/graphql/mutations'
@@ -131,8 +186,13 @@ import IconButton from '@/components/IconButton.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import { useI18n } from 'vue-i18n'
 import Tesseract from 'tesseract.js'
+import Modal from '@/components/Modal.vue'
+import { listPhotosWithAlbum } from '@/graphql/custom-queries' 
 
 
+import AlbumSelectorModal from '@/components/AlbumSelectorModal.vue'
+
+const showAlbumModal = ref(false)
 
 const { t } = useI18n()
 
@@ -140,9 +200,82 @@ const pageLimit = 50
 const nextToken = ref(null)
 const allPhotosLoaded = ref(false)
 
-
 const ocrText = ref('')
 const isOcrLoading = ref(false)
+
+
+const showAlbumPicker = ref(false)
+
+
+const photoList = ref<Photo[]>([])
+
+// 2. 自分の写真に付いているアルバム名一覧（重複除去＋ソート）
+const uniqueAlbumNames = computed(() => {
+  const names = photoList.value.map(p => p.albumName || '').filter(Boolean)
+  return [...new Set(names)].sort()
+})
+
+
+
+function toggleAlbumPicker() {
+  showAlbumPicker.value = !showAlbumPicker.value
+  console.log('📁 ピッカー開閉:', showAlbumPicker.value)
+}
+
+
+
+// ✅ アルバム選択時の処理（例: フィルターリストの更新など）
+function handleAlbumSelect() {
+  // selectedAlbum.value に基づき filteredPhotoList を更新
+  if (!selectedAlbum.value) {
+    filteredPhotoList.value = photoList.value
+  } else {
+    filteredPhotoList.value = photoList.value.filter(
+      p => p.albumName === selectedAlbum.value
+    )
+  }
+}
+
+
+const props = defineProps({
+  visible: Boolean,
+  photo: Object,
+  allPhotos: {
+    type: Array,
+    default: () => []
+  }
+})
+
+const selectedAlbum = ref('')
+
+const albumList = computed(() => {
+  const unique = new Set<string>()
+  allPhotos.value.forEach(photo => {
+    if (photo.album) unique.add(photo.album)
+  })
+  return Array.from(unique).sort()
+})
+
+
+
+
+function filterByAlbum() {
+  if (!selectedAlbum.value) {
+    filteredPhotos.value = [...allPhotos.value]  // 全件
+  } else {
+    filteredPhotos.value = allPhotos.value.filter(photo => photo.album === selectedAlbum.value)
+  }
+
+  // 撮影日で並び替え（降順）
+  filteredPhotos.value.sort((a, b) => {
+    const aDate = a.photoTakenAt || a.createdAt
+    const bDate = b.photoTakenAt || b.createdAt
+    return new Date(bDate).getTime() - new Date(aDate).getTime()
+  })
+}
+
+const selectedPhoto = ref(null)
+const photos = ref([]) 
 
 async function extractTextFromPhoto(photo) {
   ocrText.value = ''
@@ -172,7 +305,6 @@ onMounted(async () => {
   }
 })
 
-const photoList = ref([])
 const modalVisible = ref(false)
 const modalClosing = ref(false)
 const fullImageUrl = ref(null)
@@ -672,6 +804,8 @@ async function runWithConcurrencyLimit(tasks, limit = 5) {
   return results
 }
 
+const allPhotos = ref([])
+
 async function fetchPhotos() {
   isLoading.value = true
   try {
@@ -704,6 +838,14 @@ async function fetchPhotos() {
       })
     }
 
+console.log('📁 選択アルバム:', selectedAlbum.value)
+console.log('📸 フィルター前件数:', allItems.length)
+
+if (selectedAlbum.value) {
+  allItems = allItems.filter(item => item.albumName === selectedAlbum.value)
+  console.log('✅ フィルター後件数:', allItems.length)
+}
+
     // 🌱 サムネイル取得（最大5並列）
     const tasks = allItems.map(item => async () => {
       try {
@@ -717,18 +859,24 @@ async function fetchPhotos() {
 
     const updatedItems = await runWithConcurrencyLimit(tasks, 5)
 
-    // 📸 撮影日 or 作成日でソート
+    // 📸 撮影日 or 作成日でソート（降順）
     photoList.value = updatedItems.sort((a, b) => {
       const dateA = new Date(a.photoTakenAt || a.createdAt)
       const dateB = new Date(b.photoTakenAt || b.createdAt)
       return dateB - dateA
     })
 
+
   } catch (e) {
     console.error('❌ 全件取得失敗:', e)
   } finally {
     isLoading.value = false
   }
+}
+
+
+function refreshPhotoList() {
+  fetchPhotos()
 }
 
 function toggleHeartFilter() {
@@ -859,12 +1007,20 @@ function handleKeydown(e) {
   if (e.key === 'Escape') startModalClose()
 }
 
-function handleScroll(e) {
-  const el = e.target
-  if (el.scrollTop + el.clientHeight >= el.scrollHeight - 200) {
-    fetchPhotos()
-  }
+
+function openAlbumModal(photo) {
+  currentPhoto.value = photo
+  showAlbumModal.value = true
 }
+
+watch(selectedAlbum, () => {
+  fetchPhotos()
+})
+
+watch(selectedAlbum, (newVal, oldVal) => {
+  console.log(`📁 アルバム選択が変更されました: '${oldVal}' → '${newVal}'`)
+  fetchPhotos()
+})
 
 </script>
 
@@ -1352,5 +1508,46 @@ function handleScroll(e) {
   50% { opacity: 1; }
   100% { opacity: 0.6; }
 }
+
+.modal-album-icon {
+  font-size: 1.2rem;
+  cursor: pointer;
+  margin: 0 0.4rem;
+}
+
+.icon-with-picker {
+  position: relative;
+  display: inline-block;
+}
+
+.inline-album-picker {
+  position: absolute;
+  top: calc(100% + 0.2rem); /* 📁アイコンの直下に来るよう微調整 */
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  width: 180px;
+}
+
+.custom-picker {
+  width: 100%;
+  padding: 0.5rem 0.8rem;
+  border-radius: 0.6rem;
+  font-size: 1rem;
+  appearance: none;
+  border: 1px solid #555;
+  background-color: #fff;
+  color: #000;
+}
+
+/* 🌙 ダークモード対応 */
+@media (prefers-color-scheme: dark) {
+  .custom-picker {
+    background-color: #111;
+    color: #fff;
+    border: 1px solid #666;
+  }
+}
+
 
 </style>

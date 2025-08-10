@@ -566,6 +566,15 @@
 "profile.confirmBlock": "Hide {name} in the clouds? (Block)",
 "profile.confirmUnblock": "Bring {name} back from the clouds? (Unblock)",
 "profile.confirmUnblock": "Do you want to bring {name} back from the clouds? (Unblock)",
-"profile.unknownUser": "this user"
+"profile.unknownUser": "this user",
+
+"photo.allAlbums": "All albums",
+  "album.title": "📁 Select Album",
+  "album.selectExisting": "Select an existing album",
+  "album.selectPlaceholder": "Choose an album",
+  "album.newInputLabel": "Enter a new album name",
+  "album.newInputPlaceholder": "New album name",
+  "album.save": "Save",
+  "album.delete": "Delete"
 
 }

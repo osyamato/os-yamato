@@ -543,9 +543,17 @@
 
 "profile.confirmBlock": "{name} を雲にかくしますか？（ブロック）",
 "profile.confirmUnblock": "{name} を雲から戻しますか？（ブロック解除）",
-"profile.unknownUser": "このユーザー"
+"profile.unknownUser": "このユーザー",
 
+"photo.allAlbums": "すべてのアルバム",
 
+  "album.title": "📁 アルバムを選択",
+  "album.selectExisting": "既存アルバムを選択",
+  "album.selectPlaceholder": "アルバムを選択",
+  "album.newInputLabel": "新しいアルバム名を入力",
+  "album.newInputPlaceholder": "新しいアルバム名",
+  "album.save": "保存",
+  "album.delete": "削除"
 
 
 }

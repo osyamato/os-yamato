@@ -398,9 +398,10 @@ export const getPhoto = /* GraphQL */ `
     getPhoto(id: $id) {
       id
       owner
+      albumId
+      albumName
       fileName
       thumbnailFileName
-      albumName
       photoTakenAt
       lastOpenedAt
       isFavorite
@@ -420,9 +421,10 @@ export const listPhotos = /* GraphQL */ `
       items {
         id
         owner
+        albumId
+        albumName
         fileName
         thumbnailFileName
-        albumName
         photoTakenAt
         lastOpenedAt
         isFavorite

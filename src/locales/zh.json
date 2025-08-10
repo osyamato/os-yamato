@@ -526,7 +526,16 @@
 "profile.confirmBlock": "要将 {name} 隐藏在云中吗？（封锁）",
 "profile.confirmUnblock": "要将 {name} 从云中恢复吗？（解除封锁）",
 "profile.unknownUser": "该用户",
-"profile.confirmUnblock": "要将 {name} 从云中恢复吗？（解除封锁）"
+"profile.confirmUnblock": "要将 {name} 从云中恢复吗？（解除封锁）",
+
+"photo.allAlbums": "所有相册",
+  "album.title": "📁 选择相册",
+  "album.selectExisting": "选择一个已有相册",
+  "album.selectPlaceholder": "请选择相册",
+  "album.newInputLabel": "输入新相册名称",
+  "album.newInputPlaceholder": "新相册名称",
+  "album.save": "保存",
+  "album.delete": "删除"
 
 
 

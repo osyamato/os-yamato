@@ -576,9 +576,10 @@ export const createPhoto = /* GraphQL */ `
     createPhoto(input: $input, condition: $condition) {
       id
       owner
+      albumId
+      albumName
       fileName
       thumbnailFileName
-      albumName
       photoTakenAt
       lastOpenedAt
       isFavorite
@@ -596,9 +597,10 @@ export const updatePhoto = /* GraphQL */ `
     updatePhoto(input: $input, condition: $condition) {
       id
       owner
+      albumId
+      albumName
       fileName
       thumbnailFileName
-      albumName
       photoTakenAt
       lastOpenedAt
       isFavorite
@@ -616,9 +618,10 @@ export const deletePhoto = /* GraphQL */ `
     deletePhoto(input: $input, condition: $condition) {
       id
       owner
+      albumId
+      albumName
       fileName
       thumbnailFileName
-      albumName
       photoTakenAt
       lastOpenedAt
       isFavorite

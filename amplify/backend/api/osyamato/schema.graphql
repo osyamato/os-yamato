@@ -153,19 +153,20 @@ type ChatRequest
 
 type Photo
   @model
-  @auth(rules: [{ allow: owner }])
-{
+  @auth(rules: [{ allow: owner }]) {
   id: ID!
   owner: String!
+  albumId: ID              # 任意（未分類でもOK）
+  albumName: String        # 表示用（空でもOK）
   fileName: String!
   thumbnailFileName: String!
-  albumName: String         # ✅ New フィールド
   photoTakenAt: AWSDateTime
   lastOpenedAt: AWSDateTime
   isFavorite: Boolean! @default(value: "false")
   createdAt: AWSDateTime
   updatedAt: AWSDateTime
 }
+
 
 type ScheduleTemplate
   @model

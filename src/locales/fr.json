@@ -540,7 +540,17 @@
 "profile.confirmBlock": "Masquer {name} dans les nuages ? (Bloquer)",
 "profile.confirmUnblock": "Ramener {name} des nuages ? (Débloquer)",
 "profile.unknownUser": "cet utilisateur",
-"profile.confirmUnblock": "Souhaitez-vous ramener {name} des nuages ? (Débloquer)"
+"profile.confirmUnblock": "Souhaitez-vous ramener {name} des nuages ? (Débloquer)",
+
+ "photo.allAlbums": "Tous les albums",
+
+ "album.title": "📁 Sélectionner un album",
+  "album.selectExisting": "Sélectionner un album existant",
+  "album.selectPlaceholder": "Choisir un album",
+  "album.newInputLabel": "Entrer un nouveau nom d’album",
+  "album.newInputPlaceholder": "Nouveau nom d’album",
+  "album.save": "Enregistrer",
+  "album.delete": "Supprimer"
 
 
 
