@@ -673,50 +673,39 @@ async function runWithConcurrencyLimit(tasks, limit = 5) {
 }
 
 async function fetchPhotos() {
-  if (allPhotosLoaded.value) return
   isLoading.value = true
-
   try {
-    const result = await API.graphql(graphqlOperation(listPhotos, {
-      limit: pageLimit,
-      nextToken: nextToken.value
-    }))
+    let allItems = []
+    let nextToken = null
 
-    let items = result.data.listPhotos.items
-    nextToken.value = result.data.listPhotos.nextToken
-    allPhotosLoaded.value = !nextToken.value
+    // 🔁 全件取得（ページネーションあり）
+    do {
+      const result = await API.graphql(graphqlOperation(listPhotos, {
+        limit: 1000,
+        nextToken
+      }))
+
+      const items = result.data.listPhotos.items
+      nextToken = result.data.listPhotos.nextToken
+      allItems.push(...items)
+    } while (nextToken)
 
     // ❤️ フィルター：お気に入り
     if (filterFavoritesOnly.value) {
-      items = items.filter(item => item.isFavorite)
+      allItems = allItems.filter(item => item.isFavorite)
     }
 
     // 🥀 フィルター：330日以上未開封
     if (filterWiltingOnly.value) {
-      items = items.filter(item => {
+      allItems = allItems.filter(item => {
         if (!item.lastOpenedAt) return false
         const days = (Date.now() - new Date(item.lastOpenedAt)) / (1000 * 60 * 60 * 24)
         return days >= 330
       })
     }
 
-items = items.filter(item => {
-  if (!item.lastOpenedAt) return true
-  const days = (Date.now() - new Date(item.lastOpenedAt)) / (1000 * 60 * 60 * 24)
-  return days < 365
-})
-
-    // 📸 安定ソート（フィルター後に実行）
-    items = items.sort((a, b) => {
-      const dateA = new Date(a.photoTakenAt || a.createdAt)
-      const dateB = new Date(b.photoTakenAt || b.createdAt)
-      const diff = dateB - dateA
-      if (diff !== 0) return diff
-      return a.id.localeCompare(b.id)
-    })
-
     // 🌱 サムネイル取得（最大5並列）
-    const tasks = items.map(item => async () => {
+    const tasks = allItems.map(item => async () => {
       try {
         const signedThumbUrl = await Storage.get(item.thumbnailFileName, { level: 'protected' })
         return { ...item, thumbnailUrl: signedThumbUrl }
@@ -728,13 +717,15 @@ items = items.filter(item => {
 
     const updatedItems = await runWithConcurrencyLimit(tasks, 5)
 
-    // ✅ 重複除去（IDでユニークに）
-    const merged = [...photoList.value, ...updatedItems]
-    const uniquePhotos = Array.from(new Map(merged.map(p => [p.id, p])).values())
-    photoList.value = uniquePhotos
+    // 📸 撮影日 or 作成日でソート
+    photoList.value = updatedItems.sort((a, b) => {
+      const dateA = new Date(a.photoTakenAt || a.createdAt)
+      const dateB = new Date(b.photoTakenAt || b.createdAt)
+      return dateB - dateA
+    })
 
   } catch (e) {
-    console.error('❌ 写真取得エラー:', e)
+    console.error('❌ 全件取得失敗:', e)
   } finally {
     isLoading.value = false
   }

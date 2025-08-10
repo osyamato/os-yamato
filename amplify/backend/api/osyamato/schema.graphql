@@ -159,6 +159,7 @@ type Photo
   owner: String!
   fileName: String!
   thumbnailFileName: String!
+  albumName: String         # ✅ New フィールド
   photoTakenAt: AWSDateTime
   lastOpenedAt: AWSDateTime
   isFavorite: Boolean! @default(value: "false")

@@ -400,6 +400,7 @@ export const getPhoto = /* GraphQL */ `
       owner
       fileName
       thumbnailFileName
+      albumName
       photoTakenAt
       lastOpenedAt
       isFavorite
@@ -421,6 +422,7 @@ export const listPhotos = /* GraphQL */ `
         owner
         fileName
         thumbnailFileName
+        albumName
         photoTakenAt
         lastOpenedAt
         isFavorite

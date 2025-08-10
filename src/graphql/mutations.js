@@ -578,6 +578,7 @@ export const createPhoto = /* GraphQL */ `
       owner
       fileName
       thumbnailFileName
+      albumName
       photoTakenAt
       lastOpenedAt
       isFavorite
@@ -597,6 +598,7 @@ export const updatePhoto = /* GraphQL */ `
       owner
       fileName
       thumbnailFileName
+      albumName
       photoTakenAt
       lastOpenedAt
       isFavorite
@@ -616,6 +618,7 @@ export const deletePhoto = /* GraphQL */ `
       owner
       fileName
       thumbnailFileName
+      albumName
       photoTakenAt
       lastOpenedAt
       isFavorite
