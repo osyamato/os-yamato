@@ -1,0 +1,334 @@
+<template>
+  <div class="diary-container" :class="animationDirection">
+    <div class="month-header">
+      <button @click="prevMonth">&lt;</button>
+      <h2>{{ currentMonth + 1 }}月の日記</h2>
+      <button @click="nextMonth">&gt;</button>
+      <button class="edit-button" @click="handlePencilClick">✏️</button>
+    </div>
+
+    <!-- 🌸 新規作成モーダル -->
+    <transition name="drop-modal">
+      <div class="modal" v-if="showModalNew" @click.self="closeModal">
+        <div class="modal-content">
+          <input type="date" v-model="selectedDate" class="date-picker" />
+          <textarea v-model="newDiaryContent" placeholder="今日の日記..." />
+          <div class="button-row">
+            <button class="btn-active" @click="saveDiary">保存</button>
+            <button class="btn-disabled" @click="closeModal">閉じる</button>
+          </div>
+        </div>
+      </div>
+    </transition>
+
+    <!-- 🌸 編集モーダル -->
+    <transition name="drop-modal">
+      <div class="modal" v-if="showModalEdit" @click.self="closeModal">
+        <div class="modal-content">
+          <input type="date" v-model="selectedDate" class="date-picker" disabled />
+          <textarea v-model="newDiaryContent" />
+          <div class="button-row">
+            <button class="btn-active" @click="updateDiary">更新</button>
+            <button class="btn-disabled" @click="deleteDiary(selectedDiary.id)">削除</button>
+            <button class="btn-disabled" @click="closeModal">閉じる</button>
+          </div>
+        </div>
+      </div>
+    </transition>
+
+    <!-- 🌸 花の表示 -->
+    <div class="flower-area">
+      <div
+        class="flower"
+        v-for="(diary, index) in diaries"
+        :key="diary.id"
+        :style="randomPosition(index)"
+        @click="openDiary(diary)"
+      >
+        🌸<br />
+        <small>{{ formatDate(diary.date) }}</small>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, onMounted } from 'vue'
+import { API, Auth, graphqlOperation } from 'aws-amplify'
+import { createDiary, updateDiary as updateDiaryMutation, deleteDiary as deleteDiaryMutation } from '@/graphql/mutations'
+import { listDiaries } from '@/graphql/queries'
+
+const newDiaryContent = ref('')
+const selectedDate = ref(new Date().toISOString().split('T')[0])
+const diaries = ref([])
+const selectedDiary = ref(null)
+const showModalNew = ref(false)
+const showModalEdit = ref(false)
+const animationDirection = ref('dropDown')
+
+const today = new Date()
+const currentYear = ref(today.getFullYear())
+const currentMonth = ref(today.getMonth())
+
+function formatDate(dateStr) {
+  return new Date(dateStr).getDate() + '日'
+}
+
+function randomPosition(index) {
+  const top = 20 + Math.random() * 50
+  const left = 5 + Math.random() * 90
+  return {
+    top: `${top}%`,
+    left: `${left}%`,
+    position: 'absolute',
+    textAlign: 'center'
+  }
+}
+
+function handlePencilClick() {
+  const todayStr = new Date().toISOString().split('T')[0]
+  const existing = diaries.value.find(d => d.date === todayStr)
+
+  if (existing) {
+    selectedDiary.value = existing
+    newDiaryContent.value = existing.content
+    selectedDate.value = existing.date
+    showModalEdit.value = true
+  } else {
+    selectedDate.value = todayStr
+    newDiaryContent.value = ''
+    showModalNew.value = true
+  }
+}
+
+function closeModal() {
+  showModalNew.value = false
+  showModalEdit.value = false
+  selectedDiary.value = null
+}
+
+async function saveDiary() {
+  try {
+    const user = await Auth.currentAuthenticatedUser()
+    const input = {
+      date: selectedDate.value,
+      content: newDiaryContent.value,
+      owner: user.username,
+    }
+    await API.graphql(graphqlOperation(createDiary, { input }))
+    await fetchDiaries()
+    closeModal()
+  } catch (e) {
+    console.error('createDiary error:', e.errors?.[0]?.message || e)
+  }
+}
+
+async function updateDiary() {
+  try {
+    const input = {
+      id: selectedDiary.value.id,
+      content: newDiaryContent.value,
+    }
+    await API.graphql(graphqlOperation(updateDiaryMutation, { input }))
+    await fetchDiaries()
+    closeModal()
+  } catch (e) {
+    console.error('updateDiary error:', e)
+  }
+}
+
+async function deleteDiary(id) {
+  try {
+    await API.graphql(graphqlOperation(deleteDiaryMutation, { input: { id } }))
+    await fetchDiaries()
+    closeModal()
+  } catch (e) {
+    console.error('deleteDiary error:', e)
+  }
+}
+
+async function fetchDiaries() {
+  try {
+    const user = await Auth.currentAuthenticatedUser()
+    const res = await API.graphql(graphqlOperation(listDiaries, {
+      filter: {
+        owner: { eq: user.username },
+        date: { beginsWith: `${currentYear.value}-${String(currentMonth.value + 1).padStart(2, '0')}` }
+      }
+    }))
+    diaries.value = res.data.listDiaries.items
+  } catch (e) {
+    console.error('fetchDiaries error:', e)
+  }
+}
+
+function openDiary(diary) {
+  selectedDiary.value = diary
+  newDiaryContent.value = diary.content
+  selectedDate.value = diary.date
+  showModalEdit.value = true
+}
+
+function nextMonth() {
+  animationDirection.value = ''
+  setTimeout(() => {
+    animationDirection.value = 'slide-left'
+    if (currentMonth.value === 11) {
+      currentMonth.value = 0
+      currentYear.value++
+    } else {
+      currentMonth.value++
+    }
+    diaries.value = []
+    fetchDiaries()
+  }, 10)
+}
+
+function prevMonth() {
+  animationDirection.value = ''
+  setTimeout(() => {
+    animationDirection.value = 'slide-right'
+    if (currentMonth.value === 0) {
+      currentMonth.value = 11
+      currentYear.value--
+    } else {
+      currentMonth.value--
+    }
+    diaries.value = []
+    fetchDiaries()
+  }, 10)
+}
+
+onMounted(fetchDiaries)
+</script>
+
+<style scoped>
+.diary-container {
+  padding: 2rem;
+  font-family: sans-serif;
+  text-align: center;
+  position: relative;
+  animation: dropDown 0.4s ease-out;
+  transform-origin: top center;
+}
+
+.month-header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: nowrap;
+  margin-bottom: 1rem;
+}
+
+.edit-button {
+  font-size: 1.5rem;
+  padding: 0.4rem 0.8rem;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+textarea, input[type="date"] {
+  width: 100%;
+  padding: 1rem;
+  font-size: 1rem;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  margin-bottom: 1rem;
+  box-sizing: border-box;
+}
+
+.modal {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 400px;
+  box-sizing: border-box;
+}
+
+.button-row {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 1rem;
+}
+
+.btn-disabled {
+  background-color: #ccc;
+  color: #666;
+  cursor: not-allowed;
+  padding: 0.5rem 1.2rem;
+  border-radius: 8px;
+  border: none;
+  font-size: 1rem;
+}
+
+.btn-active {
+  background-color: #345;
+  color: white;
+  cursor: pointer;
+  padding: 0.5rem 1.2rem;
+  border-radius: 8px;
+  border: none;
+  font-size: 1rem;
+}
+
+.flower-area {
+  position: relative;
+  height: 60vh;
+}
+
+.flower {
+  font-size: 1.5rem;
+  cursor: pointer;
+  position: absolute;
+  text-align: center;
+}
+
+.drop-modal-enter-active {
+  animation: dropDown 0.4s ease-out;
+}
+
+.date-picker {
+  width: 100%;
+  padding: 0.5rem;
+  margin-bottom: 1rem;
+  font-size: 1rem;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+@keyframes dropDown {
+  0% { transform: translateY(-40px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+.slide-left {
+  animation: slideLeft 0.5s ease-out;
+}
+
+.slide-right {
+  animation: slideRight 0.5s ease-out;
+}
+
+@keyframes slideLeft {
+  0% { transform: translateX(40px); opacity: 0; }
+  100% { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes slideRight {
+  0% { transform: translateX(-40px); opacity: 0; }
+  100% { transform: translateX(0); opacity: 1; }
+}
+</style>

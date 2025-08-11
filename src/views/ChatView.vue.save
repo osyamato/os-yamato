@@ -1,0 +1,229 @@
+<template>
+  <div class="chat-container">
+    <!-- 🔼 メッセージ一覧 -->
+    <div class="message-list">
+      <div
+        v-for="msg in messages"
+        :key="msg.id"
+        class="message"
+        :class="{ mine: msg.senderYamatoId === myYamatoId }"
+      >
+        <p>{{ msg.content }}</p>
+        <span class="timestamp">{{ formatTime(msg.timestamp) }}</span>
+      </div>
+    </div>
+
+    <!-- 🔽 入力欄 -->
+<div class="input-area">
+<textarea
+  v-model="newMessage"
+  placeholder="メッセージを入力..."
+  rows="1"
+  class="message-input"
+  @input="autoResize"
+/>
+  <button @click="sendMessage">送信</button>
+</div>
+  </div>
+</template>
+
+<script setup>
+import { ref, onMounted, watchEffect } from 'vue'
+import { API, graphqlOperation, Auth } from 'aws-amplify'
+import { listMessages } from '@/graphql/queries'
+import { useRoute } from 'vue-router'
+import { nextTick } from 'vue'
+
+
+// ✅ メッセージと入力欄
+const messages = ref([])
+const newMessage = ref('')
+
+// ✅ 自分の Yamato ID（DynamoDB から取得）
+const myYamatoId = ref('')
+
+// ✅ ルートから roomId / receiverYamatoId を取得
+const route = useRoute()
+const roomId = ref('')
+const receiverYamatoId = ref('')
+
+watchEffect(() => {
+  roomId.value = route.params.roomId || ''
+  receiverYamatoId.value = route.params.receiverYamatoId || ''
+})
+
+onMounted(async () => {
+  try {
+    const user = await Auth.currentAuthenticatedUser()
+    const mySub = user.attributes.sub
+
+    const res = await API.graphql({
+      query: /* GraphQL */ `
+        query GetMyProfile($id: ID!) {
+          getPublicProfile(id: $id) {
+            yamatoId
+          }
+        }
+      `,
+      variables: { id: mySub },
+      authMode: 'AMAZON_COGNITO_USER_POOLS'
+    })
+
+    myYamatoId.value = res.data.getPublicProfile.yamatoId
+    console.log('✅ 自分の YamatoID:', myYamatoId.value)
+
+    if (!roomId.value || !receiverYamatoId.value) {
+      console.error('❌ roomId または receiverYamatoId が未設定です')
+      return
+    }
+
+    await fetchMessages()
+  } catch (err) {
+    console.error('❌ Yamato ID の取得エラー:', err)
+  }
+})
+
+function autoResize(event) {
+  const textarea = event.target
+  textarea.style.height = 'auto'  // 一度リセット
+  textarea.style.height = textarea.scrollHeight + 'px'
+}
+
+async function fetchMessages() {
+  try {
+    const res = await API.graphql(graphqlOperation(listMessages, {
+      filter: { roomId: { eq: roomId.value } },
+      limit: 100
+    }))
+    messages.value = res.data.listMessages.items
+      .filter(msg => msg)
+      .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
+
+    await nextTick()
+    scrollToBottom()
+  } catch (err) {
+    console.error('❌ メッセージ取得エラー:', JSON.stringify(err, null, 2))
+  }
+}
+
+function scrollToBottom() {
+  const container = document.querySelector('.message-list')
+  if (container) {
+    container.scrollTop = container.scrollHeight
+  }
+}
+
+async function sendMessage() {
+  if (!newMessage.value.trim()) return
+
+  const input = {
+    roomId: roomId.value,
+    senderYamatoId: myYamatoId.value,
+    receiverYamatoId: receiverYamatoId.value,
+    content: newMessage.value,
+    timestamp: new Date().toISOString()
+  }
+
+  const missing = Object.entries(input).filter(([_, v]) => v == null || v === '')
+  if (missing.length > 0) {
+    console.error('❌ 不正なフィールドがあります:', missing)
+    return
+  }
+
+  try {
+    const createMessageMinimal = /* GraphQL */ `
+      mutation CreateMessage($input: CreateMessageInput!) {
+        createMessage(input: $input) {
+          id
+          content
+          timestamp
+          senderYamatoId
+          receiverYamatoId
+        }
+      }
+    `
+    await API.graphql(graphqlOperation(createMessageMinimal, { input }))
+    newMessage.value = ''
+    await fetchMessages()
+  } catch (err) {
+    console.error('❌ メッセージ送信エラー:', JSON.stringify(err, null, 2))
+  }
+}
+
+function formatTime(ts) {
+  return new Date(ts).toLocaleTimeString()
+}
+</script>
+
+
+<style scoped>
+.chat-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.message-input {
+  width: 100%;
+  min-height: 40px;
+  max-height: 150px;
+  resize: none;
+  padding: 0.6rem;
+  font-size: 1rem;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  overflow-y: auto;
+  transition: height 0.1s ease-out;
+}
+
+.message-list {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.message {
+  padding: 0.5rem;
+  margin: 0.5rem 0;
+  border-radius: 10px;
+  background: #f0f0f0;
+  color: #222; /* 明るい背景用に黒に近い文字色を指定 */
+  max-width: 70%;
+}
+
+.message.mine {
+  align-self: flex-end;
+  background: #d1e7ff;
+  color: #222; /* 自分の吹き出しも同様に明示 */
+}
+
+/* 🌙 ダークモード対応 */
+@media (prefers-color-scheme: dark) {
+  .message {
+    background: #444;
+    color: #fff;
+  }
+
+  .message.mine {
+    background: #276ef1;
+    color: #fff;
+  }
+}
+
+.input-area {
+  display: flex;
+  padding: 1rem;
+  border-top: 1px solid #ccc;
+}
+
+input {
+  flex: 1;
+  padding: 0.6rem;
+  margin-right: 0.5rem;
+}
+
+button {
+  padding: 0.6rem 1rem;
+}
+</style>

@@ -1,0 +1,478 @@
+<template>
+  <div class="diary-container">
+    <!-- 年選択ヘッダー -->
+    <div class="year-header">
+      <button class="arrow-button" @click="prevYear">&lt;</button>
+      <span class="year-title">{{ currentYear }}年</span>
+      <button class="arrow-button" @click="nextYear">&gt;</button>
+      <button class="edit-button" @click="openNewDiaryModal">✏️</button>
+    </div>
+
+    <!-- 🌸 全体花エリア -->
+    <div class="full-flower-area">
+      <div
+        class="flower"
+        v-for="(diary, index) in diaries"
+        :key="diary.id"
+        :style="randomPosition(index)"
+        @click="openDiary(diary)"
+      >
+<!-- テンプレート内 -->
+<div class="flower-icon">
+<img
+  class="flower-img"
+  :src="`/dialy.${new Date(diary.date).getMonth() + 1}.png`"
+  alt="花"
+  @error="e => e.target.style.display = 'none'"
+/>
+  <div v-if="isRecentlyOpened(diary)" class="butterfly">🦋</div>
+</div>
+<small>{{ formatDate(diary.date) }}</small>
+      </div>
+    </div>
+
+    <!-- 新規作成モーダル -->
+<transition name="drop-modal">
+  <div class="modal" v-if="showNewDiaryModal" @click="closeModal">
+    <div class="modal-content" @click.stop>
+      <input type="date" v-model="selectedDate" class="date-picker" />
+      <textarea v-model="newDiaryContent" placeholder="日記を書く..." />
+      <div class="button-row">
+        <YamatoButton type="default" @click="saveDiary">保存</YamatoButton>
+      </div>
+    </div>
+  </div>
+</transition>
+
+    <!-- 表示モーダル -->
+    <transition name="drop-modal">
+      <div class="modal" v-if="selectedDiary" @click.self="closeDiaryModal">
+        <div class="modal-content">
+          <p>{{ selectedDiary.content }}</p>
+          <div class="button-row">
+            <YamatoButton type="danger" @click="deleteDiary(selectedDiary.id)">削除</YamatoButton>
+          </div>
+        </div>
+      </div>
+    </transition>
+  </div>
+</template>
+
+
+<script setup>
+import { ref, onMounted } from 'vue'
+import { API, Auth, graphqlOperation } from 'aws-amplify'
+import { createDiary, deleteDiary as deleteDiaryMutation, updateDiary as updateDiaryMutation } from '@/graphql/mutations'
+import { listDiaries } from '@/graphql/queries'
+import YamatoButton from '@/components/YamatoButton.vue'
+
+const currentYear = ref(new Date().getFullYear())
+const diaries = ref([])
+const positions = ref([])
+
+const selectedDiary = ref(null)
+const showNewDiaryModal = ref(false)
+const newDiaryContent = ref('')
+const selectedDate = ref('')
+
+function openNewDiaryModal() {
+  selectedDate.value = new Date().toISOString().split('T')[0]
+  newDiaryContent.value = ''
+  showNewDiaryModal.value = true
+}
+
+function closeModal() {
+  showNewDiaryModal.value = false
+  selectedDiary.value = null
+  window.scrollTo({ top: 0, behavior: 'smooth' })  // ✅ トップに戻す
+}
+
+function closeDiaryModal() {
+  selectedDiary.value = null
+  window.scrollTo({ top: 0, behavior: 'smooth' }) // ← これ！
+}
+
+async function openDiary(diary) {
+  selectedDiary.value = diary
+
+  try {
+    const updatedTime = new Date().toISOString()
+    await API.graphql(graphqlOperation(updateDiaryMutation, {
+      input: {
+        id: diary.id,
+        lastOpenedAt: updatedTime
+      }
+    }))
+
+    // ✅ ローカル更新も反映させる
+    diary.lastOpenedAt = updatedTime
+
+    console.log(`✅ lastOpenedAt 更新: ${diary.id}`)
+  } catch (err) {
+    console.error(`❌ 更新失敗: ${diary.id}`, err)
+  }
+}
+
+async function saveDiary() {
+  try {
+    const user = await Auth.currentAuthenticatedUser()
+    const input = {
+      date: selectedDate.value,
+      content: newDiaryContent.value,
+      owner: user.username
+    }
+    await API.graphql(graphqlOperation(createDiary, { input }))
+    await fetchDiaries()
+    closeModal()
+  } catch (e) {
+    console.error('保存失敗:', e)
+  }
+}
+
+async function deleteDiary(id) {
+  try {
+    await API.graphql(graphqlOperation(deleteDiaryMutation, { input: { id } }))
+    await fetchDiaries()
+    closeDiaryModal()
+  } catch (e) {
+    console.error('削除失敗:', e)
+  }
+}
+
+async function fetchDiaries() {
+  try {
+    const user = await Auth.currentAuthenticatedUser()
+    const res = await API.graphql(graphqlOperation(listDiaries, {
+      filter: {
+        owner: { eq: user.username },
+        date: { beginsWith: `${currentYear.value}-` }
+      }
+    }))
+
+    const all = res.data.listDiaries.items
+    const now = new Date()
+    const toKeep = []
+    const toDelete = []
+
+    for (const diary of all) {
+      const lastOpened = diary.lastOpenedAt || diary.updatedAt || diary.createdAt
+      const diffDays = (now - new Date(lastOpened)) / (1000 * 60 * 60 * 24)
+      if (diffDays > 365) {
+        toDelete.push(diary.id)
+      } else {
+        toKeep.push(diary)
+      }
+    }
+
+    // 不要日記を削除
+    for (const id of toDelete) {
+      try {
+        await API.graphql(graphqlOperation(deleteDiaryMutation, { input: { id } }))
+        console.log('🗑️ 削除: ', id)
+      } catch (e) {
+        console.error('❌ 削除失敗: ', id)
+      }
+    }
+
+    diaries.value = toKeep
+    positions.value = Array(12).fill().map(() => [])
+  } catch (e) {
+    console.error('fetchDiaries error:', e)
+  }
+}
+
+function diariesByMonth(monthIndex) {
+  return diaries.value.filter(d => new Date(d.date).getMonth() === monthIndex)
+}
+
+function randomPosition(index) {
+  const diary = diaries.value[index]
+  const diaryId = diary.id
+
+  if (positions.value[diaryId]) return positions.value[diaryId]
+
+  const maxAttempts = 30
+  let attempt = 0
+  let top, left
+
+  do {
+    top = Math.random() * 85 + 2.5   // ✅ 上下に安全マージン
+    left = Math.random() * 85 + 2.5  // ✅ 左右に安全マージン
+
+    const isTooClose = Object.values(positions.value).some(pos => {
+      const dx = parseFloat(pos.left) - left
+      const dy = parseFloat(pos.top) - top
+      return Math.sqrt(dx * dx + dy * dy) < 10
+    })
+
+    if (!isTooClose) break
+    attempt++
+  } while (attempt < maxAttempts)
+
+  const result = {
+    top: `${top}%`,
+    left: `${left}%`,
+    position: 'absolute',
+    textAlign: 'center',
+  }
+
+  positions.value[diaryId] = result
+  return result
+}
+
+function formatDate(dateStr) {
+  const date = new Date(dateStr)
+  return `${date.getMonth() + 1}/${date.getDate()}`
+}
+
+function nextYear() {
+  currentYear.value++
+  fetchDiaries()
+}
+
+function prevYear() {
+  currentYear.value--
+  fetchDiaries()
+}
+
+function isRecentlyOpened(diary) {
+  if (!diary.lastOpenedAt || diary.lastOpenedAt === diary.createdAt) return false
+  const now = new Date()
+  const opened = new Date(diary.lastOpenedAt)
+  const diffDays = (now - opened) / (1000 * 60 * 60 * 24)
+  return diffDays <= 7
+}
+
+
+onMounted(fetchDiaries)
+</script>
+
+<style scoped>
+.diary-container {
+  padding: 2rem;
+  font-family: sans-serif;
+  text-align: center;
+  animation: dropDown 0.5s ease-out;
+}
+
+.year-header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  font-size: 1.4rem;
+}
+
+.year-button {
+  background: transparent;
+  border: none;
+  font-size: 1.6rem;
+  cursor: pointer;
+  color: #274c77;
+}
+
+.year-title {
+  font-weight: 500;
+}
+
+.edit-button {
+  background-color: #f0f0f0;
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  font-size: 1.2rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: box-shadow 0.2s ease, background-color 0.3s ease;
+}
+
+.edit-button:hover {
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.year-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.5rem;
+}
+
+.month-block {
+  position: relative;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 1rem;
+  min-height: 180px;
+  background-color: #fafafa;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.month-label {
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+  text-align: left;
+  color: #274c77;
+}
+
+.full-flower-area {
+  position: relative;
+  width: 100vw;
+  height: calc(100vh - 160px); /* ヘッダー + フッター分 */
+  padding-top: 40px;
+  padding-bottom: 40px;
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+  overflow: hidden;
+}
+
+
+.butterfly {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10; /* 🦋を前面に */
+  font-size: 1.2rem;
+  animation: flutter 2s infinite ease-in-out;
+}
+
+
+
+@media (prefers-color-scheme: dark) {
+  .flower small {
+    color: #fff;
+  }
+}
+
+.flower {
+  font-size: 1.6rem;
+  position: absolute;
+  cursor: pointer;
+  user-select: none;
+  text-align: center;
+  color: #000;
+}
+
+.modal {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: #f9f5ef;
+  padding: 1.5rem;
+  border-radius: 6px;
+  border: 1px solid #d8d3c4;
+  width: 90%;
+  max-width: 400px;
+  box-sizing: border-box;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  background-image: repeating-linear-gradient(
+    to bottom,
+    #f9f5ef,
+    #f9f5ef 28px,
+    #d8d3c4 29px
+  );
+  background-size: 100% 30px;
+  font-family: "serif", "Hiragino Mincho ProN", "Noto Serif JP", serif;
+  color: #000;
+}
+
+.modal-content p {
+  font-size: 1rem;
+  line-height: 30px;
+  white-space: pre-wrap;
+  color: #000;
+  margin: 0;
+  text-align: center;
+}
+
+input[type="date"], textarea {
+  width: 100%;
+  padding: 0.8rem;
+  font-size: 1rem;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  margin-bottom: 1rem;
+  box-sizing: border-box;
+}
+
+textarea {
+  height: 200px;
+  resize: none;
+  font-family: serif;
+  line-height: 30px;
+  background: transparent;
+  border: none;
+}
+
+.button-row {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+/* アニメーション */
+@keyframes dropDown {
+  0% { transform: translateY(-40px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes flyUp {
+  0% { transform: translateY(0); opacity: 1; }
+  100% { transform: translateY(-40px); opacity: 0; }
+}
+
+.drop-modal-enter-active {
+  animation: dropDown 0.4s ease-out;
+}
+.drop-modal-leave-active {
+  animation: flyUp 0.4s ease-in;
+}
+
+.flower-icon {
+  position: relative;
+  width: 64px;
+  height: 64px;           /* ✅ 花画像の高さと揃える */
+  pointer-events: none;
+}
+
+.flower-img {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  display: block;
+  margin: 0;
+  pointer-events: none;
+}
+
+/* ✅ 日付を画像の真下に重ねる */
+.flower small {
+  position: absolute;
+  bottom: -10px;          /* ✅ 画像の下にちょっとはみ出して表示 */
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.8rem;
+  line-height: 1;
+  color: #222;
+  pointer-events: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  .edit-button {
+    background-color: #333;
+    color: #fff;
+  }
+}
+</style>

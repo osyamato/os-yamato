@@ -1,0 +1,253 @@
+
+type Memo
+  @model
+  @auth(rules: [
+    { allow: owner },  # 作成者にフルアクセス（create, read, update, delete）
+    { allow: owner, ownerField: "sharedWith", operations: [read, update] } # 共有先は read＋update
+  ])
+{
+  id: ID!
+  content: String!
+  tags: [String]
+  sharedWith: [String]     # ✅ 各ユーザーの Cognito `sub` を配列で保持
+  createdAt: AWSDateTime
+  updatedAt: AWSDateTime
+}
+
+
+
+type Diary @model @auth(rules: [{ allow: owner }]) {
+  id: ID!
+  owner: String!
+  content: String!
+  date: AWSDate!
+  lastOpenedAt: AWSDateTime  # ← 追加
+  createdAt: AWSDateTime
+  updatedAt: AWSDateTime
+}
+
+type Schedule @model @auth(rules: [{ allow: owner }]) {
+  id: ID!
+  owner: String!
+  date: AWSDate!
+  startTime: String
+  endTime: String
+  title: String
+  memo: String
+  isAllDay: Boolean       # ✅ 終日予定かどうか
+  lastOpenedAt: AWSDateTime
+  createdAt: AWSDateTime
+  updatedAt: AWSDateTime
+}
+
+type Contact @model @auth(rules: [{ allow: owner }]) {
+  id: ID!
+  name: String!
+  furigana: String
+  phoneNumbers: [String]
+  emails: [String]
+  note: String
+  yamatoId: String            # 表示用はそのまま残してOK
+  lastOpenedAt: AWSDateTime
+  createdAt: AWSDateTime
+}
+
+
+type ChatRoom
+  @model
+  @auth(rules: [
+    { allow: owner },
+    { allow: private, operations: [read, create, update] }
+  ])
+{
+  id: ID!
+
+  # 一対一のときに使う
+  user1: String
+  user2: String
+
+  # ✅ グループ対応用：参加メンバー一覧（subの配列）
+  memberSubs: [String]
+
+  # ✅ グループ判定
+  isGroup: Boolean @default(value: "false")
+  groupName: String
+
+  lastMessage: String
+  lastContentType: String
+  lastTimestamp: AWSDateTime
+  lastReadAtUser2: AWSDateTime
+  lastReadAtUser1: AWSDateTime
+  lastSenderId: String
+  expiresAt: AWSTimestamp
+
+  deletedByUser1: Boolean @default(value: "false")
+  deletedByUser2: Boolean @default(value: "false")
+}
+
+type Message
+  @model(
+    timestamps: { createdAt: "createdAt", updatedAt: null }
+    subscriptions: { level: public, onCreate: ["onCreateMessage"] }
+  )
+  @key(name: "byRoomId", fields: ["roomId"], queryField: "messagesByRoomId")
+  @auth(rules: [
+    { allow: owner },
+    { allow: private, operations: [read] }
+  ])
+{
+  id: ID!
+  roomId: ID!
+  senderSub: String!
+  senderYamatoId: String!
+
+  # ✅ 一対一のみ使用（グループでは null）
+  receiverSub: String
+  receiverYamatoId: String
+
+  content: String!
+  contentType: String         # "text" or "image"
+  imageKey: String
+  thumbnailKey: String
+  timestamp: AWSDateTime!
+  createdAt: AWSDateTime
+  expiresAt: AWSTimestamp
+}
+
+
+type Reaction
+  @model
+  @auth(rules: [
+    { allow: owner },
+    { allow: private, operations: [read] }
+  ])
+{
+  id: ID!
+  messageId: ID!
+  emoji: String!
+  reactorSub: String!
+  reactorYamatoId: String
+  createdAt: AWSDateTime
+}
+
+type PublicProfile @model
+@auth(rules: [
+  { allow: public, operations: [read] },
+  { allow: owner },
+  { allow: private, operations: [read] }
+]) {
+  id: ID!
+  yamatoId: String! @index(name: "byYamatoId", queryField: "publicProfileByYamatoId")
+  displayName: String
+  icon: String
+  bio: String
+}
+
+
+type ChatRequest @model @auth(rules: [
+  { allow: owner, ownerField: "fromUserId", operations: [create, read, update, delete] },
+  { allow: owner, ownerField: "toUserId", operations: [read, update, delete] }
+]) {
+  id: ID!
+  fromUserId: ID!
+  toUserId: ID!
+  status: String!
+  message: String
+  createdAt: AWSDateTime!
+  ttl: AWSTimestamp
+
+  # ✅ グループ申請かどうかの判別
+  isGroup: Boolean @default(value: "false")
+
+  # ✅ 承認が集まるための共通ルームID（申請時に生成）
+  provisionalRoomId: ID
+}
+
+
+type Photo @model @auth(rules: [{ allow: owner }]) {
+  id: ID!
+  owner: String!
+  fileName: String!         # フルサイズ画像
+  thumbnailFileName: String! # サムネイル画像 ← 新フィールド
+  photoTakenAt: AWSDateTime
+  lastOpenedAt: AWSDateTime
+  isFavorite: Boolean! @default(value: "false")
+  createdAt: AWSDateTime
+  updatedAt: AWSDateTime
+}
+
+type ScheduleTemplate @model @auth(rules: [{ allow: owner }]) {
+  id: ID!
+  emoji: String
+  label: String
+  startTime: String
+  endTime: String
+  isAllDay: Boolean     # ✅ ← 追加！
+}
+
+
+type WindMessage
+  @model(
+    timestamps: { createdAt: "createdAt", updatedAt: null }
+  )
+  @auth(rules: [
+    { allow: owner },
+    { allow: private, operations: [read, create, update, delete] }
+  ]) {
+  id: ID!
+  fromUserId: String!
+  fromDisplayName: String!
+  toUserId: String!
+  toDisplayName: String  # ✅ オプショナルに変更！
+
+  content: String!
+  deliveryDate: AWSDateTime!
+  isOpened: Boolean!
+  openedAt: AWSDateTime
+
+  deletedByReceiver: Boolean @default(value: "false")
+  favoriteByReceiver: Boolean @default(value: "false")
+  ttl: AWSTimestamp
+  createdAt: AWSDateTime
+}
+
+type Blossom @model @auth(rules: [
+  { allow: owner },
+  { allow: private, operations: [read] }
+]) {
+  id: ID!
+  lat: Float!
+  lng: Float!
+  comment: String
+  yamatoId: String
+  nickname: String
+  emoji: String
+  hobby: String
+  country: String
+  region: String
+  createdAt: AWSDateTime!
+
+}
+
+type BestRecord @model @auth(rules: [{ allow: owner }]) {
+  id: ID!
+  gameType: String!     # "flower-match" など
+  bestTimeSec: Int!     # 記録（秒）
+  createdAt: AWSDateTime
+  updatedAt: AWSDateTime
+}
+
+
+
+
+type Video @model @auth(rules: [{ allow: owner }]) {
+  id: ID!
+  owner: String!         # Cognito sub
+  fileName: String!      # S3のキー（例: 168984392.mov）
+  thumbnailFileName: String!  # 先頭フレームの画像を保存
+  videoTakenAt: AWSDateTime  # 撮影日時（EXIFやファイルから推定）
+  isFavorite: Boolean        # お気に入り
+  lastOpenedAt: AWSDateTime  # 開いた日時（寿命管理用）
+  createdAt: AWSDateTime!
+  updatedAt: AWSDateTime!
+}

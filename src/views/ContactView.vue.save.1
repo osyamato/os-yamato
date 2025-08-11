@@ -1,0 +1,588 @@
+<template>
+  <div class="contact-container">
+    <div class="contact-header">
+      <button class="icon-button" @click="toggleSearch">🔍</button>
+      <h2>連絡先</h2>
+      <button class="add-button" @click="openNewContactModal">＋</button>
+    </div>
+
+    <!-- 検索バー -->
+    <div v-if="isSearching" class="search-bar">
+      <input v-model="searchQuery" placeholder="名前またはふりがなで検索" />
+    </div>
+
+    <!-- 連絡先一覧 -->
+    <div v-if="filteredContacts.length === 0" class="empty-message">
+      登録された連絡先がありません
+    </div>
+    <div v-else class="contact-list">
+<div
+  v-for="contact in filteredContacts"
+  :key="contact.id"
+  class="contact-card"
+  @click="openViewModal(contact)"
+>
+  <!-- 🌸 名前＋アイコンを横並びに -->
+  <div class="name-with-icon">
+    <span class="flower-icon">{{ getLifeStageIcon(contact) }}</span>
+    <h3 class="contact-name">{{ contact.name }}</h3>
+  </div>
+
+  <!-- 📞 電話番号 -->
+  <p v-if="contact.phoneNumbers && contact.phoneNumbers.length">
+    {{ contact.phoneNumbers[0] }}
+  </p>
+
+  <!-- ✉️ メール -->
+  <p v-if="contact.emails && contact.emails.length">
+    {{ contact.emails[0] }}
+  </p>
+
+</div>
+    </div>
+
+    <!-- モーダル -->
+    <transition name="modal">
+      <div v-if="showModal" class="modal" @click.self="closeModal">
+        <div class="modal-content">
+
+          <!-- 🌸 タイトル修正版 -->
+          <h3 class="modal-title">
+            <span v-if="!isEditMode" class="flower-icon">
+              {{ selectedContact ? getLifeStageIcon(selectedContact) : '' }}
+            </span>
+            {{ isEditMode ? (selectedContact ? '連絡先を編集' : '新しい連絡先を追加') : selectedContact?.name }}
+          </h3>
+
+          <div v-if="isEditMode">
+            <!-- 編集 or 新規登録モード -->
+            <input v-model="editName" placeholder="名前" />
+            <input v-model="editFurigana" placeholder="ふりがな（任意）" />
+            <input v-model="editPhone" placeholder="電話番号" />
+            <input v-model="editEmail" placeholder="メールアドレス" />
+            <textarea v-model="editNote" placeholder="メモ（任意）"></textarea>
+            <input v-model="editYamatoId" placeholder="Yamato ID" />
+
+            <div class="button-row">
+              <button class="btn-active" @click="saveEdit">保存</button>
+              <button class="btn-disabled" @click="cancelEdit">キャンセル</button>
+            </div>
+          </div>
+
+          <div v-else>
+            <!-- 閲覧モード -->
+            <div class="modal-body">
+              <p v-if="selectedContact?.furigana">
+                <strong>ふりがな:</strong> {{ selectedContact.furigana }}
+              </p>
+
+              <p v-if="selectedContact?.phoneNumbers?.filter(p => p.trim()).length">
+                <strong>電話:</strong> {{ selectedContact.phoneNumbers.filter(p => p.trim()).join(', ') }}
+              </p>
+
+              <p v-if="selectedContact?.emails?.filter(e => e.trim()).length">
+                <strong>メール:</strong> {{ selectedContact.emails.filter(e => e.trim()).join(', ') }}
+              </p>
+
+              <p v-if="selectedContact?.note">
+                <strong>メモ:</strong> {{ selectedContact.note }}
+              </p>
+
+              <p v-if="selectedContact?.yamatoId">
+                <strong>Yamato ID:</strong> {{ selectedContact.yamatoId }}
+              </p>
+            </div>
+
+            <div class="button-row">
+              <button class="btn-active" @click="startEdit">編集</button>
+              <button class="btn-danger" @click="confirmDelete(selectedContact.id)">削除</button>
+              <button class="btn-disabled" @click="closeModal">閉じる</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </transition>
+  </div>
+</template>
+
+<script setup>
+import { ref, computed, onMounted } from 'vue'
+import { API, Auth, graphqlOperation } from 'aws-amplify'
+import { createContact, updateContact, deleteContact } from '@/graphql/mutations'
+import { listContacts } from '@/graphql/queries'
+
+// --- データ ---
+const contacts = ref([])
+const showModal = ref(false)
+const isEditMode = ref(false)
+const selectedContact = ref(null)
+const editingContactId = ref('')
+const isSearching = ref(false)
+const searchQuery = ref('')
+
+// --- 新規/編集用フォーム ---
+const newContactName = ref('')
+const newContactFurigana = ref('')
+const newContactPhones = ref([''])
+const newContactEmails = ref([''])
+const newContactNote = ref('')
+const newContactYamatoId = ref('')
+
+const editName = ref('')
+const editFurigana = ref('')
+const editPhone = ref('')
+const editEmail = ref('')
+const editNote = ref('')
+const editYamatoId = ref('')
+
+function cancelEdit() {
+  closeModal()
+}
+
+
+// --- 絞り込み ---
+const filteredContacts = computed(() => {
+  if (!searchQuery.value) return contacts.value
+  const keyword = searchQuery.value.toLowerCase()
+  return contacts.value.filter(contact =>
+    (contact.name && contact.name.toLowerCase().includes(keyword)) ||
+    (contact.furigana && contact.furigana.toLowerCase().includes(keyword))
+  )
+})
+
+// --- 閲覧モーダルを開く（＋updatedAtを更新する）---
+async function openViewModal(contact) {
+  selectedContact.value = contact
+  isEditMode.value = false
+  showModal.value = true
+
+  try {
+    await API.graphql(graphqlOperation(updateContact, { input: { id: contact.id } }))
+    console.log(`✅ updatedAt 更新: ${contact.name}`)
+    await fetchContacts()
+  } catch (e) {
+    console.error('updatedAt更新エラー:', e)
+  }
+}
+
+function startEdit() {
+  if (!selectedContact.value) return
+  isEditMode.value = true
+  editName.value = selectedContact.value.name
+  editFurigana.value = selectedContact.value.furigana || ''
+  editPhone.value = selectedContact.value.phoneNumbers?.[0] || ''
+  editEmail.value = selectedContact.value.emails?.[0] || ''
+  editNote.value = selectedContact.value.note || ''
+  editYamatoId.value = selectedContact.value.yamatoId || ''
+}
+
+async function saveEdit() {
+  try {
+    const user = await Auth.currentAuthenticatedUser()
+    
+    if (selectedContact.value) {
+      // ✍️ 既存連絡先の更新
+      const input = {
+        id: selectedContact.value.id,
+        name: editName.value,
+        furigana: editFurigana.value,
+        phoneNumbers: [editPhone.value],
+        emails: [editEmail.value],
+        note: editNote.value,
+        yamatoId: editYamatoId.value,
+        owner: user.username,
+      }
+      await API.graphql(graphqlOperation(updateContact, { input }))
+      console.log('✅ 連絡先 更新成功')
+    } else {
+      // ✍️ 新しい連絡先を作成
+      const input = {
+        name: editName.value,
+        furigana: editFurigana.value,
+        phoneNumbers: [editPhone.value],
+        emails: [editEmail.value],
+        note: editNote.value,
+        yamatoId: editYamatoId.value,
+        owner: user.username,
+      }
+      await API.graphql(graphqlOperation(createContact, { input }))
+      console.log('✅ 連絡先 新規作成成功')
+    }
+
+    await fetchContacts()
+    closeModal()
+  } catch (e) {
+    console.error('編集保存エラー:', e)
+  }
+}
+
+// --- 新規登録モーダルを開く ---
+function openNewContactModal() {
+  selectedContact.value = null
+  isEditMode.value = true
+  editingContactId.value = ''
+  editName.value = ''
+  editFurigana.value = ''
+  editPhone.value = ''
+  editEmail.value = ''
+  editNote.value = ''
+  editYamatoId.value = ''
+  showModal.value = true
+}
+
+// --- 編集モードに切り替え ---
+function openEditModal(contact) {
+  if (!contact) return
+  isEditMode.value = true
+  editingContactId.value = contact.id
+  newContactName.value = contact.name
+  newContactFurigana.value = contact.furigana || ''
+  newContactPhones.value = contact.phoneNumbers.length ? [...contact.phoneNumbers] : ['']
+  newContactEmails.value = contact.emails.length ? [...contact.emails] : ['']
+  newContactNote.value = contact.note || ''
+  newContactYamatoId.value = contact.yamatoId || ''
+}
+
+// --- 保存（新規 or 更新）---
+async function saveContact() {
+  try {
+    const user = await Auth.currentAuthenticatedUser()
+    const input = {
+      name: newContactName.value,
+      furigana: newContactFurigana.value.trim(),
+      phoneNumbers: newContactPhones.value.filter(p => p.trim() !== ''),
+      emails: newContactEmails.value.filter(e => e.trim() !== ''),
+      note: newContactNote.value.trim(),
+      yamatoId: newContactYamatoId.value.trim(),
+      owner: user.username,
+    }
+    if (editingContactId.value) {
+      input.id = editingContactId.value
+      await API.graphql(graphqlOperation(updateContact, { input }))
+    } else {
+      await API.graphql(graphqlOperation(createContact, { input }))
+    }
+    console.log('✅ 連絡先 保存成功')
+    await fetchContacts()
+    closeModal()
+  } catch (e) {
+    console.error('保存エラー:', e)
+  }
+}
+
+// --- 閲覧モードで「削除」押されたときの処理 ---
+function confirmDelete(id) {
+  if (!id) return
+  if (confirm('本当に削除しますか？')) {
+    deleteContactItem(id)
+    closeModal()
+  }
+}
+
+// --- 削除 ---
+async function deleteContactItem(id) {
+  try {
+    await API.graphql(graphqlOperation(deleteContact, { input: { id } }))
+    console.log('✅ 連絡先 削除成功')
+    await fetchContacts()
+    closeModal()
+  } catch (e) {
+    console.error('削除エラー:', e)
+  }
+}
+
+// --- 連絡先一覧を取得 ---
+async function fetchContacts() {
+  try {
+    const user = await Auth.currentAuthenticatedUser()
+    const res = await API.graphql(graphqlOperation(listContacts, {
+      filter: { owner: { eq: user.username } }
+    }))
+
+    const items = res.data.listContacts.items.map(item => ({
+      id: item.id,
+      name: item.name,
+      furigana: item.furigana || '',
+      phoneNumbers: item.phoneNumbers || [],
+      emails: item.emails || [],
+      note: item.note || '',
+      yamatoId: item.yamatoId || '',
+      createdAt: item.createdAt,
+      updatedAt: item.updatedAt || item.createdAt,
+    }))
+
+    const now = new Date()
+    for (const contact of items) {
+      const updated = new Date(contact.updatedAt)
+      const diffDays = (now - updated) / (1000 * 60 * 60 * 24)
+      if (diffDays > 365) {
+        console.log(`🛑 自動削除対象: ${contact.name} (${diffDays.toFixed(1)}日経過)`)
+        await API.graphql(graphqlOperation(deleteContact, { input: { id: contact.id } }))
+      }
+    }
+
+    contacts.value = items.filter(contact => {
+      const updated = new Date(contact.updatedAt)
+      const diffDays = (now - updated) / (1000 * 60 * 60 * 24)
+      return diffDays <= 365
+    }).sort((a, b) => {
+      const aFurigana = a.furigana || 'んんん'
+      const bFurigana = b.furigana || 'んんん'
+      return aFurigana.localeCompare(bFurigana, 'ja')
+    })
+  } catch (e) {
+    console.error('fetchContacts error:', e)
+  }
+}
+
+function enterEditMode() {
+  if (selectedContact.value) {
+    isEditMode.value = true
+    editingContactId.value = selectedContact.value.id
+    newContactName.value = selectedContact.value.name
+    newContactFurigana.value = selectedContact.value.furigana || ''
+    newContactPhones.value = selectedContact.value.phoneNumbers.length ? [...selectedContact.value.phoneNumbers] : ['']
+    newContactEmails.value = selectedContact.value.emails.length ? [...selectedContact.value.emails] : ['']
+    newContactNote.value = selectedContact.value.note || ''
+    newContactYamatoId.value = selectedContact.value.yamatoId || ''
+  }
+}
+
+// --- ステージアイコン判定 🌱🌷🥀 ---
+function getLifeStageIcon(contact) {
+  const now = new Date()
+  const baseDate = contact.updatedAt ? new Date(contact.updatedAt) : new Date(contact.createdAt)
+  const baseDateOnly = new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate())
+  const nowDateOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const diffDays = (nowDateOnly - baseDateOnly) / (1000 * 60 * 60 * 24)
+
+  if (diffDays < 180) {
+    return '🌱'
+  } else if (diffDays < 330) {
+    return '🌷'
+  } else {
+    return '🥀'
+  }
+}
+
+// --- モーダルを閉じる ---
+function closeModal() {
+  showModal.value = false
+  isEditMode.value = false
+}
+
+// --- 検索トグル ---
+function toggleSearch() {
+  isSearching.value = !isSearching.value
+  if (!isSearching.value) {
+    searchQuery.value = ''
+  }
+}
+
+// --- 最初にロード ---
+onMounted(fetchContacts)
+</script>
+
+<style scoped>
+.contact-container {
+  padding: 2rem;
+  font-family: sans-serif;
+  text-align: center;
+}
+.contact-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+.add-button, .icon-button {
+  background: white;
+  border: 1px solid #ccc;
+  padding: 0.4rem 0.8rem;
+  font-size: 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.icon-button {
+  font-size: 1.4rem;
+}
+.search-bar {
+  margin-bottom: 1rem;
+}
+.search-bar input {
+  width: 100%;
+  padding: 0.6rem;
+  font-size: 1rem;
+  box-sizing: border-box;
+}
+.empty-message {
+  color: #888;
+  margin: 2rem 0;
+}
+.contact-list {
+  margin: 1rem 0;
+}
+
+
+.modal {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+.modal-content {
+  background: #fff;
+  padding: 2rem;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 400px;
+}
+.input-row {
+  margin: 0.5rem 0;
+}
+input {
+  width: 100%;
+  padding: 0.6rem;
+  font-size: 1rem;
+  margin-bottom: 1rem;
+  box-sizing: border-box;
+}
+.button-row {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+.btn-active {
+  background-color: #274c77;
+  color: white;
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.btn-disabled {
+  background-color: #ccc;
+  color: #666;
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: 8px;
+  cursor: not-allowed;
+}
+.btn-danger {
+  background-color: #ff4d4f;
+  color: white;
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+textarea {
+  width: 100%;
+  padding: 0.6rem;
+  font-size: 1rem;
+  margin-top: 1rem;
+  box-sizing: border-box;
+  min-height: 120px; /* ✅ メモだけ高さを拡大 */
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  resize: vertical; /* 任意で上下にリサイズ可にするならこれ */
+}
+.add-button, .icon-button {
+  background: transparent;
+  border: none;
+  padding: 0.4rem 0.8rem;
+  font-size: 1.8rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+/* 背景が黒いとき */
+body.dark-mode .add-button,
+body.dark-mode .icon-button {
+  color: white; /* 白色に */
+}
+
+/* 背景が白いとき（通常） */
+body:not(.dark-mode) .add-button,
+body:not(.dark-mode) .icon-button {
+  color: #274c77; /* 青色に */
+}
+
+.name-with-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.5rem; /* ← 少しだけ間隔も短く */
+}
+
+.contact-card {
+  background: white;
+  padding: 0.3rem 0.5rem;  /* 🔵 さらに小さく */
+  margin-bottom: 0.2rem;   /* 🔵 カード間の隙間も縮小 */
+  border-bottom: 1px solid #ccc;
+  border-radius: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  font-size: 0.7rem;       /* 🔵 全体の文字も小さく */
+  color: #000;
+}
+
+.contact-name {
+  font-size: 0.9rem;        /* 🔵 タイトル文字はやや大きめ */
+  font-weight: normal;
+  color: #000;
+}
+
+.flower-icon {
+  font-size: 1.0rem;        /* 🔵 芽のサイズももう少し小さく */
+  margin-right: 0.2rem;
+  vertical-align: middle;
+}
+
+/* 🌸 通常アニメーション定義 */
+@keyframes dropDown {
+  0% {
+    transform: translateY(-40px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes flyUp {
+  0% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-40px);
+    opacity: 0;
+  }
+}
+
+/* 🌸 アプリ起動時アニメーション */
+.contact-container {
+  padding: 2rem;
+  font-family: sans-serif;
+  text-align: center;
+  animation: dropDown 0.6s ease-out; /* ←ここ */
+}
+
+/* 🌸 モーダル開閉アニメーション */
+.modal-enter-active {
+  animation: dropDown 0.4s ease-out;
+}
+.modal-leave-active {
+  animation: flyUp 0.3s ease-in;
+}
+
+</style>

@@ -1,0 +1,18 @@
+projects:
+  osyamato:
+    schemaPath: amplify/backend/api/osyamato/build/schema.graphql
+    includes:
+      - src/graphql/**/*.js
+    excludes:
+      - ./amplify/**
+    extensions:
+      amplify:
+        codeGenTarget: javascript
+        generatedFileName: ''
+        docsFilePath: src/graphql
+        region: ap-northeast-1
+        apiId: null
+        maxDepth: 2
+extensions:
+  amplify:
+    version: 3

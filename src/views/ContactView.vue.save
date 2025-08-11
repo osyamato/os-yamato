@@ -1,0 +1,223 @@
+<template>
+  <div class="contact-container">
+    <div class="contact-header">
+      <button class="icon-button" @click="toggleSearch">🔍</button>
+      <h2>連絡先リスト</h2>
+      <button class="add-button" @click="openNewContactModal">＋追加</button>
+    </div>
+
+    <!-- 検索バー -->
+    <div v-if="isSearching" class="search-bar">
+      <input v-model="searchQuery" placeholder="名前またはふりがなで検索" />
+    </div>
+
+    <!-- 連絡先一覧 -->
+    <div v-if="filteredContacts.length === 0" class="empty-message">
+      登録された連絡先がありません
+    </div>
+    <div v-else class="contact-list">
+      <div v-for="contact in filteredContacts" :key="contact.id" class="contact-card">
+        <h3>{{ contact.name }}</h3>
+        <p v-for="(phone, idx) in contact.phoneNumbers" :key="'phone-' + idx">📞 {{ phone }}</p>
+        <p v-for="(email, idx) in contact.emails" :key="'email-' + idx">✉️ {{ email }}</p>
+
+        <!-- 芽・花・枯れアイコン -->
+        <div class="status-icon">
+          {{ getLifeStageIcon(contact) }}
+        </div>
+
+        <div class="button-row">
+          <button class="btn-active" @click="openEditModal(contact)">編集</button>
+          <button class="btn-danger" @click="deleteContactItem(contact.id)">削除</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- モーダル -->
+    <transition name="modal">
+      <div v-if="showModal" class="modal" @click.self="closeModal">
+        <div class="modal-content">
+          <h3 v-if="isEditMode">連絡先を編集</h3>
+          <h3 v-else>新しい連絡先を追加</h3>
+
+          <input v-model="newContactName" placeholder="名前" />
+          <input v-model="newContactFurigana" placeholder="ふりがな（任意）" />
+
+          <div v-for="(phone, idx) in newContactPhones" :key="'phone-' + idx" class="input-row">
+            <input v-model="newContactPhones[idx]" placeholder="電話番号" />
+          </div>
+          <button @click="addPhoneField">＋電話番号を追加</button>
+
+          <div v-for="(email, idx) in newContactEmails" :key="'email-' + idx" class="input-row">
+            <input v-model="newContactEmails[idx]" placeholder="メールアドレス" />
+          </div>
+          <button @click="addEmailField">＋メールアドレスを追加</button>
+
+          <div class="button-row">
+            <button class="btn-active" @click="saveContact">{{ isEditMode ? '更新' : '保存' }}</button>
+            <button class="btn-disabled" @click="closeModal">閉じる</button>
+          </div>
+        </div>
+      </div>
+    </transition>
+  </div>
+</template>
+
+<script setup>
+import { ref, computed, onMounted } from 'vue'
+import { API, Auth, graphqlOperation } from 'aws-amplify'
+import { createContact, updateContact, deleteContact } from '@/graphql/mutations'
+import { listContacts } from '@/graphql/queries'
+
+const contacts = ref([])
+const showModal = ref(false)
+const isEditMode = ref(false)
+const editingContactId = ref('')
+const isSearching = ref(false)
+const searchQuery = ref('')
+
+const newContactName = ref('')
+const newContactFurigana = ref('')
+const newContactPhones = ref([''])
+const newContactEmails = ref([''])
+
+const filteredContacts = computed(() => {
+  if (!searchQuery.value) return contacts.value
+  const keyword = searchQuery.value.toLowerCase()
+  return contacts.value.filter(contact =>
+    (contact.name && contact.name.toLowerCase().includes(keyword)) ||
+    (contact.furigana && contact.furigana.toLowerCase().includes(keyword))
+  )
+})
+
+async function saveContact() {
+  try {
+    const user = await Auth.currentAuthenticatedUser()
+    const now = new Date().toISOString()
+
+    if (isEditMode.value) {
+      const input = {
+        id: editingContactId.value,
+        name: newContactName.value,
+        furigana: newContactFurigana.value.trim(),
+        phoneNumbers: newContactPhones.value.filter(p => p.trim() !== ''),
+        emails: newContactEmails.value.filter(e => e.trim() !== ''),
+        owner: user.username,
+        lastOpenedAt: now,
+      }
+      await API.graphql(graphqlOperation(updateContact, { input }))
+    } else {
+      const input = {
+        name: newContactName.value,
+        furigana: newContactFurigana.value.trim(),
+        phoneNumbers: newContactPhones.value.filter(p => p.trim() !== ''),
+        emails: newContactEmails.value.filter(e => p.trim() !== ''),
+        owner: user.username,
+        createdAt: now,
+        lastOpenedAt: now,
+      }
+      await API.graphql(graphqlOperation(createContact, { input }))
+    }
+
+    await fetchContacts()
+    closeModal()
+  } catch (e) {
+    console.error('保存エラー:', e)
+  }
+}
+
+async function fetchContacts() {
+  try {
+    const user = await Auth.currentAuthenticatedUser()
+    const res = await API.graphql(graphqlOperation(listContacts, {
+      filter: { owner: { eq: user.username } }
+    }))
+    contacts.value = res.data.listContacts.items.map(item => ({
+      id: item.id,
+      name: item.name,
+      furigana: item.furigana || '',
+      phoneNumbers: item.phoneNumbers || [],
+      emails: item.emails || [],
+      note: item.note || '',
+      createdAt: item.createdAt,
+      lastOpenedAt: item.lastOpenedAt || item.createdAt,
+    }))
+    contacts.value = contacts.value.sort((a, b) => {
+      const aFurigana = a.furigana || 'んんん'
+      const bFurigana = b.furigana || 'んんん'
+      return aFurigana.localeCompare(bFurigana, 'ja')
+    })
+  } catch (e) {
+    console.error('fetchContacts error:', e)
+  }
+}
+
+function openNewContactModal() {
+  isEditMode.value = false
+  editingContactId.value = ''
+  newContactName.value = ''
+  newContactFurigana.value = ''
+  newContactPhones.value = ['']
+  newContactEmails.value = ['']
+  showModal.value = true
+}
+
+function openEditModal(contact) {
+  isEditMode.value = true
+  editingContactId.value = contact.id
+  newContactName.value = contact.name
+  newContactFurigana.value = contact.furigana
+  newContactPhones.value = contact.phoneNumbers.length ? [...contact.phoneNumbers] : ['']
+  newContactEmails.value = contact.emails.length ? [...contact.emails] : ['']
+  showModal.value = true
+}
+
+async function deleteContactItem(id) {
+  if (confirm('本当に削除しますか？')) {
+    try {
+      await API.graphql(graphqlOperation(deleteContact, { input: { id } }))
+      await fetchContacts()
+    } catch (e) {
+      console.error('削除エラー:', e)
+    }
+  }
+}
+
+function toggleSearch() {
+  isSearching.value = !isSearching.value
+  if (!isSearching.value) {
+    searchQuery.value = ''
+  }
+}
+
+function addPhoneField() {
+  newContactPhones.value.push('')
+}
+
+function addEmailField() {
+  newContactEmails.value.push('')
+}
+
+// 芽・花・枯れを判定する
+function getLifeStageIcon(contact) {
+  const now = new Date()
+  const lastOpened = new Date(contact.lastOpenedAt)
+  const diffDays = (now - lastOpened) / (1000 * 60 * 60 * 24)
+
+  if (diffDays < 180) {
+    return '🌱' // 芽
+  } else if (diffDays < 330) {
+    return '🌸' // 花
+  } else if (diffDays < 365) {
+    return '🥀' // 枯れかけ
+  } else {
+    return '❌' // 1年以上 → 消す対象
+  }
+}
+
+onMounted(fetchContacts)
+</script>
+
+<style scoped>
+/* （CSSも今までと同じ。必要なら後でリファインする！） */
+</style>

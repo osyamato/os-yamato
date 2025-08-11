@@ -1,0 +1,528 @@
+<template>
+<div class="calendar-container" :class="animationDirection">
+
+<h2 class="month-title">
+  <button @click="prevMonth">&lt;</button>
+  {{ currentMonth + 1 }}月
+  <button @click="nextMonth">&gt;</button>
+</h2>
+<table class="calendar-grid">
+  <thead>
+    <tr>
+      <th v-for="(day, index) in localizedDaysOfWeek" :key="index">
+        <div class="day-circle">{{ day }}</div>
+      </th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr v-for="(week, index) in calendar" :key="index">
+      <td
+        v-for="(date, i) in week"
+        :key="i"
+        :class="{ 'has-event': hasEvent(date), 'today': isToday(date) }"
+        @click="openModal(date)"
+      >
+        <span v-if="!isNaN(date?.getTime?.())" class="date-number">
+          {{ date.getDate() }}
+        </span>
+
+        <!-- ▼ セル内：タイトルは最大6文字まで表示 -->
+        <div
+          v-for="(event, idx) in getEvents(date)"
+          :key="idx"
+          class="event-sticky"
+        >
+          {{ event.title.length > 6 ? event.title.slice(0, 6) + '…' : event.title }}
+        </div>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- ▼ カレンダーの下に今月の予定をフルで表示 -->
+<div class="event-footer">
+  <div
+    class="event-sticky"
+    v-for="(event, idx) in filteredEvents"
+    :key="idx"
+    @click="openFromFooter(event)"
+  >
+    {{ new Date(event.date).getDate() }}日：{{ event.title }}
+  </div>
+</div>
+
+<!-- ▼ モーダルにアニメーションを追加 -->
+<transition name="modal">
+  <div class="modal" v-if="selectedDate">
+    <div class="modal-content">
+      <h3>{{ selectedDate.toLocaleDateString() }} の予定</h3>
+      <div v-if="selectedEvent">
+        <p><strong>タイトル:</strong></p>
+        <input v-model="title" />
+        <p><strong>時間:</strong></p>
+        <input type="time" v-model="startTime" />
+        <input type="time" v-model="endTime" />
+        <p><strong>メモ:</strong></p>
+        <input v-model="memo" />
+        <button @click="updateSchedule">更新</button>
+        <button @click="deleteSchedule">削除</button>
+      </div>
+      <div v-else>
+        <input v-model="title" placeholder="予定タイトル" />
+        <input type="time" v-model="startTime" />
+        <input type="time" v-model="endTime" />
+        <input v-model="memo" placeholder="メモ" />
+        <button @click="createSchedule">追加</button>
+      </div>
+      <button @click="selectedDate = null">閉じる</button>
+    </div>
+  </div>
+</transition>
+</div>
+</template>
+
+
+
+
+
+
+<script setup>
+import { ref, computed, onMounted } from 'vue'
+import { API, Auth, graphqlOperation } from 'aws-amplify'
+import { listSchedules } from '@/graphql/queries'
+import {
+  createSchedule as createScheduleMutation,
+  deleteSchedule as deleteScheduleMutation,
+  updateSchedule as updateScheduleMutation
+} from '@/graphql/mutations'
+
+
+const today = new Date()
+const selectedDate = ref(null)
+const selectedEvent = ref(null)
+const schedules = ref([])
+const title = ref('')
+const startTime = ref('12:00')
+const endTime = ref('13:00')
+const memo = ref('')
+const language = ref('ja')
+
+const daysOfWeekMap = {
+  ja: ['日', '月', '火', '水', '木', '金', '土'],
+  en: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+}
+
+const localizedDaysOfWeek = computed(() => daysOfWeekMap[language.value] || daysOfWeekMap.ja)
+
+const currentMonth = ref(today.getMonth()) // 0 〜 11 の月
+const currentYear = ref(today.getFullYear())
+const animationDirection = ref('dropDown') // 初期状態
+
+const calendar = computed(() => {
+  const firstDay = new Date(currentYear.value, currentMonth.value, 1)
+  const lastDay = new Date(currentYear.value, currentMonth.value + 1, 0)
+  const calendarDays = []
+  let week = []
+
+  for (let i = 0; i < firstDay.getDay(); i++) {
+    week.push(new Date(NaN))
+  }
+
+  for (let d = 1; d <= lastDay.getDate(); d++) {
+    const date = new Date(currentYear.value, currentMonth.value, d)
+    week.push(date)
+    if (week.length === 7) {
+      calendarDays.push(week)
+      week = []
+    }
+  }
+
+  if (week.length) {
+    while (week.length < 7) week.push(new Date(NaN))
+    calendarDays.push(week)
+  }
+
+  return calendarDays
+})
+
+const filteredEvents = computed(() =>
+  schedules.value.filter(event => {
+    const date = new Date(event.date)
+    return (
+      date.getFullYear() === currentYear.value &&
+      date.getMonth() === currentMonth.value
+    )
+  })
+)
+
+function isToday(date) {
+  return date.toDateString?.() === today.toDateString?.()
+}
+
+function hasEvent(date) {
+  const target = date.toLocaleDateString?.('sv-SE')
+  return schedules.value.some(item => item.date === target)
+}
+
+function getEvent(date) {
+  const target = date.toLocaleDateString?.('sv-SE')
+  return schedules.value.find(item => item.date === target)
+}
+
+function getEvents(date) {
+  const target = date.toLocaleDateString?.('sv-SE')
+  return schedules.value.filter(item => item.date === target)
+}
+
+
+function openModal(date) {
+  if (isNaN(date)) return
+  selectedDate.value = date
+  selectedEvent.value = getEvent(date)
+  if (!selectedEvent.value) {
+    title.value = ''
+    startTime.value = '12:00'
+    endTime.value = '13:00'
+    memo.value = ''
+  }
+}
+
+function openFromFooter(event) {
+  if (!event) return
+
+  const date = new Date(event.date)
+
+  selectedDate.value = isNaN(date.getTime()) ? new Date() : date
+  selectedEvent.value = event
+
+  title.value = event.title ?? ''
+  startTime.value = event.startTime ?? '12:00'
+  endTime.value = event.endTime ?? '13:00'
+  memo.value = event.memo ?? ''
+}
+
+function nextMonth() {
+  animationDirection.value = '' // 一旦リセット
+
+  // 少し待ってからクラスを再適用
+  setTimeout(() => {
+    animationDirection.value = 'slide-left'
+    if (currentMonth.value === 11) {
+      currentMonth.value = 0
+      currentYear.value += 1
+    } else {
+      currentMonth.value += 1
+    }
+  }, 10) // 10msくらいで十分
+}
+
+function prevMonth() {
+  animationDirection.value = '' // リセット
+
+  setTimeout(() => {
+    animationDirection.value = 'slide-right'
+    if (currentMonth.value === 0) {
+      currentMonth.value = 11
+      currentYear.value -= 1
+    } else {
+      currentMonth.value -= 1
+    }
+  }, 10)
+}
+
+
+async function createSchedule() {
+  const user = await Auth.currentAuthenticatedUser()
+  const input = {
+    date: selectedDate.value.toLocaleDateString('sv-SE'),
+    title: title.value,
+    startTime: startTime.value,
+    endTime: endTime.value,
+    memo: memo.value,
+    owner: user.username,
+  }
+  await API.graphql(graphqlOperation(createScheduleMutation, { input }))
+  await fetchSchedules()
+  selectedDate.value = null
+}
+
+async function deleteSchedule() {
+  await API.graphql(graphqlOperation(deleteScheduleMutation, { input: { id: selectedEvent.value.id } }))
+  await fetchSchedules()
+  selectedDate.value = null
+}
+
+async function updateSchedule() {
+  if (!selectedEvent.value?.id) return
+
+  const input = {
+    id: selectedEvent.value.id,
+    date: selectedDate.value.toLocaleDateString('sv-SE'),
+    title: title.value,
+    startTime: startTime.value,
+    endTime: endTime.value,
+    memo: memo.value,
+  }
+
+  await API.graphql(graphqlOperation(updateScheduleMutation, { input }))
+  await fetchSchedules()
+  selectedDate.value = null
+}
+
+async function fetchSchedules() {
+  const user = await Auth.currentAuthenticatedUser()
+  language.value = user.attributes['custom:language'] || 'ja'
+  const { data } = await API.graphql(graphqlOperation(listSchedules, {
+    filter: { owner: { eq: user.username } }
+  }))
+  schedules.value = data.listSchedules.items
+}
+
+onMounted(() => {
+  fetchSchedules()
+})
+</script>
+
+<style scoped>
+.calendar-container {
+  padding: 1rem;
+  font-family: sans-serif;
+  text-align: center;
+
+  /* ▼ 追加部分（簾のように降りるアニメ） */
+  animation: dropDown 0.4s ease-out;
+  transform-origin: top center;
+}
+
+.slide-left {
+  animation: slideLeft 0.7s ease-out;
+}
+
+.slide-right {
+  animation: slideRight 0.7s ease-out;
+}
+
+
+.month-title {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.month-title button {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0 0.5rem;
+  color: #345;
+}
+
+.calendar-grid {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.calendar-grid th {
+  border: none;
+  padding: 0.5rem;
+}
+
+.day-circle {
+  background-color: rgba(52, 85, 135, 0.15); /* #345 を淡く */
+  color: rgba(52, 85, 135, 0.6);             /* 白 → 柔らかブルー */
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  line-height: 32px;
+  margin: auto;
+  font-size: 0.85rem;
+}
+
+.calendar-grid td {
+  border-top: 1px solid rgba(150, 150, 150, 0.2);    /* やさしいグレー */
+  border-bottom: 1px solid rgba(150, 150, 150, 0.2); /* 同じく */
+  border-left: none;
+  border-right: none;
+  height: 80px;
+  width: 100px;
+  vertical-align: top;
+  padding: 4px;
+  position: relative;
+  box-sizing: border-box;
+}
+
+
+.today {
+  border: 2px solid #274c77;
+  position: relative;
+}
+
+.event-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: flex-start;
+  padding: 1rem 0.5rem;
+  margin-top: 1rem;
+  border-top: 1px solid #444;
+  /* background-color: transparent; */  /* ← 背景を透明にしてもOK */
+  background-color: inherit; /* ✅ ページ全体の背景に合わせる */
+}
+
+.event-footer .event-sticky {
+display: none;
+  background-color: #fdf5c0;
+  color: #333;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  box-shadow: 1px 1px 3px rgba(255, 255, 255, 0.05);
+}
+
+
+.event-sticky {
+  position: relative;
+  background-color: #fffcbb;
+  border: 1px solid #e0c97f;
+  border-radius: 4px;
+  padding: 2px 4px;
+  font-size: 0.7rem;
+  margin-top: 22px; /* ← 日付より下にずらす */
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
+  z-index: 1;
+}
+
+
+.today::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 24px;
+  height: 24px;
+  background: rgba(255, 0, 0, 0.15);
+  border-radius: 50%;
+  z-index: 0;
+}
+
+.date-number {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  font-size: 0.85rem;
+  font-weight: bold;
+  z-index: 2; /* ← ここを追加 */
+}
+
+.event-label {
+  position: absolute;
+  bottom: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.75rem;
+  background: #88f;
+  color: white;
+  border-radius: 4px;
+  padding: 2px 4px;
+  max-width: 90%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  z-index: 1;
+}
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+
+.modal-content {
+  background: white;
+  padding: 1rem;
+  border-radius: 12px;
+  width: 320px; /* ← ✅ 横幅を明示的に固定 */
+  min-height: 360px; /* ← ✅ 高さも固定済み */
+  text-align: left;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: all 0.6s ease;
+}
+
+
+.modal-content input {
+  width: 100%;
+  margin-bottom: 0.5rem;
+  padding: 0.4rem;
+  font-size: 1rem;
+}
+
+
+.modal-enter-active {
+  animation: dropDown 0.4s ease-out;
+}
+
+.modal-leave-active {
+  animation: flyUp 0.4s ease-in;
+}
+
+@keyframes dropDown {
+  0% {
+    transform: translateY(-40px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideLeft {
+  0% {
+    transform: translateX(40px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideRight {
+  0% {
+    transform: translateX(-40px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes flyUp {
+  0% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-40px);
+    opacity: 0;
+  }
+}
+</style>
+
+
+

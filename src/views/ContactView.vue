@@ -1,0 +1,919 @@
+<template>
+  <div class="contact-container">
+    <!-- 🔵 上部ヘッダー -->
+    <div class="contact-header">
+<h2 class="header-title">{{ t('contactTitle') }}</h2>
+<div class="header-icons">
+<IconButton
+  :color="iconColor"
+  :class="{ 'active-icon': showSearchModal || searchQuery.trim().length > 0 }"
+  @click="openSearchModal"
+>
+  🔍
+</IconButton>
+  <IconButton :color="iconColor" @click="openNewContactModal">＋</IconButton>
+
+<IconButton :color="iconColor" tag="label">
+  📎
+  <input type="file" accept=".csv,.vcf" @change="handleFileUpload" hidden />
+</IconButton>
+
+  <IconButton
+    :color="iconColor"
+    :class="{ 'selected-icon': filterWiltingOnly }"
+    @click="toggleWiltFilter"
+  >🥀</IconButton>
+</div>
+    </div>
+ <p v-if="filterWiltingOnly" class="wilted-message">
+      {{ t('message.memoryFlower') }}
+    </p>
+
+    <!-- 🔵 連絡先一覧 -->
+    <div v-if="filteredContacts.length === 0" class="empty-message">
+    </div>
+    <div v-else class="contact-list">
+      <div
+        v-for="contact in filteredContacts"
+        :key="contact.id"
+        class="contact-card"
+        @click="openViewModal(contact)"
+      >
+        <div class="name-with-icon">
+          <span class="flower-icon">{{ getLifeStageIcon(contact) }}</span>
+          <h3 class="contact-name">{{ contact.name }}</h3>
+        </div>
+      </div>
+    </div>
+
+    <!-- 🔵 閲覧・編集モーダル -->
+<Modal :visible="showModal" @close="closeModal" customClass="compact">
+      <template #default>
+<h3 class="modal-title">
+  <span v-if="!isEditMode" class="flower-icon">
+    {{ selectedContact ? getLifeStageIcon(selectedContact) : '' }}
+  </span>
+  {{
+    isEditMode
+      ? (selectedContact ? t('editContactTitle') : t('addContactTitle'))
+      : selectedContact?.name
+  }}
+</h3>
+
+        <div v-if="isEditMode">
+<input v-model="editName" :placeholder="t('contactForm.name')" />
+<input v-model="editFurigana" :placeholder="t('contactForm.furigana')" />
+<div v-for="(phone, index) in editPhones" :key="'phone-' + index" class="multi-input-row">
+  <input v-model="editPhones[index]" :placeholder="t('contactForm.phone')" />
+<button @click="addPhone" v-if="index === 0" class="add-button">＋</button>
+<button @click="removePhone(index)" v-else class="remove-button">−</button>
+</div>
+
+<!-- ✉️ 複数メールアドレス -->
+<div v-for="(email, index) in editEmails" :key="'email-' + index" class="multi-input-row">
+  <input v-model="editEmails[index]" :placeholder="t('contactForm.email')" />
+<button @click="addEmail" v-if="index === 0" class="add-button">＋</button>
+<button @click="removeEmail(index)" v-else class="remove-button">−</button>
+</div>
+<textarea v-model="editNote" :placeholder="t('contactForm.note')"></textarea>
+
+ <YamatoButton :disabled="!isFormValid" @click="saveEdit">
+      {{ t('save') }}
+    </YamatoButton>
+        </div>
+
+        <div v-else>
+          <div class="modal-body">
+<p v-if="selectedContact?.furigana">
+  <strong>{{ t('contactForm.furigana') }}:</strong> {{ selectedContact.furigana }}
+</p>
+
+<p v-if="selectedContact?.phoneNumbers?.filter(p => p.trim()).length">
+  <strong>{{ t('contactForm.phone') }}:</strong><br />
+  <span
+    v-for="(phone, index) in selectedContact.phoneNumbers.filter(p => p.trim())"
+    :key="'phone-' + index"
+    class="phone-block"
+  >
+    <a :href="`tel:${phone.replace(/[^\d+]/g, '')}`" class="phone-link">{{ phone }}</a>
+  </span>
+</p>
+
+<p v-if="selectedContact?.emails?.filter(e => e.trim()).length">
+  <strong>{{ t('contactForm.email') }}:</strong><br />
+  <span
+    v-for="(email, index) in selectedContact.emails.filter(e => e.trim())"
+    :key="'email-' + index"
+    class="email-block"
+  >
+    <a :href="`mailto:${email}`" class="email-link">{{ email }}</a>
+  </span>
+</p>
+
+<p v-if="selectedContact?.note">
+  <strong>{{ t('contactForm.note') }}:</strong> {{ selectedContact.note }}
+</p>
+          </div>
+          <div class="button-row">
+<YamatoButton @click="startEdit">{{ t('edit') }}</YamatoButton>
+<YamatoButton type="danger" @click="confirmDelete(selectedContact.id)">
+  {{ t('delete') }}
+</YamatoButton>
+          </div>
+        </div>
+      </template>
+    </Modal>
+
+    <!-- 🔵 検索モーダル -->
+<Modal :visible="showSearchModal" @close="closeSearchModal" customClass="compact">
+      <template #default>
+<h3 class="modal-title">{{ t('contactSearch.title') }}</h3>
+<input v-model="searchQuery" :placeholder="t('contactSearch.placeholder')" />
+<div class="button-row">
+  <YamatoButton @click="closeSearchModal">{{ t('close') }}</YamatoButton>
+</div>
+      </template>
+
+    </Modal>
+<ConfirmDialog
+  v-if="showConfirm"
+  :visible="showConfirm"
+  :message="t('confirm.delete')"
+  @confirm="handleConfirmedDelete"
+  @cancel="showConfirm = false"
+/>
+
+
+  </div>
+</template>
+
+
+
+<script setup>
+import { ref, computed, onMounted } from 'vue'
+import { API, Auth, graphqlOperation } from 'aws-amplify'
+import { createContact, updateContact, deleteContact } from '@/graphql/mutations'
+import { listContacts } from '@/graphql/queries'
+import YamatoButton from '@/components/YamatoButton.vue'
+import Modal from '@/components/Modal.vue'
+import '@/assets/variables.css';
+import vCard from 'vcard-parser'
+import IconButton from '@/components/IconButton.vue'
+import { nextTick } from 'vue'
+import ConfirmDialog from '@/components/ConfirmDialog.vue'
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
+
+
+// --- データ ---
+const contacts = ref([])
+const showModal = ref(false)
+const showSearchModal = ref(false)
+const isEditMode = ref(false)
+const selectedContact = ref(null)
+const searchQuery = ref('')
+
+// --- フォーム用 ---
+const editName = ref('')
+const editFurigana = ref('')
+const editPhone = ref('')
+const editEmail = ref('')
+const editNote = ref('')
+const editYamatoId = ref('')
+const isFormValid = computed(() => {
+  return editName.value.trim() !== '' || editPhone.value.trim() !== '' || editEmail.value.trim() !== ''
+})
+
+const iconColor = ref('#274c77')
+
+
+const editPhones = ref([''])
+const editEmails = ref([''])
+
+function addPhone() {
+  editPhones.value.push('')
+}
+function removePhone(index) {
+  if (editPhones.value.length > 1) {
+    editPhones.value.splice(index, 1)
+  }
+}
+
+function addEmail() {
+  editEmails.value.push('')
+}
+function removeEmail(index) {
+  if (editEmails.value.length > 1) {
+    editEmails.value.splice(index, 1)
+  }
+}
+
+onMounted(async () => {
+  const user = await Auth.currentAuthenticatedUser()
+  iconColor.value = user.attributes['custom:iconColor'] || '#274c77'
+})
+async function fetchContacts() {
+  try {
+    const res = await API.graphql(graphqlOperation(listContacts))
+
+    const now = new Date()
+    const items = res.data?.listContacts?.items?.filter(item => item) || []
+
+    for (const contact of items) {
+      const base = contact.lastOpenedAt || contact.createdAt
+      const baseDate = new Date(base)
+      const diffDays = (now - baseDate) / (1000 * 60 * 60 * 24)
+
+      if (diffDays > 365) {
+        try {
+          await API.graphql(graphqlOperation(deleteContact, { input: { id: contact.id } }))
+        } catch (err) {
+          // 必要なら UI 通知（例: トースト）
+        }
+      }
+    }
+
+    contacts.value = items
+      .filter(contact => {
+        const base = contact.lastOpenedAt || contact.createdAt
+        const baseDate = new Date(base)
+        const diffDays = (now - baseDate) / (1000 * 60 * 60 * 24)
+        return diffDays <= 365
+      })
+      .sort((a, b) => {
+        const aFurigana = a.furigana || 'んんん'
+        const bFurigana = b.furigana || 'んんん'
+        return aFurigana.localeCompare(bFurigana, 'ja')
+      })
+
+  } catch (e) {
+    // 必要なら UI 通知
+  }
+}
+
+async function openViewModal(contact) {
+  selectedContact.value = contact
+  isEditMode.value = false
+  showModal.value = true
+
+  try {
+    const now = new Date().toISOString()
+    await API.graphql(graphqlOperation(updateContact, {
+      input: {
+        id: contact.id,
+        lastOpenedAt: now // ✅ 開いた日時を記録（延命処理）
+      }
+    }))
+    console.log(`✅ lastOpenedAt 更新: ${contact.name}`)
+    await fetchContacts()
+  } catch (e) {
+    console.error('lastOpenedAt 更新エラー:', e)
+  }
+}
+
+// --- 新規登録モーダル ---
+function openNewContactModal() {
+  selectedContact.value = null
+  isEditMode.value = true
+  resetForm()
+  showModal.value = true
+}
+
+// --- 検索モーダル ---
+function openSearchModal() {
+  showSearchModal.value = true
+}
+
+function closeSearchModal() {
+  showSearchModal.value = false
+  // searchQuery.value = '' // ←必要ならリセット
+}
+
+// --- 閉じる ---
+function closeModal() {
+  showModal.value = false
+  isEditMode.value = false
+}
+
+// --- 編集開始 ---
+function startEdit() {
+  if (!selectedContact.value) return
+  isEditMode.value = true
+  editName.value = selectedContact.value.name
+  editFurigana.value = selectedContact.value.furigana || ''
+  editNote.value = selectedContact.value.note || ''
+  editYamatoId.value = selectedContact.value.yamatoId || ''
+
+  editPhones.value = selectedContact.value.phoneNumbers?.length
+    ? [...selectedContact.value.phoneNumbers]
+    : ['']
+
+  editEmails.value = selectedContact.value.emails?.length
+    ? [...selectedContact.value.emails]
+    : ['']
+}
+
+// --- フォームリセット ---
+function resetForm() {
+  editName.value = ''
+  editFurigana.value = ''
+  editNote.value = ''
+  editYamatoId.value = ''
+  
+  // 🔥 配列の要素を完全クリア
+  editPhones.value.splice(0, editPhones.value.length, '')
+  editEmails.value.splice(0, editEmails.value.length, '')
+}
+
+// --- 保存（新規 or 更新）---
+async function saveEdit() {
+  try {
+    const user = await Auth.currentAuthenticatedUser()
+
+    const input = {
+      name: editName.value,
+      furigana: editFurigana.value,
+      phoneNumbers: editPhones.value.filter(p => p.trim() !== ''),
+      emails: editEmails.value.filter(e => e.trim() !== ''),
+      note: editNote.value,
+      yamatoId: editYamatoId.value,
+      lastOpenedAt: new Date().toISOString(),
+    }
+
+    if (selectedContact.value) {
+      input.id = selectedContact.value.id
+      await API.graphql(graphqlOperation(updateContact, { input }))
+      console.log('✅ 連絡先 更新成功')
+    } else {
+      await API.graphql(graphqlOperation(createContact, { input }))
+      console.log('✅ 連絡先 新規作成成功')
+    }
+
+    await fetchContacts()
+    closeModal()
+  } catch (e) {
+    console.error('保存エラー:', e)
+  }
+}
+async function saveContact({ name, phone, email, note }) {
+  try {
+    const user = await Auth.currentAuthenticatedUser()
+    await API.graphql(graphqlOperation(createContact, {
+      input: {
+        name: name || '',
+        phoneNumbers: phone ? [phone] : [],
+        emails: email ? [email] : [],
+        note: note || '',
+        owner: user.username
+      }
+    }))
+    console.log('✅ 追加済み:', name)
+  } catch (e) {
+    console.error('❌ 追加エラー:', e)
+  }
+}
+
+
+async function deleteContactItem(id) {
+  try {
+    await API.graphql(graphqlOperation(deleteContact, { input: { id } }))
+    console.log('✅ 連絡先 削除成功')
+    await nextTick()             // ← これが重要（VueのDOM更新を待つ）
+    await fetchContacts()
+  } catch (e) {
+    console.error('削除エラー:', e)
+  }
+}
+
+function getLifeStageIcon(contact) {
+  const now = new Date()
+
+  // 🌸 優先順位: lastOpenedAt > updatedAt > createdAt
+  const baseDate = contact.lastOpenedAt
+    ? new Date(contact.lastOpenedAt)
+    : contact.updatedAt
+    ? new Date(contact.updatedAt)
+    : new Date(contact.createdAt)
+
+  const baseDateOnly = new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate())
+  const nowDateOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const diffDays = (nowDateOnly - baseDateOnly) / (1000 * 60 * 60 * 24)
+
+  if (diffDays < 30) return '🌱'
+  else if (diffDays < 330) return '🌷'
+  else return '🥀'
+}
+function handleFileUpload(event) {
+  const file = event.target.files[0]
+  if (!file) return
+
+  const fileName = file.name.toLowerCase()
+  if (fileName.endsWith('.vcf')) {
+    console.log('📎 vCardファイルとして処理します')
+    handleVCFUpload(file)
+  } else if (fileName.endsWith('.csv')) {
+    console.log('📎 CSVファイルとして処理します')
+    handleCSVUpload(event)
+  } else {
+    alert('対応しているファイル形式は .csv または .vcf です')
+  }
+}
+
+function handleVCFUpload(file) {
+  const reader = new FileReader()
+  reader.onload = async () => {
+    const text = reader.result
+    console.log('📄 raw vCard:', text)
+
+    const lines = text.split(/\r?\n/)
+    let name = ''
+    let phone = ''
+    let email = ''
+    let note = ''
+
+    for (const line of lines) {
+      if (line.startsWith('FN:')) {
+        name = line.replace('FN:', '').trim()
+      } else if (line.startsWith('TEL')) {
+        phone = line.split(':')[1]?.trim() || ''
+      } else if (line.startsWith('EMAIL')) {
+        email = line.split(':')[1]?.trim() || ''
+      } else if (line.startsWith('NOTE:')) {
+        note = line.replace('NOTE:', '').trim()
+      }
+    }
+
+    if (name || phone || email) {
+      await saveContact({ name, phone, email, note })
+      alert(`✅ ${name} を登録しました`)
+      fetchContacts()
+    } else {
+      alert('⚠️ 連絡先情報が見つかりませんでした')
+    }
+  }
+
+  reader.readAsText(file)
+}
+
+function handleCSVUpload(event) {
+  const file = event.target.files[0]
+  if (!file || !file.name.endsWith('.csv')) {
+    alert('CSVファイルを選択してください')
+    return
+  }
+
+  const reader = new FileReader()
+  reader.onload = async () => {
+    const text = reader.result
+    const rows = text.split('\n').map(r => r.trim()).filter(Boolean)
+    const headers = rows[0].split(',')
+    const contactsToAdd = rows.slice(1).map(row => {
+      const values = row.split(',')
+      const obj = {}
+      headers.forEach((h, i) => obj[h.trim()] = values[i]?.trim())
+      return obj
+    })
+
+    for (const c of contactsToAdd) {
+      try {
+        const user = await Auth.currentAuthenticatedUser()
+        await API.graphql(graphqlOperation(createContact, {
+          input: {
+            name: c.Name || '',
+            phoneNumbers: [c.Phone || ''],
+            emails: [c.Email || ''],
+            owner: user.username
+          }
+        }))
+        console.log(`✅ 登録完了: ${c.Name}`)
+      } catch (e) {
+        console.error('登録失敗:', e)
+      }
+    }
+
+    fetchContacts()
+  }
+  reader.readAsText(file)
+}
+const filterWiltingOnly = ref(false)
+function toggleWiltFilter() {
+  filterWiltingOnly.value = !filterWiltingOnly.value
+}
+
+const filteredContacts = computed(() => {
+  let result = contacts.value
+
+  if (filterWiltingOnly.value) {
+    const now = Date.now()
+    result = result.filter(contact => {
+      const baseDateStr = contact.lastOpenedAt || contact.updatedAt || contact.createdAt
+      if (!baseDateStr) return false
+      const days = (now - new Date(baseDateStr)) / (1000 * 60 * 60 * 24)
+      return days >= 330
+    })
+  }
+
+  if (searchQuery.value) {
+    const keyword = searchQuery.value.toLowerCase()
+    result = result.filter(contact =>
+      (contact.name && contact.name.toLowerCase().includes(keyword)) ||
+      (contact.furigana && contact.furigana.toLowerCase().includes(keyword))
+    )
+  }
+
+  return result
+})
+
+// --- 初期ロード ---
+onMounted(fetchContacts)
+
+const showConfirm = ref(false)
+const pendingDeleteId = ref(null)
+
+function confirmDelete(id) {
+  pendingDeleteId.value = id
+  showConfirm.value = true
+}
+
+async function handleConfirmedDelete() {
+  if (!pendingDeleteId.value) return
+
+  try {
+    await deleteContactItem(pendingDeleteId.value)
+    console.log('✅ 連絡先削除')
+  } catch (e) {
+    console.error('❌ 削除失敗:', e)
+  } finally {
+    showConfirm.value = false
+    pendingDeleteId.value = null
+    closeModal()
+    await fetchContacts()
+  }
+}
+
+</script>
+
+
+
+<style scoped>
+/* 🌸 全体レイアウト */
+.contact-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 2rem;
+  font-family: sans-serif;
+  text-align: center;
+  animation: dropDown 0.6s ease-out;
+  width: 100%;
+  max-width: 960px; /* ✅ これを追加：コンテンツの幅を制限 */
+  margin: 0 auto;    /* ✅ 本体ごと中央に */
+}
+
+/* 🌸 ヘッダー */
+.contact-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  width: 100%;
+  max-width: 600px;            /* ✅ これを追加 */
+  margin-left: auto;           /* ✅ 中央揃え */
+  margin-right: auto;          /* ✅ 中央揃え */
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.contact-list {
+  width: 100%;
+  max-width: 600px;
+  margin-left: auto;           /* ✅ 中央揃え */
+  margin-right: auto;          /* ✅ 中央揃え */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.header-title {
+  font-size: 1.4rem;
+  font-weight: bold;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: black;
+margin-bottom: 0.3rem;
+  text-align: center;
+}
+
+@media (prefers-color-scheme: dark) {
+  .header-title {
+    color: white;
+  }
+}
+
+.upload-icon {
+  cursor: pointer;
+  /* 他のスタイル */
+}
+
+.contact-card {
+  width: 330px;
+  min-height: 60px;
+  padding: 0.6rem 0.8rem 0.8rem 2.4rem;
+  margin-bottom: 0.3rem;
+  background: #fdfdfd;
+  border: 1px solid #bbb;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+  font-size: 0.9rem;
+  color: #000;
+  cursor: pointer;
+  box-sizing: border-box;
+  word-wrap: break-word;
+  overflow: hidden;
+  position: relative;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.04),
+    0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+
+@media (min-width: 768px) {
+  .contact-card {
+    width: 400px; /* タブレット以上では少し広く */
+  }
+}
+
+@media (min-width: 1024px) {
+  .contact-card {
+    width: 480px; /* デスクトップではさらに広く */
+  }
+}
+
+.name-with-icon {
+  display: flex;
+  align-items: center;
+justify-content: flex-start; 
+  margin-bottom: 0.3rem;
+}
+
+.flower-icon {
+  position: absolute;
+  top: 0.6rem;
+  left: 0.8rem;
+  font-size: 1.2rem; /* ← カード左上に少し大きめで表示 */
+  z-index: 1;
+}
+
+.contact-name {
+  font-size: 1rem;
+  font-weight: normal;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%; /* ✅ 安心して省略できるように */
+}
+
+.modal {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(2px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+/* 🌸 内側のカード */
+.modal-inner-card {
+  background: #fff;
+  color: #111;
+  border-radius: 14px;
+  padding: 2rem 1.5rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  width: 90%;
+  max-width: 500px;
+  max-height: 85vh;
+  overflow-y: auto;
+
+  /* 👇 追加で中央化 */
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* 🌸 タイトル */
+.modal-title {
+  color: #111; /* ← ライトモード用の黒文字 */
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.modal-inner-card.naked {
+  max-width: 640px; /* ✅ ここを任意の幅に変更 */
+  width: 90vw;       /* スマホでも自然に広がるように */
+}
+
+/* 🌸 本文 */
+.modal-body p {
+  font-size: 1rem;
+  margin-bottom: 0.8rem;
+  white-space: pre-wrap;   /* ✅ 改行を維持しながら折り返し */
+  word-break: break-word;  /* ✅ 長い単語やメールアドレスも折り返す */
+}
+
+input,
+textarea {
+  width: 100%;
+  padding: 0.8rem;
+  margin-top: 0.6rem;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  box-sizing: border-box;
+}
+textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+
+/* 🌸 ボタン群 */
+.button-row {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+/* 🌸 アニメーション */
+@keyframes dropDown {
+  0% { transform: translateY(-40px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+@keyframes flyUp {
+  0% { transform: translateY(0); opacity: 1; }
+  100% { transform: translateY(-40px); opacity: 0; }
+}
+.modal-enter-active {
+  animation: dropDown 0.4s ease-out;
+}
+.modal-leave-active {
+  animation: flyUp 0.3s ease-in;
+}
+
+
+/* 🌙 ダークモード対応 */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --yamato-secondary: #2c2c2c;
+    --yamato-text-dark: #f5f5f5;
+    --yamato-border: #555;
+    --yamato-shadow: 0 8px 24px rgba(255, 255, 255, 0.05);
+  }
+
+  .modal-inner-card {
+    background: var(--yamato-secondary);
+    color: var(--yamato-text-dark);
+    box-shadow: var(--yamato-shadow);
+  }
+
+  input,
+  textarea {
+    background-color: #3a3a3a;
+    color: var(--yamato-text-dark);
+    border-color: var(--yamato-border);
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: #aaa;
+  }
+
+  .contact-card {
+ background: #2c2c2c;
+    color: #f5f5f5;
+    border: 1px solid transparent; /* ✅ 見えないがレイアウト維持用 */
+    box-shadow: none; /* ← 陰影もなしにするなら */
+  }
+
+  .contact-name {
+    color: var(--yamato-text-dark);
+  }
+
+  .flower-icon {
+    color: #a5d6a7; /* ← 季節の花の緑。変数化してもOK */
+  }
+
+  .icon-circle {
+    background-color: var(--yamato-primary);
+    color: var(--yamato-text-light);
+  }
+
+  .icon-circle:hover {
+    background-color: var(--yamato-primary-dark);
+  }
+}
+
+.wilted-message {
+  margin: 0.5rem 0 1rem;
+  font-size: 0.95rem;
+  color: #888;
+  font-style: italic;
+  text-align: center;
+  animation: driftFade 3s ease-out forwards;
+  opacity: 0;
+}
+
+@keyframes driftFade {
+  0% { transform: translateY(0px) rotate(0deg); opacity: 0; }
+  30% { opacity: 1; }
+  100% { transform: translateY(-10px) rotate(-1deg); opacity: 0.85; }
+}
+
+.selected-icon {
+  background-color: white !important;
+  color: #274c77 !important;
+}
+
+.phone-link {
+  color: #274c77;
+  text-decoration: none;
+  font-weight: bold;
+}
+.phone-link:hover {
+  text-decoration: underline;
+}
+
+.header-icons {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1.5rem;
+  margin-top: 0rem; /* ← ここで上にスペース追加 */
+}
+
+.multi-input-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
+}
+
+.add-button,
+.remove-button {
+  background: transparent;
+  border: 1px solid #777;
+  border-radius: 6px;
+  padding: 0.1rem 0.5rem;
+  font-size: 1rem;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ccc;
+  transition: all 0.2s ease;
+}
+
+.add-button:hover {
+  color: #4da6ff;
+  border-color: #4da6ff;
+}
+
+.remove-button:hover {
+  color: #ff6666;
+  border-color: #ff6666;
+}
+.phone-block,
+.email-block {
+  display: block;
+  margin-top: 0.2rem;
+}
+
+.phone-link,
+.email-link {
+  color: #274c77;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.phone-link:hover,
+.email-link:hover {
+  text-decoration: underline;
+}
+
+.active-icon {
+  background-color: white !important;
+  color: black !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25); /* 濃くて柔らかい影 */
+}
+
+</style>
+

@@ -1,0 +1,45 @@
+@import './base.css';
+
+/* 🌿 appレイアウト設定 */
+#app {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  font-weight: normal;
+}
+
+/* ✅ 通常リンクカラー */
+a,
+.green {
+  text-decoration: none;
+  color: hsla(160, 100%, 37%, 1);
+  transition: 0.4s;
+  padding: 3px;
+}
+
+/* ✅ ホバー時の背景変化 */
+@media (hover: hover) {
+  a:hover {
+    background-color: hsla(160, 100%, 37%, 0.2);
+  }
+}
+
+/* ✅ PCサイズ時の全体レイアウト */
+@media (min-width: 1024px) {
+  body {
+    display: flex;
+    place-items: center;
+  }
+
+  #app {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    padding: 0 2rem;
+  }
+}
+
+/* ✅ テキストカラーをCSS変数で制御 */
+.account-text {
+  color: var(--yamato-text-color, black);
+}
+

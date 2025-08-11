@@ -1,0 +1,122 @@
+<template>
+  <div class="setup-container">
+    <h2>プロフィールを登録</h2>
+
+    <input
+      v-model="yamatoId"
+      placeholder="Yamato ID（@から始まる）"
+      @input="validateAtMark"
+    />
+    <input v-model="displayName" placeholder="表示名（任意）" />
+    <textarea v-model="bio" placeholder="自己紹介（任意）" rows="4" />
+
+    <button @click="register">登録する</button>
+
+    <p v-if="errorMessage" class="error">❌ {{ errorMessage }}</p>
+  </div>
+</template>
+
+<script setup>
+import { ref, onMounted } from 'vue'
+import { API, graphqlOperation, Auth } from 'aws-amplify'
+import { createPublicProfile, updatePublicProfile } from '@/graphql/mutations'
+import { getPublicProfile } from '@/graphql/queries'
+
+const yamatoId = ref('')
+const displayName = ref('')
+const icon = ref('')
+const bio = ref('')
+const errorMessage = ref('')
+
+const emit = defineEmits(['close'])
+
+onMounted(async () => {
+  try {
+    const user = await Auth.currentAuthenticatedUser()
+    const sub = user.attributes.sub
+    const res = await API.graphql(graphqlOperation(getPublicProfile, { id: sub }))
+    const profile = res.data.getPublicProfile
+    if (profile) {
+      yamatoId.value = profile.yamatoId || ''
+      displayName.value = profile.displayName || ''
+      icon.value = profile.icon || ''
+      bio.value = profile.bio || ''
+    }
+  } catch (err) {
+    console.error('⚠️ プロフィールの取得失敗:', err)
+  }
+})
+
+// ✅ Yamato ID に必ず @ を付ける
+function validateAtMark() {
+  if (yamatoId.value && !yamatoId.value.startsWith('@')) {
+    yamatoId.value = '@' + yamatoId.value.replace(/^@+/, '')
+  }
+}
+
+async function register() {
+  try {
+    const user = await Auth.currentAuthenticatedUser()
+    const sub = user.attributes.sub
+    const input = {
+      id: sub,
+      yamatoId: yamatoId.value,
+      displayName: displayName.value,
+      icon: icon.value,
+      bio: bio.value
+    }
+
+    const existing = await API.graphql(graphqlOperation(getPublicProfile, { id: sub }))
+
+    if (existing.data.getPublicProfile) {
+      await API.graphql(graphqlOperation(updatePublicProfile, { input }))
+    } else {
+      await API.graphql(graphqlOperation(createPublicProfile, { input }))
+    }
+
+    alert('✅ プロフィールを保存しました')
+    emit('close')
+  } catch (err) {
+    console.error('❌ 登録エラー:', err)
+    errorMessage.value = '登録に失敗しました'
+  }
+}
+</script>
+
+<style scoped>
+.setup-container {
+  max-width: 500px;
+  margin: 2rem auto;
+  padding: 1.5rem;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  background: #fff;
+}
+
+input,
+textarea {
+  width: 100%;
+  padding: 0.8rem;
+  margin-bottom: 1rem;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
+}
+
+button {
+  padding: 0.8rem 1.5rem;
+  font-size: 1rem;
+  background: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.error {
+  margin-top: 1rem;
+  color: red;
+  font-weight: bold;
+}
+</style>
+

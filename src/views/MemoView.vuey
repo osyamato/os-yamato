@@ -1,0 +1,197 @@
+<template>
+  <div class="memo">
+    <h2>メモ帳</h2>
+
+    <!-- 入力フォーム -->
+    <textarea v-model="text" placeholder="メモを書いてください..."></textarea>
+    <button @click="saveMemo">保存</button>
+
+    <!-- メモ一覧表示 -->
+    <ul class="memo-list">
+      <li v-for="memo in memos" :key="memo.id" @click="openMemoOptions(memo)">
+        📝 {{ memo.content }}
+        <small>
+          作成: {{ formatDate(memo.createdAt) }}
+          <template v-if="memo.updatedAt && memo.updatedAt !== memo.createdAt">
+            ／ 更新: {{ formatDate(memo.updatedAt) }}
+          </template>
+        </small>
+      </li>
+    </ul>
+
+    <!-- 編集・削除モーダル -->
+    <div v-if="isModalOpen" class="modal">
+      <div class="modal-content">
+        <h3>編集または削除</h3>
+        <textarea v-model="editText"></textarea>
+        <div class="modal-buttons">
+          <button @click="updateSelectedMemo">更新</button>
+          <button @click="deleteSelectedMemo">削除</button>
+          <button @click="isModalOpen = false">閉じる</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, onMounted } from 'vue'
+import { Amplify, API, graphqlOperation } from 'aws-amplify'
+import awsExports from '../aws-exports'
+import { createMemo, updateMemo, deleteMemo } from '../graphql/mutations'
+import { listMemos } from '../graphql/queries'
+
+Amplify.configure(awsExports)
+
+const text = ref('')
+const editText = ref('')
+const memos = ref([])
+const selectedMemo = ref(null)
+const isModalOpen = ref(false)
+
+async function saveMemo() {
+  try {
+    await API.graphql(graphqlOperation(createMemo, {
+      input: { content: text.value }
+    }))
+    text.value = ''
+    await fetchMemos()
+    alert('✅ メモを保存しました！')
+  } catch (err) {
+    console.error('❌ 保存失敗:', err)
+    alert('保存に失敗しました')
+  }
+}
+
+async function fetchMemos() {
+  try {
+    const result = await API.graphql(graphqlOperation(listMemos))
+    const items = result.data.listMemos.items
+    memos.value = items.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+  } catch (err) {
+    console.error('❌ 読み込み失敗:', err)
+  }
+}
+
+function openMemoOptions(memo) {
+  selectedMemo.value = memo
+  editText.value = memo.content
+  isModalOpen.value = true
+}
+
+async function updateSelectedMemo() {
+  try {
+    await API.graphql(graphqlOperation(updateMemo, {
+      input: {
+        id: selectedMemo.value.id,
+        content: editText.value
+      }
+    }))
+    isModalOpen.value = false
+    await fetchMemos()
+  } catch (err) {
+    console.error('更新失敗:', err)
+  }
+}
+
+async function deleteSelectedMemo() {
+  try {
+    await API.graphql(graphqlOperation(deleteMemo, {
+      input: { id: selectedMemo.value.id }
+    }))
+    isModalOpen.value = false
+    await fetchMemos()
+  } catch (err) {
+    console.error('削除失敗:', err)
+  }
+}
+
+function formatDate(dateStr) {
+  const date = new Date(dateStr)
+  return `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()} ${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`
+}
+
+onMounted(() => {
+  fetchMemos()
+})
+</script>
+
+<style scoped>
+.memo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem;
+}
+
+textarea {
+  width: 90%;
+  height: 150px;
+  margin-bottom: 1rem;
+  font-size: 1rem;
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid #aaa;
+  resize: vertical;
+}
+
+button {
+  padding: 0.6rem 1.2rem;
+  font-size: 1rem;
+  background: #333;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-bottom: 1.5rem;
+}
+
+.memo-list {
+  list-style: none;
+  padding: 0;
+  width: 90%;
+}
+
+.memo-list li {
+  background: #f3f3f3;
+  padding: 0.8rem;
+  margin-bottom: 0.5rem;
+  border-radius: 8px;
+  color: #333;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.memo-list li:hover {
+  background: #e0e0e0;
+}
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: #fff;
+  padding: 1.5rem;
+  border-radius: 1rem;
+  text-align: center;
+  width: 80%;
+  max-width: 400px;
+}
+
+.modal-buttons button {
+  margin: 0.5rem;
+  padding: 0.5rem 1.2rem;
+  font-size: 1rem;
+}
+</style>

@@ -1,0 +1,273 @@
+<template>
+  <transition name="modal">
+    <Modal
+      v-if="showModal"
+      :visible="true"
+      @close="closeModal"
+    >
+      <div class="modal-inner-card">
+        <h3 class="modal-title">
+          <span v-if="!isEditMode" class="flower-icon">
+            {{ selectedContact ? getLifeStageIcon(selectedContact) : '' }}
+          </span>
+          {{ isEditMode ? (selectedContact ? '連絡先を編集' : '新しい連絡先を追加') : selectedContact?.name }}
+        </h3>
+
+        <div v-if="isEditMode">
+          <input v-model="editName" placeholder="名前" />
+          <input v-model="editFurigana" placeholder="ふりがな（任意）" />
+          <input v-model="editPhone" placeholder="電話番号" />
+          <input v-model="editEmail" placeholder="メールアドレス" />
+          <textarea v-model="editNote" placeholder="メモ（任意）"></textarea>
+          <input v-model="editYamatoId" placeholder="Yamato ID" />
+
+          <div class="button-row">
+            <YamatoButton :disabled="!isFormValid" @click="saveEdit">保存</YamatoButton>
+          </div>
+        </div>
+
+        <div v-else>
+          <div class="modal-body">
+            <p v-if="selectedContact?.furigana">
+              <strong>ふりがな:</strong> {{ selectedContact.furigana }}
+            </p>
+            <p v-if="selectedContact?.phoneNumbers?.filter(p => p.trim()).length">
+              <strong>電話:</strong> {{ selectedContact.phoneNumbers.filter(p => p.trim()).join(', ') }}
+            </p>
+            <p v-if="selectedContact?.emails?.filter(e => e.trim()).length">
+              <strong>メール:</strong> {{ selectedContact.emails.filter(e => e.trim()).join(', ') }}
+            </p>
+            <p v-if="selectedContact?.note">
+              <strong>メモ:</strong> {{ selectedContact.note }}
+            </p>
+            <p v-if="selectedContact?.yamatoId">
+              <strong>Yamato ID:</strong> {{ selectedContact.yamatoId }}
+            </p>
+          </div>
+
+          <div class="button-row">
+            <YamatoButton @click="startEdit">編集</YamatoButton>
+            <YamatoButton type="danger" @click="confirmDelete(selectedContact.id)">削除</YamatoButton>
+          </div>
+        </div>
+      </div>
+    </Modal>
+  </transition>
+</template>
+
+
+
+
+<script setup>
+import { ref, computed, onMounted } from 'vue'
+import { API, Auth, graphqlOperation } from 'aws-amplify'
+import { createContact, updateContact, deleteContact } from '@/graphql/mutations'
+import { listContacts } from '@/graphql/queries'
+import YamatoButton from '@/components/YamatoButton.vue'
+import Modal from '@/components/Modal.vue'
+
+
+// --- データ ---
+const contacts = ref([])
+const showModal = ref(false)
+const showSearchModal = ref(false)
+const isEditMode = ref(false)
+const selectedContact = ref(null)
+const searchQuery = ref('')
+
+// --- フォーム用 ---
+const editName = ref('')
+const editFurigana = ref('')
+const editPhone = ref('')
+const editEmail = ref('')
+const editNote = ref('')
+const editYamatoId = ref('')
+const isFormValid = computed(() => {
+  return editName.value.trim() !== '' || editPhone.value.trim() !== '' || editEmail.value.trim() !== ''
+})
+
+
+// --- フィルタリング ---
+const filteredContacts = computed(() => {
+  if (!searchQuery.value) return contacts.value
+  const keyword = searchQuery.value.toLowerCase()
+  return contacts.value.filter(contact =>
+    (contact.name && contact.name.toLowerCase().includes(keyword)) ||
+    (contact.furigana && contact.furigana.toLowerCase().includes(keyword))
+  )
+})
+
+// --- 連絡先一覧取得 ---
+async function fetchContacts() {
+  try {
+    const user = await Auth.currentAuthenticatedUser()
+    const res = await API.graphql(graphqlOperation(listContacts, {
+      filter: { owner: { eq: user.username } }
+    }))
+
+    const now = new Date()
+    const items = res.data.listContacts.items.filter(item => item)
+
+    // 古いデータを削除する
+    for (const contact of items) {
+      const updated = new Date(contact.updatedAt || contact.createdAt)
+      const diffDays = (now - updated) / (1000 * 60 * 60 * 24)
+
+      if (diffDays > 365) {
+        console.log(`🛑 削除対象: ${contact.name} (${diffDays.toFixed(1)}日経過)`)
+        try {
+          await API.graphql(graphqlOperation(deleteContact, { input: { id: contact.id } }))
+          console.log(`✅ ${contact.name} を削除しました`)
+        } catch (err) {
+          console.error(`❌ ${contact.name} の削除に失敗`, err)
+        }
+      }
+    }
+
+    // 残ったデータだけで一覧を再構築
+    contacts.value = items
+      .filter(contact => {
+        const updated = new Date(contact.updatedAt || contact.createdAt)
+        const diffDays = (now - updated) / (1000 * 60 * 60 * 24)
+        return diffDays <= 365
+      })
+      .sort((a, b) => {
+        const aFurigana = a.furigana || 'んんん'
+        const bFurigana = b.furigana || 'んんん'
+        return aFurigana.localeCompare(bFurigana, 'ja')
+      })
+
+  } catch (e) {
+    console.error('fetchContacts error:', e)
+  }
+}
+
+// --- 閲覧モーダル ---
+async function openViewModal(contact) {
+  selectedContact.value = contact
+  isEditMode.value = false
+  showModal.value = true
+
+  try {
+    await API.graphql(graphqlOperation(updateContact, { input: { id: contact.id } }))
+    console.log(`✅ updatedAt 更新: ${contact.name}`)
+    await fetchContacts()
+  } catch (e) {
+    console.error('updatedAt更新エラー:', e)
+  }
+}
+
+// --- 新規登録モーダル ---
+function openNewContactModal() {
+  selectedContact.value = null
+  isEditMode.value = true
+  resetForm()
+  showModal.value = true
+}
+
+// --- 検索モーダル ---
+function openSearchModal() {
+  showSearchModal.value = true
+}
+
+function closeSearchModal() {
+  showSearchModal.value = false
+  // searchQuery.value = '' // ←必要ならリセット
+}
+
+// --- 閉じる ---
+function closeModal() {
+  showModal.value = false
+  isEditMode.value = false
+}
+
+// --- 編集開始 ---
+function startEdit() {
+  if (!selectedContact.value) return
+  isEditMode.value = true
+  editName.value = selectedContact.value.name
+  editFurigana.value = selectedContact.value.furigana || ''
+  editPhone.value = selectedContact.value.phoneNumbers?.[0] || ''
+  editEmail.value = selectedContact.value.emails?.[0] || ''
+  editNote.value = selectedContact.value.note || ''
+  editYamatoId.value = selectedContact.value.yamatoId || ''
+}
+
+// --- フォームリセット ---
+function resetForm() {
+  editName.value = ''
+  editFurigana.value = ''
+  editPhone.value = ''
+  editEmail.value = ''
+  editNote.value = ''
+  editYamatoId.value = ''
+}
+
+// --- 保存（新規 or 更新）---
+async function saveEdit() {
+  try {
+    const user = await Auth.currentAuthenticatedUser()
+
+    const input = {
+      name: editName.value,
+      furigana: editFurigana.value,
+      phoneNumbers: [editPhone.value],
+      emails: [editEmail.value],
+      note: editNote.value,
+      yamatoId: editYamatoId.value,
+      owner: user.username,
+    }
+
+    if (selectedContact.value) {
+      input.id = selectedContact.value.id
+      await API.graphql(graphqlOperation(updateContact, { input }))
+      console.log('✅ 連絡先 更新成功')
+    } else {
+      await API.graphql(graphqlOperation(createContact, { input }))
+      console.log('✅ 連絡先 新規作成成功')
+    }
+
+    await fetchContacts()
+    closeModal()
+  } catch (e) {
+    console.error('保存エラー:', e)
+  }
+}
+
+// --- 削除処理 ---
+async function confirmDelete(id) {
+  if (!id) return
+  if (confirm('本当に削除しますか？')) {
+    await deleteContactItem(id)
+    closeModal()
+  }
+}
+
+async function deleteContactItem(id) {
+  try {
+    await API.graphql(graphqlOperation(deleteContact, { input: { id } }))
+    console.log('✅ 連絡先 削除成功')
+    await fetchContacts()
+  } catch (e) {
+    console.error('削除エラー:', e)
+  }
+}
+
+// --- 芽アイコン判定 🌱🌷🥀 ---
+function getLifeStageIcon(contact) {
+  const now = new Date()
+  const baseDate = contact.updatedAt ? new Date(contact.updatedAt) : new Date(contact.createdAt)
+  const baseDateOnly = new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate())
+  const nowDateOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const diffDays = (nowDateOnly - baseDateOnly) / (1000 * 60 * 60 * 24)
+
+  if (diffDays < 180) return '🌱'
+  else if (diffDays < 330) return '🌷'
+  else return '🥀'
+}
+
+// --- 初期ロード ---
+onMounted(fetchContacts)
+</script>
+
+

@@ -1,0 +1,331 @@
+type Memo
+  @model
+  @auth(rules: [
+    { allow: owner },
+    { allow: owner, ownerField: "sharedWith", operations: [read, update] }
+  ]) {
+  id: ID!
+  content: String!
+  tags: [String]
+  sharedWith: [String]
+  createdAt: AWSDateTime
+  updatedAt: AWSDateTime
+}
+
+type Diary
+  @model
+  @auth(rules: [{ allow: owner }]) {
+  id: ID!
+  owner: String!
+  content: String!
+  date: AWSDate!
+  lastOpenedAt: AWSDateTime
+  createdAt: AWSDateTime
+  updatedAt: AWSDateTime
+}
+
+type Schedule
+  @model
+  @auth(rules: [{ allow: owner }]) {
+  id: ID!
+  owner: String!
+  date: AWSDate!
+  startTime: String
+  endTime: String
+  title: String
+  memo: String
+  isAllDay: Boolean
+  lastOpenedAt: AWSDateTime
+  createdAt: AWSDateTime
+  updatedAt: AWSDateTime
+}
+
+type Contact
+  @model
+  @auth(rules: [{ allow: owner }]) {
+  id: ID!
+  name: String!
+  furigana: String
+  phoneNumbers: [String]
+  emails: [String]
+  note: String
+  yamatoId: String
+  lastOpenedAt: AWSDateTime
+  createdAt: AWSDateTime
+}
+
+type ChatRoom
+  @model
+  @auth(rules: [
+    { allow: owner },
+    { allow: private, operations: [read, create, update] }
+  ]) {
+  id: ID!
+  user1: String
+  user2: String
+  memberSubs: [String]
+  isGroup: Boolean @default(value: "false")
+  groupName: String
+  lastMessage: String
+  lastContentType: String
+  lastTimestamp: AWSDateTime
+  lastReadAtUser2: AWSDateTime
+  lastReadAtUser1: AWSDateTime
+  lastSenderId: String
+  expiresAt: AWSTimestamp
+  deletedByUser1: Boolean @default(value: "false")
+  deletedByUser2: Boolean @default(value: "false")
+}
+
+type Message
+  @model
+  @auth(rules: [
+    { allow: owner },
+    { allow: private, operations: [read] }
+  ]) {
+  id: ID!
+  roomId: ID! @index(name: "byRoom", queryField: "messagesByRoomId", sortKeyFields: ["timestamp"])
+  senderSub: String!
+  senderYamatoId: String!
+  receiverSub: String
+  receiverYamatoId: String
+  content: String!
+  contentType: String
+  imageKey: String
+  thumbnailKey: String
+  timestamp: AWSDateTime!
+  createdAt: AWSDateTime
+  expiresAt: AWSTimestamp
+  reactions: [Reaction] @hasMany(indexName: "byMessage", fields: ["id"])
+}
+
+type Reaction
+  @model
+  @auth(rules: [
+    { allow: owner },
+    { allow: private, operations: [read] }
+  ]) {
+  id: ID!
+  messageId: ID! @index(name: "byMessage", sortKeyFields: ["createdAt"])
+  emoji: String!
+  reactorSub: String!
+  reactorYamatoId: String
+  createdAt: AWSDateTime
+}
+
+type PublicProfile
+  @model
+  @auth(rules: [
+    { allow: owner },
+    { allow: private, operations: [read] }
+  ]) {
+  id: ID!
+  yamatoId: String! @index(name: "byYamatoId", queryField: "publicProfileByYamatoId")
+  displayName: String
+  icon: String
+  bio: String
+}
+
+type ChatRequest
+  @model
+  @auth(rules: [
+    { allow: owner, ownerField: "fromUserId", operations: [create, read, update, delete] },
+    { allow: owner, ownerField: "toUserId", operations: [read, update, delete] }
+  ]) {
+  id: ID!
+  fromUserId: ID!
+  toUserId: ID!
+  status: String!
+  message: String
+  createdAt: AWSDateTime!
+  ttl: AWSTimestamp
+  isGroup: Boolean @default(value: "false")
+  provisionalRoomId: ID
+}
+
+type Photo
+  @model
+  @auth(rules: [{ allow: owner }]) {
+  id: ID!
+  owner: String!
+  albumId: ID
+  albumName: String
+  fileName: String!
+  thumbnailFileName: String!
+  photoTakenAt: AWSDateTime
+  lastOpenedAt: AWSDateTime
+  isFavorite: Boolean! @default(value: "false")
+  createdAt: AWSDateTime
+  updatedAt: AWSDateTime
+}
+
+type Video
+  @model
+  @auth(rules: [{ allow: owner }]) {
+  id: ID!
+  owner: String!
+  fileName: String!
+  thumbnailFileName: String!
+  videoTakenAt: AWSDateTime
+  isFavorite: Boolean
+  lastOpenedAt: AWSDateTime
+  createdAt: AWSDateTime!
+  updatedAt: AWSDateTime!
+}
+
+type ScheduleTemplate
+  @model
+  @auth(rules: [{ allow: owner }]) {
+  id: ID!
+  emoji: String
+  label: String
+  startTime: String
+  endTime: String
+  isAllDay: Boolean
+}
+
+type WindMessage
+  @model(timestamps: { createdAt: "createdAt", updatedAt: null })
+  @auth(rules: [
+    { allow: owner },
+    { allow: private, operations: [read, create, update, delete] }
+  ]) {
+  id: ID!
+  fromUserId: String!
+  fromDisplayName: String!
+  toUserId: String!
+  toDisplayName: String
+  content: String!
+  deliveryDate: AWSDateTime!
+  isOpened: Boolean!
+  openedAt: AWSDateTime
+  deletedByReceiver: Boolean @default(value: "false")
+  favoriteByReceiver: Boolean @default(value: "false")
+  ttl: AWSTimestamp
+  createdAt: AWSDateTime
+}
+
+type Blossom
+  @model
+  @auth(rules: [
+    { allow: owner },
+    { allow: private, operations: [read] }
+  ]) {
+  id: ID!
+  lat: Float!
+  lng: Float!
+  comment: String
+  yamatoId: String
+  nickname: String
+  emoji: String
+  hobby: String
+  country: String
+  region: String
+  createdAt: AWSDateTime!
+}
+
+type BestRecord
+  @model
+  @auth(rules: [{ allow: owner }]) {
+  id: ID!
+  gameType: String!
+  bestTimeSec: Int!
+  createdAt: AWSDateTime
+  updatedAt: AWSDateTime
+}
+
+type GPTMiniSession
+  @model
+  @auth(rules: [{ allow: owner }]) {
+  id: ID!
+  title: String
+  mode: String!
+  lastOpenedAt: AWSDateTime
+  createdAt: AWSDateTime!
+  updatedAt: AWSDateTime!
+}
+
+type GPTMiniHistory
+  @model
+  @auth(rules: [{ allow: owner }]) {
+  id: ID!
+  sessionId: ID! @index(name: "bySession", queryField: "historiesBySession", sortKeyFields: ["createdAt"])
+  prompt: String!
+  response: String!
+  language: String
+  createdAt: AWSDateTime!
+  updatedAt: AWSDateTime!
+}
+
+type WeatherCity
+  @model
+  @auth(rules: [{ allow: owner }]) {
+  id: ID!
+  name: String!
+  countryCode: String
+  lat: Float
+  lon: Float
+  lastUsedAt: AWSDateTime
+}
+
+type WeatherProfile
+  @model
+  @auth(rules: [
+    { allow: owner },
+    { allow: private, operations: [read] }
+  ]) {
+  id: ID!
+  icon: String
+  nickname: String
+  yamatoId: String
+  bio: String
+  homepage: String
+  blockedSubs: [String]
+  createdAt: AWSDateTime!
+}
+
+type WeatherComment
+  @model
+  @auth(rules: [
+    { allow: owner },
+    { allow: private, operations: [read, update] }
+  ]) {
+  id: ID!
+  owner: String
+  ownerNickname: String
+  icon: String
+  weather: String!
+  temperature: Float!
+  timeOfDay: Float!
+  language: String!
+  content: String!
+  imageKey: String
+  thumbnailKey: String
+  profileView: Boolean
+  likeCount: Int
+  reportCount: Int
+  replyCount: Int
+  replyAllowed: Boolean
+  createdAt: AWSDateTime
+  updatedAt: AWSDateTime
+}
+
+type WeatherReply
+  @model
+  @auth(rules: [
+    { allow: owner },
+    { allow: private, operations: [read, update] }
+  ]) {
+  id: ID!
+  commentId: ID!
+  owner: String!
+  ownerNickname: String
+  icon: String
+  content: String!
+  language: String!
+  reported: Boolean
+  reportReason: String
+  hiddenByCommentOwner: Boolean
+  createdAt: AWSDateTime
+  updatedAt: AWSDateTime
+}
