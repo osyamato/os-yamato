@@ -516,6 +516,7 @@
 "profile.confirmUnblock": "¿Quieres traer de vuelta a {name} desde las nubes? (Desbloquear)",
 "profile.confirmBlock": "¿Ocultar a {name} entre las nubes? (Bloquear)",
 "profile.confirmUnblock": "¿Traer de vuelta a {name} desde las nubes? (Desbloquear)",
+<<<<<<< HEAD
 "profile.unknownUser": "este usuario",
 
  "photo.allAlbums": "Todos los álbumes",
@@ -528,6 +529,9 @@
   "album.save": "Guardar",
   "album.delete": "Eliminar"
 
+=======
+"profile.unknownUser": "este usuario"
+>>>>>>> 84c4c5f9d3d4162bddcc81b07c07b79ae5fa47d5
 
 
 

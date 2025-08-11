@@ -591,8 +591,11 @@ export const onCreatePhoto = /* GraphQL */ `
     onCreatePhoto(filter: $filter, owner: $owner) {
       id
       owner
+<<<<<<< HEAD
       albumId
       albumName
+=======
+>>>>>>> 84c4c5f9d3d4162bddcc81b07c07b79ae5fa47d5
       fileName
       thumbnailFileName
       photoTakenAt
@@ -612,8 +615,11 @@ export const onUpdatePhoto = /* GraphQL */ `
     onUpdatePhoto(filter: $filter, owner: $owner) {
       id
       owner
+<<<<<<< HEAD
       albumId
       albumName
+=======
+>>>>>>> 84c4c5f9d3d4162bddcc81b07c07b79ae5fa47d5
       fileName
       thumbnailFileName
       photoTakenAt
@@ -633,8 +639,11 @@ export const onDeletePhoto = /* GraphQL */ `
     onDeletePhoto(filter: $filter, owner: $owner) {
       id
       owner
+<<<<<<< HEAD
       albumId
       albumName
+=======
+>>>>>>> 84c4c5f9d3d4162bddcc81b07c07b79ae5fa47d5
       fileName
       thumbnailFileName
       photoTakenAt

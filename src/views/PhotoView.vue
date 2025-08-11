@@ -5,6 +5,7 @@
       <h2 class="header-title">{{ t('photo.title') }}</h2>
     </div>
 
+<<<<<<< HEAD
 <!-- 🎛️ アクションボタン -->
 <div class="header-actions">
   <IconButton :color="iconColor" @click="triggerFileInput">＋</IconButton>
@@ -63,6 +64,35 @@
     🥀
   </IconButton>
 </div>
+=======
+    <!-- 🎛️ アクションボタン -->
+    <div class="header-actions">
+      <IconButton :color="iconColor" @click="triggerFileInput">＋</IconButton>
+      <input
+        ref="fileInput"
+        type="file"
+        accept="image/*"
+        multiple
+        @change="handleFileUpload"
+        hidden
+      />
+<IconButton
+  :color="iconColor"
+  :class="{ 'selected-icon': filterFavoritesOnly }"
+  @click="toggleHeartFilter"
+>
+  ♡
+</IconButton>
+      <IconButton :color="iconColor" :class="{ 'selected-icon': isSelectionMode }" @click="toggleSelectionMode">☑️</IconButton>
+<IconButton
+  :color="iconColor"
+  :class="{ 'selected-icon': filterWiltingOnly }"
+  @click="toggleWiltingFilter"
+>
+  🥀
+</IconButton>
+    </div>
+>>>>>>> 84c4c5f9d3d4162bddcc81b07c07b79ae5fa47d5
 
     <!-- 🌱 アップロード中 or 削除中 -->
     <div v-if="(isLoading || isDeleting) && iconStage" class="upload-life-cycle">
@@ -90,12 +120,16 @@
           :class="{ selected: isSelectionMode && selectedPhotoIds.includes(photo.id) }"
           @click="isSelectionMode ? toggleSelection(photo.id) : openModal(photo)"
         >
+<<<<<<< HEAD
 <img
   :src="photo.thumbnailUrl"
   class="photo-thumbnail"
   loading="lazy"
   style="cursor: pointer"
 />
+=======
+<img :src="photo.thumbnailUrl" class="photo-thumbnail" style="cursor: pointer" />
+>>>>>>> 84c4c5f9d3d4162bddcc81b07c07b79ae5fa47d5
           <span v-if="isWilting(photo)" class="wilt-icon">🥀</span>
           <div v-if="isSelectionMode && selectedPhotoIds.includes(photo.id)" class="check-overlay">☑️</div>
           <div class="photo-info">
@@ -116,6 +150,7 @@
       @touchend="handleTouchEnd"
     >
       <div class="modal-content-wrapper" @click.stop>
+<<<<<<< HEAD
 <div v-if="isImageLoaded" class="modal-toolbar-centered">
   <!-- ダウンロード ↓ -->
   <span class="modal-download-icon" @click.stop="downloadCurrentPhoto">↓</span>
@@ -138,6 +173,20 @@
   <!-- 削除 🗑️ -->
   <button class="modal-delete-button-above" @click.stop.prevent="promptDeletePhoto(currentPhoto)">🗑</button>
 </div>
+=======
+        <div v-if="isImageLoaded" class="modal-toolbar-centered">
+          <span class="modal-download-icon" @click.stop="downloadCurrentPhoto">↓</span>
+          <span
+            class="modal-favorite-icon"
+            :class="{ active: currentPhoto?.isFavorite }"
+            @click.stop="toggleFavorite(currentPhoto)"
+          >♡</span>
+          <span class="modal-date-text" v-if="currentPhoto?.photoTakenAt">
+            {{ formatDate(currentPhoto.photoTakenAt) }}
+          </span>
+          <button class="modal-delete-button-above" @click.stop.prevent="promptDeletePhoto(currentPhoto)">🗑</button>
+        </div>
+>>>>>>> 84c4c5f9d3d4162bddcc81b07c07b79ae5fa47d5
 
         <div class="modal-content">
           <div v-if="!isImageLoaded" class="modal-loading-overlay">
@@ -163,6 +212,7 @@
       @confirm="handleConfirmedDelete"
       @cancel="cancelDelete"
     />
+<<<<<<< HEAD
 
 <AlbumSelectorModal
   :visible="showAlbumModal"
@@ -177,6 +227,13 @@
 
 <script setup lang="ts">
 
+=======
+  </div>
+</template>
+
+
+<script setup>
+>>>>>>> 84c4c5f9d3d4162bddcc81b07c07b79ae5fa47d5
 import { ref, onMounted, watch, computed, onBeforeUnmount } from 'vue'
 import { Storage, API, graphqlOperation, Auth } from 'aws-amplify'
 import { createPhoto, updatePhoto, deletePhoto as deletePhotoMutation } from '@/graphql/mutations'
@@ -186,6 +243,7 @@ import IconButton from '@/components/IconButton.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import { useI18n } from 'vue-i18n'
 import Tesseract from 'tesseract.js'
+<<<<<<< HEAD
 import Modal from '@/components/Modal.vue'
 import { listPhotosWithAlbum } from '@/graphql/custom-queries' 
 
@@ -193,6 +251,10 @@ import { listPhotosWithAlbum } from '@/graphql/custom-queries'
 import AlbumSelectorModal from '@/components/AlbumSelectorModal.vue'
 
 const showAlbumModal = ref(false)
+=======
+
+
+>>>>>>> 84c4c5f9d3d4162bddcc81b07c07b79ae5fa47d5
 
 const { t } = useI18n()
 
@@ -200,6 +262,7 @@ const pageLimit = 50
 const nextToken = ref(null)
 const allPhotosLoaded = ref(false)
 
+<<<<<<< HEAD
 const ocrText = ref('')
 const isOcrLoading = ref(false)
 
@@ -277,6 +340,12 @@ function filterByAlbum() {
 const selectedPhoto = ref(null)
 const photos = ref([]) 
 
+=======
+
+const ocrText = ref('')
+const isOcrLoading = ref(false)
+
+>>>>>>> 84c4c5f9d3d4162bddcc81b07c07b79ae5fa47d5
 async function extractTextFromPhoto(photo) {
   ocrText.value = ''
   isOcrLoading.value = true
@@ -305,6 +374,10 @@ onMounted(async () => {
   }
 })
 
+<<<<<<< HEAD
+=======
+const photoList = ref([])
+>>>>>>> 84c4c5f9d3d4162bddcc81b07c07b79ae5fa47d5
 const modalVisible = ref(false)
 const modalClosing = ref(false)
 const fullImageUrl = ref(null)
@@ -804,6 +877,7 @@ async function runWithConcurrencyLimit(tasks, limit = 5) {
   return results
 }
 
+<<<<<<< HEAD
 const allPhotos = ref([])
 
 async function fetchPhotos() {
@@ -827,17 +901,41 @@ async function fetchPhotos() {
     // ❤️ フィルター：お気に入り
     if (filterFavoritesOnly.value) {
       allItems = allItems.filter(item => item.isFavorite)
+=======
+async function fetchPhotos() {
+  if (allPhotosLoaded.value) return
+  isLoading.value = true
+
+  try {
+    const result = await API.graphql(graphqlOperation(listPhotos, {
+      limit: pageLimit,
+      nextToken: nextToken.value
+    }))
+
+    let items = result.data.listPhotos.items
+    nextToken.value = result.data.listPhotos.nextToken
+    allPhotosLoaded.value = !nextToken.value
+
+    // ❤️ フィルター：お気に入り
+    if (filterFavoritesOnly.value) {
+      items = items.filter(item => item.isFavorite)
+>>>>>>> 84c4c5f9d3d4162bddcc81b07c07b79ae5fa47d5
     }
 
     // 🥀 フィルター：330日以上未開封
     if (filterWiltingOnly.value) {
+<<<<<<< HEAD
       allItems = allItems.filter(item => {
+=======
+      items = items.filter(item => {
+>>>>>>> 84c4c5f9d3d4162bddcc81b07c07b79ae5fa47d5
         if (!item.lastOpenedAt) return false
         const days = (Date.now() - new Date(item.lastOpenedAt)) / (1000 * 60 * 60 * 24)
         return days >= 330
       })
     }
 
+<<<<<<< HEAD
 console.log('📁 選択アルバム:', selectedAlbum.value)
 console.log('📸 フィルター前件数:', allItems.length)
 
@@ -848,6 +946,19 @@ if (selectedAlbum.value) {
 
     // 🌱 サムネイル取得（最大5並列）
     const tasks = allItems.map(item => async () => {
+=======
+    // 📸 安定ソート（フィルター後に実行）
+    items = items.sort((a, b) => {
+      const dateA = new Date(a.photoTakenAt || a.createdAt)
+      const dateB = new Date(b.photoTakenAt || b.createdAt)
+      const diff = dateB - dateA
+      if (diff !== 0) return diff
+      return a.id.localeCompare(b.id)
+    })
+
+    // 🌱 サムネイル取得（最大5並列）
+    const tasks = items.map(item => async () => {
+>>>>>>> 84c4c5f9d3d4162bddcc81b07c07b79ae5fa47d5
       try {
         const signedThumbUrl = await Storage.get(item.thumbnailFileName, { level: 'protected' })
         return { ...item, thumbnailUrl: signedThumbUrl }
@@ -859,6 +970,7 @@ if (selectedAlbum.value) {
 
     const updatedItems = await runWithConcurrencyLimit(tasks, 5)
 
+<<<<<<< HEAD
     // 📸 撮影日 or 作成日でソート（降順）
     photoList.value = updatedItems.sort((a, b) => {
       const dateA = new Date(a.photoTakenAt || a.createdAt)
@@ -869,16 +981,28 @@ if (selectedAlbum.value) {
 
   } catch (e) {
     console.error('❌ 全件取得失敗:', e)
+=======
+    // ✅ 重複除去（IDでユニークに）
+    const merged = [...photoList.value, ...updatedItems]
+    const uniquePhotos = Array.from(new Map(merged.map(p => [p.id, p])).values())
+    photoList.value = uniquePhotos
+
+  } catch (e) {
+    console.error('❌ 写真取得エラー:', e)
+>>>>>>> 84c4c5f9d3d4162bddcc81b07c07b79ae5fa47d5
   } finally {
     isLoading.value = false
   }
 }
 
+<<<<<<< HEAD
 
 function refreshPhotoList() {
   fetchPhotos()
 }
 
+=======
+>>>>>>> 84c4c5f9d3d4162bddcc81b07c07b79ae5fa47d5
 function toggleHeartFilter() {
   filterFavoritesOnly.value = !filterFavoritesOnly.value
   filterWiltingOnly.value = false
@@ -1007,6 +1131,7 @@ function handleKeydown(e) {
   if (e.key === 'Escape') startModalClose()
 }
 
+<<<<<<< HEAD
 
 function openAlbumModal(photo) {
   currentPhoto.value = photo
@@ -1022,6 +1147,15 @@ watch(selectedAlbum, (newVal, oldVal) => {
   fetchPhotos()
 })
 
+=======
+function handleScroll(e) {
+  const el = e.target
+  if (el.scrollTop + el.clientHeight >= el.scrollHeight - 200) {
+    fetchPhotos()
+  }
+}
+
+>>>>>>> 84c4c5f9d3d4162bddcc81b07c07b79ae5fa47d5
 </script>
 
 
@@ -1509,6 +1643,7 @@ watch(selectedAlbum, (newVal, oldVal) => {
   100% { opacity: 0.6; }
 }
 
+<<<<<<< HEAD
 .modal-album-icon {
   font-size: 1.2rem;
   cursor: pointer;
@@ -1550,4 +1685,6 @@ watch(selectedAlbum, (newVal, oldVal) => {
 }
 
 
+=======
+>>>>>>> 84c4c5f9d3d4162bddcc81b07c07b79ae5fa47d5
 </style>

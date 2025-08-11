@@ -566,6 +566,7 @@
 "profile.confirmBlock": "Hide {name} in the clouds? (Block)",
 "profile.confirmUnblock": "Bring {name} back from the clouds? (Unblock)",
 "profile.confirmUnblock": "Do you want to bring {name} back from the clouds? (Unblock)",
+<<<<<<< HEAD
 "profile.unknownUser": "this user",
 
 "photo.allAlbums": "All albums",
@@ -576,5 +577,8 @@
   "album.newInputPlaceholder": "New album name",
   "album.save": "Save",
   "album.delete": "Delete"
+=======
+"profile.unknownUser": "this user"
+>>>>>>> 84c4c5f9d3d4162bddcc81b07c07b79ae5fa47d5
 
 }

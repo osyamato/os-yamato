@@ -540,6 +540,7 @@
 "profile.confirmBlock": "Masquer {name} dans les nuages ? (Bloquer)",
 "profile.confirmUnblock": "Ramener {name} des nuages ? (Débloquer)",
 "profile.unknownUser": "cet utilisateur",
+<<<<<<< HEAD
 "profile.confirmUnblock": "Souhaitez-vous ramener {name} des nuages ? (Débloquer)",
 
  "photo.allAlbums": "Tous les albums",
@@ -551,6 +552,9 @@
   "album.newInputPlaceholder": "Nouveau nom d’album",
   "album.save": "Enregistrer",
   "album.delete": "Supprimer"
+=======
+"profile.confirmUnblock": "Souhaitez-vous ramener {name} des nuages ? (Débloquer)"
+>>>>>>> 84c4c5f9d3d4162bddcc81b07c07b79ae5fa47d5
 
 
 

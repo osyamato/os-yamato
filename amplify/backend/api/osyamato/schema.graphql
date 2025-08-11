@@ -153,11 +153,18 @@ type ChatRequest
 
 type Photo
   @model
+<<<<<<< HEAD
   @auth(rules: [{ allow: owner }]) {
   id: ID!
   owner: String!
   albumId: ID              # 任意（未分類でもOK）
   albumName: String        # 表示用（空でもOK）
+=======
+  @auth(rules: [{ allow: owner }])
+{
+  id: ID!
+  owner: String!
+>>>>>>> 84c4c5f9d3d4162bddcc81b07c07b79ae5fa47d5
   fileName: String!
   thumbnailFileName: String!
   photoTakenAt: AWSDateTime
@@ -165,6 +172,7 @@ type Photo
   isFavorite: Boolean! @default(value: "false")
   createdAt: AWSDateTime
   updatedAt: AWSDateTime
+<<<<<<< HEAD
 }
 
 
@@ -251,6 +259,93 @@ type Video
 }
 
 
+=======
+}
+
+type ScheduleTemplate
+  @model
+  @auth(rules: [{ allow: owner }])
+{
+  id: ID!
+  emoji: String
+  label: String
+  startTime: String
+  endTime: String
+  isAllDay: Boolean
+}
+
+type WindMessage
+  @model(
+    timestamps: { createdAt: "createdAt", updatedAt: null }
+  )
+  @auth(rules: [
+    { allow: owner },
+    { allow: private, operations: [read, create, update, delete] }
+  ])
+{
+  id: ID!
+  fromUserId: String!
+  fromDisplayName: String!
+  toUserId: String!
+  toDisplayName: String
+  content: String!
+  deliveryDate: AWSDateTime!
+  isOpened: Boolean!
+  openedAt: AWSDateTime
+  deletedByReceiver: Boolean @default(value: "false")
+  favoriteByReceiver: Boolean @default(value: "false")
+  ttl: AWSTimestamp
+  createdAt: AWSDateTime
+}
+
+type Blossom
+  @model
+  @auth(rules: [
+    { allow: owner },
+    { allow: private, operations: [read] }
+  ])
+{
+  id: ID!
+  lat: Float!
+  lng: Float!
+  comment: String
+  yamatoId: String
+  nickname: String
+  emoji: String
+  hobby: String
+  country: String
+  region: String
+  createdAt: AWSDateTime!
+}
+
+type BestRecord
+  @model
+  @auth(rules: [{ allow: owner }])
+{
+  id: ID!
+  gameType: String!
+  bestTimeSec: Int!
+  createdAt: AWSDateTime
+  updatedAt: AWSDateTime
+}
+
+type Video
+  @model
+  @auth(rules: [{ allow: owner }])
+{
+  id: ID!
+  owner: String!
+  fileName: String!
+  thumbnailFileName: String!
+  videoTakenAt: AWSDateTime
+  isFavorite: Boolean
+  lastOpenedAt: AWSDateTime
+  createdAt: AWSDateTime!
+  updatedAt: AWSDateTime!
+}
+
+
+>>>>>>> 84c4c5f9d3d4162bddcc81b07c07b79ae5fa47d5
 type GPTMiniSession
   @model
   @auth(rules: [{ allow: owner }])

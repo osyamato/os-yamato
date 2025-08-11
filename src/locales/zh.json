@@ -526,6 +526,7 @@
 "profile.confirmBlock": "要将 {name} 隐藏在云中吗？（封锁）",
 "profile.confirmUnblock": "要将 {name} 从云中恢复吗？（解除封锁）",
 "profile.unknownUser": "该用户",
+<<<<<<< HEAD
 "profile.confirmUnblock": "要将 {name} 从云中恢复吗？（解除封锁）",
 
 "photo.allAlbums": "所有相册",
@@ -536,6 +537,9 @@
   "album.newInputPlaceholder": "新相册名称",
   "album.save": "保存",
   "album.delete": "删除"
+=======
+"profile.confirmUnblock": "要将 {name} 从云中恢复吗？（解除封锁）"
+>>>>>>> 84c4c5f9d3d4162bddcc81b07c07b79ae5fa47d5
 
 
 
