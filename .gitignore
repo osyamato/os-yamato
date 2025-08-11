@@ -53,3 +53,4 @@ amplifytools.xcconfig
 node_modules
 dist
 aws-exports.js
+node_modules.zip
