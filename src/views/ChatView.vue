@@ -791,19 +791,21 @@ onBeforeUnmount(() => {
 
 const isShaking = ref(false)
 
+const isSending = ref(false)
+
 function handleSendClick(event) {
+  if (isSending.value) return // 🛑 すでに送信中なら無視
+
   // ✅ 変換中または直後で未確定文字の可能性があるときは送信させない
   if (isComposing.value || isJapaneseInput.value) {
     event?.preventDefault()
     event?.stopPropagation()
 
-    // 🌪️ 揺らす（変換中でも押されたら揺らす）
     isShaking.value = true
     setTimeout(() => {
       isShaking.value = false
     }, 300)
 
-    // フォーカスを戻す
     setTimeout(() => {
       textareaRef.value?.focus()
     }, 0)
@@ -811,7 +813,6 @@ function handleSendClick(event) {
   }
 
   if (!newMessage.value.trim()) {
-    // 🌪️ 空白は揺らす
     isShaking.value = true
     setTimeout(() => {
       isShaking.value = false
@@ -819,12 +820,20 @@ function handleSendClick(event) {
     return
   }
 
-  // ✅ 明示的にフラグをリセット
   isComposing.value = false
   isJapaneseInput.value = false
 
+  // 🚫 ここで連打防止フラグON
+  isSending.value = true
+
   // 🚀 実際の送信処理
   sendMessage()
+    .then(() => {
+      newMessage.value = ''
+    })
+    .finally(() => {
+      isSending.value = false
+    })
 }
 
 
