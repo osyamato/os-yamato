@@ -88,6 +88,8 @@ function toggleSelect(photo) {
   selectedPhoto.value = selectedPhoto.value?.id === photo.id ? null : photo
 }
 
+let stageInterval = null
+
 async function sendPhoto() {
   try {
     const photo = selectedPhoto.value
@@ -96,9 +98,10 @@ async function sendPhoto() {
     isUploading.value = true
     currentStage.value = 1
 
-    // 🌱 → 🌷 → 🥀 ステージ進行
-    setTimeout(() => currentStage.value = 2, 1000)
-    setTimeout(() => currentStage.value = 3, 2000)
+    // 🌱🌷🥀ループ開始
+    stageInterval = setInterval(() => {
+      currentStage.value = currentStage.value % 3 + 1
+    }, 800)
 
     const timestamp = Date.now()
     const baseName = photo.fileName.replace(/^.*[\\/]/, '')
@@ -138,11 +141,13 @@ async function sendPhoto() {
       isTemporary: true
     })
 
+    clearInterval(stageInterval) // ループ停止
     isUploading.value = false
     emit('close')
     console.log('✅ 写真コピー＆送信完了')
   } catch (err) {
     console.error('❌ 写真送信処理に失敗:', err)
+    clearInterval(stageInterval) // エラー時も停止
     isUploading.value = false
   }
 }
@@ -154,9 +159,16 @@ onMounted(async () => {
       limit: 100
     }))
     const items = res.data.listPhotos.items
-    photos.value = items
+
+    // 🔽 新しい順に並べ替え（photoTakenAt が優先）
+    photos.value = items.sort((a, b) => {
+      const dateA = new Date(a.photoTakenAt || a.createdAt)
+      const dateB = new Date(b.photoTakenAt || b.createdAt)
+      return dateB - dateA
+    })
+
     thumbnailUrls.value = await Promise.all(
-      items.map(photo =>
+      photos.value.map(photo =>
         Storage.get(photo.thumbnailFileName, { level: 'protected' })
       )
     )
@@ -164,6 +176,7 @@ onMounted(async () => {
     console.error('❌ 写真取得失敗:', err)
   }
 })
+
 </script>
 
 <style scoped>

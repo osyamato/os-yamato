@@ -1,6 +1,7 @@
 <template>
   <Modal :visible="visible" @close="handleClose">
     <div class="weather-reply-modal">
+      
       <!-- 🌪️ スクロール領域 -->
       <div class="modal-scroll-area">
         <!-- 💬 親コメント -->
@@ -11,6 +12,7 @@
         <!-- 💬 既存リプライ一覧 -->
         <div class="reply-list" v-if="replies.length > 0">
           <div v-for="reply in replies" :key="reply.id" class="reply-item-row">
+            
             <!-- 👤 アイコン -->
             <div class="reply-icon" @click="emitProfileOpen(reply.owner)">
               <template v-if="reply.icon && iconFilenames.includes(reply.icon)">
@@ -35,14 +37,14 @@
 
             <!-- 🗑️ 削除ボタン -->
             <div v-if="reply.owner === currentSub" class="reply-menu">
-<button class="delete-button" @click.stop="requestDelete(reply.id)">…</button>
+              <button class="delete-button" @click.stop="requestDelete(reply.id)">…</button>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- ✍️ 新規リプライ入力 -->
-      <div class="input-row">
+      <!-- ✍️ 入力欄を下部に固定 -->
+      <div class="input-row fixed-input">
         <textarea
           v-model="replyContent"
           ref="textareaRef"
@@ -70,6 +72,7 @@
     </div>
   </Modal>
 </template>
+
 
 <script setup lang="ts">
 
@@ -241,12 +244,11 @@ watch(
 
 <style scoped>
 .weather-reply-modal {
-  padding: 1rem;
-  min-height: 200px;        /* 📏 初期高さ */
-  max-height: 70vh;         /* 📱 スマホ対応の最大高さ */
-  overflow-y: auto;         /* ✅ スクロール対応 */
-  transition: min-height 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  height: 50vh;
   box-sizing: border-box;
+  padding: 0.8rem 1rem 0 1rem; /* ⬅️ 下を0に修正！ */
   border-radius: 1rem;
   background-color: #fff;
 }
@@ -259,7 +261,7 @@ watch(
 
 @media (max-width: 600px) {
   .weather-reply-modal {
-    max-height: 60vh; /* スマホで高さを抑える */
+    max-height: 50vh; /* スマホで高さを抑える */
   }
 }
 
@@ -271,7 +273,7 @@ watch(
 }
 
 .modal-scroll-area {
-  max-height: 300px;
+  flex-grow: 1;             /* ここでスクロールエリアが伸縮する */
   overflow-y: auto;
   margin-bottom: 1rem;
   padding-right: 4px;
@@ -347,53 +349,56 @@ watch(
   color: #888;
 }
 
-.input-row {
+
+.input-row.fixed-input {
   display: flex;
-  align-items: flex-end;
-  gap: 1rem; /* ← ここを調整してみて！ */
+  align-items: center;
+  gap: 0.8rem;
+  margin-top: auto;
+  padding-bottom: 0rem; /* ← ここも完全に0にしてもよい */
 }
 
 .chat-textarea {
   flex: 1;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  padding: 0.6rem;
-  resize: none;
-  font-size: 1rem;
-  background: #fff;
+  min-height: 2.4rem;
   max-height: 150px;
+  border: 1px solid #ccc;
+  border-radius: 1.4rem;
+  padding: 0.6rem 1rem;
+  font-size: 1rem;
+  resize: none;
+  background-color: #fff;
   overflow-y: auto;
 }
+
 @media (prefers-color-scheme: dark) {
   .chat-textarea {
-    background: #222;
+    background-color: #222;
     color: #eee;
     border-color: #555;
   }
 }
 
 .send-button {
-  background-color: #2d4a77;
-  border: none;
-  font-size: 1.4rem;
-  cursor: pointer;
-  color: white;
   width: 2.5rem;
   height: 2.5rem;
   border-radius: 50%;
+  background-color: #2d4a77;
+  color: white;
+  font-size: 1.2rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background-color 0.3s;
-
-  margin-left: 0.5rem; /* ← ここを追加！ */
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
 }
 
 .send-button:disabled {
-  opacity: 0.4;
+  background-color: #aaa;
   cursor: not-allowed;
-  background-color: #999;
 }
+
 @media (prefers-color-scheme: dark) {
   .send-button {
     color: #eee;
