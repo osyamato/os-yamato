@@ -27,10 +27,16 @@
 
 <div class="icon-with-picker">
   <!-- 📁 ピッカートグル -->
-  <IconButton :color="iconColor" @click="toggleAlbumPicker">📁</IconButton>
+<IconButton
+  :color="iconColor"
+  :class="{ 'selected-icon': showAlbumPicker }"
+  @click="toggleAlbumPicker"
+>
+  📁
+</IconButton>
 
   <!-- 🔽 ピッカー -->
-  <div v-if="showAlbumPicker" class="inline-album-picker">
+ <div v-if="showAlbumPicker" class="inline-album-picker">
     <select
       class="custom-picker"
       v-model="selectedAlbum"
@@ -1536,6 +1542,7 @@ watch(selectedAlbum, (newVal, oldVal) => {
     border: 1px solid #666;
   }
 }
+
 
 
 </style>
