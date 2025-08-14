@@ -239,6 +239,8 @@ import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
 
+const userSettings = ref({})
+
 const showImageModal = ref(false)
 const previewImageUrl = ref('')
 const previewImageKey = ref('')
@@ -256,8 +258,15 @@ const isRestoringScroll = ref(false)
 const loadedImageCount = ref(0)
 const imageCount = ref(0) 
 
-const pendingScrollRestore = ref(null) 
 
+const pendingScrollRestore = ref(null)
+
+ 
+const chatEffect = ref(null)
+const messageAnimationEnabled = ref(true)
+const messageEffectEnabled = userSettings.value?.messageEffectEnabled ?? true
+
+const { maybePlayEffect } = useChatEffects(chatEffect, messageAnimationEnabled)
 
 let reactionSubscription = null
 
@@ -536,7 +545,6 @@ async function openImageModal(thumbnailUrl, fullKey) {
   }
 }
 
-const chatEffect = ref(null)
 const textareaRef = ref(null)
 const isComposing = ref(false)
 const bottomOfChat = ref(null)
@@ -685,20 +693,15 @@ watch(groupedMessages, async () => {
   scrollToBottom()
 })
 
-const { maybePlayEffect } = useChatEffects(chatEffect)
 
 watch(messages, () => {
   const lastMsg = messages.value[messages.value.length - 1]
   if (!lastMsg || lastMsg.senderSub === mySub.value) return
-  maybePlayEffect(lastMsg.content)
+  if (messageAnimationEnabled.value) {
+    maybePlayEffect(lastMsg.content)
+  }
 })
 
-
-watch(messages, () => {
-  const lastMsg = messages.value[messages.value.length - 1]
-  if (!lastMsg || lastMsg.senderSub === mySub.value) return
-  maybePlayEffect(lastMsg.content)
-})
 
 function dismissKeyboard() {
   const activeElement = document.activeElement
@@ -740,6 +743,10 @@ onMounted(async () => {
   const user = await Auth.currentAuthenticatedUser()
   mySub.value = user.attributes.sub
 
+  // ✅ メッセージアニメーション設定を取得
+  const animSetting = user.attributes['custom:message_animation']
+  messageAnimationEnabled.value = animSetting !== 'off' // 未定義なら true とみなす
+
   // 🔽 自分の Yamato ID を取得
   const res = await API.graphql({
     query: /* GraphQL */ `
@@ -773,7 +780,7 @@ onMounted(async () => {
 
   // ✅ サブスク開始（メッセージ + リアクション）
   subscribeToNewMessages()
-  subscribeToNewReactions() // ← 追加！
+  subscribeToNewReactions()
 
   // ✅ 初回スクロール調整など
   loadedImageCount.value = 0
@@ -839,7 +846,8 @@ function handleSendClick(event) {
 
 async function sendMessage() {
   if (isComposing.value) return
-const content = (newMessage.value || '').trim() 
+
+  const content = (newMessage.value || '').trim()
   if (!content) return
 
   const now = new Date()
@@ -857,25 +865,48 @@ const content = (newMessage.value || '').trim()
   }
 
   try {
+    // ✅ メッセージ作成
     await API.graphql(graphqlOperation(createMessage, { input }))
-await API.graphql(graphqlOperation(updateChatRoom, {
-  input: {
-    id: roomId.value,
-    lastMessage: content,
-    lastContentType: 'text', // ✅ ← これを追加！
-    lastTimestamp: now.toISOString(),
-    lastSenderId: mySub.value,
-    expiresAt
-  }
-}))
+
+    // ✅ チャットルーム更新
+    await API.graphql(graphqlOperation(updateChatRoom, {
+      input: {
+        id: roomId.value,
+        lastMessage: content,
+        lastContentType: 'text',
+        lastTimestamp: now.toISOString(),
+        lastSenderId: mySub.value,
+        expiresAt
+      }
+    }))
+
+    // ✅ 成功後処理
     newMessage.value = ''
     await nextTick()
-    if (textareaRef.value) textareaRef.value.style.height = 'auto'
+
+    if (textareaRef.value) {
+      textareaRef.value.style.height = 'auto'
+    }
+
     const triggered = maybePlayEffect(content)
-    if (!triggered && textareaRef.value) textareaRef.value.focus()
+    if (!triggered && textareaRef.value) {
+      textareaRef.value.focus()
+    }
   } catch (err) {
-    console.error('❌ メッセージ送信エラー:', JSON.stringify(err, null, 2))
-    if (err.errors) err.errors.forEach(e => console.error('GraphQL Error:', e.message))
+    // ✅ 詳細なエラーログ出力
+    console.error('❌ メッセージ送信エラー:', err)
+
+    if (err.errors && Array.isArray(err.errors)) {
+      err.errors.forEach(e => {
+        console.error('GraphQL Error:', e.message || e)
+      })
+    } else if (err.message) {
+      console.error('Error message:', err.message)
+    } else {
+      console.error('Unknown error:', JSON.stringify(err, null, 2))
+    }
+
+    // UIフィードバックなどを追加するならここ
   }
 }
 
@@ -1067,9 +1098,9 @@ function subscribeToNewMessages() {
           }
         }
 
-        if (enrichedMsg.senderSub !== mySub.value) {
-          maybePlayEffect(enrichedMsg.content)
-        }
+if (enrichedMsg.senderSub !== mySub.value && messageAnimationEnabled.value) {
+  maybePlayEffect(enrichedMsg.content)
+}
 
         await nextTick()
         setTimeout(() => scrollToBottom(), 0)

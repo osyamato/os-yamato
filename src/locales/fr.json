@@ -552,7 +552,9 @@
   "album.newInputLabel": "Entrer un nouveau nom d’album",
   "album.newInputPlaceholder": "Nouveau nom d’album",
   "album.save": "Enregistrer",
-  "album.delete": "Supprimer"
+  "album.delete": "Supprimer",
+
+"messageAnimationLabel": "Animation des messages"
 
 
 

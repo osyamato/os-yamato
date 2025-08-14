@@ -553,7 +553,9 @@
   "album.newInputLabel": "新しいアルバム名を入力",
   "album.newInputPlaceholder": "新しいアルバム名",
   "album.save": "保存",
-  "album.delete": "削除"
+  "album.delete": "削除",
+
+"messageAnimationLabel": "メッセージアニメーション"
 
 
 

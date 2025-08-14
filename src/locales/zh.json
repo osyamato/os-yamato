@@ -538,7 +538,9 @@
   "album.newInputLabel": "输入新相册名称",
   "album.newInputPlaceholder": "新相册名称",
   "album.save": "保存",
-  "album.delete": "删除"
+  "album.delete": "删除",
+
+"messageAnimationLabel": "消息动画"
 
 
 

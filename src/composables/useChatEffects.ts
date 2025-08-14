@@ -26,7 +26,10 @@ function hideKeyboard() {
   }, 50)
 }
 
-export function useChatEffects(chatEffect: Ref<any>) {
+export function useChatEffects(
+  chatEffect: Ref<any>,
+  messageAnimationEnabled: Ref<boolean>
+) {
   const specialPatterns: EffectPattern[] = [
     { pattern: /(金閣寺|三島由紀夫|愛国|林ゆかり|倉岡剛)/, effect: 'mishima' },
     { pattern: /(i love you|愛している|愛してる|te amo|我爱你)/i, effect: 'moon' },
@@ -48,6 +51,7 @@ export function useChatEffects(chatEffect: Ref<any>) {
   ]
 
   function maybePlayEffect(content: string): boolean {
+    if (!messageAnimationEnabled.value) return false
     if (!chatEffect?.value) return false
 
     for (const { pattern, effect } of specialPatterns) {

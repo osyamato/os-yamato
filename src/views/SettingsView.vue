@@ -46,6 +46,24 @@
       </select>
     </div>
 
+<div class="setting-group horizontal-toggle">
+  <span class="label-text">{{ t('messageAnimationLabel') }}</span>
+  <div class="toggle-options">
+    <div
+      :class="['toggle-option', { active: messageAnimationEnabled === false }]"
+      @click="messageAnimationEnabled = false"
+    >
+    OFF
+    </div>
+    <div
+      :class="['toggle-option', { active: messageAnimationEnabled === true }]"
+      @click="messageAnimationEnabled = true"
+    >
+      ON
+    </div>
+  </div>
+</div>
+
 
     <!-- 💾 保存ボタン -->
     <div class="button-container">
@@ -86,6 +104,13 @@ const selectedColor = ref('')
 const buttonKey = ref(0)
 
 
+const selectedMessageAnimation = ref('on')
+const messageAnimationEnabled = ref(true)
+
+watch(messageAnimationEnabled, (enabled) => {
+  selectedMessageAnimation.value = enabled ? 'on' : 'off'
+})
+
 const route = useRoute()               // ✅ 追加
 const shouldAnimate = ref(false) 
 
@@ -96,18 +121,26 @@ const availableColors = [
 
 onMounted(async () => {
   const user = await Auth.currentAuthenticatedUser()
+
+  // 各種属性を取得
   selectedLanguage.value = user.attributes['custom:language'] || 'ja'
   selectedWallpaper.value = user.attributes['custom:wallpaper'] || ''
   selectedColor.value = user.attributes['custom:iconColor'] || '#274c77'
+
+  // ✅ メッセージアニメーション設定を取得（未設定なら true）
+  const animationAttr = user.attributes['custom:messageAnimation']
+  messageAnimationEnabled.value = animationAttr !== 'off'
+
+  // 言語・壁紙の初期化
   document.body.setAttribute('data-bg', selectedWallpaper.value || '')
   locale.value = selectedLanguage.value
 
-  // ✅ アニメーションを一度だけ発火し、クエリを消す
+  // ✅ アニメーション効果を一度だけ発火（ホームから来た場合）
   if (route.query.from === 'home') {
     await nextTick()
     shouldAnimate.value = true
 
-    // 🔻 クエリを消してURLをクリーンに（履歴はそのまま）
+    // クエリを消してURLをきれいに
     router.replace({ path: route.path })
   }
 })
@@ -125,7 +158,8 @@ async function saveSettings() {
   await Auth.updateUserAttributes(user, {
     'custom:language': selectedLanguage.value,
     'custom:wallpaper': selectedWallpaper.value,
-    'custom:iconColor': selectedColor.value
+    'custom:iconColor': selectedColor.value,
+    'custom:message_animation': selectedMessageAnimation.value || 'on' // ✅ ← 追加！
   })
 
   document.documentElement.style.setProperty('--yamato-button-color', selectedColor.value)
@@ -141,6 +175,7 @@ function goToAccount() {
 function goToAbout() {
   router.push('/about')
 }
+
 
 
 </script>
@@ -308,6 +343,44 @@ function goToAbout() {
 /* 👇 アニメーションは dropDown クラスがついたときだけ */
 .settings.dropDown {
   animation: dropDown 0.6s ease-out forwards;
+}
+
+
+.horizontal-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.label-text {
+  font-weight: bold;
+  color: #ddd;
+  font-size: 0.9rem; /* 少し小さく */
+  white-space: nowrap;
+}
+
+.toggle-options {
+  display: flex;
+  gap: 6px;
+}
+
+.toggle-option {
+  padding: 2px 10px; /* サイズ調整 */
+  border-radius: 999px;
+  border: 1.5px solid #888;
+  color: #888;
+  font-weight: 600;
+  font-size: 0.75rem; /* フォントも少し小さめに */
+  cursor: pointer;
+  user-select: none;
+  transition: 0.2s;
+}
+
+.toggle-option.active {
+  background-color: #007aff;
+  color: white;
+  border-color: #007aff;
 }
 
 </style>
