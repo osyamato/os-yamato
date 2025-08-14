@@ -128,7 +128,7 @@ onMounted(async () => {
   selectedColor.value = user.attributes['custom:iconColor'] || '#274c77'
 
   // ✅ メッセージアニメーション設定を取得（未設定なら true）
-  const animationAttr = user.attributes['custom:messageAnimation']
+const animationAttr = user.attributes['custom:message_animation']
   messageAnimationEnabled.value = animationAttr !== 'off'
 
   // 言語・壁紙の初期化
