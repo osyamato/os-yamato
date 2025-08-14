@@ -577,6 +577,8 @@
   "album.newInputLabel": "Enter a new album name",
   "album.newInputPlaceholder": "New album name",
   "album.save": "Save",
-  "album.delete": "Delete"
+  "album.delete": "Delete",
+
+"messageAnimationLabel": "Message Animation"
 
 }
