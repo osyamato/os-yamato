@@ -122,7 +122,7 @@ const iconFilenames = [
   'weather.icon7.png', 'weather.icon8.png', 'weather.icon9.png', 'weather.icon10.png'
 ]
 
-const emojiList = ['☀️', '☁️', '☔️', '❄️', '🌸', '🌈', '🍃', '🫧', '🌊']
+const emojiList = ['❤️', '😊', '☀️', '🌱', '🌷', '🐈', '🐶']
 
 function addEmoji(emoji: string) {
   replyContent.value += emoji
@@ -486,22 +486,30 @@ watch(
 
 .emoji-bar {
   display: flex;
-  gap: 0.6rem;
   flex-wrap: wrap;
-  margin-bottom: 0.5rem;
-  padding-left: 0.2rem;
+  gap: 3px; /* ← 必要に応じて 2px などに小さく */
+  padding: 4px 0;
+  justify-content: center; /* 中央寄せ（任意） */
 }
 
 .emoji-button {
-  background: none;
+  font-size: 15px;      /* ← 少し小さく */
+  padding: 0px 6px;     /* ← 余白を小さく */
+  background: transparent;
   border: none;
-  font-size: 1.5rem;
   cursor: pointer;
-  transition: transform 0.2s;
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
 }
 
 .emoji-button:hover {
-  transform: scale(1.3);
+  background-color: #eee;
+}
+
+@media (prefers-color-scheme: dark) {
+  .emoji-button:hover {
+    background-color: #333;
+  }
 }
 
 </style> 
