@@ -356,7 +356,7 @@ function goToAbout() {
 .label-text {
   font-weight: bold;
   color: #111; /* ライトモードでは黒 */
-  font-size: 0.1rem;
+  font-size: 1rem;
   white-space: nowrap;
 }
 

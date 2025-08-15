@@ -43,6 +43,17 @@
         </div>
       </div>
 
+<div class="emoji-bar">
+  <button
+    v-for="(emoji, index) in emojiList"
+    :key="'emoji-' + index"
+    class="emoji-button"
+    @click="addEmoji(emoji)"
+  >
+    {{ emoji }}
+  </button>
+</div>
+
       <!-- ✍️ 入力欄を下部に固定 -->
       <div class="input-row fixed-input">
         <textarea
@@ -110,6 +121,13 @@ const iconFilenames = [
   'weather.icon4.png', 'weather.icon5.png', 'weather.icon6.png',
   'weather.icon7.png', 'weather.icon8.png', 'weather.icon9.png', 'weather.icon10.png'
 ]
+
+const emojiList = ['☀️', '☁️', '☔️', '❄️', '🌸', '🌈', '🍃', '🫧', '🌊']
+
+function addEmoji(emoji: string) {
+  replyContent.value += emoji
+  nextTick(() => autoResize())
+}
 
 function getIconUrl(fileName) {
   return fileName && iconFilenames.includes(fileName)
@@ -464,6 +482,26 @@ watch(
   height: 36px;
   border-radius: 50%;
   cursor: pointer;
+}
+
+.emoji-bar {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.5rem;
+  padding-left: 0.2rem;
+}
+
+.emoji-button {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.emoji-button:hover {
+  transform: scale(1.3);
 }
 
 </style> 
