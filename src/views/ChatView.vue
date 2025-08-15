@@ -236,6 +236,8 @@ import { useChatEffects } from '@/composables/useChatEffects'
 
 
 import { useI18n } from 'vue-i18n'
+const isSubscribed = ref(false) // ✅ 追加
+
 
 const { t } = useI18n()
 
@@ -737,18 +739,14 @@ function hideKeyboard() {
 
 
 onMounted(async () => {
-  await nextTick()
-  scrollToBottom()
-
+  // ✅ 1. 認証ユーザーの取得と基本情報
   const user = await Auth.currentAuthenticatedUser()
   mySub.value = user.attributes.sub
-
-  // ✅ メッセージアニメーション設定を取得
   const animSetting = user.attributes['custom:message_animation']
-  messageAnimationEnabled.value = animSetting !== 'off' // 未定義なら true とみなす
+  messageAnimationEnabled.value = animSetting !== 'off' // undefined も true 扱い
 
-  // 🔽 自分の Yamato ID を取得
-  const res = await API.graphql({
+  // ✅ 2. 自分の Yamato ID を取得
+  const profileRes = await API.graphql({
     query: /* GraphQL */ `
       query GetMyProfile($id: ID!) {
         getPublicProfile(id: $id) {
@@ -758,13 +756,14 @@ onMounted(async () => {
     variables: { id: mySub.value },
     authMode: 'AMAZON_COGNITO_USER_POOLS'
   })
-  myYamatoId.value = res.data.getPublicProfile.yamatoId
 
-  // 🔽 相手のプロフィール取得
-  const profileRes = await API.graphql(graphqlOperation(publicProfileByYamatoId, {
+  myYamatoId.value = profileRes.data.getPublicProfile.yamatoId
+
+  // ✅ 3. 相手のプロフィール取得
+  const partnerRes = await API.graphql(graphqlOperation(publicProfileByYamatoId, {
     yamatoId: receiverYamatoId.value
   }))
-  const partner = profileRes.data.publicProfileByYamatoId.items[0]
+  const partner = partnerRes.data.publicProfileByYamatoId.items[0]
 
   if (!partner) {
     console.warn('⚠️ partner が見つかりませんでした')
@@ -772,20 +771,15 @@ onMounted(async () => {
     return
   }
 
-  partnerDisplayName.value = partner.displayName || '相手'
   receiverSub.value = partner.id
+  partnerDisplayName.value = partner.displayName || '相手'
 
-  // ✅ メッセージ取得
+  // ✅ 4. メッセージ取得とサブスクリプション登録（fetchMessages 内で subscribe 呼ぶ）
   await fetchMessages()
 
-  // ✅ サブスク開始（メッセージ + リアクション）
-  subscribeToNewMessages()
-  subscribeToNewReactions()
-
-  // ✅ 初回スクロール調整など
+  // ✅ 5. 初期スクロール位置調整（画像なしなら即スクロール）
   loadedImageCount.value = 0
   await nextTick()
-
   if (imageCount.value === 0) {
     scrollToBottom(true)
   }
@@ -801,6 +795,11 @@ const isShaking = ref(false)
 const isSending = ref(false)
 
 function handleSendClick(event) {
+  if (!isSubscribed.value) {
+    console.warn('🕓 サブスクリプションが完了していないため、送信を待機します')
+    return
+  }
+
   if (isSending.value) return // 🛑 すでに送信中なら無視
 
   // ✅ 変換中または直後で未確定文字の可能性があるときは送信させない
@@ -1062,15 +1061,12 @@ function subscribeToNewMessages() {
   subscription = API.graphql(graphqlOperation(onCreateMessage)).subscribe({
     next: async ({ value }) => {
       const newMsg = value?.data?.onCreateMessage
-      if (!newMsg?.roomId) {
-        console.warn('⚠️ 無効なメッセージを受信:', value)
-        return
-      }
+      if (!newMsg?.roomId) return
 
       if (newMsg.roomId === roomId.value) {
         let enrichedMsg = newMsg
 
-        // 💬 画像メッセージの場合に imageUrl を取得
+        // 💬 画像の場合の処理...
         if (newMsg.contentType === 'image' && newMsg.imageKey) {
           try {
             const url = await Storage.get(newMsg.thumbnailKey || newMsg.imageKey, {
@@ -1082,25 +1078,24 @@ function subscribeToNewMessages() {
           }
         }
 
-        // ✅ 仮メッセージ（isTemporary: true）置き換えロジック
+        // ✅ 仮メッセージ置換または追加
         const existingIndex = messages.value.findIndex(
           m => m.imageKey === newMsg.imageKey && m.isTemporary
         )
 
         if (existingIndex !== -1) {
-          // ✅ 仮メッセージを正式メッセージで置き換える
           messages.value.splice(existingIndex, 1, enrichedMsg)
+          messages.value = [...messages.value] // ✅ 明示的に再描画を促す
         } else {
-          // ✅ id 重複チェック
           const exists = messages.value.findIndex(m => m.id === newMsg.id) !== -1
           if (!exists) {
-            messages.value.push(enrichedMsg)
+            messages.value = [...messages.value, enrichedMsg] // ✅ push の代わりに新インスタンス
           }
         }
 
-if (enrichedMsg.senderSub !== mySub.value && messageAnimationEnabled.value) {
-  maybePlayEffect(enrichedMsg.content)
-}
+        if (enrichedMsg.senderSub !== mySub.value && messageAnimationEnabled.value) {
+          maybePlayEffect(enrichedMsg.content)
+        }
 
         await nextTick()
         setTimeout(() => scrollToBottom(), 0)
@@ -1108,6 +1103,8 @@ if (enrichedMsg.senderSub !== mySub.value && messageAnimationEnabled.value) {
     },
     error: (err) => console.error('❌ サブスクリプションエラー:', err)
   })
+
+  isSubscribed.value = true // ✅ 最後に完了を明示
 }
 
 
