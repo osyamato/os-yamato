@@ -355,11 +355,17 @@ function goToAbout() {
 
 .label-text {
   font-weight: bold;
-  color: #ddd;
-  font-size: 0.9rem; /* 少し小さく */
+  color: #111; /* ライトモードでは黒 */
+  font-size: 0.1rem;
   white-space: nowrap;
 }
 
+/* ダークモード時は白文字に */
+@media (prefers-color-scheme: dark) {
+  .label-text {
+    color: #fff;
+  }
+}
 .toggle-options {
   display: flex;
   gap: 6px;
