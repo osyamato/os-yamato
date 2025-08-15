@@ -2,7 +2,7 @@
   <transition name="weather-transition">
     <div v-if="visible" class="forecast-modal" @click.self="close">
       <div class="forecast-card">
-        <h3 class="forecast-title">🌤️ {{ t('weather.forecastTitle') }}</h3>
+        <h3 class="forecast-title">{{ getWeatherEmoji('default') }} {{ t('weather.forecastTitle') }}</h3>
 
         <!-- 今日 -->
         <div v-if="todayList.length" class="section">
@@ -14,7 +14,9 @@
               class="forecast-row"
             >
               <span class="forecast-time">{{ formatHour(item.time) }}</span>
-              <span class="forecast-weather">{{ item.weather }}</span>
+              <span class="forecast-weather">
+                {{ getWeatherEmoji(item.weather) }} {{ cleanWeatherText(item.weather) }}
+              </span>
               <span class="forecast-temp">{{ item.temp }}℃</span>
             </div>
           </div>
@@ -30,7 +32,9 @@
               class="forecast-row"
             >
               <span class="forecast-date">{{ formatDate(item.date) }}</span>
-              <span class="forecast-weather">{{ item.weather }}</span>
+              <span class="forecast-weather">
+                {{ getWeatherEmoji(item.weather) }} {{ cleanWeatherText(item.weather) }}
+              </span>
               <span class="forecast-temp">{{ item.min }}℃ / {{ item.max }}℃</span>
             </div>
           </div>
@@ -43,6 +47,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
+
 
 const { t, locale } = useI18n()
 
@@ -64,6 +69,11 @@ function formatDate(dateStr) {
   const month = date.getMonth() + 1
   const day = date.getDate()
   return `${month}/${day}`
+}
+
+function cleanWeatherText(text = '') {
+  // 絵文字（全範囲）を除去 + trim
+  return text.replace(/[\p{Emoji_Presentation}\p{Extended_Pictographic}]/gu, '').trim()
 }
 
 function formatHour(time) {
@@ -121,6 +131,59 @@ const laterList = computed(() => {
     return { date, min, max, weather: mostFrequent }
   })
 })
+
+function getWeatherEmoji(weather = '') {
+  const lang = locale.value.slice(0, 2)
+  const w = weather.trim().toLowerCase()
+
+  const emojiMap = {
+    sun: '☀️',
+    cloud: '☁️',
+    rain: '☔️',
+    snow: '☃️'
+  }
+
+  const keywordGroups = {
+    rain: {
+      ja: ['雨', '小雨', 'にわか雨', '雷雨', '弱い雨'],
+      en: ['rain', 'light rain', 'showers', 'drizzle', 'thunderstorm'],
+      fr: ['pluie', 'averses', 'bruine', 'orage'],
+      zh: ['雨', '小雨', '阵雨', '雷雨'],
+      es: ['lluvia', 'llovizna', 'chubascos', 'tormenta']
+    },
+    cloud: {
+      ja: ['曇', '曇り', '曇りがち', '曇天', '厚い雲'],
+      en: ['cloud', 'overcast', 'mostly cloudy'],
+      fr: ['nuageux', 'nuage', 'couvert'],
+      zh: ['多云', '阴天'],
+      es: ['nublado', 'nuboso', 'mayormente nublado']
+    },
+    sun: {
+      ja: ['晴', '快晴', '晴天'],
+      en: ['sunny', 'clear', 'fine'],
+      fr: ['ensoleillé', 'clair'],
+      zh: ['晴', '晴朗', '晴天'],
+      es: ['soleado', 'despejado']
+    },
+    snow: {
+      ja: ['雪', '粉雪', 'みぞれ', '吹雪'],
+      en: ['snow', 'flurries', 'sleet', 'snowfall'],
+      fr: ['neige', 'chute de neige'],
+      zh: ['雪', '雪花', '夹雪'],
+      es: ['nieve', 'nevada', 'aguanieve']
+    }
+  }
+
+  for (const [type, langMap] of Object.entries(keywordGroups)) {
+    const keywords = langMap[lang] || []
+    if (keywords.some(keyword => w.includes(keyword))) {
+      return emojiMap[type]
+    }
+  }
+
+  return '🌤️' // デフォルト：晴れ時々曇り的な
+}
+
 
 function getMostFrequent(array) {
   const counts = {}
