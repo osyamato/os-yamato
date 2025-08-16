@@ -105,6 +105,20 @@
 </div>
 
 
+<div v-if="effectType === 'rainbow'" class="effect-container rainbow-wrapper">
+  <svg class="rainbow-svg" viewBox="0 0 400 220">
+    <g class="rainbow-arcs">
+      <path d="M 50 200 A 150 150 0 0 1 350 200" class="rainbow-path red" />
+      <path d="M 55 200 A 145 145 0 0 1 345 200" class="rainbow-path orange" />
+      <path d="M 60 200 A 140 140 0 0 1 340 200" class="rainbow-path yellow" />
+      <path d="M 65 200 A 135 135 0 0 1 335 200" class="rainbow-path green" />
+      <path d="M 70 200 A 130 130 0 0 1 330 200" class="rainbow-path blue" />
+      <path d="M 75 200 A 125 125 0 0 1 325 200" class="rainbow-path indigo" />
+      <path d="M 80 200 A 120 120 0 0 1 320 200" class="rainbow-path violet" />
+    </g>
+  </svg>
+</div>
+
   </Teleport>
 
 </template>
@@ -248,6 +262,7 @@ defineExpose({
   triggerConfetti,
   triggerStarry,
 　triggerBubble,
+triggerRainbow, 
   playEffect
 })
 
@@ -427,6 +442,11 @@ const pastelColors = ['#e63946', '#f1c40f', '#2ecc71', '#3498db', '#9b59b6', '#e
   }
 }
 
+function triggerRainbow() {
+  effectType.value = 'rainbow'
+  resetAfterDelay(3000) // 5秒間表示
+}
+
 
 </script>
 
@@ -602,6 +622,53 @@ const pastelColors = ['#e63946', '#f1c40f', '#2ecc71', '#3498db', '#9b59b6', '#e
   will-change: opacity;
 }
 
+.rainbow-wrapper {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+  z-index: 9999;
+}
+
+.rainbow-svg {
+  width: 100vw;
+  height: auto;
+  filter: blur(3px) brightness(1.1);
+}
+
+.rainbow-path {
+  fill: none;
+  stroke-width: 20;
+  stroke-linecap: round;
+  opacity: 0.15;
+  stroke-dasharray: 600;
+  stroke-dashoffset: 600;
+  animation: drawRainbow 3s ease-out forwards;
+}
+
+.rainbow-path.red    { stroke: red;    animation-delay: 0s; }
+.rainbow-path.orange { stroke: orange; animation-delay: 0.1s; }
+.rainbow-path.yellow { stroke: yellow; animation-delay: 0.2s; }
+.rainbow-path.green  { stroke: green;  animation-delay: 0.3s; }
+.rainbow-path.blue   { stroke: blue;   animation-delay: 0.4s; }
+.rainbow-path.indigo { stroke: indigo; animation-delay: 0.5s; }
+.rainbow-path.violet { stroke: violet; animation-delay: 0.6s; }
+
+@keyframes drawRainbow {
+  0% {
+    stroke-dashoffset: 600;
+    opacity: 0;
+  }
+  30% {
+    opacity: 0.4;
+  }
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 0;
+  }
+}
+
 
 </style>
 
@@ -694,5 +761,7 @@ const pastelColors = ['#e63946', '#f1c40f', '#2ecc71', '#3498db', '#9b59b6', '#e
   60% { transform: translateY(-700px) translateX(-10px) scale(1.05) rotate(180deg); }
   100% { transform: translateY(-1000px) translateX(20px) scale(1.1) rotate(360deg); opacity: 0; }
 }
+
+
 </style>
 
