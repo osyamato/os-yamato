@@ -5,6 +5,7 @@ import en from './locales/en.json'
 import zh from './locales/zh.json'
 import es from './locales/es.json'
 import fr from './locales/fr.json' // ✅ フランス語を追加
+import id from './locales/id.json' 
 
 export const i18n = createI18n({
   legacy: false,
@@ -15,7 +16,8 @@ export const i18n = createI18n({
     en,
     zh,
     es,
-    fr // ✅ ここも忘れず追加
+    fr,
+ id 
   }
 })
 

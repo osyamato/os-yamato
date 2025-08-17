@@ -14,6 +14,7 @@
   <option value="zh">{{ t('chinese') }}</option>
   <option value="es">{{ t('spanish') }}</option>
   <option value="fr">{{ t('french') }}</option> <!-- ✅ フランス語を追加 -->
+  <option value="id">{{ t('indonesian') }}</option> <!-- ✅ インドネシア語を追加 -->
 </select>
     </div>
 

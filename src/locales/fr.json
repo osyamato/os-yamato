@@ -1,26 +1,4 @@
 {
-  "common.cancel": "Annuler",
-  "common.delete": "Supprimer",
-  "common.termsAndPrivacy": "Conditions et politique de confidentialité",
-
-  "terms.title": "Conditions d'utilisation et politique de confidentialité",
-  "terms.body": "OS Yamato est fondé sur la philosophie selon laquelle « un enregistrement non touché retourne au vent ».\n\nToutes les données sont temporairement stockées dans le cloud et seront automatiquement supprimées si elles ne sont pas consultées pendant une période donnée (actuellement 365 jours). Cette période peut être modifiée sans préavis.\n\nVos enregistrements fleuriront, flotteront dans le vent, puis disparaîtront.\nProfitez librement de cette beauté éphémère et sereine.\n\n■ Remarques sur l'utilisation\n・Ce service ne garantit pas la conservation permanente des données.\n・Les données dépassant la période de conservation seront automatiquement supprimées et ne pourront pas être récupérées.\n・Nous ne sommes pas responsables de la perte de données due à des erreurs d'accès, des pannes de communication ou des erreurs utilisateur.\n・Nous ne sommes pas responsables des pertes liées à des accès non autorisés tels que le vol de compte. Il est recommandé d'utiliser des mots de passe forts et de les changer régulièrement.\n・Pour les enregistrements importants, effectuez des sauvegardes si nécessaire.\n・Les informations personnelles sont utilisées uniquement pour l'authentification et la fourniture du service, et ne sont pas partagées avec des tiers (sauf si requis par la loi).\n\nAvant d'utiliser ce service, vous devez lire et accepter ces conditions.\nLes conditions peuvent être mises à jour pour améliorer le service ou se conformer aux lois.\nVous pouvez consulter les conditions actuelles à tout moment depuis la page des paramètres.\n\nCe service est fourni par un développeur indépendant. Pour toute question, veuillez utiliser l’option « Nous contacter » dans les paramètres.",
-
-  "auth.email": "E-mail",
-  "auth.password": "Mot de passe",
-  "auth.signin": "Se connecter",
-  "auth.noAccount": "Vous n'avez pas de compte ?",
-  "auth.registerHere": "Inscrivez-vous ici",
-
-  "auth.userNotConfirmed": "Le compte n'a pas été vérifié.",
-  "auth.confirmCode": "Code de vérification",
-  "auth.confirm": "Confirmer",
-  "auth.resendCode": "Renvoyer le code",
-  "auth.forgotPassword": "Réinitialiser le mot de passe",
-  "auth.verifiedTitle": "Vérification terminée.",
-  "auth.verifiedSubtitle": "Bienvenue sur OS Yamato. Nous vous souhaitons une belle expérience.",
-  "auth.codeSent": "Le code a été envoyé à votre adresse e-mail",
-
 "common.cancel": "Annuler",
   "common.delete": "Supprimer",
   "common.termsAndPrivacy": "Conditions et politique de confidentialité",
@@ -97,6 +75,8 @@
   "chinese": "Chinois",
   "spanish": "Espagnol",
   "french": "Français",
+"indonesian": "Indonésien",
+
 
   "auth.language": "Langue",
 
