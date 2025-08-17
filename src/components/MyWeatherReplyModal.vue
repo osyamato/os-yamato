@@ -1,55 +1,55 @@
 <template>
   <Modal :visible="visible" @close="close">
-    <div class="weather-reply-modal">
-      <!-- 🌤️ タイトル -->
-
-      <!-- 📝 親コメント -->
-      <div class="parent-comment">
-        {{ parentComment?.content }}
-      </div>
-
-      <!-- 💬 リプライ一覧 -->
-      <div class="modal-scroll-area">
-        <div v-if="visibleReplies.length" class="reply-list">
-          <div
-            v-for="reply in visibleReplies"
-            :key="reply.id"
-            class="reply-item-row"
-          >
-            <!-- 🖼️ アイコン -->
-<div class="reply-icon" @click.stop="openProfile(reply)">
-  <img v-if="reply.icon" :src="`/${reply.icon}`" />
-  <div v-else class="icon-initial">
-    {{ reply.ownerNickname?.[0] || '？' }}
-  </div>
-</div>
-
-            <!-- 📝 本文とニックネーム -->
-            <div class="reply-body">
-<span class="nickname" @click.stop="openProfile(reply)">
-  {{ reply.ownerNickname }}
-</span>
-              <div class="reply-text">{{ reply.content }}</div>
-            </div>
-
-            <!-- 🔘 メニュー（非表示切り替え） -->
-            <div class="reply-menu">
-              <button class="delete-button" @click="toggleHidden(reply)">
-                {{ reply.hiddenByCommentOwner ? '👁️‍🗨️' : '🙈' }}
-              </button>
-            </div>
-          </div>
+    <transition name="reply-modal-transition">
+      <div class="weather-reply-modal" v-if="visible">
+        <!-- 📝 親コメント -->
+        <div class="parent-comment">
+          {{ parentComment?.content }}
         </div>
 
-        <!-- 🪶 詩的なメッセージ（返信がないとき） -->
-        <transition name="fade">
-          <div v-show="showNoReplyMessage" class="no-reply">
-            {{ t('weather.noRepliesPoetic1') }}<br />
-            {{ t('weather.noRepliesPoetic2') }}
+        <!-- 💬 リプライ一覧 -->
+        <div class="modal-scroll-area">
+          <div v-if="visibleReplies.length" class="reply-list">
+            <div
+              v-for="reply in visibleReplies"
+              :key="reply.id"
+              class="reply-item-row"
+            >
+              <!-- アイコン -->
+              <div class="reply-icon" @click.stop="openProfile(reply)">
+                <img v-if="reply.icon" :src="`/${reply.icon}`" />
+                <div v-else class="icon-initial">
+                  {{ reply.ownerNickname?.[0] || '？' }}
+                </div>
+              </div>
+
+              <!-- 本文 -->
+              <div class="reply-body">
+                <span class="nickname" @click.stop="openProfile(reply)">
+                  {{ reply.ownerNickname }}
+                </span>
+                <div class="reply-text">{{ reply.content }}</div>
+              </div>
+
+              <!-- 非表示ボタン -->
+              <div class="reply-menu">
+                <button class="delete-button" @click="toggleHidden(reply)">
+                  {{ reply.hiddenByCommentOwner ? '👁️‍🗨️' : '🙈' }}
+                </button>
+              </div>
+            </div>
           </div>
-        </transition>
+
+          <!-- 詩的メッセージ -->
+          <transition name="fade">
+            <div v-show="showNoReplyMessage" class="no-reply">
+              {{ t('weather.noRepliesPoetic1') }}<br />
+              {{ t('weather.noRepliesPoetic2') }}
+            </div>
+          </transition>
+        </div>
       </div>
-    </div>
+    </transition>
   </Modal>
 </template>
 
@@ -304,6 +304,22 @@ function close() {
 }
 .fade-enter-to, .fade-leave-from {
   opacity: 1;
+}
+
+.reply-modal-transition-enter-active {
+  animation: dropDown 0.4s ease-out;
+}
+.reply-modal-transition-leave-active {
+  animation: flyUp 0.3s ease-in;
+}
+
+@keyframes dropDown {
+  0% { transform: translateY(-40px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+@keyframes flyUp {
+  0% { transform: translateY(0); opacity: 1; }
+  100% { transform: translateY(-40px); opacity: 0; }
 }
 
 </style>

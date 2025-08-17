@@ -126,14 +126,18 @@
     </template>
 
     <!-- ❤️ リアクション -->
-    <div
-      v-if="msg.reactions?.items?.length"
-      :class="['reaction-display', msg.mine ? 'right-corner' : 'left-corner']"
-    >
-      <span v-for="r in msg.reactions.items" :key="r.id || r.emoji">
-        {{ r.emoji }}
-      </span>
-    </div>
+<div
+  v-if="msg.reactions?.items?.length"
+  :class="[
+    'reaction-display',
+    msg.mine ? 'right-corner' : 'left-corner',
+    msg._animate ? 'reaction-emoji-animate' : ''
+  ]"
+>
+  <span v-for="r in msg.reactions.items" :key="r.id || r.emoji">
+    {{ r.emoji }}
+  </span>
+</div>
   </div>
 </template>
 
@@ -311,21 +315,20 @@ async function selectReaction(emoji, msg) {
   const user = await Auth.currentAuthenticatedUser()
   const mySub = user.attributes.sub
 
-  // すでに同じリアクションをつけているか判定
   const existing = msg.reactions?.items?.find(r => r.reactorSub === mySub)
 
   if (existing && existing.emoji === emoji) {
-    // ✅ 同じなら削除
+    // 👇 リアクション削除
     await deleteReaction(existing.id)
     msg.reactions.items = msg.reactions.items.filter(r => r.id !== existing.id)
   } else {
-    // ✅ 上書き: まず削除
+    // 👇 同じ人の前のリアクション削除（上書き）
     if (existing) {
       await deleteReaction(existing.id)
       msg.reactions.items = msg.reactions.items.filter(r => r.id !== existing.id)
     }
 
-    // 追加
+    // 👇 新しいリアクション登録
     const result = await API.graphql(graphqlOperation(createReaction, {
       input: {
         messageId: msg.id,
@@ -339,10 +342,20 @@ async function selectReaction(emoji, msg) {
     if (newReaction) {
       if (!msg.reactions) msg.reactions = { items: [] }
       msg.reactions.items.push(newReaction)
+
+      // ✅ アニメーション発火のための工夫
+      msg._animate = false
+      await nextTick()
+      msg._animate = true
+
+      // ⏱️ アニメーション終了でリセット（500ms 後）
+      setTimeout(() => {
+        msg._animate = false
+      }, 500)
     }
   }
 
-  // ✅ ピッカーは閉じる
+  // 👇 ピッカー閉じる
   showReactionPickerFor.value = null
 }
 
@@ -1551,6 +1564,9 @@ button:hover {
   right: 0.1rem; /* ← 時計には被らず、吹き出し右上にピッタリ重なる */
   transform: none;
 }
+
+
+
 
 /* 🎯 各リアクション絵文字：装飾を完全除去 */
 .reaction-display span {

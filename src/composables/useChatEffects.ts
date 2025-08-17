@@ -39,14 +39,14 @@ export function useChatEffects(
     { pattern: /(おめでとう|お祝い|祝|congratulations|congrats|celebrate|felicidades|enhorabuena|祝贺)/i, effect: 'confetti' },
     { pattern: /(星空|モンゴル|星|夜空|stars|starry sky|night sky|mongolia|cielo estrellado|夜空)/i, effect: 'starry' },
     { pattern: /(虹|rainbow|🌈)/i, effect: 'rainbow' },
-    { pattern: /(シャボン玉|泡|bubble|bubbles|soap bubble|burbuja|泡泡)/i, effect: 'bubble' }
+    { pattern: /(シャボン玉|泡|bubble|bubbles|soap bubble|burbuja|泡泡)/i, effect: 'bubble' },
+  { pattern: /(新緑|greenery|風|fresh green|verdor)/i, effect: 'leaf' } 
   ]
 
   const seasonalPatterns: EffectPattern[] = [
     { pattern: /(雨|rain|lluvia|雨水)/i, effect: 'rain' },
     { pattern: /(雪|snow|nieve|下雪)/i, effect: 'snow' },
     { pattern: /(晴れ|sunny|soleado|晴天)/i, effect: 'sunny' },
-    { pattern: /(風|wind|viento|风)/i, effect: 'wind' },
     { pattern: /(春|spring|primavera|春天)/i, effect: 'spring' },
     { pattern: /(桜|cherry blossom|flor de cerezo|樱花)/i, effect: 'spring' },
     { pattern: /(秋|fall|autumn|otoño|秋天)/i, effect: 'autumn' },
