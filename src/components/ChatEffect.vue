@@ -119,6 +119,16 @@
   </svg>
 </div>
 
+<!-- 🍃 カスタム葉っぱ（leaf.png） -->
+<div v-if="effectType === 'leaf'" class="effect-container">
+  <div
+    v-for="n in 50"
+    :key="'leaf-' + n"
+    class="leaf"
+    :style="randomLeafStyle(n)"
+  />
+</div>
+
   </Teleport>
 
 </template>
@@ -263,6 +273,7 @@ defineExpose({
   triggerStarry,
 　triggerBubble,
 triggerRainbow, 
+  triggerLeaf,
   playEffect
 })
 
@@ -445,6 +456,38 @@ const pastelColors = ['#e63946', '#f1c40f', '#2ecc71', '#3498db', '#9b59b6', '#e
 function triggerRainbow() {
   effectType.value = 'rainbow'
   resetAfterDelay(3000) // 5秒間表示
+}
+
+function triggerLeaf() {
+  effectType.value = 'leaf'
+  resetAfterDelay(7000) // 落ち葉と同様に長め
+}
+
+function randomLeafStyle(index) {
+  const dx = (Math.random() - 0.5) * 200 + 'px'
+  const dy = (Math.random() - 0.5) * 200 + 'px'
+  const size = 24 + Math.random() * 16
+  const duration = (2.0 + Math.random() * 1.5).toFixed(2) + 's'
+  const top = Math.random() * 80
+  const left = Math.random() * 80
+
+  return {
+    top: `${top}%`,
+    left: `${left}%`,
+    width: `${size}px`,
+    height: `${size}px`,
+    backgroundImage: `url('/leaf.png')`, // ✅ ここが変更点
+    backgroundSize: 'contain',
+    backgroundRepeat: 'no-repeat',
+    pointerEvents: 'none',
+    animationName: 'autumn-pop', // ✅ 同じアニメーションを使う
+    animationDuration: duration,
+    animationTimingFunction: 'ease-out',
+    animationIterationCount: '1',
+    animationFillMode: 'forwards',
+    '--dx': dx,
+    '--dy': dy
+  }
 }
 
 
@@ -667,6 +710,11 @@ function triggerRainbow() {
     stroke-dashoffset: 0;
     opacity: 0;
   }
+}
+
+.leaf {
+  position: absolute;
+  animation: autumn-pop ease-out forwards;
 }
 
 
