@@ -19,7 +19,6 @@ type Diary
   owner: String!
   content: String!
   date: AWSDate!
-  emoji: String        # 👈 追加するフィールド
   lastOpenedAt: AWSDateTime
   createdAt: AWSDateTime
   updatedAt: AWSDateTime
@@ -331,20 +330,18 @@ type WeatherReply
   updatedAt: AWSDateTime
 }
 
+
 type Mission @model @auth(rules: [{ allow: owner }]) {
   id: ID!
-  title: String!              # ミッションのタイトル（必須）
-  note: String                # 説明やメモ（任意）
-  goalDate: AWSDate!          # 目標達成予定日（必須）
-
+  title: String!
+  note: String
+  goalDate: AWSDate!
   createdAt: AWSDateTime
-  completedAt: AWSDateTime 
+  completedAt: AWSDateTime
   isCompleted: Boolean!
-
   emoji: String
   colorHue: Int
   importance: Int
-
   deletedAt: AWSDateTime
 }
 

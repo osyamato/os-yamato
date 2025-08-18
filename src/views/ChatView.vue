@@ -65,6 +65,13 @@
   </div>
 </template>
 
+<template v-if="isSingleEmoji(msg.content)">
+  <div class="message-wrapper text-with-time">
+    <div class="emoji-only">{{ msg.content }}</div>
+    <span class="timestamp-right">{{ formatTime(msg.timestamp) }}</span>
+  </div>
+</template>
+
 <template v-else>
   <div class="message-wrapper text-with-time">
     <div
@@ -117,6 +124,10 @@
         </div>
       </div>
     </template>
+
+<template v-if="isSingleEmoji(msg.content)">
+  <div class="emoji-only mine">{{ msg.content }}</div>
+</template>
 
     <!-- ✅ テキストメッセージ -->
     <template v-else>
@@ -293,6 +304,13 @@ function startPressTimer(callback) {
 
 function clearPressTimer() {
   clearTimeout(pressTimer)
+}
+
+
+function isSingleEmoji(text) {
+  const trimmed = text.trim()
+  const emojiRegex = /^(\p{Emoji_Presentation}|\p{Extended_Pictographic})$/u
+  return emojiRegex.test(trimmed)
 }
 
 
@@ -1647,6 +1665,30 @@ button:hover {
   color: #3366cc;
   text-decoration: underline;
   word-break: break-word;
+}
+
+.emoji-only {
+  font-size: 3.5rem;
+  line-height: 1;
+  display: inline-block;
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+  margin: 0.1em 0;
+  animation: emojiWobble 3s ease-in-out infinite alternate; /* ← 3sに変更 */
+  vertical-align: middle;
+}
+
+.emoji-only.mine {
+  align-self: flex-end;
+  text-align: right;
+}
+
+/* ゆっくりゆらゆらアニメーション */
+@keyframes emojiWobble {
+  0%   { transform: translateY(0px) rotate(0deg); }
+  50%  { transform: translateY(-2px) rotate(-4deg); }
+  100% { transform: translateY(0px) rotate(4deg); }
 }
 
 </style>

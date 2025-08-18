@@ -44,6 +44,7 @@ type EagerDiary = {
   readonly owner: string;
   readonly content: string;
   readonly date: string;
+  readonly emoji?: string | null;
   readonly lastOpenedAt?: string | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
@@ -57,6 +58,7 @@ type LazyDiary = {
   readonly owner: string;
   readonly content: string;
   readonly date: string;
+  readonly emoji?: string | null;
   readonly lastOpenedAt?: string | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
@@ -366,6 +368,8 @@ type EagerPhoto = {
   };
   readonly id: string;
   readonly owner: string;
+  readonly albumId?: string | null;
+  readonly albumName?: string | null;
   readonly fileName: string;
   readonly thumbnailFileName: string;
   readonly photoTakenAt?: string | null;
@@ -381,6 +385,8 @@ type LazyPhoto = {
   };
   readonly id: string;
   readonly owner: string;
+  readonly albumId?: string | null;
+  readonly albumName?: string | null;
   readonly fileName: string;
   readonly thumbnailFileName: string;
   readonly photoTakenAt?: string | null;
@@ -394,6 +400,42 @@ export declare type Photo = LazyLoading extends LazyLoadingDisabled ? EagerPhoto
 
 export declare const Photo: (new (init: ModelInit<Photo>) => Photo) & {
   copyOf(source: Photo, mutator: (draft: MutableModel<Photo>) => MutableModel<Photo> | void): Photo;
+}
+
+type EagerVideo = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<Video, 'id'>;
+  };
+  readonly id: string;
+  readonly owner: string;
+  readonly fileName: string;
+  readonly thumbnailFileName: string;
+  readonly videoTakenAt?: string | null;
+  readonly isFavorite?: boolean | null;
+  readonly lastOpenedAt?: string | null;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+}
+
+type LazyVideo = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<Video, 'id'>;
+  };
+  readonly id: string;
+  readonly owner: string;
+  readonly fileName: string;
+  readonly thumbnailFileName: string;
+  readonly videoTakenAt?: string | null;
+  readonly isFavorite?: boolean | null;
+  readonly lastOpenedAt?: string | null;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+}
+
+export declare type Video = LazyLoading extends LazyLoadingDisabled ? EagerVideo : LazyVideo
+
+export declare const Video: (new (init: ModelInit<Video>) => Video) & {
+  copyOf(source: Video, mutator: (draft: MutableModel<Video>) => MutableModel<Video> | void): Video;
 }
 
 type EagerScheduleTemplate = {
@@ -552,42 +594,6 @@ export declare const BestRecord: (new (init: ModelInit<BestRecord>) => BestRecor
   copyOf(source: BestRecord, mutator: (draft: MutableModel<BestRecord>) => MutableModel<BestRecord> | void): BestRecord;
 }
 
-type EagerVideo = {
-  readonly [__modelMeta__]: {
-    identifier: ManagedIdentifier<Video, 'id'>;
-  };
-  readonly id: string;
-  readonly owner: string;
-  readonly fileName: string;
-  readonly thumbnailFileName: string;
-  readonly videoTakenAt?: string | null;
-  readonly isFavorite?: boolean | null;
-  readonly lastOpenedAt?: string | null;
-  readonly createdAt: string;
-  readonly updatedAt: string;
-}
-
-type LazyVideo = {
-  readonly [__modelMeta__]: {
-    identifier: ManagedIdentifier<Video, 'id'>;
-  };
-  readonly id: string;
-  readonly owner: string;
-  readonly fileName: string;
-  readonly thumbnailFileName: string;
-  readonly videoTakenAt?: string | null;
-  readonly isFavorite?: boolean | null;
-  readonly lastOpenedAt?: string | null;
-  readonly createdAt: string;
-  readonly updatedAt: string;
-}
-
-export declare type Video = LazyLoading extends LazyLoadingDisabled ? EagerVideo : LazyVideo
-
-export declare const Video: (new (init: ModelInit<Video>) => Video) & {
-  copyOf(source: Video, mutator: (draft: MutableModel<Video>) => MutableModel<Video> | void): Video;
-}
-
 type EagerGPTMiniSession = {
   readonly [__modelMeta__]: {
     identifier: ManagedIdentifier<GPTMiniSession, 'id'>;
@@ -692,11 +698,12 @@ type EagerWeatherProfile = {
     readOnlyFields: 'updatedAt';
   };
   readonly id: string;
-  readonly sub: string;
   readonly icon?: string | null;
   readonly nickname?: string | null;
   readonly yamatoId?: string | null;
   readonly bio?: string | null;
+  readonly homepage?: string | null;
+  readonly blockedSubs?: (string | null)[] | null;
   readonly createdAt: string;
   readonly updatedAt?: string | null;
 }
@@ -707,11 +714,12 @@ type LazyWeatherProfile = {
     readOnlyFields: 'updatedAt';
   };
   readonly id: string;
-  readonly sub: string;
   readonly icon?: string | null;
   readonly nickname?: string | null;
   readonly yamatoId?: string | null;
   readonly bio?: string | null;
+  readonly homepage?: string | null;
+  readonly blockedSubs?: (string | null)[] | null;
   readonly createdAt: string;
   readonly updatedAt?: string | null;
 }
@@ -741,6 +749,7 @@ type EagerWeatherComment = {
   readonly likeCount?: number | null;
   readonly reportCount?: number | null;
   readonly replyCount?: number | null;
+  readonly replyAllowed?: boolean | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
 }
@@ -764,6 +773,7 @@ type LazyWeatherComment = {
   readonly likeCount?: number | null;
   readonly reportCount?: number | null;
   readonly replyCount?: number | null;
+  readonly replyAllowed?: boolean | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
 }
@@ -772,4 +782,46 @@ export declare type WeatherComment = LazyLoading extends LazyLoadingDisabled ? E
 
 export declare const WeatherComment: (new (init: ModelInit<WeatherComment>) => WeatherComment) & {
   copyOf(source: WeatherComment, mutator: (draft: MutableModel<WeatherComment>) => MutableModel<WeatherComment> | void): WeatherComment;
+}
+
+type EagerWeatherReply = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<WeatherReply, 'id'>;
+  };
+  readonly id: string;
+  readonly commentId: string;
+  readonly owner: string;
+  readonly ownerNickname?: string | null;
+  readonly icon?: string | null;
+  readonly content: string;
+  readonly language: string;
+  readonly reported?: boolean | null;
+  readonly reportReason?: string | null;
+  readonly hiddenByCommentOwner?: boolean | null;
+  readonly createdAt?: string | null;
+  readonly updatedAt?: string | null;
+}
+
+type LazyWeatherReply = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<WeatherReply, 'id'>;
+  };
+  readonly id: string;
+  readonly commentId: string;
+  readonly owner: string;
+  readonly ownerNickname?: string | null;
+  readonly icon?: string | null;
+  readonly content: string;
+  readonly language: string;
+  readonly reported?: boolean | null;
+  readonly reportReason?: string | null;
+  readonly hiddenByCommentOwner?: boolean | null;
+  readonly createdAt?: string | null;
+  readonly updatedAt?: string | null;
+}
+
+export declare type WeatherReply = LazyLoading extends LazyLoadingDisabled ? EagerWeatherReply : LazyWeatherReply
+
+export declare const WeatherReply: (new (init: ModelInit<WeatherReply>) => WeatherReply) & {
+  copyOf(source: WeatherReply, mutator: (draft: MutableModel<WeatherReply>) => MutableModel<WeatherReply> | void): WeatherReply;
 }

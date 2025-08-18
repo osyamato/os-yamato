@@ -7,7 +7,8 @@
       "mode": "AMAZON_COGNITO_USER_POOLS",
       "cognitoUserPoolId": "authosyamatoddd28512"
     },
-    "transformerVersion": 2
+    "transformerVersion": 2,
+    "conflictResolution": {},
+    "additionalAuthTypes": []
   }
 }
-

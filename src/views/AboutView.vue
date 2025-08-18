@@ -21,7 +21,8 @@
     <option value="en">{{ $t('english') }}</option>
     <option value="es">{{ $t('spanish') }}</option>   <!-- 🇪🇸 -->
     <option value="zh">{{ $t('chinese') }}</option>
-    <option value="fr">{{ $t('french') }}</option>    <!-- 🇫🇷 追加 -->
+    <option value="fr">{{ $t('french') }}</option>    <!-- 🇫🇷 -->
+    <option value="id">{{ $t('indonesian') }}</option> <!-- 🇮🇩 追加 -->
   </select>
 </div>
 

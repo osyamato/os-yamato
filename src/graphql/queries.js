@@ -44,6 +44,7 @@ export const getDiary = /* GraphQL */ `
       owner
       content
       date
+      emoji
       lastOpenedAt
       createdAt
       updatedAt
@@ -63,6 +64,7 @@ export const listDiaries = /* GraphQL */ `
         owner
         content
         date
+        emoji
         lastOpenedAt
         createdAt
         updatedAt
@@ -910,6 +912,54 @@ export const listWeatherReplies = /* GraphQL */ `
         hiddenByCommentOwner
         createdAt
         updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const getMission = /* GraphQL */ `
+  query GetMission($id: ID!) {
+    getMission(id: $id) {
+      id
+      title
+      note
+      goalDate
+      createdAt
+      completedAt
+      isCompleted
+      emoji
+      colorHue
+      importance
+      deletedAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;
+export const listMissions = /* GraphQL */ `
+  query ListMissions(
+    $filter: ModelMissionFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    listMissions(filter: $filter, limit: $limit, nextToken: $nextToken) {
+      items {
+        id
+        title
+        note
+        goalDate
+        createdAt
+        completedAt
+        isCompleted
+        emoji
+        colorHue
+        importance
+        deletedAt
+        updatedAt
+        owner
         __typename
       }
       nextToken

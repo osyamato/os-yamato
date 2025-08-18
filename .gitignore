@@ -29,6 +29,10 @@ coverage
 
 *.tsbuildinfo
 
+node_modules
+dist
+aws-exports.js
+
 #amplify-do-not-edit-begin
 amplify/\#current-cloud-backend
 amplify/.config/local-*
@@ -50,6 +54,3 @@ amplifytools.xcconfig
 .secret-*
 **.sample
 #amplify-do-not-edit-end
-node_modules
-dist
-aws-exports.js
