@@ -62,6 +62,7 @@ export const createDiary = /* GraphQL */ `
       owner
       content
       date
+      emoji
       lastOpenedAt
       createdAt
       updatedAt
@@ -79,6 +80,7 @@ export const updateDiary = /* GraphQL */ `
       owner
       content
       date
+      emoji
       lastOpenedAt
       createdAt
       updatedAt
@@ -96,6 +98,7 @@ export const deleteDiary = /* GraphQL */ `
       owner
       content
       date
+      emoji
       lastOpenedAt
       createdAt
       updatedAt
@@ -1302,6 +1305,75 @@ export const deleteWeatherReply = /* GraphQL */ `
       hiddenByCommentOwner
       createdAt
       updatedAt
+      __typename
+    }
+  }
+`;
+export const createMission = /* GraphQL */ `
+  mutation CreateMission(
+    $input: CreateMissionInput!
+    $condition: ModelMissionConditionInput
+  ) {
+    createMission(input: $input, condition: $condition) {
+      id
+      title
+      note
+      goalDate
+      createdAt
+      completedAt
+      isCompleted
+      emoji
+      colorHue
+      importance
+      deletedAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;
+export const updateMission = /* GraphQL */ `
+  mutation UpdateMission(
+    $input: UpdateMissionInput!
+    $condition: ModelMissionConditionInput
+  ) {
+    updateMission(input: $input, condition: $condition) {
+      id
+      title
+      note
+      goalDate
+      createdAt
+      completedAt
+      isCompleted
+      emoji
+      colorHue
+      importance
+      deletedAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;
+export const deleteMission = /* GraphQL */ `
+  mutation DeleteMission(
+    $input: DeleteMissionInput!
+    $condition: ModelMissionConditionInput
+  ) {
+    deleteMission(input: $input, condition: $condition) {
+      id
+      title
+      note
+      goalDate
+      createdAt
+      completedAt
+      isCompleted
+      emoji
+      colorHue
+      importance
+      deletedAt
+      updatedAt
+      owner
       __typename
     }
   }

@@ -1,25 +1,4 @@
 {
-  "dev": {
-    "awscloudformation": {
-      "AuthRoleName": "amplify-osyamato-dev-7f3b6-authRole",
-      "UnauthRoleArn": "arn:aws:iam::495599735325:role/amplify-osyamato-dev-7f3b6-unauthRole",
-      "AuthRoleArn": "arn:aws:iam::495599735325:role/amplify-osyamato-dev-7f3b6-authRole",
-      "Region": "ap-northeast-1",
-      "DeploymentBucketName": "amplify-osyamato-dev-7f3b6-deployment",
-      "UnauthRoleName": "amplify-osyamato-dev-7f3b6-unauthRole",
-      "StackName": "amplify-osyamato-dev-7f3b6",
-      "StackId": "arn:aws:cloudformation:ap-northeast-1:495599735325:stack/amplify-osyamato-dev-7f3b6/8814d930-1a57-11f0-950c-0e4c66c0095b",
-      "AmplifyAppId": "dvocczdb288bo"
-    },
-    "categories": {
-      "auth": {
-        "osyamatoddd28512": {}
-      },
-      "storage": {
-        "photoStorage": {}
-      }
-    }
-  },
   "devnew": {
     "awscloudformation": {
       "AuthRoleName": "amplify-osyamato-devnew-8704f-authRole",
@@ -41,6 +20,27 @@
       },
       "api": {
         "osyamato": {}
+      }
+    }
+  },
+  "dev": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-osyamato-dev-7f3b6-authRole",
+      "UnauthRoleArn": "arn:aws:iam::495599735325:role/amplify-osyamato-dev-7f3b6-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::495599735325:role/amplify-osyamato-dev-7f3b6-authRole",
+      "Region": "ap-northeast-1",
+      "DeploymentBucketName": "amplify-osyamato-dev-7f3b6-deployment",
+      "UnauthRoleName": "amplify-osyamato-dev-7f3b6-unauthRole",
+      "StackName": "amplify-osyamato-dev-7f3b6",
+      "StackId": "arn:aws:cloudformation:ap-northeast-1:495599735325:stack/amplify-osyamato-dev-7f3b6/8814d930-1a57-11f0-950c-0e4c66c0095b",
+      "AmplifyAppId": "dvocczdb288bo"
+    },
+    "categories": {
+      "auth": {
+        "osyamatoddd28512": {}
+      },
+      "storage": {
+        "photoStorage": {}
       }
     }
   }

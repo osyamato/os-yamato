@@ -62,6 +62,7 @@ export const onCreateDiary = /* GraphQL */ `
       owner
       content
       date
+      emoji
       lastOpenedAt
       createdAt
       updatedAt
@@ -79,6 +80,7 @@ export const onUpdateDiary = /* GraphQL */ `
       owner
       content
       date
+      emoji
       lastOpenedAt
       createdAt
       updatedAt
@@ -96,6 +98,7 @@ export const onDeleteDiary = /* GraphQL */ `
       owner
       content
       date
+      emoji
       lastOpenedAt
       createdAt
       updatedAt
@@ -1317,6 +1320,75 @@ export const onDeleteWeatherReply = /* GraphQL */ `
       hiddenByCommentOwner
       createdAt
       updatedAt
+      __typename
+    }
+  }
+`;
+export const onCreateMission = /* GraphQL */ `
+  subscription OnCreateMission(
+    $filter: ModelSubscriptionMissionFilterInput
+    $owner: String
+  ) {
+    onCreateMission(filter: $filter, owner: $owner) {
+      id
+      title
+      note
+      goalDate
+      createdAt
+      completedAt
+      isCompleted
+      emoji
+      colorHue
+      importance
+      deletedAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;
+export const onUpdateMission = /* GraphQL */ `
+  subscription OnUpdateMission(
+    $filter: ModelSubscriptionMissionFilterInput
+    $owner: String
+  ) {
+    onUpdateMission(filter: $filter, owner: $owner) {
+      id
+      title
+      note
+      goalDate
+      createdAt
+      completedAt
+      isCompleted
+      emoji
+      colorHue
+      importance
+      deletedAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;
+export const onDeleteMission = /* GraphQL */ `
+  subscription OnDeleteMission(
+    $filter: ModelSubscriptionMissionFilterInput
+    $owner: String
+  ) {
+    onDeleteMission(filter: $filter, owner: $owner) {
+      id
+      title
+      note
+      goalDate
+      createdAt
+      completedAt
+      isCompleted
+      emoji
+      colorHue
+      importance
+      deletedAt
+      updatedAt
+      owner
       __typename
     }
   }

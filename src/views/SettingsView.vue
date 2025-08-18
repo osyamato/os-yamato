@@ -213,6 +213,13 @@ function goToAbout() {
 .setting-group label {
   min-width: 140px;
   font-weight: bold;
+  color: #111; /* ← 追加：ライトモードで黒にする */
+}
+
+@media (prefers-color-scheme: dark) {
+  .setting-group label {
+    color: #fff; /* ← 追加：ダークモードで白にする */
+  }
 }
 
 .setting-group select {

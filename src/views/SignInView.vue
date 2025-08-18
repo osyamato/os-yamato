@@ -59,6 +59,7 @@
             <option value="es">{{ $t('spanish') }}</option>
             <option value="zh">{{ $t('chinese') }}</option>
 <option value="fr">{{ $t('french') }}</option>         
+<option value="id">{{ $t('indonesian') }}</option> 
  </select>
         </div>
       </div>
