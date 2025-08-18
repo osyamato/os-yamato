@@ -1,18 +1,18 @@
 <template>
-<div class="view-wrapper" @click="handleOuterClick">
+  <div class="view-wrapper" @click="handleOuterClick">
     <div class="chat-container">
-      <!-- 🔼 ヘッダー -->
+      <!-- 🕸️ ヘッダー -->
       <div class="chat-header">
         <span>{{ partnerDisplayName }}</span>
       </div>
 
-      <!-- 🔽 メッセージ一覧 -->
-<div
-  class="message-list"
-  @scroll.passive="handleScrollTop"
-  ref="messageListRef"
->
-<template v-for="msg in groupedMessages" :key="msg.id">
+      <!-- 🗳️ メッセージ一覧 -->
+      <div
+        class="message-list"
+        @scroll.passive="handleScrollTop"
+        ref="messageListRef"
+      >
+        <template v-for="msg in groupedMessages" :key="msg.id">
           <div v-if="msg.isDateSeparator" class="date-separator">
             {{ msg.date }}
           </div>
@@ -21,16 +21,13 @@
             v-else
             class="message-row"
             :class="{ mine: msg.senderSub === mySub }"
-:id="`msg-${msg.id}`"          
->
+            :id="`msg-${msg.id}`"
+          >
             <!-- 💬 相手メッセージ -->
             <div v-if="msg.senderSub !== mySub">
-
 <template v-if="msg.contentType === 'image'">
   <div class="message-wrapper text-with-time">
-    <!-- ✅ サイズ固定のラッパーで画像・🖼️を統一 -->
     <div class="image-wrapper">
-      <!-- ✅ 画像がロードされている場合 -->
       <img
         v-if="msg.imageUrl"
         :src="msg.imageUrl"
@@ -39,8 +36,6 @@
         @click="openImageModal(msg.imageUrl, msg.imageKey)"
         @load="onImageLoad"
       />
-
-      <!-- ✅ imageKey があるが URL 未取得（🖼️ボタン） -->
       <div
         v-else-if="msg.imageKey"
         class="message-placeholder"
@@ -50,13 +45,13 @@
       </div>
     </div>
 
-    <!-- 🕒 タイムスタンプ -->
+    <!-- ⏰ タイムスタンプ -->
     <span class="timestamp-right">{{ formatTime(msg.timestamp) }}</span>
 
     <!-- ❤️ リアクション -->
     <div
       v-if="msg.reactions?.items?.length"
-      :class="['reaction-display', msg.senderSub === mySub ? 'right-corner' : 'left-corner']"
+      :class="['reaction-display', 'left-corner']"
     >
       <span v-for="r in msg.reactions.items" :key="r.id || r.emoji">
         {{ r.emoji }}
@@ -65,114 +60,102 @@
   </div>
 </template>
 
-<template v-if="isSingleEmoji(msg.content)">
-  <div class="message-wrapper text-with-time">
-    <div class="emoji-only">{{ msg.content }}</div>
-    <span class="timestamp-right">{{ formatTime(msg.timestamp) }}</span>
-  </div>
-</template>
+              <template v-else-if="isSingleEmoji(msg.content)">
+                <div class="message-wrapper text-with-time">
+                  <div class="emoji-only">{{ msg.content }}</div>
+                  <span class="timestamp-right">{{ formatTime(msg.timestamp) }}</span>
+                </div>
+              </template>
 
-<template v-else>
-  <div class="message-wrapper text-with-time">
-    <div
-      class="message"
-      @touchstart="startLongPress(msg.id)"
-      @touchend="cancelLongPress"
-      @mousedown="startLongPress(msg.id)"
-      @mouseup="cancelLongPress"
-      @mouseleave="cancelLongPress"
-    >
-      <div v-html="msg.content.replace(/\n/g, '<br>')"></div>
-    </div>
+              <template v-else>
+                <div class="message-wrapper text-with-time">
+                  <div
+                    class="message"
+                    @touchstart="startLongPress(msg.id)"
+                    @touchend="cancelLongPress"
+                    @mousedown="startLongPress(msg.id)"
+                    @mouseup="cancelLongPress"
+                    @mouseleave="cancelLongPress"
+                  >
+                    <div v-html="msg.content.replace(/\n/g, '<br>')"></div>
+                  </div>
+                  <span class="timestamp-right">{{ formatTime(msg.timestamp) }}</span>
 
-    <!-- 🕒 吹き出しの右に時間 -->
-    <span class="timestamp-right">{{ formatTime(msg.timestamp) }}</span>
-
-    <!-- 🖼️ リアクション表示 -->
-    <div v-if="msg.reactions?.items?.length" class="reaction-display over">
-      <span v-for="r in msg.reactions.items" :key="r.id || r.emoji">{{ r.emoji }}</span>
-    </div>
-  </div>
-</template>
+                  <div v-if="msg.reactions?.items?.length" class="reaction-display over">
+                    <span v-for="r in msg.reactions.items" :key="r.id || r.emoji">{{ r.emoji }}</span>
+                  </div>
+                </div>
+              </template>
             </div>
 
-<template v-else>
-  <!-- ⏰ タイムスタンプ -->
-  <span class="timestamp-side">{{ formatTime(msg.timestamp) }}</span>
+            <!-- 自分のメッセージ -->
+            <template v-else>
+              <span class="timestamp-side">{{ formatTime(msg.timestamp) }}</span>
 
-  <div class="message-wrapper mine">
-    <!-- ✅ 画像メッセージ -->
-    <template v-if="msg.contentType === 'image'">
-      <div class="image-wrapper">
-        <!-- ✅ サムネイルがある場合 -->
-        <img
-          v-if="msg.imageUrl"
-          :src="msg.imageUrl"
-          class="message-image"
-          :key="msg.imageUrl"
-          @click="openImageModal(msg.imageUrl, msg.imageKey)"
-          @load="onImageLoad"
-        />
+              <template v-if="msg.contentType === 'image'">
+                <div class="image-wrapper mine">
+                  <img
+                    v-if="msg.imageUrl"
+                    :src="msg.imageUrl"
+                    class="message-image"
+                    :key="msg.imageUrl"
+                    @click="openImageModal(msg.imageUrl, msg.imageKey)"
+                    @load="onImageLoad"
+                  />
+                  <div
+                    v-else-if="msg.imageKey"
+                    class="message-placeholder"
+                    @click="loadImageOnDemand(msg)"
+                  >
+                    🖼️
+                  </div>
+                </div>
+              </template>
 
-        <!-- ✅ 🖼️ プレースホルダ -->
-        <div
-          v-else-if="msg.imageKey"
-          class="message-placeholder"
-          @click="loadImageOnDemand(msg)"
-        >
-          🖼️
-        </div>
-      </div>
-    </template>
+              <template v-else-if="isSingleEmoji(msg.content)">
+                <div class="emoji-only mine">{{ msg.content }}</div>
+              </template>
 
-<template v-if="isSingleEmoji(msg.content)">
-  <div class="emoji-only mine">{{ msg.content }}</div>
-</template>
+              <template v-else>
+                <div class="message-wrapper mine">
+                  <div class="message mine">
+                    <div v-html="msg.content.replace(/\n/g, '<br>')"></div>
+                  </div>
 
-    <!-- ✅ テキストメッセージ -->
-    <template v-else>
-      <div class="message mine">
-        <div v-html="msg.content.replace(/\n/g, '<br>')"></div>
-      </div>
-    </template>
-
-    <!-- ❤️ リアクション -->
-<div
-  v-if="msg.reactions?.items?.length"
-  :class="[
-    'reaction-display',
-    msg.mine ? 'right-corner' : 'left-corner',
-    msg._animate ? 'reaction-emoji-animate' : ''
-  ]"
->
-  <span v-for="r in msg.reactions.items" :key="r.id || r.emoji">
-    {{ r.emoji }}
-  </span>
-</div>
-  </div>
-</template>
+                  <div
+                    v-if="msg.reactions?.items?.length"
+                    :class="[
+                      'reaction-display',
+                      msg.mine ? 'right-corner' : 'left-corner',
+                      msg._animate ? 'reaction-emoji-animate' : ''
+                    ]"
+                  >
+                    <span v-for="r in msg.reactions.items" :key="r.id || r.emoji">
+                      {{ r.emoji }}
+                    </span>
+                  </div>
+                </div>
+              </template>
+            </template>
 
             <!-- 🎉 リアクションピッカー -->
-<div
-  v-if="showReactionPickerFor === msg.id && msg.senderSub !== mySub"
-  ref="reactionPickerRef"
-  class="reaction-picker"
-  @click.stop
->
-  <!-- リアクション絵文字群 -->
-  <div class="emoji-list">
-    <span
-v-for="emoji in ['❤️','😆','🥺','😮','😂','🥰','👍']"
-      :key="emoji"
-      @click="selectReaction(emoji, msg)"
-    >
-      {{ emoji }}
-    </span>
-  </div>
-
-  <!-- 📋 コピー -->
-  <span class="copy-icon" @click.stop="copyToClipboard(msg.content)">📋</span>
-</div>
+            <div
+              v-if="showReactionPickerFor === msg.id && msg.senderSub !== mySub"
+              ref="reactionPickerRef"
+              class="reaction-picker"
+              @click.stop
+            >
+              <div class="emoji-list">
+                <span
+                  v-for="emoji in ['❤️','😆','🥺','😮','😂','🥰','👍']"
+                  :key="emoji"
+                  @click="selectReaction(emoji, msg)"
+                >
+                  {{ emoji }}
+                </span>
+              </div>
+              <span class="copy-icon" @click.stop="copyToClipboard(msg.content)">📋</span>
+            </div>
           </div>
         </template>
 
@@ -182,31 +165,30 @@ v-for="emoji in ['❤️','😆','🥺','😮','😂','🥰','👍']"
       <!-- ✨ エフェクト -->
       <ChatEffect ref="chatEffect" />
 
-      <!-- 🔽 入力欄 -->
+      <!-- 🗳️ 入力栏 -->
       <div class="input-area">
         <button type="button" @click="openPhotoPicker" class="circle-button">🖼</button>
         <textarea
           ref="textareaRef"
           v-model="newMessage"
- :placeholder="t('chat.inputPlaceholder')"
+          :placeholder="t('chat.inputPlaceholder')"
           rows="1"
           class="message-input"
           @input="autoResize"
           @compositionstart="handleCompositionStart"
           @compositionend="handleCompositionEnd"
-  @focus="handleInputFocus"       
- ></textarea>
-<button
-  type="button"
-  class="circle-button"
-  :class="{ shake: isShaking }"
-  :disabled="isSendButtonDisabled"
-  @mousedown.prevent="handleSendClick"
-  @touchstart.prevent="handleSendClick"
->
-  ⇧
-</button>
-
+          @focus="handleInputFocus"
+        ></textarea>
+        <button
+          type="button"
+          class="circle-button"
+          :class="{ shake: isShaking }"
+          :disabled="isSendButtonDisabled"
+          @mousedown.prevent="handleSendClick"
+          @touchstart.prevent="handleSendClick"
+        >
+          ⇧
+        </button>
       </div>
     </div>
 
