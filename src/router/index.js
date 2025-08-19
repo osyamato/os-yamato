@@ -39,6 +39,7 @@ import GPTMiniView from '../views/GPTMiniView.vue'
 import GPTMiniChatView from '../views/GPTMiniChatView.vue'
 import Weather875View from '../views/Weather875View.vue' 
 import WeatherProfileView from '../views/WeatherProfileView.vue' // ✅ 天気プロフィール
+import MissionView from '../views/Mission.vue'
 import { Auth } from 'aws-amplify'
 
 
@@ -58,6 +59,12 @@ const routes = [
   { path: '/settings', name: 'settings', component: SettingsView },
   { path: '/account', name: 'account', component: AccountView },
   { path: '/photo', name: 'photo', component: PhotoView },
+{
+  path: '/mission',
+  name: 'Mission',
+  component: MissionView
+},
+
   {
     path: '/chat/:roomId/:receiverYamatoId',
     name: 'chat',
