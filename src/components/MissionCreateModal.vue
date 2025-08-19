@@ -5,9 +5,17 @@
         <h2 class="modal-title">新しいミッション</h2>
 
         <!-- タイトル、説明、日付 -->
-        <input v-model="title" class="modal-input" type="text" placeholder="タイトル" />
-        <textarea v-model="note" class="modal-textarea" placeholder="説明（任意）"></textarea>
-        <input v-model="goalDate" class="modal-input" type="date" />
+<div class="centered-input">
+  <input v-model="title" class="modal-input" type="text" placeholder="タイトル" />
+</div>
+
+<div class="centered-input">
+  <textarea v-model="note" class="modal-textarea" placeholder="説明（任意）"></textarea>
+</div>
+<div class="goal-date-container">
+  <div class="goal-date-label">達成日</div>
+  <input v-model="goalDate" class="modal-input goal-date-input" type="date" />
+</div>
 
         <!-- 絵文字・カラー・重要度 -->
         <div class="row-pickers">
@@ -40,7 +48,9 @@
 </div>
         </div>
 
-        <button class="modal-button" @click="createMission">作成</button>
+  <div class="button-container">
+    <YamatoButton @click="createMission">作成</YamatoButton>
+  </div>
       </div>
     </transition>
   </Modal>
@@ -50,12 +60,17 @@
 import { ref } from 'vue'
 import Modal from '@/components/Modal.vue'
 
+import YamatoButton from '@/components/YamatoButton.vue'
+
 const props = defineProps<{ visible: boolean }>()
 const emit = defineEmits(['close', 'submit'])
 
 const title = ref('')
 const note = ref('')
-const goalDate = ref('')
+const today = new Date()
+const nextMonth = new Date(today.setMonth(today.getMonth() + 1))
+const formatted = nextMonth.toISOString().split('T')[0]  // YYYY-MM-DD
+const goalDate = ref(formatted)
 const emoji = ref('🌱')
 const colorHue = ref('200')   // デフォルト 青
 const importance = ref('1')   // デフォルト 1
@@ -111,16 +126,21 @@ function close() {
 .modal-title {
   font-size: 1.2rem;
   font-weight: bold;
-  margin-bottom: 1rem;
   text-align: center;
+  margin-top: 0.1rem;     /* ← 上に余白 */
+  margin-bottom: 1.5rem;  /* 下の余白も拡大して目立たせる */
+}
+
+.centered-input {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 0.8rem;
 }
 
 .modal-input,
-.modal-textarea,
-select {
-  width: 100%;
+.modal-textarea {
+  width: 85%;
   padding: 0.6rem;
-  margin-bottom: 0.8rem;
   border: 1px solid #ccc;
   border-radius: 0.5rem;
   font-size: 1rem;
@@ -128,9 +148,40 @@ select {
   color: inherit;
 }
 
+/* スマホ用レイアウト調整 */
+@media (max-width: 600px) {
+  .modal-input,
+  .modal-textarea {
+    width: 100%;
+  }
+}
+
+/* 説明欄の高さを広げる */
 .modal-textarea {
-  min-height: 80px;
+  min-height: 120px;
   resize: vertical;
+}
+
+.full-width {
+  width: 100%;
+}
+
+/* 達成日関連 */
+.goal-date-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.goal-date-label {
+  font-weight: bold;
+  margin-bottom: 0.4rem;
+  text-align: center;
+}
+
+.goal-date-input {
+  width: 60%;
 }
 
 .row-pickers {
@@ -146,21 +197,10 @@ select {
   flex-direction: column;
 }
 
-.modal-button {
-  width: 100%;
-  padding: 0.7rem;
-  font-size: 1rem;
-  font-weight: bold;
-  border: none;
-  border-radius: 0.5rem;
-  background-color: #274c77;
-  color: white;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-}
-
-.modal-button:hover {
-  background-color: #1f3c5d;
+.button-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 1.5rem;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -170,3 +210,4 @@ select {
   }
 }
 </style>
+
