@@ -1,6 +1,13 @@
 <template>
   <div class="mission-page">
-    <h1 class="title">ミッション</h1>
+    <h1 class="title drop-animation">ミッション</h1>
+    
+    <div class="icon-bar drop-animation">
+      <IconButton :color="iconColor" @click="handleAddMission">＋</IconButton>
+      <IconButton :color="iconColor">🌷</IconButton>
+      <IconButton :color="iconColor">⏳</IconButton>
+    </div>
+
     <div class="year-clock">
       <div
         v-for="month in 12"
@@ -15,7 +22,18 @@
   </div>
 </template>
 
+
 <script setup lang="ts">
+import IconButton from '@/components/IconButton.vue'
+import { ref } from 'vue'
+
+// 動的カラー
+const iconColor = ref('#274c77')
+
+function handleAddMission() {
+  alert('新しいミッションを追加します')
+}
+
 // 円周上に12個のマークを配置
 function getMarkerStyle(month: number) {
   const angle = (month / 12) * 360
@@ -34,11 +52,26 @@ function getMarkerStyle(month: number) {
 }
 
 .title {
-  font-size: 2rem;
+  font-size: 1.4rem;
   font-weight: bold;
-  margin-bottom: 2rem;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  color: #000;
   text-align: center;
 }
+
+@media (prefers-color-scheme: dark) {
+  .title {
+    color: #fff;
+  }
+}
+.icon-bar {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1rem;
+  margin-bottom: 4rem; /* ← 追加：時計との距離をとる */
+}
+
 
 .year-clock {
   position: relative;
@@ -70,10 +103,25 @@ function getMarkerStyle(month: number) {
   font-weight: bold;
   color: inherit;
 }
+
+.drop-animation {
+  animation: dropIn 0.5s ease-out;
+}
+
+@keyframes dropIn {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
 </style>
 
 <style>
-/* グローバル: テーマに応じたカラー定義 */
 :root {
   --clock-bg: #ffffff;
   --clock-text: #222222;
@@ -88,3 +136,4 @@ function getMarkerStyle(month: number) {
   }
 }
 </style>
+
