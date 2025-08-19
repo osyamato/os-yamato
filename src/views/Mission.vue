@@ -1,7 +1,7 @@
 <template>
   <div class="mission-page">
     <h1 class="title drop-animation">ミッション</h1>
-    
+
     <div class="icon-bar drop-animation">
       <IconButton :color="iconColor" @click="handleAddMission">＋</IconButton>
       <IconButton :color="iconColor">🌷</IconButton>
@@ -19,22 +19,33 @@
       </div>
       <div class="center-label">1年</div>
     </div>
+
+    <!-- ミッション作成モーダル -->
+    <MissionCreateModal
+      :visible="showCreateModal"
+      @close="showCreateModal = false"
+      @submit="handleMissionSubmit"
+    />
   </div>
 </template>
 
-
 <script setup lang="ts">
-import IconButton from '@/components/IconButton.vue'
 import { ref } from 'vue'
+import IconButton from '@/components/IconButton.vue'
+import MissionCreateModal from '@/components/MissionCreateModal.vue'
 
-// 動的カラー
 const iconColor = ref('#274c77')
+const showCreateModal = ref(false)
 
 function handleAddMission() {
-  alert('新しいミッションを追加します')
+  showCreateModal.value = true
 }
 
-// 円周上に12個のマークを配置
+function handleMissionSubmit(data) {
+  console.log('✅ ミッション作成データ:', data)
+  // ここで保存処理などを追加予定
+}
+
 function getMarkerStyle(month: number) {
   const angle = (month / 12) * 360
   return {
