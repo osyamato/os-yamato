@@ -42,14 +42,14 @@
   <label>重要度</label>
   <select v-model="importance">
     <option v-for="level in 5" :key="level" :value="level">
-      {{ level }}
+      {{ level }}{{ level === 1 ? ' (低)' : level === 5 ? ' (高)' : '' }}
     </option>
   </select>
 </div>
         </div>
 
   <div class="button-container">
-    <YamatoButton @click="createMission">作成</YamatoButton>
+<YamatoButton @click="submitMission">作成</YamatoButton>
   </div>
       </div>
     </transition>
@@ -59,8 +59,10 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import Modal from '@/components/Modal.vue'
-
 import YamatoButton from '@/components/YamatoButton.vue'
+
+import { API, graphqlOperation, Auth } from 'aws-amplify'
+import { createMission as createMissionMutation } from '@/graphql/mutations'
 
 const props = defineProps<{ visible: boolean }>()
 const emit = defineEmits(['close', 'submit'])
@@ -69,13 +71,17 @@ const title = ref('')
 const note = ref('')
 const today = new Date()
 const nextMonth = new Date(today.setMonth(today.getMonth() + 1))
-const formatted = nextMonth.toISOString().split('T')[0]  // YYYY-MM-DD
+const formatted = nextMonth.toISOString().split('T')[0]
 const goalDate = ref(formatted)
 const emoji = ref('🌱')
-const colorHue = ref('200')   // デフォルト 青
-const importance = ref('1')   // デフォルト 1
+const colorHue = ref('200')
+const importance = ref('1')
 
-const emojiOptions = ['🌱', '🌷', '📕', '✏️', '🍳', '🏃‍♂️']
+const emojiOptions = [
+  '🌱', '🌷', '🌟', '📘', '📕', '✏️', '🧘‍♂️', '💪', '🍳', '🏃‍♂️', '🚴‍♀️',
+  '📈', '🗓️', '🧠', '🧹', '🎵', '🎨', '💼', '🛏️'
+]
+
 const colorOptions = {
   0: '赤',
   40: 'オレンジ',
@@ -84,32 +90,46 @@ const colorOptions = {
   280: '紫'
 }
 
-function createMission() {
+async function submitMission() {
   if (!title.value || !goalDate.value) {
     alert('タイトルと期日は必須です')
     return
   }
 
-  emit('submit', {
-    title: title.value,
-    note: note.value,
-    goalDate: goalDate.value,
-    emoji: emoji.value,
-    colorHue: parseInt(colorHue.value),
-    importance: parseInt(importance.value)
-  })
+  try {
+    const user = await Auth.currentAuthenticatedUser()
+    const owner = user.username
 
-  resetForm()
-  close()
+const missionData = {
+  title: title.value,
+  note: note.value,
+  goalDate: goalDate.value,
+  emoji: emoji.value,
+  colorHue: parseInt(colorHue.value),
+  importance: parseInt(importance.value),
+  isCompleted: false
+}
+
+    const result = await API.graphql(
+graphqlOperation(createMissionMutation, { input: missionData })
+    )
+
+    emit('submit', result.data.createMission)
+    resetForm()
+    close()
+  } catch (error) {
+    console.error('❌ ミッション作成失敗:', error)
+    alert('保存に失敗しました')
+  }
 }
 
 function resetForm() {
   title.value = ''
   note.value = ''
   goalDate.value = ''
-  emoji.value = ''
-  colorHue.value = ''
-  importance.value = ''
+  emoji.value = '🌱'
+  colorHue.value = '200'
+  importance.value = '1'
 }
 
 function close() {
