@@ -78,7 +78,6 @@ Auth.currentAuthenticatedUser()
   .catch(() => {})
 
 function handleIconClick() {
-  console.log('🕰️ Clock icon clicked — animation selector (future)')
 }
 
 const TOTAL_PETALS = 60
@@ -178,7 +177,6 @@ function spawnPetals(event) {
   const y = event.clientY - rect.top
   const id = Date.now() + Math.random()
 
-  console.log('📍 spawnPetals', x, y)
 
   petalOverlays.value.push({ id, x, y })
 

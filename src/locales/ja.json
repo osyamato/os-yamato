@@ -7,12 +7,12 @@
 "about.english": "English",
 "about.chinese": "中文",
 
-"chinese": "中国語",
-"spanish": "スペイン語",
-"french": "フランス語",
-"japanese": "日本語",
-"english": "英語",
-"indonesian": "インドネシア語",
+"japanese": "日本語 (JP)",
+  "english": "英語 (EN)",
+  "chinese": "中国語 (ZH)",
+  "spanish": "スペイン語 (ES)",
+  "french": "フランス語 (FR)",
+  "indonesian": "インドネシア語 (ID)",
 
 
  "title": "設定",
