@@ -1,4 +1,9 @@
 {
+"alertNeedProfile": "Silakan atur profil Anda dari ikon 👤.",
+
+  "errorYamatoIdRequired": "Silakan masukkan ID Yamato",
+
+ "alertNeedProfile.id": "Silakan atur profil Anda terlebih dahulu.",
 "title": "Pengaturan", 
 "common.cancel": "Batalkan",
 "common.delete": "Hapus",

@@ -9,25 +9,29 @@
     </div>
 
     <div class="year-clock">
-      <div
-        v-for="month in 12"
-        :key="month"
-        class="month-marker"
-        :style="getMarkerStyle(month)"
-      >
-        {{ month }}
-      </div>
-      <div class="center-label">1年</div>
-
+      <!-- 0〜11月を固定で表示 -->
 <div
-  v-for="m in missions"
-  :key="m.id"
-  class="mission-marker"
-  :style="getMissionStyle(m)"
-@click="openMissionDetail(m)" 
+  v-for="i in (isYearView ? 12 : 31)"
+  :key="i"
+  class="month-marker"
+  :style="getMarkerStyle(i - 1, isYearView ? 12 : 31)"
 >
-  {{ m.emoji }}
+  {{ i - 1 }}
 </div>
+
+<div class="center-label" @click="toggleViewMode">
+  {{ isYearView ? '1年' : '1ヶ月' }}
+</div>
+      <!-- ミッション -->
+      <div
+        v-for="m in missions"
+        :key="m.id"
+        class="mission-marker"
+        :style="getMissionStyle(m)"
+        @click="openMissionDetail(m)"
+      >
+        {{ m.emoji }}
+      </div>
     </div>
 
     <MissionCreateModal
@@ -35,12 +39,11 @@
       @close="showCreateModal = false"
       @submit="handleMissionSubmit"
     />
-<MissionDetailModal
-  :visible="showDetailModal"
-  :mission="selectedMission"
-  @close="showDetailModal = false"
-/>
-
+    <MissionDetailModal
+      :visible="showDetailModal"
+      :mission="selectedMission"
+      @close="showDetailModal = false"
+    />
   </div>
 </template>
 
@@ -55,21 +58,22 @@ import { listMissions } from '@/graphql/queries'
 const iconColor = ref('#274c77')
 const showCreateModal = ref(false)
 const missions = ref([])
-
 const selectedMission = ref(null)
 const showDetailModal = ref(false)
+
+const isYearView = ref(true)
+
+function toggleViewMode() {
+  isYearView.value = !isYearView.value
+}
 
 function openMissionDetail(mission) {
   selectedMission.value = mission
   showDetailModal.value = true
 }
 
-// 角度ごとのミッション数をカウント
-const angleMap = new Map()
-
 async function fetchMissions() {
   try {
-    angleMap.clear() // ← 毎回リセット
     const result = await API.graphql(graphqlOperation(listMissions))
     missions.value = result.data.listMissions.items
   } catch (e) {
@@ -87,64 +91,87 @@ function handleMissionSubmit() {
   fetchMissions()
 }
 
-function getMissionStyle(mission) {
+function getMonthOffsetFromToday(goal: Date): number {
   const today = new Date()
+  const goalDate = new Date(goal)
+
+  const yearDiff = goalDate.getFullYear() - today.getFullYear()
+  const monthDiff = goalDate.getMonth() - today.getMonth()
+
+  const offset = yearDiff * 12 + monthDiff
+
+  if (offset === 0) return 0
+
+  return Math.max(0, Math.min(offset, 11))
+}
+
+function getMissionStyle(mission) {
   const goal = new Date(mission.goalDate)
+  const today = new Date()
 
-  // 月差分
-  let monthsFromNow = monthDiff(today, goal)
-  monthsFromNow = Math.max(0, Math.min(11, monthsFromNow))
+  const seed = hashCode(mission.id)
+  const radiusOffset = ((seed % 300) - 150) / 150 * 15
 
-  const baseAngle = monthsFromNow * 30
-
-  // --- ランダム化 ---
-  // 同じ角度に複数ある場合 → カウント用
-  const key = `${monthsFromNow}`
-  const count = angleMap.get(key) || 0
-  angleMap.set(key, count + 1)
-
-  // spread: ±10度, ±15px
-  const spreadAngle = 10
-  const spreadRadius = 15
-
-  // ずれを計算（ミッションごとに差をつける）
-  const angleOffset = (Math.random() - 0.5) * 2 * spreadAngle
-  const radiusOffset = (Math.random() - 0.5) * 2 * spreadRadius
-
-  const finalAngle = baseAngle + angleOffset
   const baseRadius = 130 + radiusOffset
-
-  // サイズ
   const baseSize = 20 + mission.importance * 4
   const size = mission.importance === 5 ? baseSize * 1.15 : baseSize
 
-  return {
-    '--angle': `${finalAngle}deg`,
-    width: `${size}px`,
-    height: `${size}px`,
-    backgroundColor: `hsl(${mission.colorHue}, 70%, 70%)`,
-    fontSize: `${size * 0.6}px`,
-    transform: `translate(-50%, -50%) rotate(${finalAngle}deg) translateY(-${baseRadius}px) rotate(${-finalAngle}deg)`
+  if (isYearView.value) {
+    const offset = getMonthOffsetFromToday(goal)
+    const baseAngle = offset * 30
+
+    const rawAngle = seed % 100
+    const angleOffset = offset === 0
+      ? (rawAngle / 100) * 10
+      : ((rawAngle - 50) / 50) * 10
+
+    const finalAngle = baseAngle + angleOffset
+
+    return {
+      '--angle': `${finalAngle}deg`,
+      width: `${size}px`,
+      height: `${size}px`,
+      backgroundColor: `hsl(${mission.colorHue}, 70%, 70%)`,
+      fontSize: `${size * 0.6}px`,
+      transform: `translate(-50%, -50%) rotate(${finalAngle}deg) translateY(-${baseRadius}px) rotate(${-finalAngle}deg)`
+    }
+  } else {
+    // === 1ヶ月ビュー ===
+    const diff = goal.getTime() - today.getTime()
+    const days = diff / (1000 * 60 * 60 * 24)
+    if (days < 0 || days > 31) return { display: 'none' }
+
+    const angle = (days / 31) * 360
+    const finalAngle = angle
+
+    return {
+      '--angle': `${finalAngle}deg`,
+      width: `${size}px`,
+      height: `${size}px`,
+      backgroundColor: `hsl(${mission.colorHue}, 70%, 70%)`,
+      fontSize: `${size * 0.6}px`,
+      transform: `translate(-50%, -50%) rotate(${finalAngle}deg) translateY(-${baseRadius}px) rotate(${-finalAngle}deg)`
+    }
   }
 }
 
-function monthDiff(start: Date, end: Date) {
-  const yearDiff = end.getFullYear() - start.getFullYear()
-  const monthDiff = end.getMonth() - start.getMonth()
-  const dayDiff = end.getDate() - start.getDate()
-
-  let totalMonths = yearDiff * 12 + monthDiff
-  if (dayDiff < 0) totalMonths -= 1
-
-  return totalMonths
+function hashCode(str: string): number {
+  let hash = 0
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash << 5) - hash + str.charCodeAt(i)
+    hash |= 0
+  }
+  return Math.abs(hash)
 }
 
-function getMarkerStyle(month: number) {
-  const angle = (month / 12) * 360
+function getMarkerStyle(index: number, division: number) {
+  const angle = (index / division) * 360 - 0  // ← 12時方向を 0 にする！
   return {
     '--angle': `${angle}deg`
   }
 }
+
+
 </script>
 
 
@@ -251,3 +278,5 @@ function getMarkerStyle(month: number) {
   }
 }
 </style>
+
+

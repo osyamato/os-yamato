@@ -1,4 +1,7 @@
 {
+"alertNeedProfile": "Por favor, configura tu perfil desde el ícono 👤.",
+"errorYamatoIdRequired": "Por favor, introduce un ID de Yamato",
+  "alertNeedProfile.es": "Por favor, configura tu perfil primero.",
   "common.cancel": "Cancelar",
   "common.delete": "Eliminar",
   "common.termsAndPrivacy": "Términos y política de privacidad",
