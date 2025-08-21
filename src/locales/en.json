@@ -1,4 +1,6 @@
 {
+"alertNeedProfile": "Please set up your profile from the 👤 icon.",
+  "errorYamatoIdRequired": "Please enter a Yamato ID",
 "common.cancel": "Cancel",
   "common.delete": "Delete",
 

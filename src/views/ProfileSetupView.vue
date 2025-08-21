@@ -11,7 +11,12 @@
     <textarea v-model="bio" :placeholder="t('profile.bioPlaceholder')" rows="4" />
 
     <div class="button-row">
-      <YamatoButton @click="register">{{ t('profile.registerButton') }}</YamatoButton>
+<YamatoButton
+  @click="register"
+  :disabled="!yamatoId.trim() || !displayName.trim()"
+>
+  {{ t('profile.registerButton') }}
+</YamatoButton>
     </div>
 
     <div class="go-hidden">
@@ -72,6 +77,11 @@ function validateAtMark() {
 }
 
 async function register() {
+if (!yamatoId.value.trim() || yamatoId.value.trim() === '@') {
+  errorMessage.value = t('errorYamatoIdRequired')
+  return
+}
+
   try {
     const user = await Auth.currentAuthenticatedUser()
     const sub = user.attributes.sub
@@ -182,5 +192,8 @@ textarea {
   transform: scale(1.2);
   color: #f5c6c6; /* ✅ ホバー時にさらに淡く上品に */
 }
-
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 </style>

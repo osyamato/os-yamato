@@ -1,4 +1,6 @@
 {
+"alertNeedProfile": "请通过 👤 图标设置您的个人资料。",
+ "errorYamatoIdRequired": "请输入 Yamato ID",
   "common.cancel": "取消",
   "common.delete": "删除",
 "terms.title": "服务条款与隐私政策",

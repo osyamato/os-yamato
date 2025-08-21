@@ -1,4 +1,7 @@
 {
+"alertNeedProfile": "Veuillez configurer votre profil via l’icône 👤.",
+"errorYamatoIdRequired": "Veuillez saisir un identifiant Yamato",
+
 "common.cancel": "Annuler",
   "common.delete": "Supprimer",
   "common.termsAndPrivacy": "Conditions et politique de confidentialité",

@@ -1,29 +1,26 @@
 <template>
-  <div class="chat-room-list">
-    <!-- 🔷 ヘッダー -->
-    <transition name="dropDown" v-if="shouldAnimate">
-      <div class="chat-header" v-if="isReady">
-        <h2 class="header-title">{{ t('chat.title') }}</h2>
-        <div class="header-icons">
-          <IconButton :color="iconColor" @click="openProfileModal">{{ myInitial }}</IconButton>
-          <IconButton v-if="hasProfile" :color="iconColor" :class="{ blink: hasIncomingRequest }" @click="handleRequestClick">📮</IconButton>
-          <IconButton v-if="hasProfile" :color="iconColor" @click="openSearchModal">🔍</IconButton>
-<IconButton v-if="hasProfile" :color="iconColor" @click="openSentWindMessages">
-  🕊️
-</IconButton>
-        </div>
-      </div>
-    </transition>
 
-    <div class="chat-header" v-else-if="isReady">
-      <h2 class="header-title">{{ t('chat.title') }}</h2>
-      <div class="header-icons">
-        <IconButton :color="iconColor" @click="openProfileModal">{{ myInitial }}</IconButton>
-        <IconButton v-if="hasProfile" :color="iconColor" :class="{ blink: hasIncomingRequest }" @click="handleRequestClick">📮</IconButton>
-        <IconButton v-if="hasProfile" :color="iconColor" @click="openSearchModal">🔍</IconButton>
-<IconButton v-if="hasProfile" :color="iconColor" @click="openSentWindMessages">🕊️</IconButton>
-      </div>
-    </div>
+  <div class="chat-room-list">
+
+<!-- 🔷 ヘッダー -->
+<div class="chat-header">
+  <h2 class="header-title">{{ t('chat.title') }}</h2>
+  <div class="header-icons">
+    <IconButton :color="iconColor" @click="handleProfileClick">
+      {{ hasProfile ? myInitial : '👤' }}
+    </IconButton>
+    <IconButton :color="iconColor" :class="{ blink: hasIncomingRequest }" @click="handleRequestClick">📮</IconButton>
+    <IconButton :color="iconColor" @click="handleSearchClick">🔍</IconButton>
+    <IconButton :color="iconColor" @click="handleSentMessagesClick">🕊️</IconButton>
+  </div>
+</div>
+
+<transition name="fade">
+  <div v-if="!isReady && shouldAnimate" class="list-loading-overlay">
+    <img src="/messege.icon.png" class="loading-image" alt="Loading..." />
+  </div>
+</transition>
+
 
     <!-- 🔷 チャットリスト -->
     <transition name="dropDownList" v-if="shouldAnimate">
@@ -385,11 +382,6 @@ function closeOptions() {
   showOptionsFor.value = null
 }
 
-function handleRequestClick() {
-  fetchRequests()                      // ✅ 追加
-  showRequestModal.value = true
-  hasIncomingRequest.value = false
-}
 
 function scrollToTop() {
   window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -655,23 +647,16 @@ function goToRequestView() {
   router.push({ name: 'chat-requests' })
 }
 async function handleRefreshAndClose() {
-  console.log('📥 モーダルからrefresh受信')
   await fetchChatRooms()
-  console.log('✅ チャットルーム再取得完了')
   showRequestModal.value = false
 }
 
 function openSearchModal() {
   if (!hasProfile.value) {
-    showProfileModal.value = true  // ✅ プロフィール未登録 → 登録モーダルへ
   } else {
-    showModal.value = true         // ✅ 登録済 → Yamato検索モーダルへ
   }
 }
 
-function openProfileModal() {
-  showProfileModal.value = true    // 🔘 パーソナルアイコン押下で直接表示
-}
 
 function goToWindMessage() {
   router.push({ name: 'wind-message' })  // 適宜ルート名に合わせて修正
@@ -704,14 +689,93 @@ onBeforeUnmount(() => {
 
 defineExpose({ accept, reject })
 
+function handleProfileClick() {
+  showProfileModal.value = true
+}
+
+function handleSearchClick() {
+  if (!hasProfile.value) {
+alert(t('alertNeedProfile'))
+    return
+  }
+  showModal.value = true
+}
+
+function handleSentMessagesClick() {
+  if (!hasProfile.value) {
+alert(t('alertNeedProfile'))
+    return
+  }
+  openSentWindMessages()
+}
+
+function handleRequestClick() {
+  if (!hasProfile.value) {
+alert(t('alertNeedProfile'))
+    return
+  }
+  fetchRequests()
+  showRequestModal.value = true
+  hasIncomingRequest.value = false
+}
+
 </script>
 
 
 
 <style>
-.chat-room-list {
-  padding: 2rem;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+.room-list {
+  position: relative;
+  min-height: 300px; /* 必須：高さがないと中央配置できない */
+}
+
+.list-loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.loading-image {
+  width: 120px;
+  opacity: 0.9;
+  border-radius: 24px;
+}
+
+@keyframes loadingFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(1);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes loadingFadeOut {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.4);
+  }
+}
+
+.fade-enter-active {
+  animation: loadingFadeIn 0.4s ease forwards;
+}
+
+.fade-leave-active {
+  animation: loadingFadeOut 0.5s ease forwards;
 }
 
 /* ヘッダー */
@@ -723,11 +787,13 @@ defineExpose({ accept, reject })
 }
 
 .header-title {
+  margin-top: 2.0rem; /* ← お好みで調整。例：1.5rem = 約24px */
   font-size: 1.4rem;
   font-weight: bold;
   text-align: center;
   color: black !important;
 }
+
 @media (prefers-color-scheme: dark) {
   .header-title {
     color: white !important;
@@ -843,12 +909,13 @@ defineExpose({ accept, reject })
   white-space: nowrap;
 }
 .unread-dot.inline {
-  width: 12px;
-  height: 12px;
-  margin-right: 6px;
+  width: 15px;
+  height: 15px;
+  margin-right: 16px;
   border-radius: 50%;
   background-color: var(--yamato-primary);
 }
+
 
 /* 時刻 */
 .last-time {
@@ -938,7 +1005,5 @@ defineExpose({ accept, reject })
   }
 }
 
-
 </style>
-
 

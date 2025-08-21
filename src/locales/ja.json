@@ -1,4 +1,8 @@
 {
+
+  "alertNeedProfile": "👤アイコンからプロフィールを設定してください。",
+"errorYamatoIdRequired": "Yamato IDを入力してください",
+
   "common.cancel": "キャンセル",
   "common.delete": "削除",
 
