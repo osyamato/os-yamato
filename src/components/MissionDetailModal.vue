@@ -54,10 +54,11 @@
           </div>
         </div>
 
-        <div class="button-container">
-          <button @click="save">💾 保存</button>
-          <button @click="isEditing = false">キャンセル</button>
-        </div>
+<div class="button-container">
+  <YamatoButton @click="handleDelete" tone="danger">削除</YamatoButton>
+  <YamatoButton @click="save">保存</YamatoButton>
+  <YamatoButton @click="isEditing = false" outline>キャンセル</YamatoButton>
+</div>
       </div>
     </div>
   </Modal>
@@ -66,13 +67,13 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import Modal from '@/components/Modal.vue'
+import YamatoButton from '@/components/YamatoButton.vue'
 
 const props = defineProps<{
   visible: boolean
   mission: any
 }>()
 
-const emit = defineEmits(['close', 'update'])
 
 const isEditing = ref(false)
 
@@ -125,6 +126,16 @@ function save() {
   isEditing.value = false
   emit('close')
 }
+
+const emit = defineEmits(['close', 'update', 'delete'])
+
+function handleDelete() {
+  if (props.mission && confirm('このミッションを本当に削除しますか？')) {
+    emit('delete', props.mission.id)
+    emit('close')
+  }
+}
+
 </script>
 
 <style scoped>

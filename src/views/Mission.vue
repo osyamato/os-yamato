@@ -44,6 +44,7 @@
   :mission="selectedMission"
   @close="showDetailModal = false"
   @update="handleMissionUpdate"
+  @delete="handleMissionDelete"
 />
   </div>
 </template>
@@ -56,6 +57,7 @@ import MissionDetailModal from '@/components/MissionDetailModal.vue'
 import { API, graphqlOperation } from 'aws-amplify'
 import { listMissions } from '@/graphql/queries'
 import { updateMission as updateMissionMutation } from '@/graphql/mutations'
+import { deleteMission as deleteMissionMutation } from '@/graphql/mutations'
 
 const iconColor = ref('#274c77')
 const showCreateModal = ref(false)
@@ -195,6 +197,16 @@ async function handleMissionUpdate(updatedMission) {
   } catch (e) {
     console.error('❌ 更新失敗:', e)
     alert('保存に失敗しました')
+  }
+}
+
+async function handleMissionDelete(id: string) {
+  try {
+    await API.graphql(graphqlOperation(deleteMissionMutation, { input: { id } }))
+    missions.value = missions.value.filter(m => m.id !== id)
+  } catch (e) {
+    console.error('❌ 削除失敗:', e)
+    alert('削除に失敗しました')
   }
 }
 
