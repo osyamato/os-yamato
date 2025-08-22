@@ -12,8 +12,8 @@
       <!-- 0〜11月を固定で表示 -->
 <div
   v-for="i in (isYearView ? 12 : 31)"
-  :key="i"
-  class="month-marker"
+  :key="'marker-' + i + '-' + isYearView"
+  class="month-marker fade-item"
   :style="getMarkerStyle(i - 1, isYearView ? 12 : 31)"
 >
   {{ i - 1 }}
@@ -23,13 +23,13 @@
   {{ isYearView ? '1年' : '1ヶ月' }}
 </div>
       <!-- ミッション -->
-      <div
-        v-for="m in missions"
-        :key="m.id"
-        class="mission-marker"
-        :style="getMissionStyle(m)"
-        @click="openMissionDetail(m)"
-      >
+<div
+  v-for="m in missions"
+  :key="m.id + '-' + isYearView"
+  class="mission-marker fade-item"
+  :style="getMissionStyle(m)"
+  @click="openMissionDetail(m)"
+>
         {{ m.emoji }}
       </div>
     </div>
@@ -39,11 +39,12 @@
       @close="showCreateModal = false"
       @submit="handleMissionSubmit"
     />
-    <MissionDetailModal
-      :visible="showDetailModal"
-      :mission="selectedMission"
-      @close="showDetailModal = false"
-    />
+<MissionDetailModal
+  :visible="showDetailModal"
+  :mission="selectedMission"
+  @close="showDetailModal = false"
+  @update="handleMissionUpdate"
+/>
   </div>
 </template>
 
@@ -54,6 +55,7 @@ import MissionCreateModal from '@/components/MissionCreateModal.vue'
 import MissionDetailModal from '@/components/MissionDetailModal.vue'
 import { API, graphqlOperation } from 'aws-amplify'
 import { listMissions } from '@/graphql/queries'
+import { updateMission as updateMissionMutation } from '@/graphql/mutations'
 
 const iconColor = ref('#274c77')
 const showCreateModal = ref(false)
@@ -171,6 +173,31 @@ function getMarkerStyle(index: number, division: number) {
   }
 }
 
+async function handleMissionUpdate(updatedMission) {
+  try {
+    // 必要なフィールドだけ抽出（UpdateMissionInput に定義されているもののみ）
+    const input = {
+      id: updatedMission.id,
+      title: updatedMission.title,
+      note: updatedMission.note,
+      goalDate: updatedMission.goalDate,
+      emoji: updatedMission.emoji,
+      importance: updatedMission.importance,
+      colorHue: updatedMission.colorHue
+    }
+
+    await API.graphql(graphqlOperation(updateMissionMutation, { input }))
+
+    const index = missions.value.findIndex(m => m.id === updatedMission.id)
+    if (index !== -1) {
+      missions.value[index] = { ...missions.value[index], ...input }
+    }
+  } catch (e) {
+    console.error('❌ 更新失敗:', e)
+    alert('保存に失敗しました')
+  }
+}
+
 
 </script>
 
@@ -261,6 +288,8 @@ function getMarkerStyle(index: number, division: number) {
     opacity: 1;
   }
 }
+
+
 </style>
 
 <style>
@@ -277,6 +306,21 @@ function getMarkerStyle(index: number, division: number) {
     --clock-border: #666666;
   }
 }
+
+.fade-item {
+  opacity: 0;
+  animation: fadeIn 1.5s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 </style>
 
 
