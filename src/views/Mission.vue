@@ -79,7 +79,10 @@ function openMissionDetail(mission) {
 async function fetchMissions() {
   try {
     const result = await API.graphql(graphqlOperation(listMissions))
-    missions.value = result.data.listMissions.items
+    const allMissions = result.data.listMissions.items
+
+    // 👇 完了していないミッションだけを表示する
+    missions.value = allMissions.filter(m => !m.isCompleted)
   } catch (e) {
     console.error('❌ ミッション取得失敗', e)
   }
@@ -118,7 +121,7 @@ function getMissionStyle(mission) {
 
   const baseRadius = 130 + radiusOffset
   const baseSize = 20 + mission.importance * 4
-  const size = mission.importance === 5 ? baseSize * 1.15 : baseSize
+const size = mission.importance === 5 ? baseSize * 1.5 : baseSize
 
   if (isYearView.value) {
     const offset = getMonthOffsetFromToday(goal)
@@ -177,7 +180,6 @@ function getMarkerStyle(index: number, division: number) {
 
 async function handleMissionUpdate(updatedMission) {
   try {
-    // 必要なフィールドだけ抽出（UpdateMissionInput に定義されているもののみ）
     const input = {
       id: updatedMission.id,
       title: updatedMission.title,
@@ -185,14 +187,19 @@ async function handleMissionUpdate(updatedMission) {
       goalDate: updatedMission.goalDate,
       emoji: updatedMission.emoji,
       importance: updatedMission.importance,
-      colorHue: updatedMission.colorHue
+      colorHue: updatedMission.colorHue,
+      isCompleted: updatedMission.isCompleted // ← これが重要！
     }
 
     await API.graphql(graphqlOperation(updateMissionMutation, { input }))
 
     const index = missions.value.findIndex(m => m.id === updatedMission.id)
     if (index !== -1) {
-      missions.value[index] = { ...missions.value[index], ...input }
+      if (input.isCompleted) {
+        missions.value.splice(index, 1) // 完了済みは削除
+      } else {
+        missions.value[index] = { ...missions.value[index], ...input }
+      }
     }
   } catch (e) {
     console.error('❌ 更新失敗:', e)
@@ -251,8 +258,19 @@ async function handleMissionDelete(id: string) {
   border-radius: 50%;
   background-color: var(--clock-bg);
   color: var(--clock-text);
-  border: 4px solid var(--clock-border);
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+  border: 6px solid var(--clock-border);
+  box-shadow:
+    0 12px 28px rgba(0, 0, 0, 0.4),   /* メインの濃く大きな影 */
+    0 6px 18px rgba(0, 0, 0, 0.3),    /* 中間のやわらかい影 */
+    0 0 60px rgba(0, 0, 0, 0.2); 
+}
+@media (prefers-color-scheme: dark) {
+  .year-clock {
+    box-shadow:
+      0 12px 28px rgba(255, 255, 255, 0.08),
+      0 6px 18px rgba(255, 255, 255, 0.05),
+      0 0 60px rgba(255, 255, 255, 0.04);
+  }
 }
 
 .month-marker {
@@ -308,7 +326,7 @@ async function handleMissionDelete(id: string) {
 :root {
   --clock-bg: #ffffff;
   --clock-text: #222222;
-  --clock-border: #dddddd;
+  --clock-border: #bbbbbb; /* 少し濃くして枠線が目立つように */
 }
 
 @media (prefers-color-scheme: dark) {

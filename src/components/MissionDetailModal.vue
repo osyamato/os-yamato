@@ -2,15 +2,24 @@
   <Modal :visible="visible" @close="$emit('close')">
     <div class="modal-body" v-if="mission">
       <!-- ✏️ 編集ボタン -->
+<button class="complete-button" @click="handleCompleteClick">🏁</button>
+
       <button class="edit-button" @click="isEditing = !isEditing">✏️</button>
 
-      <!-- 表示モード -->
-      <div v-if="!isEditing">
-        <h2 class="modal-title">{{ mission.emoji }} {{ mission.title }}</h2>
-        <p><strong>説明:</strong> {{ mission.note || 'なし' }}</p>
-        <p><strong>達成日:</strong> {{ mission.goalDate }}</p>
-        <p><strong>重要度:</strong> ⭐️{{ mission.importance }}</p>
-      </div>
+<div v-if="!isEditing" class="view-mode">
+  <h2 class="modal-title center-text">{{ mission.emoji }} {{ mission.title }}</h2>
+
+  <p v-if="mission.note" class="center-text">{{ mission.note }}</p>
+
+  <div class="center-text date-block">
+    <div class="goal-date-label">達成日</div>
+    <div>{{ mission.goalDate }}</div>
+  </div>
+
+  <p class="center-text importance-stars">
+    {{ '⭐️'.repeat(mission.importance) }}
+  </p>
+</div>
 
       <!-- 編集モード -->
       <div v-else>
@@ -136,9 +145,40 @@ function handleDelete() {
   }
 }
 
+function handleCompleteClick() {
+  if (confirm('このミッションを完了にしますか？')) {
+    emit('update', {
+      ...props.mission,
+      isCompleted: true
+    })
+    emit('close')
+  }
+}
+
 </script>
 
 <style scoped>
+
+.center-text {
+  text-align: center;
+  margin: 0.5rem 0;
+}
+
+.importance-stars {
+  font-size: 1.5rem;
+}
+
+.date-block {
+  margin-top: 1rem;
+}
+
+.goal-date-label {
+  font-weight: bold;
+  font-size: 0.95rem;
+  margin-bottom: 0.2rem;
+}
+
+
 .modal-body {
   padding: 1.5rem;
   max-width: 90vw;
@@ -155,9 +195,19 @@ function handleDelete() {
 
 .edit-button {
   position: absolute;
-  top: 1rem;
-  right: 1rem;
-  font-size: 1.3rem;
+  top: -0.8rem;
+  right: -0.8rem; /* ← ここを狭くすることで、より右上に */
+  font-size: 1.4rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.complete-button {
+  position: absolute;
+  top: -0.8rem;
+  left: -0.8rem;
+  font-size: 1.4rem;
   background: none;
   border: none;
   cursor: pointer;
