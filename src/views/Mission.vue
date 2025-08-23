@@ -4,8 +4,7 @@
 
     <div class="icon-bar drop-animation">
       <IconButton :color="iconColor" @click="handleAddMission">＋</IconButton>
-      <IconButton :color="iconColor">🌷</IconButton>
-      <IconButton :color="iconColor">⏳</IconButton>
+<IconButton :color="iconColor" @click="showCompletedModal = true">🏁</IconButton>
     </div>
 
     <div class="year-clock">
@@ -42,15 +41,25 @@
 <MissionDetailModal
   :visible="showDetailModal"
   :mission="selectedMission"
+  :iconColor="iconColor"
   @close="showDetailModal = false"
   @update="handleMissionUpdate"
   @delete="handleMissionDelete"
 />
+
+
+<CompletedMissionsModal
+  :visible="showCompletedModal"
+  :missions="completedMissions"
+  :iconColor="iconColor"
+  @close="showCompletedModal = false"
+/>
+
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import IconButton from '@/components/IconButton.vue'
 import MissionCreateModal from '@/components/MissionCreateModal.vue'
 import MissionDetailModal from '@/components/MissionDetailModal.vue'
@@ -58,6 +67,8 @@ import { API, graphqlOperation } from 'aws-amplify'
 import { listMissions } from '@/graphql/queries'
 import { updateMission as updateMissionMutation } from '@/graphql/mutations'
 import { deleteMission as deleteMissionMutation } from '@/graphql/mutations'
+import CompletedMissionsModal from '@/components/CompletedMissionsModal.vue'
+
 
 const iconColor = ref('#274c77')
 const showCreateModal = ref(false)
@@ -66,6 +77,11 @@ const selectedMission = ref(null)
 const showDetailModal = ref(false)
 
 const isYearView = ref(true)
+
+const showCompletedModal = ref(false)
+const completedMissions = computed(() =>
+  missions.value.filter(m => m.isCompleted)
+)
 
 function toggleViewMode() {
   isYearView.value = !isYearView.value

@@ -1,25 +1,39 @@
 <template>
   <Modal :visible="visible" @close="$emit('close')">
-    <div class="modal-body" v-if="mission">
-      <!-- ✏️ 編集ボタン -->
-<button class="complete-button" @click="handleCompleteClick">🏁</button>
+    <template v-if="mission">
+      <!-- 完了ボタン（左上） -->
+      <button
+        class="icon-button complete-button"
+        @click="handleCompleteClick"
+        :style="{ backgroundColor: props.iconColor, color: '#fff' }"
+      >
+        🏁
+      </button>
 
-      <button class="edit-button" @click="isEditing = !isEditing">✏️</button>
+      <!-- 編集ボタン（右上） -->
+      <button
+        class="icon-button edit-button"
+        @click="isEditing = !isEditing"
+        :style="{ backgroundColor: props.iconColor, color: '#fff' }"
+      >
+        ✏️
+      </button>
 
-<div v-if="!isEditing" class="view-mode">
-  <h2 class="modal-title center-text">{{ mission.emoji }} {{ mission.title }}</h2>
+      <!-- 表示モード -->
+      <div v-if="!isEditing" class="view-mode">
+        <h2 class="modal-title center-text">{{ mission.emoji }} {{ mission.title }}</h2>
 
-  <p v-if="mission.note" class="center-text">{{ mission.note }}</p>
+        <p v-if="mission.note" class="center-text">{{ mission.note }}</p>
 
-  <div class="center-text date-block">
-    <div class="goal-date-label">達成日</div>
-    <div>{{ mission.goalDate }}</div>
-  </div>
+        <div class="center-text date-block">
+          <div class="goal-date-label">達成日</div>
+          <div>{{ mission.goalDate }}</div>
+        </div>
 
-  <p class="center-text importance-stars">
-    {{ '⭐️'.repeat(mission.importance) }}
-  </p>
-</div>
+        <p class="center-text importance-stars">
+          {{ '⭐️'.repeat(mission.importance) }}
+        </p>
+      </div>
 
       <!-- 編集モード -->
       <div v-else>
@@ -63,25 +77,21 @@
           </div>
         </div>
 
-<div class="button-container">
-  <YamatoButton @click="handleDelete" tone="danger">削除</YamatoButton>
-  <YamatoButton @click="save">保存</YamatoButton>
-  <YamatoButton @click="isEditing = false" outline>キャンセル</YamatoButton>
-</div>
+        <div class="button-container">
+          <YamatoButton @click="handleDelete" tone="danger">削除</YamatoButton>
+          <YamatoButton @click="save">保存</YamatoButton>
+          <YamatoButton @click="isEditing = false" outline>キャンセル</YamatoButton>
+        </div>
       </div>
-    </div>
+    </template>
   </Modal>
 </template>
+
 
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import Modal from '@/components/Modal.vue'
 import YamatoButton from '@/components/YamatoButton.vue'
-
-const props = defineProps<{
-  visible: boolean
-  mission: any
-}>()
 
 
 const isEditing = ref(false)
@@ -94,6 +104,12 @@ const form = ref({
   importance: 3,
   colorHue: '200'
 })
+
+const props = defineProps<{
+  visible: boolean
+  mission: any
+  iconColor: string
+}>()
 
 const emojiOptions = [
   '🌱', '🌷', '🌟', '📘', '📕', '✏️', '🧘‍♂️', '💪', '🍳', '🏃‍♂️', '🚴‍♀️',
@@ -158,7 +174,6 @@ function handleCompleteClick() {
 </script>
 
 <style scoped>
-
 .center-text {
   text-align: center;
   margin: 0.5rem 0;
@@ -178,14 +193,6 @@ function handleCompleteClick() {
   margin-bottom: 0.2rem;
 }
 
-
-.modal-body {
-  padding: 1.5rem;
-  max-width: 90vw;
-  position: relative;
-  font-size: 1rem;
-}
-
 .modal-title {
   font-size: 1.3rem;
   font-weight: bold;
@@ -195,22 +202,14 @@ function handleCompleteClick() {
 
 .edit-button {
   position: absolute;
-  top: -0.8rem;
-  right: -0.8rem; /* ← ここを狭くすることで、より右上に */
-  font-size: 1.4rem;
-  background: none;
-  border: none;
-  cursor: pointer;
+  top: 5px;
+  right: 5px;
 }
 
 .complete-button {
   position: absolute;
-  top: -0.8rem;
-  left: -0.8rem;
-  font-size: 1.4rem;
-  background: none;
-  border: none;
-  cursor: pointer;
+  top: 5px;
+  left: 5px;
 }
 
 /* 入力系統 */
@@ -281,10 +280,27 @@ button {
   cursor: pointer;
 }
 
+.icon-button {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  font-size: 1.2rem;
+  background-color: var(--icon-bg, #274c77);
+  color: white;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 @media (prefers-color-scheme: dark) {
-  .modal-body {
+  .modal-input,
+  .modal-textarea {
     --input-bg: #333;
     color: #eee;
   }
 }
 </style>
+
