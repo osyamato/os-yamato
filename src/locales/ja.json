@@ -561,9 +561,11 @@
   "album.save": "保存",
   "album.delete": "削除",
 
-"messageAnimationLabel": "メッセージアニメーション"
+"messageAnimationLabel": "メッセージアニメーション",
 
-
+"mission.title": "目標",
+  "mission.view.year": "1年",
+  "mission.view.month": "1ヶ月"
 
 
 

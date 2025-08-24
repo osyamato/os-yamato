@@ -1,6 +1,6 @@
 <template>
   <div class="mission-page">
-    <h1 class="title drop-animation">ミッション</h1>
+<h1 class="title drop-animation">{{ t('mission.title') }}</h1>
 
     <div class="icon-bar drop-animation">
   <IconButton :color="iconColor" @click="openExpiredModal">🥀</IconButton>
@@ -20,7 +20,7 @@
 </div>
 
 <div class="center-label" @click="toggleViewMode">
-  {{ isYearView ? '1年' : '1ヶ月' }}
+  {{ isYearView ? t('mission.view.year') : t('mission.view.month') }}
 </div>
       <!-- ミッション -->
 <div
@@ -54,6 +54,7 @@
   :missions="completedMissions"
   :iconColor="iconColor"
   @close="showCompletedModal = false"
+  @delete="handleMissionDelete"
 />
 
 <ExpiredMissionsModal
@@ -61,6 +62,7 @@
   :missions="expiredMissions"
   :iconColor="iconColor"
   @close="showExpiredModal = false"
+  @delete="handleMissionDelete"
 />
 
   </div>
@@ -77,7 +79,8 @@ import { updateMission as updateMissionMutation } from '@/graphql/mutations'
 import { deleteMission as deleteMissionMutation } from '@/graphql/mutations'
 import CompletedMissionsModal from '@/components/CompletedMissionsModal.vue'
 import ExpiredMissionsModal from '@/components/ExpiredMissionsModal.vue' 
-
+import { useI18n } from 'vue-i18n'
+const { t, locale } = useI18n()
 import { Auth } from 'aws-amplify'
 
 
@@ -376,6 +379,9 @@ async function handleMissionDelete(id: string) {
   font-size: 1.5rem;
   font-weight: bold;
   color: inherit;
+  border-bottom: 2px solid currentColor; /* 👈 アンダーラインを追加 */
+  padding-bottom: 2px;
+  cursor: pointer; /* 👈 タブっぽく見せる */
 }
 
 .mission-marker {

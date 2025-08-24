@@ -583,6 +583,10 @@
   "album.save": "Save",
   "album.delete": "Delete",
 
-"messageAnimationLabel": "Message Animation"
+"messageAnimationLabel": "Message Animation",
+
+ "mission.title": "Goals",
+  "mission.view.year": "1 Year",
+  "mission.view.month": "1 Month"
 
 }

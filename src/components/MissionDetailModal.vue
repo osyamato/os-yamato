@@ -104,6 +104,15 @@ const form = ref({
   importance: 3,
   colorHue: '200'
 })
+function save() {
+  emit('update', {
+    ...props.mission,
+    ...form.value,
+    colorHue: parseInt(form.value.colorHue) // 必要に応じて string → number に変換
+  })
+  isEditing.value = false
+  emit('close')
+}
 
 const props = defineProps<{
   visible: boolean

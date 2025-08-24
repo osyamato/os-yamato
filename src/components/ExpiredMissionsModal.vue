@@ -16,7 +16,9 @@
             <div class="mission-title">{{ m.title }}</div>
             <div class="mission-date">期日: {{ m.goalDate }}</div>
           </div>
-        </li>
+ <button class="action-button" @click="confirmDelete(m.id)">⋯</button>
+       
+ </li>
       </ul>
     </div>
   </Modal>
@@ -31,7 +33,14 @@ defineProps<{
   iconColor: string
 }>()
 
-defineEmits(['close'])
+function confirmDelete(id: string) {
+  if (confirm('このミッションを削除しますか？')) {
+    emit('delete', id)
+  }
+}
+
+defineEmits(['close', 'delete'])
+
 </script>
 
 <style scoped>
@@ -43,6 +52,14 @@ defineEmits(['close'])
   background-color: var(--modal-bg, #fff);
   border-radius: 12px;
   color: inherit;
+}
+
+@media (max-width: 600px) {
+  .modal-body {
+    max-height: 60vh;
+    font-size: 0.9rem;
+    padding: 0.8rem;
+  }
 }
 
 .modal-title {
@@ -67,6 +84,7 @@ defineEmits(['close'])
 .mission-item {
   display: flex;
   align-items: center;
+  justify-content: space-between; /* 🔧 右端にボタンを押し出す */
   gap: 1rem;
   padding: 0.7rem 0;
   border-bottom: 1px solid #e0e0e0;
@@ -81,11 +99,13 @@ defineEmits(['close'])
   align-items: center;
   justify-content: center;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  flex-shrink: 0;
 }
 
 .mission-info {
   display: flex;
   flex-direction: column;
+  flex: 1; /* 🔧 内容幅が広がりすぎないように調整 */
 }
 
 .mission-title {
@@ -98,16 +118,42 @@ defineEmits(['close'])
   color: #666;
 }
 
+.action-button {
+  background: none;
+  border: none;
+  font-size: 1.4rem;
+  color: #888;
+  cursor: pointer;
+  padding: 0 0.4rem;
+  flex-shrink: 0; /* 🔧 アイコンが潰れないように */
+}
+
+.action-button:hover {
+  color: #e00;
+}
+
+/* 🌙 ダークモード対応 */
 @media (prefers-color-scheme: dark) {
   .modal-body {
     --modal-bg: #1e1e1e;
     color: #f0f0f0;
   }
+
   .mission-item {
     border-bottom: 1px solid #444;
   }
+
   .mission-date {
     color: #aaa;
   }
+
+  .action-button {
+    color: #aaa;
+  }
+
+  .action-button:hover {
+    color: #f66;
+  }
 }
+
 </style>

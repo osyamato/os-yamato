@@ -537,7 +537,11 @@
   "album.save": "Enregistrer",
   "album.delete": "Supprimer",
 
-"messageAnimationLabel": "Animation des messages"
+"messageAnimationLabel": "Animation des messages",
+
+ "mission.title": "Objectifs",
+  "mission.view.year": "1 an",
+  "mission.view.month": "1 mois"
 
 
 

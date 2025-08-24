@@ -544,7 +544,11 @@
   "album.save": "保存",
   "album.delete": "删除",
 
-"messageAnimationLabel": "消息动画"
+"messageAnimationLabel": "消息动画",
+
+  "mission.title": "目标",
+  "mission.view.year": "1年",
+  "mission.view.month": "1个月"
 
 
 

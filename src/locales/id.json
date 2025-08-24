@@ -528,7 +528,11 @@
 "album.save": "Simpan",
 "album.delete": "Hapus",
 
-"messageAnimationLabel": "Animasi Pesan"
+"messageAnimationLabel": "Animasi Pesan",
+
+"mission.title": "Tujuan",
+  "mission.view.year": "1 Tahun",
+  "mission.view.month": "1 Bulan"
 
 }
 

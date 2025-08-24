@@ -16,6 +16,7 @@
             <div class="mission-title">{{ m.title }}</div>
             <div class="mission-date">達成日: {{ m.goalDate }}</div>
           </div>
+<button class="action-button" @click="confirmDelete(m.id)">⋯</button>
         </li>
       </ul>
     </div>
@@ -35,7 +36,15 @@ defineProps({
   }
 })
 
-defineEmits(['close'])
+// 🔧 emit を使えるように宣言
+const emit = defineEmits(['close', 'delete'])
+
+function confirmDelete(id: string) {
+  if (confirm('このミッションを削除しますか？')) {
+    emit('delete', id)
+    emit('close') // ← これを追加
+  }
+}
 </script>
 
 <style scoped>
@@ -114,5 +123,18 @@ defineEmits(['close'])
     color: #aaa;
   }
 }
+.action-button {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  color: #888;
+  cursor: pointer;
+  margin-left: auto;
+}
+
+.action-button:hover {
+  color: #e00;
+}
+
 </style>
 
