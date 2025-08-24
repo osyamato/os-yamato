@@ -142,14 +142,21 @@ watch(
   { immediate: true }
 )
 
-function save() {
-  emit('update', {
-    ...props.mission,
-    ...form.value,
-    colorHue: parseInt(form.value.colorHue)
-  })
-  isEditing.value = false
-  emit('close')
+async function handleCompleteClick() {
+  if (confirm('このミッションを完了にしますか？')) {
+    const today = new Date().toISOString().split('T')[0]  // "YYYY-MM-DD"
+
+    const updated = {
+      ...props.mission,
+      isCompleted: true,
+      goalDate: today
+    }
+
+    console.log('🔧 update input:', updated)
+
+    emit('update', updated)
+    emit('close')
+  }
 }
 
 const emit = defineEmits(['close', 'update', 'delete'])
@@ -161,15 +168,6 @@ function handleDelete() {
   }
 }
 
-function handleCompleteClick() {
-  if (confirm('このミッションを完了にしますか？')) {
-    emit('update', {
-      ...props.mission,
-      isCompleted: true
-    })
-    emit('close')
-  }
-}
 
 </script>
 

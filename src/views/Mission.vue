@@ -4,7 +4,7 @@
 
     <div class="icon-bar drop-animation">
       <IconButton :color="iconColor" @click="handleAddMission">＋</IconButton>
-<IconButton :color="iconColor" @click="showCompletedModal = true">🏁</IconButton>
+<IconButton :color="iconColor" @click="openCompletedModal">🏁</IconButton>
     </div>
 
     <div class="year-clock">
@@ -68,6 +68,7 @@ import { listMissions } from '@/graphql/queries'
 import { updateMission as updateMissionMutation } from '@/graphql/mutations'
 import { deleteMission as deleteMissionMutation } from '@/graphql/mutations'
 import CompletedMissionsModal from '@/components/CompletedMissionsModal.vue'
+import { Auth } from 'aws-amplify'
 
 
 const iconColor = ref('#274c77')
@@ -77,11 +78,30 @@ const selectedMission = ref(null)
 const showDetailModal = ref(false)
 
 const isYearView = ref(true)
-
+const completedMissions = ref([])
 const showCompletedModal = ref(false)
-const completedMissions = computed(() =>
-  missions.value.filter(m => m.isCompleted)
-)
+const fetchCompletedMissions = async () => {
+  try {
+    const user = await Auth.currentAuthenticatedUser()
+    const userSub = user.attributes.sub
+
+    const result = await API.graphql(graphqlOperation(listMissions, {
+      filter: {
+        isCompleted: { eq: true },
+        owner: { contains: userSub }
+      }
+    }))
+
+    completedMissions.value = result.data.listMissions.items || []
+  } catch (e) {
+    console.error('✅ 完了ミッション取得失敗:', e)
+  }
+}
+
+const openCompletedModal = async () => {
+  await fetchCompletedMissions()
+  showCompletedModal.value = true
+}
 
 function toggleViewMode() {
   isYearView.value = !isYearView.value

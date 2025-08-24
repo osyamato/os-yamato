@@ -3,7 +3,7 @@
     <div class="modal-body">
       <h2 class="modal-title">完了済みミッション</h2>
 
-      <div v-if="missions.length === 0" class="empty-message">
+      <div v-if="missions?.length === 0" class="empty-message">
         🎉 完了ミッションはまだありません。
       </div>
 
@@ -23,15 +23,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
-
 import Modal from '@/components/Modal.vue'
+import type { Mission } from '@/types' // Mission型がある場合は明示、なければ any[]
 
-defineProps<{
-  visible: boolean
-  missions: any[]
-  iconColor: string
-}>()
+defineProps({
+  visible: Boolean,
+  iconColor: String,
+  missions: {
+    type: Array,
+    default: () => []
+  }
+})
 
 defineEmits(['close'])
 </script>
@@ -100,7 +102,6 @@ defineEmits(['close'])
   color: #666;
 }
 
-/* ダークモード対応 */
 @media (prefers-color-scheme: dark) {
   .modal-body {
     --modal-bg: #1e1e1e;
