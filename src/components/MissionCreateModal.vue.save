@@ -106,7 +106,7 @@ function validateDateBeforeSubmit() {
   const selected = new Date(goalDate.value)
   const today = new Date()
   const max = new Date()
-  max.setFullYear(max.getFullYear() + 1)
+  max.setFullYear(max.getFullYear() + 1) 
 
   selected.setHours(0, 0, 0, 0)
   today.setHours(0, 0, 0, 0)
@@ -131,6 +131,7 @@ async function submitMission() {
     return
   }
 
+  // 🔧 日付のバリデーション追加
   if (!validateDateBeforeSubmit()) {
     return
   }
@@ -162,9 +163,23 @@ async function submitMission() {
   }
 }
 
+    const result = await API.graphql(
+graphqlOperation(createMissionMutation, { input: missionData })
+    )
+
+    emit('submit', result.data.createMission)
+    resetForm()
+    close()
+  } catch (error) {
+    console.error('❌ ミッション作成失敗:', error)
+    alert('保存に失敗しました')
+  }
+}
+
 function resetForm() {
   title.value = ''
   note.value = ''
+  goalDate.value = ''
   emoji.value = '🌱'
   colorHue.value = '200'
   importance.value = '1'

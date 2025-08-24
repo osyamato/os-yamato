@@ -370,12 +370,14 @@ async function getHourlyWeather() {
   if (!selectedCity.value) return
 
   try {
-    const langMap = {
-      ja: 'ja',
-      en: 'en',
-      es: 'es',
-      zh: 'zh_cn'
-    }
+const langMap = {
+  ja: 'ja',
+  en: 'en',
+  es: 'es',
+  zh: 'zh_cn',
+  fr: 'fr',       // ← フランス語を追加
+  id: 'id'        // ← インドネシア語を追加
+}
     const apiLang = langMap[locale.value] || 'en'
 
     const url = `https://api.openweathermap.org/data/2.5/forecast?lat=${selectedCity.value.lat}&lon=${selectedCity.value.lon}&appid=${API_KEY}&units=metric&lang=${apiLang}`

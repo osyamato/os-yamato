@@ -3,17 +3,17 @@
     <h1 class="title drop-animation">ミッション</h1>
 
     <div class="icon-bar drop-animation">
+  <IconButton :color="iconColor" @click="openExpiredModal">🥀</IconButton>
       <IconButton :color="iconColor" @click="handleAddMission">＋</IconButton>
-      <IconButton :color="iconColor">🌷</IconButton>
-      <IconButton :color="iconColor">⏳</IconButton>
+<IconButton :color="iconColor" @click="openCompletedModal">🏁</IconButton>
     </div>
 
     <div class="year-clock">
       <!-- 0〜11月を固定で表示 -->
 <div
   v-for="i in (isYearView ? 12 : 31)"
-  :key="i"
-  class="month-marker"
+  :key="'marker-' + i + '-' + isYearView"
+  class="month-marker fade-item"
   :style="getMarkerStyle(i - 1, isYearView ? 12 : 31)"
 >
   {{ i - 1 }}
@@ -23,13 +23,13 @@
   {{ isYearView ? '1年' : '1ヶ月' }}
 </div>
       <!-- ミッション -->
-      <div
-        v-for="m in missions"
-        :key="m.id"
-        class="mission-marker"
-        :style="getMissionStyle(m)"
-        @click="openMissionDetail(m)"
-      >
+<div
+  v-for="m in missions"
+  :key="m.id + '-' + isYearView"
+  class="mission-marker fade-item"
+  :style="getMissionStyle(m)"
+  @click="openMissionDetail(m)"
+>
         {{ m.emoji }}
       </div>
     </div>
@@ -39,21 +39,47 @@
       @close="showCreateModal = false"
       @submit="handleMissionSubmit"
     />
-    <MissionDetailModal
-      :visible="showDetailModal"
-      :mission="selectedMission"
-      @close="showDetailModal = false"
-    />
+<MissionDetailModal
+  :visible="showDetailModal"
+  :mission="selectedMission"
+  :iconColor="iconColor"
+  @close="showDetailModal = false"
+  @update="handleMissionUpdate"
+  @delete="handleMissionDelete"
+/>
+
+
+<CompletedMissionsModal
+  :visible="showCompletedModal"
+  :missions="completedMissions"
+  :iconColor="iconColor"
+  @close="showCompletedModal = false"
+/>
+
+<ExpiredMissionsModal
+  :visible="showExpiredModal"
+  :missions="expiredMissions"
+  :iconColor="iconColor"
+  @close="showExpiredModal = false"
+/>
+
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import IconButton from '@/components/IconButton.vue'
 import MissionCreateModal from '@/components/MissionCreateModal.vue'
 import MissionDetailModal from '@/components/MissionDetailModal.vue'
 import { API, graphqlOperation } from 'aws-amplify'
 import { listMissions } from '@/graphql/queries'
+import { updateMission as updateMissionMutation } from '@/graphql/mutations'
+import { deleteMission as deleteMissionMutation } from '@/graphql/mutations'
+import CompletedMissionsModal from '@/components/CompletedMissionsModal.vue'
+import ExpiredMissionsModal from '@/components/ExpiredMissionsModal.vue' 
+
+import { Auth } from 'aws-amplify'
+
 
 const iconColor = ref('#274c77')
 const showCreateModal = ref(false)
@@ -62,6 +88,58 @@ const selectedMission = ref(null)
 const showDetailModal = ref(false)
 
 const isYearView = ref(true)
+const completedMissions = ref([])
+const showCompletedModal = ref(false)
+const fetchCompletedMissions = async () => {
+  try {
+    const user = await Auth.currentAuthenticatedUser()
+    const userSub = user.attributes.sub
+
+    const result = await API.graphql(graphqlOperation(listMissions, {
+      filter: {
+        isCompleted: { eq: true },
+        owner: { contains: userSub }
+      }
+    }))
+
+    completedMissions.value = result.data.listMissions.items || []
+  } catch (e) {
+    console.error('✅ 完了ミッション取得失敗:', e)
+  }
+}
+
+const openCompletedModal = async () => {
+  await fetchCompletedMissions()
+  showCompletedModal.value = true
+}
+
+
+const expiredMissions = ref([])
+const showExpiredModal = ref(false)
+const fetchExpiredMissions = async () => {
+  try {
+    const user = await Auth.currentAuthenticatedUser()
+    const userSub = user.attributes.sub
+    const today = new Date().toISOString().split('T')[0]
+
+    const result = await API.graphql(graphqlOperation(listMissions, {
+      filter: {
+        isCompleted: { eq: false },         // 未完了
+        owner: { contains: userSub },       // 自分のもの
+        goalDate: { lt: today }             // 過去日付
+      }
+    }))
+
+    expiredMissions.value = result.data.listMissions.items || []
+  } catch (e) {
+    console.error('❌ 期限切れミッション取得失敗:', e)
+  }
+}
+
+const openExpiredModal = async () => {
+  await fetchExpiredMissions()
+  showExpiredModal.value = true
+}
 
 function toggleViewMode() {
   isYearView.value = !isYearView.value
@@ -75,13 +153,27 @@ function openMissionDetail(mission) {
 async function fetchMissions() {
   try {
     const result = await API.graphql(graphqlOperation(listMissions))
-    missions.value = result.data.listMissions.items
+    const allMissions = result.data.listMissions.items
+
+    const today = new Date()
+    today.setHours(0, 0, 0, 0) // 比較用に時間部分をリセット
+
+    missions.value = allMissions.filter(m => {
+      const isIncomplete = !m.isCompleted
+      const goalDate = new Date(m.goalDate)
+      goalDate.setHours(0, 0, 0, 0)
+      const isNotExpired = goalDate >= today
+      return isIncomplete && isNotExpired
+    })
   } catch (e) {
     console.error('❌ ミッション取得失敗', e)
   }
 }
 
-onMounted(fetchMissions)
+onMounted(() => {
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+  fetchMissions()
+})
 
 function handleAddMission() {
   showCreateModal.value = true
@@ -114,7 +206,7 @@ function getMissionStyle(mission) {
 
   const baseRadius = 130 + radiusOffset
   const baseSize = 20 + mission.importance * 4
-  const size = mission.importance === 5 ? baseSize * 1.15 : baseSize
+const size = mission.importance === 5 ? baseSize * 1.5 : baseSize
 
   if (isYearView.value) {
     const offset = getMonthOffsetFromToday(goal)
@@ -171,6 +263,45 @@ function getMarkerStyle(index: number, division: number) {
   }
 }
 
+async function handleMissionUpdate(updatedMission) {
+  try {
+    const input = {
+      id: updatedMission.id,
+      title: updatedMission.title,
+      note: updatedMission.note,
+      goalDate: updatedMission.goalDate,
+      emoji: updatedMission.emoji,
+      importance: updatedMission.importance,
+      colorHue: updatedMission.colorHue,
+      isCompleted: updatedMission.isCompleted // ← これが重要！
+    }
+
+    await API.graphql(graphqlOperation(updateMissionMutation, { input }))
+
+    const index = missions.value.findIndex(m => m.id === updatedMission.id)
+    if (index !== -1) {
+      if (input.isCompleted) {
+        missions.value.splice(index, 1) // 完了済みは削除
+      } else {
+        missions.value[index] = { ...missions.value[index], ...input }
+      }
+    }
+  } catch (e) {
+    console.error('❌ 更新失敗:', e)
+    alert('保存に失敗しました')
+  }
+}
+
+async function handleMissionDelete(id: string) {
+  try {
+    await API.graphql(graphqlOperation(deleteMissionMutation, { input: { id } }))
+    missions.value = missions.value.filter(m => m.id !== id)
+  } catch (e) {
+    console.error('❌ 削除失敗:', e)
+    alert('削除に失敗しました')
+  }
+}
+
 
 </script>
 
@@ -212,8 +343,19 @@ function getMarkerStyle(index: number, division: number) {
   border-radius: 50%;
   background-color: var(--clock-bg);
   color: var(--clock-text);
-  border: 4px solid var(--clock-border);
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+  border: 6px solid var(--clock-border);
+  box-shadow:
+    0 12px 28px rgba(0, 0, 0, 0.4),   /* メインの濃く大きな影 */
+    0 6px 18px rgba(0, 0, 0, 0.3),    /* 中間のやわらかい影 */
+    0 0 60px rgba(0, 0, 0, 0.2); 
+}
+@media (prefers-color-scheme: dark) {
+  .year-clock {
+    box-shadow:
+      0 12px 28px rgba(255, 255, 255, 0.08),
+      0 6px 18px rgba(255, 255, 255, 0.05),
+      0 0 60px rgba(255, 255, 255, 0.04);
+  }
 }
 
 .month-marker {
@@ -261,13 +403,15 @@ function getMarkerStyle(index: number, division: number) {
     opacity: 1;
   }
 }
+
+
 </style>
 
 <style>
 :root {
   --clock-bg: #ffffff;
   --clock-text: #222222;
-  --clock-border: #dddddd;
+  --clock-border: #bbbbbb; /* 少し濃くして枠線が目立つように */
 }
 
 @media (prefers-color-scheme: dark) {
@@ -277,6 +421,21 @@ function getMarkerStyle(index: number, division: number) {
     --clock-border: #666666;
   }
 }
+
+.fade-item {
+  opacity: 0;
+  animation: fadeIn 1.5s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 </style>
 
 
