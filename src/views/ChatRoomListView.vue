@@ -742,16 +742,10 @@ alert(t('alertNeedProfile'))
   z-index: 1;
 }
 
-.loading-image {
-  width: 120px;
-  opacity: 0.9;
-  border-radius: 24px;
-}
-
-@keyframes loadingFadeIn {
+@keyframes scaleUpIn {
   from {
     opacity: 0;
-    transform: scale(1);
+    transform: scale(0.15); /* 👈 小さく始める */
   }
   to {
     opacity: 1;
@@ -759,7 +753,7 @@ alert(t('alertNeedProfile'))
   }
 }
 
-@keyframes loadingFadeOut {
+@keyframes scaleFadeOut {
   from {
     opacity: 1;
     transform: scale(1);
@@ -770,12 +764,15 @@ alert(t('alertNeedProfile'))
   }
 }
 
-.fade-enter-active {
-  animation: loadingFadeIn 0.4s ease forwards;
+.loading-image {
+  width: 120px;
+  opacity: 0.9;
+  border-radius: 24px;
+  animation: scaleUpIn 0.6s ease forwards;
 }
 
 .fade-leave-active {
-  animation: loadingFadeOut 0.5s ease forwards;
+  animation: scaleFadeOut 0.6s ease forwards;
 }
 
 /* ヘッダー */

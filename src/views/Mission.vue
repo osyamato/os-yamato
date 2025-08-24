@@ -3,6 +3,7 @@
     <h1 class="title drop-animation">ミッション</h1>
 
     <div class="icon-bar drop-animation">
+  <IconButton :color="iconColor" @click="openExpiredModal">🥀</IconButton>
       <IconButton :color="iconColor" @click="handleAddMission">＋</IconButton>
 <IconButton :color="iconColor" @click="openCompletedModal">🏁</IconButton>
     </div>
@@ -55,6 +56,13 @@
   @close="showCompletedModal = false"
 />
 
+<ExpiredMissionsModal
+  :visible="showExpiredModal"
+  :missions="expiredMissions"
+  :iconColor="iconColor"
+  @close="showExpiredModal = false"
+/>
+
   </div>
 </template>
 
@@ -68,6 +76,8 @@ import { listMissions } from '@/graphql/queries'
 import { updateMission as updateMissionMutation } from '@/graphql/mutations'
 import { deleteMission as deleteMissionMutation } from '@/graphql/mutations'
 import CompletedMissionsModal from '@/components/CompletedMissionsModal.vue'
+import ExpiredMissionsModal from '@/components/ExpiredMissionsModal.vue' 
+
 import { Auth } from 'aws-amplify'
 
 
@@ -103,6 +113,34 @@ const openCompletedModal = async () => {
   showCompletedModal.value = true
 }
 
+
+const expiredMissions = ref([])
+const showExpiredModal = ref(false)
+const fetchExpiredMissions = async () => {
+  try {
+    const user = await Auth.currentAuthenticatedUser()
+    const userSub = user.attributes.sub
+    const today = new Date().toISOString().split('T')[0]
+
+    const result = await API.graphql(graphqlOperation(listMissions, {
+      filter: {
+        isCompleted: { eq: false },         // 未完了
+        owner: { contains: userSub },       // 自分のもの
+        goalDate: { lt: today }             // 過去日付
+      }
+    }))
+
+    expiredMissions.value = result.data.listMissions.items || []
+  } catch (e) {
+    console.error('❌ 期限切れミッション取得失敗:', e)
+  }
+}
+
+const openExpiredModal = async () => {
+  await fetchExpiredMissions()
+  showExpiredModal.value = true
+}
+
 function toggleViewMode() {
   isYearView.value = !isYearView.value
 }
@@ -117,14 +155,25 @@ async function fetchMissions() {
     const result = await API.graphql(graphqlOperation(listMissions))
     const allMissions = result.data.listMissions.items
 
-    // 👇 完了していないミッションだけを表示する
-    missions.value = allMissions.filter(m => !m.isCompleted)
+    const today = new Date()
+    today.setHours(0, 0, 0, 0) // 比較用に時間部分をリセット
+
+    missions.value = allMissions.filter(m => {
+      const isIncomplete = !m.isCompleted
+      const goalDate = new Date(m.goalDate)
+      goalDate.setHours(0, 0, 0, 0)
+      const isNotExpired = goalDate >= today
+      return isIncomplete && isNotExpired
+    })
   } catch (e) {
     console.error('❌ ミッション取得失敗', e)
   }
 }
 
-onMounted(fetchMissions)
+onMounted(() => {
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+  fetchMissions()
+})
 
 function handleAddMission() {
   showCreateModal.value = true
