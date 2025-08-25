@@ -48,10 +48,10 @@ Let it return to the wind.
 	•	Wind Messages — Letters that arrive months later, like whispers on the breeze
 	•	Clock & Games — Time visualized poetically
 
-🆕 Recent updates:
-	•	✅ Spanish localization 🇪🇸
-	•	✅ Chat message reactions 💬❤️
-
+🆕 Recent updates
+• ✅ Spanish localization 🇪🇸
+• ✅ Indonesian localization 🇮🇩
+• ✅ Chat message reactions 💬❤️
 ⸻
 
 🌤️ New: hanaco Weather Integration
@@ -90,8 +90,6 @@ This gentle feature merges meteorology with memory, making each sunny day or gen
 Test accounts are available in pinned notes & X posts.
 
 ⸻
-
-❤️ A Note
 
 Let it bloom.
 Let it fade.
