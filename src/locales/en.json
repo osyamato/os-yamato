@@ -587,6 +587,49 @@
 
  "mission.title": "Goals",
   "mission.view.year": "1 Year",
-  "mission.view.month": "1 Month"
+  "mission.view.month": "1 Month",
+
+  "mission.title": "Goal",
+  "mission.new": "New Goal",
+  "mission.placeholder.title": "Title",
+  "mission.placeholder.note": "Notes",
+  "mission.goalDate": "Goal Date",
+  "mission.emoji": "Icon",
+  "mission.color": "Color",
+  "mission.importance": "Importance",
+  "mission.low": "(Low)",
+  "mission.high": "(High)",
+
+  "color.red": "Red",
+  "color.orange": "Orange",
+  "color.green": "Green",
+  "color.blue": "Blue",
+  "color.purple": "Purple",
+
+ "mission.error.pastDate": "You cannot select a past date",
+  "mission.error.overOneYear": "You cannot select a date more than 1 year ahead",
+  "mission.error.requiredFields": "Title and goal date are required",
+  "mission.error.saveFailed": "Failed to save",
+
+  "mission.edit": "Edit Goal",
+  "common.delete": "Delete",
+  "common.save": "Save",
+  "common.cancel": "Cancel",
+
+  "mission.confirm.complete": "Mark this goal as completed?",
+  "mission.confirm.delete": "Are you sure you want to delete this goal?",
+
+"mission.completedTitle": "Achieved Goals",
+"mission.completedEmpty": "You haven't achieved any goals yet.",
+"mission.completedDate": "Date Achieved",
+"mission.confirm.delete": "Are you sure you want to delete this goal?",
+
+"mission.expiredTitle": "Unachieved Goals",
+"mission.expiredEmpty": "There are no unachieved goals.",
+"mission.dueDate": "Due Date",
+"mission.confirm.delete": "Are you sure you want to delete this goal?"
+
+
+
 
 }

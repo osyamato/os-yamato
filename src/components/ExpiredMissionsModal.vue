@@ -1,31 +1,39 @@
 <template>
   <Modal :visible="visible" @close="$emit('close')">
     <div class="modal-body">
-      <h2 class="modal-title">期限切れミッション</h2>
+      <h2 class="modal-title">{{ t('mission.expiredTitle') }}</h2>
 
       <div v-if="missions.length === 0" class="empty-message">
-        ⏰ 期限切れのミッションはありません。
+        ⏰ {{ t('mission.expiredEmpty') }}
       </div>
 
       <ul v-else class="mission-list">
         <li v-for="m in missions" :key="m.id" class="mission-item">
-          <div class="emoji-circle" :style="{ backgroundColor: `hsl(${m.colorHue}, 70%, 70%)` }">
+          <div
+            class="emoji-circle"
+            :style="{ backgroundColor: `hsl(${m.colorHue}, 70%, 70%)` }"
+          >
             {{ m.emoji }}
           </div>
           <div class="mission-info">
             <div class="mission-title">{{ m.title }}</div>
-            <div class="mission-date">期日: {{ m.goalDate }}</div>
+            <div class="mission-date">
+              {{ t('mission.dueDate') }}: {{ m.goalDate }}
+            </div>
           </div>
- <button class="action-button" @click="confirmDelete(m.id)">⋯</button>
-       
- </li>
+          <button class="action-button" @click="confirmDelete(m.id)">⋯</button>
+        </li>
       </ul>
     </div>
   </Modal>
 </template>
 
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 import Modal from '@/components/Modal.vue'
+
+const { t } = useI18n()
+const emit = defineEmits(['close', 'delete'])
 
 defineProps<{
   visible: boolean
@@ -34,13 +42,10 @@ defineProps<{
 }>()
 
 function confirmDelete(id: string) {
-  if (confirm('このミッションを削除しますか？')) {
+  if (confirm(t('mission.confirm.delete'))) {
     emit('delete', id)
   }
 }
-
-defineEmits(['close', 'delete'])
-
 </script>
 
 <style scoped>

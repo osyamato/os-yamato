@@ -565,7 +565,47 @@
 
 "mission.title": "目標",
   "mission.view.year": "1年",
-  "mission.view.month": "1ヶ月"
+  "mission.view.month": "1ヶ月",
+
+  "mission.new": "新しい目標",
+  "mission.placeholder.title": "タイトル",
+  "mission.placeholder.note": "自由記載",
+  "mission.goalDate": "達成日",
+  "mission.emoji": "アイコン",
+  "mission.color": "カラー",
+  "mission.importance": "重要度",
+  "mission.low": "（低）",
+  "mission.high": "（高）",
+
+ "color.red": "赤",
+  "color.orange": "オレンジ",
+  "color.green": "緑",
+  "color.blue": "青",
+  "color.purple": "紫",
+
+  "mission.error.pastDate": "過去の日付は選択できません",
+  "mission.error.overOneYear": "1年より先は選べません",
+
+  "mission.error.requiredFields": "タイトルと期日は必須です",
+  "mission.error.saveFailed": "保存に失敗しました",
+
+ "mission.edit": "目標編集",
+  "common.delete": "削除",
+  "common.save": "保存",
+  "common.cancel": "キャンセル",
+
+  "mission.confirm.complete": "この目標を完了にしますか？",
+  "mission.confirm.delete": "この目標を本当に削除しますか？",
+
+  "mission.completedTitle": "達成した目標",
+  "mission.completedEmpty": "達成した目標はまだありません。",
+  "mission.completedDate": "達成日",
+  "mission.confirm.delete": "この目標を本当に削除しますか？",
+
+"mission.expiredTitle": "期限切れの目標",
+  "mission.expiredEmpty": "期限切れの目標はありません。",
+  "mission.dueDate": "期日",
+  "mission.confirm.delete": "この目標を本当に削除しますか？"
 
 
 

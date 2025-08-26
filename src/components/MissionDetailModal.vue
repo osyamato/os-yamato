@@ -26,7 +26,7 @@
         <p v-if="mission.note" class="center-text">{{ mission.note }}</p>
 
         <div class="center-text date-block">
-          <div class="goal-date-label">達成日</div>
+          <div class="goal-date-label">{{ t('mission.goalDate') }}</div>
           <div>{{ mission.goalDate }}</div>
         </div>
 
@@ -37,50 +37,66 @@
 
       <!-- 編集モード -->
       <div v-else>
-        <h2 class="modal-title">ミッション編集</h2>
+        <h2 class="modal-title">{{ t('mission.edit') }}</h2>
 
         <div class="centered-input">
-          <input v-model="form.title" class="modal-input" type="text" placeholder="タイトル" />
+          <input
+            v-model="form.title"
+            class="modal-input"
+            type="text"
+            :placeholder="t('mission.placeholder.title')"
+          />
         </div>
 
         <div class="centered-input">
-          <textarea v-model="form.note" class="modal-textarea" placeholder="説明（任意）"></textarea>
+          <textarea
+            v-model="form.note"
+            class="modal-textarea"
+            :placeholder="t('mission.placeholder.note')"
+          />
         </div>
 
         <div class="goal-date-container">
-          <div class="goal-date-label">達成日</div>
-          <input v-model="form.goalDate" class="modal-input goal-date-input" type="date" />
+          <div class="goal-date-label">{{ t('mission.goalDate') }}</div>
+          <input
+            v-model="form.goalDate"
+            class="modal-input goal-date-input"
+            type="date"
+          />
         </div>
 
         <div class="row-pickers">
+          <!-- Emoji Picker -->
           <div class="picker-group">
-            <label>アイコン</label>
+            <label>{{ t('mission.emoji') }}</label>
             <select v-model="form.emoji">
               <option v-for="e in emojiOptions" :key="e" :value="e">{{ e }}</option>
             </select>
           </div>
 
+          <!-- Color Picker -->
           <div class="picker-group">
-            <label>カラー</label>
+            <label>{{ t('mission.color') }}</label>
             <select v-model="form.colorHue">
               <option v-for="(label, hue) in colorOptions" :key="hue" :value="hue">{{ label }}</option>
             </select>
           </div>
 
+          <!-- Importance Picker -->
           <div class="picker-group">
-            <label>重要度</label>
+            <label>{{ t('mission.importance') }}</label>
             <select v-model.number="form.importance">
               <option v-for="level in 5" :key="level" :value="level">
-                {{ level }}{{ level === 1 ? ' (低)' : level === 5 ? ' (高)' : '' }}
+                {{ level }}{{ level === 1 ? t('mission.low') : level === 5 ? t('mission.high') : '' }}
               </option>
             </select>
           </div>
         </div>
 
         <div class="button-container">
-          <YamatoButton @click="handleDelete" tone="danger">削除</YamatoButton>
-          <YamatoButton @click="save">保存</YamatoButton>
-          <YamatoButton @click="isEditing = false" outline>キャンセル</YamatoButton>
+          <YamatoButton @click="handleDelete" tone="danger">{{ t('common.delete') }}</YamatoButton>
+          <YamatoButton @click="save">{{ t('common.save') }}</YamatoButton>
+          <YamatoButton @click="isEditing = false" outline>{{ t('common.cancel') }}</YamatoButton>
         </div>
       </div>
     </template>
@@ -92,6 +108,9 @@
 import { ref, watch } from 'vue'
 import Modal from '@/components/Modal.vue'
 import YamatoButton from '@/components/YamatoButton.vue'
+
+import { useI18n } from 'vue-i18n'
+const { t, locale } = useI18n()
 
 
 const isEditing = ref(false)
@@ -125,12 +144,13 @@ const emojiOptions = [
   '📈', '🗓️', '🧠', '🧹', '🎵', '🎨', '💼', '🛏️'
 ]
 
+
 const colorOptions = {
-  0: '赤',
-  40: 'オレンジ',
-  120: '緑',
-  200: '青',
-  280: '紫'
+  0: t('color.red'),
+  40: t('color.orange'),
+  120: t('color.green'),
+  200: t('color.blue'),
+  280: t('color.purple')
 }
 
 watch(
@@ -151,8 +171,10 @@ watch(
   { immediate: true }
 )
 
+const emit = defineEmits(['close', 'update', 'delete'])
+
 async function handleCompleteClick() {
-  if (confirm('このミッションを完了にしますか？')) {
+  if (confirm(t('mission.confirm.complete'))) {
     const today = new Date().toISOString().split('T')[0]  // "YYYY-MM-DD"
 
     const updated = {
@@ -168,10 +190,8 @@ async function handleCompleteClick() {
   }
 }
 
-const emit = defineEmits(['close', 'update', 'delete'])
-
 function handleDelete() {
-  if (props.mission && confirm('このミッションを本当に削除しますか？')) {
+  if (props.mission && confirm(t('mission.confirm.delete'))) {
     emit('delete', props.mission.id)
     emit('close')
   }

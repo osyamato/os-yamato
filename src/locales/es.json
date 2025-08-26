@@ -539,8 +539,47 @@
 
  "mission.title": "Objetivos",
   "mission.view.year": "1 año",
-  "mission.view.month": "1 mes"
+  "mission.view.month": "1 mes",
 
+  "mission.title": "Objetivo",
+  "mission.new": "Nuevo Objetivo",
+  "mission.placeholder.title": "Título",
+  "mission.placeholder.note": "Notas libres",
+  "mission.goalDate": "Fecha de logro",
+  "mission.emoji": "Ícono",
+  "mission.color": "Color",
+  "mission.importance": "Importancia",
+  "mission.low": "(Baja)",
+  "mission.high": "(Alta)",
+
+  "color.red": "Rojo",
+  "color.orange": "Naranja",
+  "color.green": "Verde",
+  "color.blue": "Azul",
+  "color.purple": "Morado",
+
+"mission.error.pastDate": "No se puede seleccionar una fecha pasada",
+  "mission.error.overOneYear": "No se puede seleccionar una fecha con más de un año de antelación",
+  "mission.error.requiredFields": "El título y la fecha objetivo son obligatorios",
+  "mission.error.saveFailed": "Error al guardar",
+
+  "mission.edit": "Editar Objetivo",
+  "common.delete": "Eliminar",
+  "common.save": "Guardar",
+  "common.cancel": "Cancelar",
+
+"mission.confirm.complete": "¿Marcar este objetivo como completado?",
+"mission.confirm.delete": "¿Estás seguro de que deseas eliminar este objetivo?",
+
+"mission.completedTitle": "Objetivos logrados",
+"mission.completedEmpty": "Aún no has logrado ningún objetivo.",
+"mission.completedDate": "Fecha de logro",
+"mission.confirm.delete": "¿Estás seguro de que deseas eliminar este objetivo?",
+
+"mission.expiredTitle": "Objetivos no cumplidos",
+"mission.expiredEmpty": "No hay objetivos no cumplidos.",
+"mission.dueDate": "Fecha límite",
+"mission.confirm.delete": "¿Estás seguro de que deseas eliminar este objetivo?"
 
 
 

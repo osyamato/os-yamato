@@ -548,8 +548,47 @@
 
   "mission.title": "目标",
   "mission.view.year": "1年",
-  "mission.view.month": "1个月"
+  "mission.view.month": "1个月",
 
+  "mission.title": "目标",
+  "mission.new": "新目标",
+  "mission.placeholder.title": "标题",
+  "mission.placeholder.note": "备注",
+  "mission.goalDate": "达成日期",
+  "mission.emoji": "图标",
+  "mission.color": "颜色",
+  "mission.importance": "重要性",
+  "mission.low": "（低）",
+  "mission.high": "（高）",
+
+ "color.red": "红色",
+  "color.orange": "橙色",
+  "color.green": "绿色",
+  "color.blue": "蓝色",
+  "color.purple": "紫色",
+
+"mission.error.pastDate": "不能选择过去的日期",
+  "mission.error.overOneYear": "不能选择超过一年以后的日期",
+  "mission.error.requiredFields": "标题和目标日期为必填项",
+  "mission.error.saveFailed": "保存失败",
+
+  "mission.edit": "编辑目标",
+  "common.delete": "删除",
+  "common.save": "保存",
+  "common.cancel": "取消",
+
+"mission.confirm.complete": "是否将此目标标记为已完成？",
+"mission.confirm.delete": "您确定要删除此目标吗？",
+
+"mission.completedTitle": "已达成的目标",
+"mission.completedEmpty": "你还没有达成任何目标。",
+"mission.completedDate": "达成日期",
+"mission.confirm.delete": "你确定要删除这个目标吗？",
+
+"mission.expiredTitle": "未完成的目标",
+"mission.expiredEmpty": "暂无未完成的目标。",
+"mission.dueDate": "截止日期",
+"mission.confirm.delete": "确定要删除这个目标吗？"
 
 
 

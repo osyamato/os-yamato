@@ -53,6 +53,9 @@
 
 <button @click="goToGPTMiniFromHome" class="icon-button" style="background-image: url('/ai.icon.png')"></button>
 
+<!-- ✅ 目標 -->
+<button @click="goTo('mission')" class="icon-button" style="background-image: url('/mission.png')"></button>
+
     </div>
   </div>
 </template>
