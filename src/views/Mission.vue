@@ -213,18 +213,17 @@ function getMissionStyle(mission) {
   const today = new Date()
   const seed = hashCode(mission.id)
 
-  // ランダムオフセット生成
-  const angleNoise = ((seed % 100) - 50) / 50 * 15 // ±15度のずれ
+  const angleNoise = ((seed % 100) - 50) / 50 * 15
 
-  // アイコンサイズ計算（重要度で変動）
   const baseSize = 20 + mission.importance * 4
   const size = mission.importance === 5 ? baseSize * 1.5 : baseSize
 
-const randomness = ((seed % 80) - 40) // → -40〜+40 のズレ
-const baseRadius = 120 + mission.importance * 10 + randomness
+  // ランダムズレを加えるが、最大半径を160pxに制限
+  const randomness = ((seed % 80) - 40) // -40〜+40
+  const rawRadius = 120 + mission.importance * 10 + randomness
+  const baseRadius = Math.min(rawRadius, 160)  // 👈 最大160pxまで
 
-  // zIndex は重要度が低いほど前面に（＝高い数字）
-  const zIndex = 10 - mission.importance // importance=1 → 9, importance=5 → 5
+  const zIndex = 10 - mission.importance
 
   if (isYearView.value) {
     const offset = getMonthOffsetFromToday(goal)
