@@ -1,8 +1,8 @@
 # OS Yamato 🌸
 
-## 🗓️ New App: Mission — Visualize your goals across time
+## 🗓️ New App: Goal — Visualize your goals across time
 
-We’re excited to introduce a new app in OS Yamato: Mission.
+We’re excited to introduce a new app in OS Yamato: Goal.
 
 This isn’t just a to-do list — it’s a poetic space to **set intentions** and **see them arranged over time**.
 
@@ -15,14 +15,18 @@ This isn’t just a to-do list — it’s a poetic space to **set intentions** a
 - Visual layout helps you **feel the flow of time**
 - Auto-sorting by date keeps your intentions clear and calm
 
-Mission isn’t about pressure.  
+Goal isn’t about pressure.  
 It’s about clarity, rhythm, and the quiet momentum of intention.
 
 Now available in the latest OS Yamato update.
 
 <img width="85" height="85" alt="スクリーンショット 2025-08-26 10 20 30" src="https://github.com/user-attachments/assets/ecd6005b-6b55-4788-ba3f-84261fc1c422" />
 
+![IMG_1506](https://github.com/user-attachments/assets/d11f15e5-fc9a-4575-8fce-b163f9d08a1d)
 
+![IMG_1507](https://github.com/user-attachments/assets/643e0bdf-9508-406c-beab-6a0d88788fdb)
+
+![IMG_1508](https://github.com/user-attachments/assets/82c135b0-bc00-4b1b-abfa-3c1d8d30ca90)
 
 🔗 Visit: https://hanaco875.com
 
