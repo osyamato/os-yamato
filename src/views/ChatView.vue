@@ -77,7 +77,7 @@
                     @mouseup="cancelLongPress"
                     @mouseleave="cancelLongPress"
                   >
-                    <div v-html="msg.content.replace(/\n/g, '<br>')"></div>
+ <div v-html="linkify(msg.content)"></div>
                   </div>
                   <span class="timestamp-right">{{ formatTime(msg.timestamp) }}</span>
 
@@ -119,7 +119,7 @@
               <template v-else>
                 <div class="message-wrapper mine">
                   <div class="message mine">
-                    <div v-html="msg.content.replace(/\n/g, '<br>')"></div>
+<div v-html="linkify(msg.content)"></div>
                   </div>
 
                   <div
@@ -1121,21 +1121,6 @@ function subscribeToNewMessages() {
 }
 
 
-function groupMessagesByDate(messages) {
-  const grouped = []
-  let lastDate = null
-  for (const msg of messages) {
-    const date = new Date(msg.timestamp).toLocaleDateString('ja-JP', {
-      year: 'numeric', month: 'long', day: 'numeric', weekday: 'short'
-    })
-    if (date !== lastDate) {
-      grouped.push({ isDateSeparator: true, date })
-      lastDate = date
-    }
-    grouped.push(msg)
-  }
-  return grouped
-}
 
 function scrollToBottom(immediate = false) {
   if (suppressAutoScroll.value) {
@@ -1167,6 +1152,22 @@ async function tryGetUrl(key, retries = 5, delay = 1000) {
   return null
 }
 
+function groupMessagesByDate(messages) {
+  const grouped = []
+  let lastDate = null
+  for (const msg of messages) {
+    const date = new Date(msg.timestamp).toLocaleDateString('ja-JP', {
+      year: 'numeric', month: 'long', day: 'numeric', weekday: 'short'
+    })
+    if (date !== lastDate) {
+      grouped.push({ isDateSeparator: true, date })
+      lastDate = date
+    }
+    grouped.push(msg)
+  }
+  return grouped
+}
+
 function handleInputFocus() {
   if (!isMobile.value) return
 
@@ -1174,6 +1175,16 @@ function handleInputFocus() {
   setTimeout(() => {
     scrollToBottom(true) // 即座にジャンプ
   }, 300) // モバイルでの keyboard 開くタイミングに合わせて微調整
+}
+
+function linkify(content) {
+  if (!content) return ''
+  const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+|\b[^\s]+\.(com|net|org|jp|io|dev|co)[^\s]*)/gi
+
+  return content.replace(urlRegex, url => {
+    const href = url.startsWith('http') ? url : `http://${url}`
+    return `<a href="${href}" target="_blank" class="message-link">${url}</a>`
+  }).replace(/\n/g, '<br>')
 }
 
 </script>
@@ -1671,6 +1682,12 @@ button:hover {
   0%   { transform: translateY(0px) rotate(0deg); }
   50%  { transform: translateY(-2px) rotate(-4deg); }
   100% { transform: translateY(0px) rotate(4deg); }
+}
+
+.message-link {
+  color: #007aff;
+  text-decoration: underline;
+  word-break: break-word;
 }
 
 </style>
