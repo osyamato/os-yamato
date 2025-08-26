@@ -537,9 +537,51 @@
   "album.save": "Enregistrer",
   "album.delete": "Supprimer",
 
-"messageAnimationLabel": "Animation des messages"
+"messageAnimationLabel": "Animation des messages",
 
+ "mission.title": "Objectifs",
+  "mission.view.year": "1 an",
+  "mission.view.month": "1 mois",
 
+  "mission.title": "Objectif",
+  "mission.new": "Nouvel Objectif",
+  "mission.placeholder.title": "Titre",
+  "mission.placeholder.note": "Notes libres",
+  "mission.goalDate": "Date d’achèvement",
+  "mission.emoji": "Icône",
+  "mission.color": "Couleur",
+  "mission.importance": "Importance",
+  "mission.low": "(Faible)",
+  "mission.high": "(Élevée)",
+
+ "color.red": "Rouge",
+  "color.orange": "Orange",
+  "color.green": "Vert",
+  "color.blue": "Bleu",
+  "color.purple": "Violet",
+
+"mission.error.pastDate": "Vous ne pouvez pas sélectionner une date passée",
+  "mission.error.overOneYear": "Vous ne pouvez pas sélectionner une date de plus d’un an",
+ "mission.error.requiredFields": "Le titre et la date d'objectif sont requis",
+  "mission.error.saveFailed": "Échec de l'enregistrement",
+
+  "mission.edit": "Modifier l’objectif",
+  "common.delete": "Supprimer",
+  "common.save": "Enregistrer",
+  "common.cancel": "Annuler",
+
+"mission.confirm.complete": "Marquer cet objectif comme terminé ?",
+"mission.confirm.delete": "Êtes-vous sûr de vouloir supprimer cet objectif ?",
+
+"mission.completedTitle": "Objectifs atteints",
+"mission.completedEmpty": "Vous n'avez encore atteint aucun objectif.",
+"mission.completedDate": "Date d'accomplissement",
+"mission.confirm.delete": "Voulez-vous vraiment supprimer cet objectif ?",
+
+"mission.expiredTitle": "Objectifs non atteints",
+"mission.expiredEmpty": "Aucun objectif non atteint.",
+"mission.dueDate": "Date limite",
+"mission.confirm.delete": "Êtes-vous sûr de vouloir supprimer cet objectif ?"
 
 
 

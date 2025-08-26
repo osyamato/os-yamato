@@ -1,10 +1,10 @@
 <template>
   <Modal :visible="visible" @close="$emit('close')">
     <div class="modal-body">
-      <h2 class="modal-title">完了済みミッション</h2>
+      <h2 class="modal-title">{{ t('mission.completedTitle') }}</h2>
 
       <div v-if="missions?.length === 0" class="empty-message">
-        🎉 完了ミッションはまだありません。
+        🎉 {{ t('mission.completedEmpty') }}
       </div>
 
       <ul v-else class="mission-list">
@@ -14,8 +14,9 @@
           </div>
           <div class="mission-info">
             <div class="mission-title">{{ m.title }}</div>
-            <div class="mission-date">達成日: {{ m.goalDate }}</div>
+            <div class="mission-date">{{ t('mission.completedDate') }}: {{ m.goalDate }}</div>
           </div>
+          <button class="action-button" @click="confirmDelete(m.id)">⋯</button>
         </li>
       </ul>
     </div>
@@ -26,6 +27,10 @@
 import Modal from '@/components/Modal.vue'
 import type { Mission } from '@/types' // Mission型がある場合は明示、なければ any[]
 
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
+
+
 defineProps({
   visible: Boolean,
   iconColor: String,
@@ -35,7 +40,15 @@ defineProps({
   }
 })
 
-defineEmits(['close'])
+// 🔧 emit を使えるように宣言
+const emit = defineEmits(['close', 'delete'])
+
+function confirmDelete(id: string) {
+  if (confirm(t('mission.confirm.delete'))) {
+    emit('delete', id)
+  }
+}
+
 </script>
 
 <style scoped>
@@ -114,5 +127,18 @@ defineEmits(['close'])
     color: #aaa;
   }
 }
+.action-button {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  color: #888;
+  cursor: pointer;
+  margin-left: auto;
+}
+
+.action-button:hover {
+  color: #e00;
+}
+
 </style>
 

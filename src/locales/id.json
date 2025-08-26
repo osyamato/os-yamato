@@ -528,7 +528,53 @@
 "album.save": "Simpan",
 "album.delete": "Hapus",
 
-"messageAnimationLabel": "Animasi Pesan"
+"messageAnimationLabel": "Animasi Pesan",
+
+"mission.title": "Tujuan",
+  "mission.view.year": "1 Tahun",
+  "mission.view.month": "1 Bulan",
+
+  "mission.title": "Tujuan",
+  "mission.new": "Tujuan Baru",
+  "mission.placeholder.title": "Judul",
+  "mission.placeholder.note": "Catatan bebas",
+  "mission.goalDate": "Tanggal Pencapaian",
+  "mission.emoji": "Ikon",
+  "mission.color": "Warna",
+  "mission.importance": "Tingkat Penting",
+  "mission.low": "(Rendah)",
+  "mission.high": "(Tinggi)",
+
+  "color.red": "Merah",
+  "color.orange": "Oranye",
+  "color.green": "Hijau",
+  "color.blue": "Biru",
+  "color.purple": "Ungu",
+
+  "mission.error.pastDate": "Anda tidak dapat memilih tanggal yang sudah lewat",
+  "mission.error.overOneYear": "Anda tidak dapat memilih tanggal lebih dari 1 tahun ke depan",
+"mission.error.requiredFields": "Judul dan tanggal tujuan wajib diisi",
+  "mission.error.saveFailed": "Gagal menyimpan",
+
+  "mission.edit": "Edit Tujuan",
+  "common.delete": "Hapus",
+  "common.save": "Simpan",
+  "common.cancel": "Batal",
+
+"mission.confirm.complete": "Tandai tujuan ini sebagai selesai?",
+"mission.confirm.delete": "Apakah Anda yakin ingin menghapus tujuan ini?",
+"mission.completedTitle": "Tujuan Tercapai",
+"mission.completedEmpty": "Belum ada tujuan yang tercapai.",
+"mission.completedDate": "Tanggal Pencapaian",
+"mission.confirm.delete": "Apakah Anda yakin ingin menghapus tujuan ini?",
+
+"mission.expiredTitle": "Tujuan yang belum tercapai",
+"mission.expiredEmpty": "Tidak ada tujuan yang belum tercapai.",
+"mission.dueDate": "Tanggal target",
+"mission.confirm.delete": "Apakah Anda yakin ingin menghapus tujuan ini?"
+
+
+
 
 }
 

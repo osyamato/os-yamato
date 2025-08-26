@@ -2,18 +2,27 @@
   <Modal :visible="visible" @close="close">
     <transition name="modal-fade">
       <div class="modal-body" v-if="visible">
-        <h2 class="modal-title">新しいミッション</h2>
+<h2 class="modal-title">{{ t('mission.new') }}</h2>
 
         <!-- タイトル、説明、日付 -->
 <div class="centered-input">
-  <input v-model="title" class="modal-input" type="text" placeholder="タイトル" />
+<input
+  v-model="title"
+  class="modal-input"
+  type="text"
+  :placeholder="t('mission.placeholder.title')" 
+/>
 </div>
 
 <div class="centered-input">
-  <textarea v-model="note" class="modal-textarea" placeholder="説明（任意）"></textarea>
+<textarea
+  v-model="note"
+  class="modal-textarea"
+  :placeholder="t('mission.placeholder.note')"
+/>
 </div>
 <div class="goal-date-container">
-  <div class="goal-date-label">達成日</div>
+<div class="goal-date-label">{{ t('mission.goalDate') }}</div>
 <input
   v-model="goalDate"
   class="modal-input goal-date-input"
@@ -23,35 +32,34 @@
 />
 </div>
 
-        <!-- 絵文字・カラー・重要度 -->
-        <div class="row-pickers">
-          <!-- Emoji Picker -->
-          <div class="picker-group">
-            <label>アイコン</label>
-            <select v-model="emoji">
-              <option v-for="e in emojiOptions" :key="e" :value="e">{{ e }}</option>
-            </select>
-          </div>
+<div class="row-pickers">
+  <!-- Emoji Picker -->
+  <div class="picker-group">
+    <label>{{ t('mission.emoji') }}</label>
+    <select v-model="emoji">
+      <option v-for="e in emojiOptions" :key="e" :value="e">{{ e }}</option>
+    </select>
+  </div>
 
-<!-- Color Picker -->
-<div class="picker-group">
-  <label>カラー</label>
-  <select v-model="colorHue">
-    <option v-for="(label, hue) in colorOptions" :key="hue" :value="hue">
-      {{ label }}
-    </option>
-  </select>
-</div>
+  <!-- Color Picker -->
+  <div class="picker-group">
+    <label>{{ t('mission.color') }}</label>
+    <select v-model="colorHue">
+      <option v-for="(label, hue) in colorOptions" :key="hue" :value="hue">
+        {{ label }}
+      </option>
+    </select>
+  </div>
 
-<!-- Importance Picker -->
-<div class="picker-group">
-  <label>重要度</label>
-  <select v-model="importance">
-    <option v-for="level in 5" :key="level" :value="level">
-      {{ level }}{{ level === 1 ? ' (低)' : level === 5 ? ' (高)' : '' }}
-    </option>
-  </select>
-</div>
+  <!-- Importance Picker -->
+  <div class="picker-group">
+    <label>{{ t('mission.importance') }}</label>
+    <select v-model="importance">
+      <option v-for="level in 5" :key="level" :value="level">
+        {{ level }}{{ level === 1 ? t('mission.low') : level === 5 ? t('mission.high') : '' }}
+      </option>
+    </select>
+  </div>
         </div>
 
   <div class="button-container">
@@ -70,21 +78,29 @@ import YamatoButton from '@/components/YamatoButton.vue'
 import { API, graphqlOperation, Auth } from 'aws-amplify'
 import { createMission as createMissionMutation } from '@/graphql/mutations'
 
+import { useI18n } from 'vue-i18n'
+const { t, locale } = useI18n()
+
 const props = defineProps<{ visible: boolean }>()
 const emit = defineEmits(['close', 'submit'])
 
 const title = ref('')
 const note = ref('')
-const today = new Date()
-const nextMonth = new Date(today.setMonth(today.getMonth() + 1))
 
-const oneYearLater = new Date()
+const today = new Date()
 const todayISO = today.toISOString().split('T')[0]
+
+// 🗓️ デフォルト日付 → 1ヶ月後
+const nextMonth = new Date(today)
+nextMonth.setMonth(nextMonth.getMonth() + 1)
+const formatted = nextMonth.toISOString().split('T')[0]
+const goalDate = ref(formatted)
+
+// 📅 最大日付 → 今日から1年後
+const oneYearLater = new Date(today)
 oneYearLater.setFullYear(oneYearLater.getFullYear() + 1)
 const maxDate = oneYearLater.toISOString().split('T')[0]
 
-const formatted = nextMonth.toISOString().split('T')[0]
-const goalDate = ref(formatted)
 const emoji = ref('🌱')
 const colorHue = ref('200')
 const importance = ref('1')
@@ -95,11 +111,11 @@ const emojiOptions = [
 ]
 
 const colorOptions = {
-  0: '赤',
-  40: 'オレンジ',
-  120: '緑',
-  200: '青',
-  280: '紫'
+  0: t('color.red'),
+  40: t('color.orange'),
+  120: t('color.green'),
+  200: t('color.blue'),
+  280: t('color.purple')
 }
 
 function validateDateBeforeSubmit() {
@@ -113,12 +129,12 @@ function validateDateBeforeSubmit() {
   max.setHours(0, 0, 0, 0)
 
   if (selected < today) {
-    alert("過去の日付は選択できません")
+    alert(t('mission.error.pastDate'))
     return false
   }
 
   if (selected > max) {
-    alert("1年より先は選べません")
+    alert(t('mission.error.overOneYear'))
     return false
   }
 
@@ -127,7 +143,7 @@ function validateDateBeforeSubmit() {
 
 async function submitMission() {
   if (!title.value || !goalDate.value) {
-    alert('タイトルと期日は必須です')
+    alert(t('mission.error.requiredFields'))
     return
   }
 
@@ -158,7 +174,7 @@ async function submitMission() {
     close()
   } catch (error) {
     console.error('❌ ミッション作成失敗:', error)
-    alert('保存に失敗しました')
+    alert(t('mission.error.saveFailed'))
   }
 }
 

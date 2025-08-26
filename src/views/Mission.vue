@@ -1,6 +1,6 @@
 <template>
   <div class="mission-page">
-    <h1 class="title drop-animation">ミッション</h1>
+<h1 class="title drop-animation">{{ t('mission.title') }}</h1>
 
     <div class="icon-bar drop-animation">
   <IconButton :color="iconColor" @click="openExpiredModal">🥀</IconButton>
@@ -20,7 +20,7 @@
 </div>
 
 <div class="center-label" @click="toggleViewMode">
-  {{ isYearView ? '1年' : '1ヶ月' }}
+  {{ isYearView ? t('mission.view.year') : t('mission.view.month') }}
 </div>
       <!-- ミッション -->
 <div
@@ -54,6 +54,7 @@
   :missions="completedMissions"
   :iconColor="iconColor"
   @close="showCompletedModal = false"
+  @delete="handleCompletedMissionDelete"
 />
 
 <ExpiredMissionsModal
@@ -61,6 +62,7 @@
   :missions="expiredMissions"
   :iconColor="iconColor"
   @close="showExpiredModal = false"
+  @delete="handleExpiredMissionDelete"
 />
 
   </div>
@@ -77,7 +79,8 @@ import { updateMission as updateMissionMutation } from '@/graphql/mutations'
 import { deleteMission as deleteMissionMutation } from '@/graphql/mutations'
 import CompletedMissionsModal from '@/components/CompletedMissionsModal.vue'
 import ExpiredMissionsModal from '@/components/ExpiredMissionsModal.vue' 
-
+import { useI18n } from 'vue-i18n'
+const { t, locale } = useI18n()
 import { Auth } from 'aws-amplify'
 
 
@@ -170,7 +173,15 @@ async function fetchMissions() {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
+  try {
+    const user = await Auth.currentAuthenticatedUser()
+    iconColor.value = user.attributes['custom:iconColor'] || '#274c77'
+  } catch (e) {
+    console.error('🎨 アイコンカラーの取得失敗:', e)
+  }
+
+  // 他の初期化処理
   window.scrollTo({ top: 0, behavior: 'smooth' })
   fetchMissions()
 })
@@ -200,46 +211,48 @@ function getMonthOffsetFromToday(goal: Date): number {
 function getMissionStyle(mission) {
   const goal = new Date(mission.goalDate)
   const today = new Date()
-
   const seed = hashCode(mission.id)
-  const radiusOffset = ((seed % 300) - 150) / 150 * 15
 
-  const baseRadius = 130 + radiusOffset
+  // ランダムオフセット生成
+  const angleNoise = ((seed % 100) - 50) / 50 * 15 // ±15度のずれ
+
+  // アイコンサイズ計算（重要度で変動）
   const baseSize = 20 + mission.importance * 4
-const size = mission.importance === 5 ? baseSize * 1.5 : baseSize
+  const size = mission.importance === 5 ? baseSize * 1.5 : baseSize
+
+const randomness = ((seed % 80) - 40) // → -40〜+40 のズレ
+const baseRadius = 120 + mission.importance * 10 + randomness
+
+  // zIndex は重要度が低いほど前面に（＝高い数字）
+  const zIndex = 10 - mission.importance // importance=1 → 9, importance=5 → 5
 
   if (isYearView.value) {
     const offset = getMonthOffsetFromToday(goal)
     const baseAngle = offset * 30
-
-    const rawAngle = seed % 100
-    const angleOffset = offset === 0
-      ? (rawAngle / 100) * 10
-      : ((rawAngle - 50) / 50) * 10
-
-    const finalAngle = baseAngle + angleOffset
+    const finalAngle = baseAngle + angleNoise
 
     return {
       '--angle': `${finalAngle}deg`,
       width: `${size}px`,
       height: `${size}px`,
+      zIndex,
       backgroundColor: `hsl(${mission.colorHue}, 70%, 70%)`,
       fontSize: `${size * 0.6}px`,
       transform: `translate(-50%, -50%) rotate(${finalAngle}deg) translateY(-${baseRadius}px) rotate(${-finalAngle}deg)`
     }
   } else {
-    // === 1ヶ月ビュー ===
     const diff = goal.getTime() - today.getTime()
     const days = diff / (1000 * 60 * 60 * 24)
     if (days < 0 || days > 31) return { display: 'none' }
 
     const angle = (days / 31) * 360
-    const finalAngle = angle
+    const finalAngle = angle + angleNoise
 
     return {
       '--angle': `${finalAngle}deg`,
       width: `${size}px`,
       height: `${size}px`,
+      zIndex,
       backgroundColor: `hsl(${mission.colorHue}, 70%, 70%)`,
       fontSize: `${size * 0.6}px`,
       transform: `translate(-50%, -50%) rotate(${finalAngle}deg) translateY(-${baseRadius}px) rotate(${-finalAngle}deg)`
@@ -302,6 +315,27 @@ async function handleMissionDelete(id: string) {
   }
 }
 
+
+async function handleCompletedMissionDelete(id: string) {
+  try {
+    await API.graphql(graphqlOperation(deleteMissionMutation, { input: { id } }))
+    completedMissions.value = completedMissions.value.filter(m => m.id !== id)
+  } catch (e) {
+    console.error('❌ 完了ミッション削除失敗:', e)
+    alert('削除に失敗しました')
+  }
+}
+
+// 親 (Mission.vue) にて追加
+async function handleExpiredMissionDelete(id: string) {
+  try {
+    await API.graphql(graphqlOperation(deleteMissionMutation, { input: { id } }))
+    expiredMissions.value = expiredMissions.value.filter(m => m.id !== id)
+  } catch (e) {
+    console.error('❌ 削除失敗:', e)
+    alert('削除に失敗しました')
+  }
+}
 
 </script>
 
@@ -376,6 +410,9 @@ async function handleMissionDelete(id: string) {
   font-size: 1.5rem;
   font-weight: bold;
   color: inherit;
+  border-bottom: 2px solid currentColor; /* 👈 アンダーラインを追加 */
+  padding-bottom: 2px;
+  cursor: pointer; /* 👈 タブっぽく見せる */
 }
 
 .mission-marker {
@@ -387,6 +424,17 @@ async function handleMissionDelete(id: string) {
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.6); /* 濃い影 */
+  background-color: white; /* 背景が透明で見づらい場合用 */
+}
+
+@media (prefers-color-scheme: dark) {
+  .mission-marker {
+    box-shadow:
+      0 0 0 2px rgba(255, 255, 255, 0.8),   /* 外側に白い円 */
+      0 6px 14px rgba(255, 255, 255, 0.1); /* 軽い内側の影 */
+    background-color: #1e1e1e; /* ダーク背景と馴染むように */
+  }
 }
 
 .drop-animation {
