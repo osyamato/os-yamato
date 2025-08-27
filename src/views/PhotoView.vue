@@ -671,52 +671,46 @@ async function handleFileUpload(event) {
   isLoading.value = true
 
   try {
-    // ★ 制限ロジックを削除
-    // const user = await Auth.currentAuthenticatedUser()
-    // const subscription = user.attributes['custom:subscription'] || 'free'
+    const maxUploadsPerDay = 20
+    const todayUploadCount = await getTodayUploadCount()
+    const remaining = maxUploadsPerDay - todayUploadCount
 
-    // const maxUploads = subscription === 'paid' ? 30 : 1
-    // const todayUploadCount = await getTodayUploadCount()
-    // const remaining = maxUploads - todayUploadCount
+    if (remaining <= 0) {
+      alert(t('photoUpload.limitReached', { max: maxUploadsPerDay }))
+      return
+    }
 
-    // if (remaining <= 0) {
-    //   alert(`本日はすでに${maxUploads}枚アップロード済みです。`)
-    //   return
-    // }
-
-    // const uploadCount = Math.min(remaining, files.length)
-
-    // for (let i = 0; i < uploadCount; i++) {
-    //   await uploadSinglePhoto(files[i])
-    // }
-
-    // if (files.length > uploadCount) {
-    //   alert(`本日は ${remaining} 枚までアップロード可能でした。`)
-    // }
-
-    // ★ 制限なしですべてアップロード
-    for (let i = 0; i < files.length; i++) {
+    // 上限内でアップロード
+    const uploadCount = Math.min(remaining, files.length)
+    for (let i = 0; i < uploadCount; i++) {
       await uploadSinglePhoto(files[i])
     }
 
     await fetchPhotos()
   } catch (e) {
     console.error('❌ アップロード中エラー:', e)
-    alert('アップロードに失敗しました。')
+    alert(t('photoUpload.uploadFailed'))
   } finally {
     isLoading.value = false
   }
 }
 
+/**
+ * 今日アップロード済みの写真枚数を取得
+ */
 async function getTodayUploadCount() {
-  const result = await API.graphql(graphqlOperation(listPhotos))
-  const items = result.data.listPhotos.items
+  try {
+    const result = await API.graphql(graphqlOperation(listPhotos))
+    const items = result.data.listPhotos.items
 
-  const today = new Date().toISOString().slice(0, 10) // YYYY-MM-DD
-
-  return items.filter(photo =>
-    (photo.createdAt || '').startsWith(today)
-  ).length
+    const today = new Date().toISOString().slice(0, 10) // YYYY-MM-DD
+    return items.filter(photo =>
+      (photo.createdAt || '').startsWith(today)
+    ).length
+  } catch (e) {
+    console.error('❌ 今日のアップロード数取得失敗', e)
+    return 0
+  }
 }
 
 async function uploadSinglePhoto(file) {

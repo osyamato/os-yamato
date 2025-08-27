@@ -1,4 +1,6 @@
 {
+  "photoUpload.limitReached": "本日はすでに {max} 枚アップロード済みです。",
+  "photoUpload.uploadFailed": "アップロードに失敗しました。",
 
   "alertNeedProfile": "👤アイコンからプロフィールを設定してください。",
 "errorYamatoIdRequired": "Yamato IDを入力してください",
