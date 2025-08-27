@@ -1,4 +1,7 @@
 {
+  "photoUpload.limitReached": "您今天已上传 {max} 张照片。",
+  "photoUpload.uploadFailed": "照片上传失败。",
+
 "alertNeedProfile": "请通过 👤 图标设置您的个人资料。",
  "errorYamatoIdRequired": "请输入 Yamato ID",
   "common.cancel": "取消",

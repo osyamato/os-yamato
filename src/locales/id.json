@@ -1,4 +1,7 @@
 {
+  "photoUpload.limitReached": "Anda sudah mengunggah {max} foto hari ini.",
+  "photoUpload.uploadFailed": "Gagal mengunggah foto.",
+
 "alertNeedProfile": "Silakan atur profil Anda dari ikon 👤.",
 
   "errorYamatoIdRequired": "Silakan masukkan ID Yamato",

@@ -1,4 +1,7 @@
 {
+"photoUpload.limitReached": "Vous avez déjà téléchargé {max} photos aujourd'hui.",
+  "photoUpload.uploadFailed": "Échec du téléchargement de la photo.",
+
 "alertNeedProfile": "Veuillez configurer votre profil via l’icône 👤.",
 "errorYamatoIdRequired": "Veuillez saisir un identifiant Yamato",
 

@@ -1,4 +1,7 @@
 {
+  "photoUpload.limitReached": "You have already uploaded {max} photos today.",
+  "photoUpload.uploadFailed": "Photo upload failed.",
+
 "alertNeedProfile": "Please set up your profile from the 👤 icon.",
   "errorYamatoIdRequired": "Please enter a Yamato ID",
 "common.cancel": "Cancel",

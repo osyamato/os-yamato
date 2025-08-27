@@ -1,4 +1,7 @@
 {
+  "photoUpload.limitReached": "Ya has subido {max} fotos hoy.",
+  "photoUpload.uploadFailed": "Error al subir la foto.",
+
 "alertNeedProfile": "Por favor, configura tu perfil desde el ícono 👤.",
 "errorYamatoIdRequired": "Por favor, introduce un ID de Yamato",
   "alertNeedProfile.es": "Por favor, configura tu perfil primero.",
