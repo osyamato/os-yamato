@@ -131,16 +131,8 @@ const handleClose = () => {
   padding: 2rem;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
   text-align: center;
-  color: #000;
-  background-color: #fff;
-}
-
-/* 🌙 ダークモード時のベース色 */
-@media (prefers-color-scheme: dark) {
-  .album-modal-content {
-    color: #fff;
-    background-color: #111;
-  }
+  /* 背景色は Modal コンポーネントに任せる */
+  color: inherit; /* テキスト色も親に任せる */
 }
 
 .album-modal-content h2 {
@@ -162,14 +154,7 @@ const handleClose = () => {
   display: block;
   font-size: 0.95rem;
   margin-bottom: 0.25rem;
-  color: #666;
-}
-
-/* 🌙 ダークモードでラベルを明るく */
-@media (prefers-color-scheme: dark) {
-  .picker-label {
-    color: #ccc;
-  }
+  color: inherit; /* 親の色に従う */
 }
 
 .picker-container {
@@ -185,18 +170,9 @@ const handleClose = () => {
   line-height: 1.2rem;
   appearance: none;
   border: 1px solid #ccc;
-  background-color: #fff;
-  color: #000;
+  background-color: transparent; /* 背景を透明にして Modal に従う */
+  color: inherit;
   margin: 0;
-}
-
-/* 🌙 ダークモード */
-@media (prefers-color-scheme: dark) {
-  .custom-picker {
-    background-color: #111;
-    color: #fff;
-    border: 1px solid #555;
-  }
 }
 
 .custom-picker:focus {
@@ -221,28 +197,12 @@ const handleClose = () => {
   border-radius: 0.6rem;
   font-size: 0.95rem;
   border: 1px solid #ccc;
-  background-color: #fff;
-  color: #000;
-}
-
-/* 🌙 ダークモード */
-@media (prefers-color-scheme: dark) {
-  .yamato-input {
-    background-color: #111;
-    color: #fff;
-    border: 1px solid #555;
-  }
+  background-color: transparent; /* Modal に任せる */
+  color: inherit;
 }
 
 .yamato-input::placeholder {
   color: #999;
-}
-
-/* 🌙 ダークモード */
-@media (prefers-color-scheme: dark) {
-  .yamato-input::placeholder {
-    color: #666;
-  }
 }
 
 .button-group {
@@ -276,5 +236,4 @@ const handleClose = () => {
 .delete:hover {
   background-color: #b91c1c !important;
 }
-
 </style>
