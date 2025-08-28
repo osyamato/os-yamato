@@ -1,5 +1,25 @@
 <template>
   <div class="desktop" :style="wallpaperStyle">
+
+<div v-if="wallpaper === 'effect.sakura'" class="sakura-container">
+  <div
+    v-for="n in 20"
+    :key="n"
+    class="sakura"
+    :style="getSakuraStyle(n)"
+  />
+</div>
+
+<div v-if="wallpaper === 'image.bubble.png'" class="bubble-container">
+      <div
+        v-for="n in 20"
+        :key="n"
+        class="bubble"
+        :style="getBubbleStyle(n)"
+      />
+    </div>
+
+
     <div class="icon-grid">
       <!-- ✅ カレンダー（文字オーバーレイのため特殊対応） -->
       <button @click="goTo('calendar')" class="icon-button calendar-button" style="background-image: url('/calendar.png')">
@@ -81,14 +101,20 @@ const currentMonthName = computed(() => t(`calendar.month.${today.getMonth() + 1
 
 const wallpaperStyle = computed(() => {
   if (!wallpaper.value) return {}
+
   if (wallpaper.value.startsWith('color.')) {
-    const colorMap = {
-      'color.lightBlue': '#e6f0f9',
-      'color.lightYellow': '#fff9e3',
-      'color.lightPurple': '#f5f0fb'
+const colorMap = {
+'color.lightBlue': '#ecf5fb',    // 元: #e6f0f9 → 少し濃く → #dceaf7 → そこから少し薄く
+'color.lightYellow': '#fffbea',  // 元: #fff9e3 → 少し濃く → #fff2cc → そこから少し薄く
+'color.lightPurple': '#f8f4fd',  
+  'color.gray': '#aaaaaa'
+}
+    return {
+      backgroundColor: colorMap[wallpaper.value] || '#f5f5f5'
     }
-    return { backgroundColor: colorMap[wallpaper.value] || '#f5f5f5' }
   }
+
+  // ✅ 通常の画像背景（moon、take など）
   return {
     backgroundImage: `url(/${wallpaper.value})`,
     backgroundSize: 'cover',
@@ -147,6 +173,38 @@ onMounted(async () => {
     error: (err) => console.error('❌ メッセージサブスクリプションエラー:', err)
   })
 })
+
+function getBubbleStyle(n) {
+  const left = Math.random() * 100
+  const size = Math.random() < 0.4
+    ? 15 + Math.random() * 10   // 小さめ（15〜25px）
+    : 40 + Math.random() * 20   // 大きめ（40〜60px）
+  const delay = Math.random() * 10
+  const duration = 20 + Math.random() * 15  // ✅ ゆっくり長め（20〜35秒）
+
+  return {
+    left: `${left}%`,
+    width: `${size}px`,
+    height: `${size}px`,
+    animationDelay: `${delay}s`,
+    animationDuration: `${duration}s`
+  }
+}
+
+function getSakuraStyle(n) {
+  const left = Math.random() * 100
+  const size = 20 + Math.random() * 15
+  const delay = Math.random() * 10
+  const duration = 18 + Math.random() * 10
+
+  return {
+    left: `${left}%`,
+    width: `${size}px`,
+    height: `${size}px`,
+    animationDelay: `${delay}s`,
+    animationDuration: `${duration}s`
+  }
+}
 
 onUnmounted(() => {
   if (subscription.value) {
@@ -249,5 +307,84 @@ onUnmounted(() => {
   font-size: 14px;
   line-height: 1;
 }
+
+.bubble-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.bubble {
+  position: absolute;
+  bottom: -60px;
+  background-image: url('/bubble.png');
+  background-size: cover;
+  background-repeat: no-repeat;
+  border-radius: 50%; /* ✅ 丸くする */
+  opacity: 0;
+  animation: floatUpFade ease-in-out infinite;
+  pointer-events: none;
+  filter: blur(0.5px); /* 💫 ほのかにボケさせると幻想的 */
+}
+
+@keyframes floatUpFade {
+  0% {
+    transform: translateY(0px);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+  90% {
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(-120vh);
+    opacity: 0;
+  }
+}
+
+.sakura-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.sakura {
+  position: absolute;
+  top: -60px;
+  background-image: url('/sakura.time10.png');
+  background-size: cover;
+  background-repeat: no-repeat;
+  border-radius: 50%;
+  opacity: 1;
+  animation: fallDownFade linear infinite;
+  pointer-events: none;
+}
+
+@keyframes fallDownFade {
+  0% {
+    transform: translateY(0px) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(120vh) rotate(360deg);
+    opacity: 1;
+  }
+}
+
 </style>
 
