@@ -44,6 +44,9 @@
         <option value="color.lightBlue">{{ t('lightBlue') }}</option>
         <option value="color.lightYellow">{{ t('lightYellow') }}</option>
         <option value="color.lightPurple">{{ t('lightPurple') }}</option>
+<option value="color.gray">{{ t('gray') }}</option>
+<option value="image.bubble.png">{{ t('bubble') }}</option>
+<option value="effect.sakura">{{ t('sakura') }}</option>
       </select>
     </div>
 
