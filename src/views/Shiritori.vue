@@ -4,11 +4,19 @@
     <div class="header">
       <h2 class="header-title">しりとり</h2>
       <div class="icon-button-group">
-<button class="icon-button" @click="showModeModal = true">🌱</button>
+        <button class="icon-button" @click="showModeModal = true">🌱</button>
         <button class="icon-button" @click="resetGame">🌀</button>
         <button class="icon-button">🌸</button>
       </div>
     </div>
+
+<div class="selected-mode-display">
+  <div class="mode-label">
+    {{ selectedSpeedMode.emoji }} {{ selectedSpeedMode.label }}
+    ×
+    {{ selectedGenreMode.emoji }} {{ selectedGenreMode.label }}
+  </div>
+</div>
 
     <!-- ステータスバー -->
     <div class="status-bar-container" v-if="!gameOver && timerStarted">
@@ -28,11 +36,7 @@
 
     <!-- 会話履歴（最新が上） -->
     <div class="message-list">
-      <div
-        v-for="(entry, index) in [...history].reverse()"
-        :key="index"
-        class="message-pair"
-      >
+      <div v-for="(entry, index) in [...history].reverse()" :key="index" class="message-pair">
         <div class="bot-message">
           Bot：
           <div v-if="entry.bot === '...'" class="gpt-dots-loader">
@@ -44,24 +48,24 @@
         </div>
         <div class="user-message">あなた：{{ entry.user }}</div>
       </div>
-
-      <!-- ゲームオーバー表示 -->
       <div v-if="gameOver" class="gameover-message">⏰ ゲームオーバー</div>
     </div>
-<ModeSelectModal
-  :visible="showModeModal"
-  @select="handleModeSelect"
-  @close="showModeModal = false"
-/>
 
+    <ModeSelectModal
+      :visible="showModeModal"
+      @select="handleModeSelect"
+      @close="showModeModal = false"
+    />
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onUnmounted } from 'vue'
 import ModeSelectModal from '@/components/ModeSelectModal.vue'
+import { speedModes, genreModes } from '@/components/shiritoriModes.js'
+import { wordPool } from '@/data/wordPool.js' // ← 🍙 追加ポイント！
 
-// 入力・状態
+// 入力・状態管理
 const userInput = ref('')
 const history = ref([])
 const gameOver = ref(false)
@@ -70,27 +74,22 @@ const progress = ref(0)
 let intervalId = null
 let startTime = null
 
-// モード選択
-const selectedMode = ref('梅')
+// モード選択状態
+const selectedSpeedKey = ref('ume')     // 初期値：梅（ゆったり）
+const selectedGenreKey = ref('any')     // 初期値：ジャンル制限なし
 const showModeModal = ref(false)
 
-function handleModeSelect(mode) {
-  selectedMode.value = mode
+// モードの詳細（ラベル・ルール取得などに使う）
+const selectedSpeedMode = computed(() => speedModes[selectedSpeedKey.value])
+const selectedGenreMode = computed(() => genreModes[selectedGenreKey.value])
+const TIMER_DURATION = computed(() => selectedSpeedMode.value.timeLimit)
+
+// モード選択ハンドラ
+function handleModeSelect({ speed, genre }) {
+  selectedSpeedKey.value = speed
+  selectedGenreKey.value = genre
   showModeModal.value = false
 }
-
-// モードごとの制限時間
-const TIMER_DURATION = computed(() => {
-  switch (selectedMode.value) {
-    case '松': return 5000
-    case '竹': return 10000
-    case '梅': return 15000
-    default: return 10000
-  }
-})
-
-// 仮のBot単語リスト
-const words = ['りんご', 'ごりら', 'らっぱ', 'ぱんだ', 'だるま', 'まくら', 'らいおん']
 
 // カタカナ→ひらがな変換
 function toHiragana(str) {
@@ -99,7 +98,7 @@ function toHiragana(str) {
   )
 }
 
-// 最後の文字取得
+// 小文字考慮の最後の文字取得
 function getLastChar(word) {
   const base = word.replace(/ー$/, '')
   const last = base.at(-1)
@@ -111,9 +110,10 @@ function getLastChar(word) {
   return map[last] || last
 }
 
-// Botの応答（仮）
+// Botの返答
 function getBotReply(lastChar) {
-  return words.find(w => w.startsWith(lastChar)) || 'おわり'
+  const pool = wordPool[selectedGenreKey.value] || []
+  return pool.find(word => word.startsWith(lastChar)) || 'おわり'
 }
 
 // タイマー開始
@@ -126,7 +126,6 @@ function startTimer() {
   intervalId = setInterval(() => {
     const elapsed = Date.now() - startTime
     progress.value = Math.min(100, (elapsed / TIMER_DURATION.value) * 100)
-
     if (elapsed >= TIMER_DURATION.value) {
       clearInterval(intervalId)
       gameOver.value = true
@@ -134,12 +133,27 @@ function startTimer() {
   }, 100)
 }
 
-// ユーザーが単語を入力
 function submitWord() {
   const input = toHiragana(userInput.value.trim())
+
   if (!input || !/^[ぁ-んー]+$/.test(input)) {
     alert('ひらがなのみ入力してください')
     return
+  }
+
+  const previousEntry = history.value.at(-1)
+  if (previousEntry) {
+    const lastChar = getLastChar(previousEntry.bot)
+    const firstChar = input[0]
+
+    const mismatch = selectedSpeedMode.value.rules.allowSmallKanaMismatch
+      ? getLastChar(firstChar) !== getLastChar(lastChar)
+      : firstChar !== lastChar
+
+    if (mismatch) {
+      alert(`前の単語は「${previousEntry.bot}」なので、「${lastChar}」から始めてください`)
+      return
+    }
   }
 
   history.value.push({ user: input, bot: '...' })
@@ -147,6 +161,7 @@ function submitWord() {
   clearInterval(intervalId)
   timerStarted.value = false
 
+  // Bot の応答処理
   setTimeout(() => {
     const last = getLastChar(input)
     const bot = input.endsWith('ん')
@@ -155,15 +170,15 @@ function submitWord() {
 
     history.value[history.value.length - 1].bot = bot
 
-    if (!bot.includes('終了')) {
-      startTimer()
-    } else {
+    if (!bot || bot.includes('終了') || bot === 'おわり') {
       gameOver.value = true
+    } else {
+      startTimer()
     }
   }, 2000)
 }
 
-// リセット
+// リセット処理
 function resetGame() {
   userInput.value = ''
   history.value = []
@@ -178,6 +193,8 @@ onUnmounted(() => {
   clearInterval(intervalId)
 })
 </script>
+
+
 
 <style scoped>
 :root {
@@ -316,5 +333,27 @@ input {
   0%, 80%, 100% { opacity: 0.4; transform: translateY(0); }
   40% { opacity: 1; transform: translateY(-6px); }
 }
+
+.selected-mode-display {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+.mode-label {
+  display: inline-block;
+  font-size: 1.1rem;
+  font-weight: bold;
+  padding: 0.4rem 1rem;
+  border-radius: 20px;
+  background-color: #e0f2f1;
+  color: #065f46;
+}
+@media (prefers-color-scheme: dark) {
+  .mode-label {
+    background-color: #1f2937;
+    color: #a7f3d0;
+  }
+}
+
+
 </style>
 
