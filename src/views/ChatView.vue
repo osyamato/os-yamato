@@ -1156,9 +1156,9 @@ function groupMessagesByDate(messages) {
   const grouped = []
   let lastDate = null
   for (const msg of messages) {
-    const date = new Date(msg.timestamp).toLocaleDateString('ja-JP', {
-      year: 'numeric', month: 'long', day: 'numeric', weekday: 'short'
-    })
+    const d = new Date(msg.timestamp)
+    const date = `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}`
+
     if (date !== lastDate) {
       grouped.push({ isDateSeparator: true, date })
       lastDate = date
