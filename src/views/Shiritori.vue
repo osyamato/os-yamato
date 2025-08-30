@@ -4,7 +4,7 @@
     <div class="header">
       <h2 class="header-title">しりとり</h2>
       <div class="icon-button-group">
-        <button class="icon-button">🌱</button>
+<button class="icon-button" @click="showModeModal = true">🌱</button>
         <button class="icon-button" @click="resetGame">🌀</button>
         <button class="icon-button">🌸</button>
       </div>
@@ -48,30 +48,58 @@
       <!-- ゲームオーバー表示 -->
       <div v-if="gameOver" class="gameover-message">⏰ ゲームオーバー</div>
     </div>
+<ModeSelectModal
+  :visible="showModeModal"
+  @select="handleModeSelect"
+  @close="showModeModal = false"
+/>
+
   </div>
 </template>
 
 <script setup>
-import { ref, onUnmounted } from 'vue'
+import { ref, computed, onUnmounted } from 'vue'
+import ModeSelectModal from '@/components/ModeSelectModal.vue'
 
+// 入力・状態
 const userInput = ref('')
 const history = ref([])
 const gameOver = ref(false)
 const timerStarted = ref(false)
-
-const TIMER_DURATION = 10000
 const progress = ref(0)
 let intervalId = null
 let startTime = null
 
+// モード選択
+const selectedMode = ref('梅')
+const showModeModal = ref(false)
+
+function handleModeSelect(mode) {
+  selectedMode.value = mode
+  showModeModal.value = false
+}
+
+// モードごとの制限時間
+const TIMER_DURATION = computed(() => {
+  switch (selectedMode.value) {
+    case '松': return 5000
+    case '竹': return 10000
+    case '梅': return 15000
+    default: return 10000
+  }
+})
+
+// 仮のBot単語リスト
 const words = ['りんご', 'ごりら', 'らっぱ', 'ぱんだ', 'だるま', 'まくら', 'らいおん']
 
+// カタカナ→ひらがな変換
 function toHiragana(str) {
   return str.replace(/[\u30a1-\u30f6]/g, c =>
     String.fromCharCode(c.charCodeAt(0) - 0x60)
   )
 }
 
+// 最後の文字取得
 function getLastChar(word) {
   const base = word.replace(/ー$/, '')
   const last = base.at(-1)
@@ -83,10 +111,12 @@ function getLastChar(word) {
   return map[last] || last
 }
 
+// Botの応答（仮）
 function getBotReply(lastChar) {
   return words.find(w => w.startsWith(lastChar)) || 'おわり'
 }
 
+// タイマー開始
 function startTimer() {
   clearInterval(intervalId)
   progress.value = 0
@@ -95,15 +125,16 @@ function startTimer() {
 
   intervalId = setInterval(() => {
     const elapsed = Date.now() - startTime
-    progress.value = Math.min(100, (elapsed / TIMER_DURATION) * 100)
+    progress.value = Math.min(100, (elapsed / TIMER_DURATION.value) * 100)
 
-    if (elapsed >= TIMER_DURATION) {
+    if (elapsed >= TIMER_DURATION.value) {
       clearInterval(intervalId)
       gameOver.value = true
     }
   }, 100)
 }
 
+// ユーザーが単語を入力
 function submitWord() {
   const input = toHiragana(userInput.value.trim())
   if (!input || !/^[ぁ-んー]+$/.test(input)) {
@@ -132,6 +163,7 @@ function submitWord() {
   }, 2000)
 }
 
+// リセット
 function resetGame() {
   userInput.value = ''
   history.value = []
@@ -141,6 +173,7 @@ function resetGame() {
   clearInterval(intervalId)
 }
 
+// クリーンアップ
 onUnmounted(() => {
   clearInterval(intervalId)
 })
