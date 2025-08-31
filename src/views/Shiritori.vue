@@ -63,7 +63,7 @@
 import { ref, computed, onUnmounted } from 'vue'
 import ModeSelectModal from '@/components/ModeSelectModal.vue'
 import { speedModes, genreModes } from '@/components/shiritoriModes.js'
-import { wordPool } from '@/data/wordPool.js' // ← 🍙 追加ポイント！
+import { wordPool } from '@/data/wordPool.js'
 
 // 入力・状態管理
 const userInput = ref('')
@@ -75,16 +75,15 @@ let intervalId = null
 let startTime = null
 
 // モード選択状態
-const selectedSpeedKey = ref('ume')     // 初期値：梅（ゆったり）
-const selectedGenreKey = ref('any')     // 初期値：ジャンル制限なし
+const selectedSpeedKey = ref('ume')
+const selectedGenreKey = ref('any')
 const showModeModal = ref(false)
 
-// モードの詳細（ラベル・ルール取得などに使う）
 const selectedSpeedMode = computed(() => speedModes[selectedSpeedKey.value])
 const selectedGenreMode = computed(() => genreModes[selectedGenreKey.value])
 const TIMER_DURATION = computed(() => selectedSpeedMode.value.timeLimit)
 
-// モード選択ハンドラ
+// モード変更
 function handleModeSelect({ speed, genre }) {
   selectedSpeedKey.value = speed
   selectedGenreKey.value = genre
@@ -98,7 +97,7 @@ function toHiragana(str) {
   )
 }
 
-// 小文字考慮の最後の文字取得
+// 小文字補正して最後の文字を取得
 function getLastChar(word) {
   const base = word.replace(/ー$/, '')
   const last = base.at(-1)
@@ -116,7 +115,37 @@ function getBotReply(lastChar) {
   return pool.find(word => word.startsWith(lastChar)) || 'おわり'
 }
 
-// タイマー開始
+// GPT mini でジャンル判定
+async function validateWithGPT(word, genreKey) {
+  const genreLabel = genreModes[genreKey]?.label || genreKey
+  try {
+    const res = await fetch('https://tfxc3pudv4.execute-api.ap-northeast-1.amazonaws.com/Yamato_GPT_mini', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messages: [
+          {
+            role: 'system',
+            content: `ユーザーが入力した単語が「${genreLabel}」のジャンル（例：動物、食べ物など）に該当するか判定してください。`
+          },
+          {
+            role: 'user',
+            content: `単語：「${word}」\nジャンル：「${genreLabel}」\nこの単語は該当しますか？はい/いいえで答えてください。`
+          }
+        ],
+        mode: 'factual',
+        language: 'ja'
+      })
+    })
+    const data = await res.json()
+    return data.text?.includes('はい') || false
+  } catch (e) {
+    console.error('❌ GPT 判定失敗:', e)
+    return false
+  }
+}
+
+// タイマー
 function startTimer() {
   clearInterval(intervalId)
   progress.value = 0
@@ -133,7 +162,7 @@ function startTimer() {
   }, 100)
 }
 
-function submitWord() {
+async function submitWord() {
   const input = toHiragana(userInput.value.trim())
 
   if (!input || !/^[ぁ-んー]+$/.test(input)) {
@@ -141,11 +170,11 @@ function submitWord() {
     return
   }
 
+  // しりとりルールチェック
   const previousEntry = history.value.at(-1)
   if (previousEntry) {
     const lastChar = getLastChar(previousEntry.bot)
     const firstChar = input[0]
-
     const mismatch = selectedSpeedMode.value.rules.allowSmallKanaMismatch
       ? getLastChar(firstChar) !== getLastChar(lastChar)
       : firstChar !== lastChar
@@ -156,12 +185,29 @@ function submitWord() {
     }
   }
 
+  // アニメーション表示
   history.value.push({ user: input, bot: '...' })
   userInput.value = ''
   clearInterval(intervalId)
   timerStarted.value = false
 
-  // Bot の応答処理
+  // ジャンルチェック（DBとGPT）
+  const pool = wordPool[selectedGenreKey.value] || []
+  if (selectedGenreKey.value !== 'any' && !pool.includes(input)) {
+    const isValid = await validateWithGPT(input, selectedGenreKey.value)
+    if (!isValid) {
+      history.value[history.value.length - 1].bot = `「${input}」は「${selectedGenreMode.value.label}」ジャンルでは使えません`
+
+      // ⏳ 2秒後にタイマー再開
+      setTimeout(() => {
+        startTimer()
+      }, 2000)
+
+      return
+    }
+  }
+
+  // Bot応答処理（2秒ディレイ）
   setTimeout(() => {
     const last = getLastChar(input)
     const bot = input.endsWith('ん')
