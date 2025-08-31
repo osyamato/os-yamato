@@ -5,7 +5,11 @@
       <h2 class="header-title">しりとり</h2>
       <div class="icon-button-group">
         <button class="icon-button" @click="showModeModal = true">🌱</button>
-        <button class="icon-button" @click="resetGame">🌀</button>
+<button
+  class="icon-button"
+  :class="{ 'rotate-once': isRotating }"
+  @click="handleResetWithAnimation"
+>↻</button>
         <button class="icon-button">🌸</button>
       </div>
     </div>
@@ -83,6 +87,19 @@ const selectedSpeedMode = computed(() => speedModes[selectedSpeedKey.value])
 const selectedGenreMode = computed(() => genreModes[selectedGenreKey.value])
 const TIMER_DURATION = computed(() => selectedSpeedMode.value.timeLimit)
 
+
+const isRotating = ref(false)
+
+function handleResetWithAnimation() {
+  isRotating.value = true
+  resetGame()
+
+  // 一度だけ回転 → クラス削除
+  setTimeout(() => {
+    isRotating.value = false
+  }, 500) // アニメ時間と一致
+}
+
 // モード変更
 function handleModeSelect({ speed, genre }) {
   selectedSpeedKey.value = speed
@@ -145,7 +162,6 @@ async function validateWithGPT(word, genreKey) {
   }
 }
 
-// タイマー
 function startTimer() {
   clearInterval(intervalId)
   progress.value = 0
@@ -154,7 +170,18 @@ function startTimer() {
 
   intervalId = setInterval(() => {
     const elapsed = Date.now() - startTime
-    progress.value = Math.min(100, (elapsed / TIMER_DURATION.value) * 100)
+    const percentage = Math.min(100, (elapsed / TIMER_DURATION.value) * 100)
+    progress.value = percentage
+
+    const bar = document.querySelector('.status-bar')
+    if (bar) {
+      if (percentage >= 66) {
+        bar.classList.add('warning')
+      } else {
+        bar.classList.remove('warning')
+      }
+    }
+
     if (elapsed >= TIMER_DURATION.value) {
       clearInterval(intervalId)
       gameOver.value = true
@@ -165,12 +192,17 @@ function startTimer() {
 async function submitWord() {
   const input = toHiragana(userInput.value.trim())
 
-  if (!input || !/^[ぁ-んー]+$/.test(input)) {
+  // 🔕 入力なしなら処理スキップ（アラートなし）
+  if (!input) return
+
+  // ⚠️ ひらがな以外が含まれる場合：アラート → 入力クリア
+  if (!/^[ぁ-んー]+$/.test(input)) {
     alert('ひらがなのみ入力してください')
+    userInput.value = ''
     return
   }
 
-  // しりとりルールチェック
+  // 📌 前の単語と接続チェック（しりとり）
   const previousEntry = history.value.at(-1)
   if (previousEntry) {
     const lastChar = getLastChar(previousEntry.bot)
@@ -185,21 +217,23 @@ async function submitWord() {
     }
   }
 
-  // アニメーション表示
+  // ⏳ アニメーション表示 & タイマー停止
   history.value.push({ user: input, bot: '...' })
   userInput.value = ''
   clearInterval(intervalId)
   timerStarted.value = false
 
-  // ジャンルチェック（DBとGPT）
+  // ✅ ジャンルチェック（DB → GPT）
   const pool = wordPool[selectedGenreKey.value] || []
   if (selectedGenreKey.value !== 'any' && !pool.includes(input)) {
     const isValid = await validateWithGPT(input, selectedGenreKey.value)
+
     if (!isValid) {
       history.value[history.value.length - 1].bot = `「${input}」は「${selectedGenreMode.value.label}」ジャンルでは使えません`
 
-      // ⏳ 2秒後にタイマー再開
+      // ⏱ 2秒後に削除＆タイマー再開
       setTimeout(() => {
+        history.value.pop()
         startTimer()
       }, 2000)
 
@@ -207,7 +241,7 @@ async function submitWord() {
     }
   }
 
-  // Bot応答処理（2秒ディレイ）
+  // 🤖 Bot 応答処理（2秒遅延）
   setTimeout(() => {
     const last = getLastChar(input)
     const bot = input.endsWith('ん')
@@ -290,20 +324,25 @@ onUnmounted(() => {
   cursor: pointer;
 }
 
-/* ステータスバー */
 .status-bar-container {
   width: 100%;
-  height: 6px;
+  height: 10px; /* ← 高さを6px→10pxに */
   background-color: #ddd;
-  border-radius: 3px;
+  border-radius: 5px;
   overflow: hidden;
   margin: 0.5rem auto;
   max-width: 400px;
 }
+
 .status-bar {
-  height: 100%;
-  background-color: #10b981;
-  transition: width 0.1s linear;
+  height: 12px; /* ← 少し太くしました */
+  background-color: #274c77;
+  transition: width 0.1s linear, background-color 0.3s ease;
+  border-radius: 5px;
+}
+
+.status-bar.warning {
+  background-color: #fca5a5; /* 淡い赤色 */
 }
 
 /* 入力欄 */
@@ -400,6 +439,14 @@ input {
   }
 }
 
+@keyframes rotate-once {
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.rotate-once {
+  animation: rotate-once 0.5s ease-in-out;
+}
 
 </style>
 

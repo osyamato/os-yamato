@@ -14,7 +14,7 @@
             @click="selectSpeed(key)"
             :class="{ selected: selectedSpeed === key }"
           >
-            {{ mode.emoji }} {{ mode.label }}
+            {{ mode.label }}
           </button>
         </div>
       </div>
@@ -30,7 +30,7 @@
             @click="selectGenre(key)"
             :class="{ selected: selectedGenre === key }"
           >
-            {{ mode.emoji }} {{ mode.label }}
+            {{ mode.label }}
           </button>
         </div>
       </div>
@@ -97,14 +97,16 @@ function confirmSelection() {
   background-color: #14532d;
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: 9999px; /* ← 丸くする */
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: background-color 0.2s, transform 0.1s ease;
 }
+
 .mode-button.selected {
   background-color: #166534;
   font-weight: bold;
   box-shadow: 0 0 0 2px #fff inset;
+  transform: scale(1.05); /* 選択時の軽い拡大もOK */
 }
 .confirm-button {
   margin-top: 1rem;
