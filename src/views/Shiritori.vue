@@ -5,27 +5,32 @@
       <h2 class="header-title">しりとり</h2>
       <div class="icon-button-group">
         <button class="icon-button" @click="showModeModal = true">🌱</button>
-<button
-  class="icon-button"
-  :class="{ 'rotate-once': isRotating }"
-  @click="handleResetWithAnimation"
->↻</button>
+        <button
+          class="icon-button"
+          :class="{ 'rotate-once': isRotating }"
+          @click="handleResetWithAnimation"
+        >↻</button>
         <button class="icon-button">🌸</button>
       </div>
     </div>
 
-<div class="selected-mode-display">
-  <div class="mode-label">
-    {{ selectedSpeedMode.emoji }} {{ selectedSpeedMode.label }}
-    ×
-    {{ selectedGenreMode.emoji }} {{ selectedGenreMode.label }}
-  </div>
-</div>
+    <!-- モード表示 -->
+    <div class="selected-mode-display">
+      <div class="mode-label">
+        {{ selectedSpeedMode.emoji }} {{ selectedSpeedMode.label }}
+        ×
+        {{ selectedGenreMode.emoji }} {{ selectedGenreMode.label }}
+      </div>
+    </div>
 
     <!-- ステータスバー -->
     <div class="status-bar-container" v-if="!gameOver && timerStarted">
       <div class="status-bar" :style="{ width: `${progress}%` }"></div>
     </div>
+
+<div v-if="history.length === 0 && !gameOver" class="start-screen">
+  <button class="start-button" @click="startGame">▶️ ゲームを始める</button>
+</div>
 
     <!-- 入力欄 -->
     <div class="input-area">
@@ -40,7 +45,12 @@
 
     <!-- 会話履歴（最新が上） -->
     <div class="message-list">
-      <div v-for="(entry, index) in [...history].reverse()" :key="index" class="message-pair">
+      <div
+        v-for="(entry, index) in [...history].reverse()"
+        :key="index"
+        class="message-pair"
+      >
+        <!-- Botの返答 -->
         <div class="bot-message">
           Bot：
           <div v-if="entry.bot === '...'" class="gpt-dots-loader">
@@ -50,11 +60,21 @@
           </div>
           <span v-else>{{ entry.bot }}</span>
         </div>
-        <div class="user-message">あなた：{{ entry.user }}</div>
+
+        <!-- ✅ ユーザー発言がある場合のみ表示 -->
+        <div
+          class="user-message"
+          v-if="entry.user"
+        >
+          あなた：{{ entry.user }}
+        </div>
       </div>
+
+      <!-- ゲームオーバー -->
       <div v-if="gameOver" class="gameover-message">⏰ ゲームオーバー</div>
     </div>
 
+    <!-- モーダル -->
     <ModeSelectModal
       :visible="showModeModal"
       @select="handleModeSelect"
@@ -62,6 +82,7 @@
     />
   </div>
 </template>
+
 
 <script setup>
 import { ref, computed, onUnmounted } from 'vue'
@@ -100,11 +121,13 @@ function handleResetWithAnimation() {
   }, 500) // アニメ時間と一致
 }
 
-// モード変更
 function handleModeSelect({ speed, genre }) {
   selectedSpeedKey.value = speed
   selectedGenreKey.value = genre
   showModeModal.value = false
+
+  // 🔁 ゲームリセットして、スタート待ちの状態に戻す
+  resetGame()
 }
 
 // カタカナ→ひらがな変換
@@ -112,6 +135,18 @@ function toHiragana(str) {
   return str.replace(/[\u30a1-\u30f6]/g, c =>
     String.fromCharCode(c.charCodeAt(0) - 0x60)
   )
+}
+
+
+function startGame() {
+  resetGame()  // 状態リセット
+
+  // 最初の Bot の単語（ランダムでもOK）
+  const pool = wordPool[selectedGenreKey.value] || []
+  const firstWord = pool[Math.floor(Math.random() * pool.length)] || 'ねこ'
+
+  history.value.push({ user: '', bot: firstWord })
+  startTimer()
 }
 
 // 小文字補正して最後の文字を取得
@@ -258,7 +293,6 @@ async function submitWord() {
   }, 2000)
 }
 
-// リセット処理
 function resetGame() {
   userInput.value = ''
   history.value = []
@@ -446,6 +480,27 @@ input {
 
 .rotate-once {
   animation: rotate-once 0.5s ease-in-out;
+}
+
+.start-screen {
+  display: flex;
+  justify-content: center;
+  margin: 1rem 0;
+}
+
+.start-button {
+  background-color: #14532d; /* 他のボタンと統一 */
+  color: white;
+  border: none;
+  border-radius: 9999px;
+  font-size: 1.1rem;
+  padding: 0.6rem 1.4rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.start-button:hover {
+  background-color: #166534;
 }
 
 </style>
