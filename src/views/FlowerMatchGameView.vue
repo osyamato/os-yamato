@@ -6,10 +6,16 @@
         <div class="icon-button" :style="{ backgroundColor: iconColor }" @click="handleClockClick">
           🕰️
         </div>
-        <div class="icon-button" :style="{ backgroundColor: iconColor }" @click="restartGame">
-          ↻
-        </div>
-      </div>
+<div
+  class="icon-button"
+  :class="{ 'rotate-once': isRotating }"
+  :style="{ backgroundColor: iconColor, color: iconTextColor }"
+  @click="restartGame"
+>
+  ↻
+</div>
+ </div> 
+
       <div class="timer-text">{{ formattedTime }}</div>
     </div>
 
@@ -81,10 +87,16 @@ async function handleClockClick() {
   await fetchBestScores()
 }
 
+const iconTextColor = computed(() => {
+  const whiteBackgrounds = ['#274c77', '#14532d']
+  return whiteBackgrounds.includes(iconColor.value) ? 'white' : 'black'
+})
+
 const basePaths = Array.from({ length: 12 }, (_, i) => `/dialy.${i + 1}.png`)
 const baseCardPool = basePaths.flatMap(img => [{ img }, { img }])
 const shuffledCards = ref([])
 const isResetting = ref(false)
+const isRotating = ref(false)
 
 
 function shuffle(array) {
@@ -128,6 +140,11 @@ function flipCard(index) {
 }
 
 async function restartGame() {
+  isRotating.value = true
+  setTimeout(() => {
+    isRotating.value = false
+  }, 600)
+
   if (timer.value) clearInterval(timer.value)
   time.value = 0
   gameStarted.value = false
@@ -135,39 +152,37 @@ async function restartGame() {
   showConfetti.value = false
   isResetting.value = true
 
-  // 🌸 1. すべてのカードを裏返す
+  // 1. すべてのカードを裏返す
   for (const card of shuffledCards.value) {
     card.flipped = false
   }
 
-  console.log('→ flipped を false にする')
   await nextTick()
-  await new Promise(resolve => setTimeout(resolve, 500)) // 回転を視覚的に待つ
+  await new Promise(resolve => setTimeout(resolve, 500))
 
-  // 🌸 2. フェードアウト（opacity = 0）
+  // 2. フェードアウト（opacity = 0）
   for (const card of shuffledCards.value) {
     card.opacity = 0
   }
-  console.log('→ opacity を 0 にする')
-  await nextTick()
-  await new Promise(resolve => setTimeout(resolve, 500)) // フェードアウト視覚確認
 
-  // 🌸 3. カード更新
+  await nextTick()
+  await new Promise(resolve => setTimeout(resolve, 500))
+
+  // 3. カード更新（opacity 0 で初期化）
   shuffledCards.value = shuffle([...baseCardPool]).map(c => ({
     ...c,
     flipped: false,
     matched: false,
     opacity: 0
   }))
-  console.log('→ 新カード生成（opacity 0）')
-  await nextTick()
-  await new Promise(resolve => setTimeout(resolve, 100)) // DOM生成待ち
 
-  // 🌸 4. フェードイン
+  await nextTick()
+  await new Promise(resolve => setTimeout(resolve, 100))
+
+  // 4. フェードイン（opacity 1）
   for (const card of shuffledCards.value) {
     card.opacity = 1
   }
-  console.log('→ opacity を 1 に戻す')
 
   isResetting.value = false
 }
@@ -263,7 +278,6 @@ onMounted(() => {
   height: 44px;
   border-radius: 50%;
   background-color: #b6f1cc;
-  color: black;
   font-size: 1.3rem;
   font-weight: bold;
   line-height: 1;
@@ -403,6 +417,14 @@ ul {
     transform: translateY(0);
     opacity: 1;
   }
+}
+
+@keyframes rotate-once {
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+.rotate-once {
+  animation: rotate-once 0.6s ease-in-out;
 }
 
 </style>

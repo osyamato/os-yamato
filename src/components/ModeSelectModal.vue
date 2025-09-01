@@ -6,37 +6,60 @@
       <!-- スピードモード -->
       <div class="mode-section">
         <div class="section-title">スピードモード</div>
-        <div class="mode-options">
+        <div class="mode-options horizontal">
           <button
             v-for="(mode, key) in speedModes"
             :key="key"
             class="mode-button"
             @click="selectSpeed(key)"
             :class="{ selected: selectedSpeed === key }"
+            :style="{
+              backgroundColor: iconColor,
+              color: getTextColor(iconColor)
+            }"
           >
-            {{ mode.emoji }} {{ mode.label }}
+            {{ mode.label }}
           </button>
+        </div>
+        <div class="mode-description">
+          {{ speedModes[selectedSpeed].description }}
         </div>
       </div>
 
       <!-- ジャンルモード -->
       <div class="mode-section">
         <div class="section-title">ジャンルモード</div>
-        <div class="mode-options">
+        <div class="mode-options horizontal">
           <button
             v-for="(mode, key) in genreModes"
             :key="key"
             class="mode-button"
             @click="selectGenre(key)"
             :class="{ selected: selectedGenre === key }"
+            :style="{
+              backgroundColor: iconColor,
+              color: getTextColor(iconColor)
+            }"
           >
-            {{ mode.emoji }} {{ mode.label }}
+            {{ mode.label }}
           </button>
+        </div>
+        <div class="mode-description">
+          {{ genreModes[selectedGenre].description }}
         </div>
       </div>
 
       <!-- 決定ボタン -->
-      <button class="confirm-button" @click="confirmSelection">このモードで遊ぶ</button>
+      <button
+        class="confirm-button"
+        @click="confirmSelection"
+        :style="{
+          backgroundColor: iconColor,
+          color: getTextColor(iconColor)
+        }"
+      >
+        このモードで遊ぶ
+      </button>
     </div>
   </Modal>
 </template>
@@ -46,8 +69,13 @@ import { ref } from 'vue'
 import Modal from '@/components/Modal.vue'
 import { speedModes, genreModes } from '@/components/shiritoriModes.js'
 
-// ✅ emitを明示的に定義
 const emit = defineEmits(['close', 'select'])
+const props = defineProps({
+  iconColor: {
+    type: String,
+    default: '#14532d'
+  }
+})
 
 const selectedSpeed = ref('ume')
 const selectedGenre = ref('any')
@@ -65,59 +93,81 @@ function confirmSelection() {
   })
   emit('close')
 }
+
+// 🎨 iconColor に応じて文字色を切り替え
+function getTextColor(bg) {
+  const darkColors = ['#274c77', '#14532d']
+  return darkColors.includes(bg.toLowerCase()) ? 'white' : 'black'
+}
 </script>
 
 <style scoped>
 .mode-modal {
   text-align: center;
   padding: 1.5rem 1rem;
+  color: #000;
 }
+@media (prefers-color-scheme: dark) {
+  .mode-modal {
+    color: #fff;
+  }
+}
+
 .mode-title {
   font-size: 1.4rem;
   font-weight: bold;
   margin-bottom: 1.5rem;
 }
 .mode-section {
-  margin-bottom: 1.8rem;
+  margin-bottom: 2rem;
 }
 .section-title {
   font-size: 1.1rem;
   font-weight: bold;
-  margin-bottom: 0.6rem;
+  margin-bottom: 0.5rem;
 }
-.mode-options {
+.mode-options.horizontal {
   display: flex;
   justify-content: center;
-  gap: 1rem;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
   flex-wrap: wrap;
 }
 .mode-button {
-  font-size: 1.1rem;
-  padding: 0.6rem 1.2rem;
-  background-color: #14532d;
-  color: white;
+  font-size: 1rem;
+  padding: 0.5rem 1.2rem;
   border: none;
-  border-radius: 8px;
+  border-radius: 9999px;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: filter 0.2s ease, transform 0.1s ease;
 }
 .mode-button.selected {
-  background-color: #166534;
+  filter: brightness(1.2);
   font-weight: bold;
+  transform: scale(1.05);
   box-shadow: 0 0 0 2px #fff inset;
+}
+.mode-description {
+  font-size: 0.95rem;
+  color: #555;
+}
+@media (prefers-color-scheme: dark) {
+  .mode-description {
+    color: #aaa;
+  }
 }
 .confirm-button {
   margin-top: 1rem;
-  font-size: 1.1rem;
-  background-color: #1e40af;
-  color: white;
-  padding: 0.7rem 1.5rem;
+  font-size: 1rem;
+  padding: 0.5rem 1.2rem;
   border: none;
-  border-radius: 8px;
+  border-radius: 9999px;
   cursor: pointer;
+  transition: filter 0.2s ease, transform 0.1s ease;
 }
 .confirm-button:hover {
-  background-color: #1e3a8a;
+  filter: brightness(1.15);
+  transform: scale(1.05);
 }
 </style>
 
