@@ -3,11 +3,15 @@
     <h2 class="title">{{ t('weather.title') }}</h2>
 
     <div class="icon-buttons">
-      <button class="icon-button" @click="goToProfile" :style="{ backgroundColor: iconColor }">
-        <span class="icon-initial" :style="{ color: iconColor === 'white' ? 'black' : 'white' }">
-          {{ profile?.nickname?.charAt(0) || '👤' }}
-        </span>
-      </button>
+<button
+  class="icon-button"
+  @click="goToProfile"
+  :style="{ backgroundColor: iconColor, color: iconTextColor }"
+>
+  <span class="icon-initial">
+    {{ profile?.nickname?.charAt(0) || '👤' }}
+  </span>
+</button>
 
 <!-- ✏️ 投稿 -->
 <button class="icon-button" @click="checkBeforePost('post')" :style="{ backgroundColor: iconColor }">✏️</button>
@@ -191,6 +195,10 @@ const iosGraphQLUrl = 'https://mu4wobom7jcazmpazk3hpxnjc4.appsync-api.ap-northea
 const iosApiKey = 'da2-tuututuweneyrdykwh4vw3yfbm'
 
 const blockedSubs = ref<string[]>([])
+const iconTextColor = computed(() => {
+  const darkColors = ['#274c77', '#14532d']
+  return darkColors.includes(iconColor.value.toLowerCase()) ? 'white' : 'black'
+})
 
 
 const fetchMyProfile = async () => {
@@ -662,7 +670,6 @@ function closeReplyModal() {
   border-radius: 50%;
   border: none;
   font-size: 22px;
-  color: white;
   cursor: pointer;
   display: flex;
   align-items: center;
