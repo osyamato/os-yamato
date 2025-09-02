@@ -1,11 +1,8 @@
 <template>
   <Modal :visible="true" @close="emit('close')">
     <div class="mode-modal" :style="{ '--icon-color': iconColor, '--text-color': getTextColor(iconColor) }">
-      <h3 class="mode-title">モードを選んでね</h3>
-
-      <!-- スピードモード -->
       <div class="mode-section">
-        <div class="section-title">スピードモード</div>
+        <div class="section-title">スピード選択</div>
         <div class="mode-options horizontal">
           <button
             v-for="(mode, key) in speedModes"
@@ -24,7 +21,7 @@
 
       <!-- ジャンルモード -->
       <div class="mode-section">
-        <div class="section-title">ジャンルモード</div>
+        <div class="section-title">ジャンル選択</div>
         <div class="mode-options horizontal">
           <button
             v-for="(mode, key) in genreModes"

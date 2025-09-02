@@ -19,12 +19,6 @@
         >
           ↻
         </button>
-        <button
-          class="icon-button"
-          :style="{ backgroundColor: iconColor, color: getTextColor(iconColor) }"
-        >
-          🌸
-        </button>
       </div>
     </div>
 
@@ -334,8 +328,9 @@ onUnmounted(() => {
 .input-area {
   margin: 1rem auto;
   width: 100%;
-  max-width: 400px;
+  max-width: 280px; /* ← 横幅を少し小さく */
 }
+
 input {
   width: 100%;
   padding: 0.6rem 1rem;
