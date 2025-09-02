@@ -9,7 +9,7 @@
           @click="showModeModal = true"
           :style="{ backgroundColor: iconColor, color: getTextColor(iconColor) }"
         >
-          🌱
+          🎛️
         </button>
         <button
           class="icon-button"
@@ -29,12 +29,14 @@
     </div>
 
     <!-- モード表示 -->
-    <div class="selected-mode-display">
-      <div class="mode-label">
-        {{ selectedSpeedMode.emoji }} {{ selectedSpeedMode.label }}
-        ×
-        {{ selectedGenreMode.emoji }} {{ selectedGenreMode.label }}
+    <div class="selected-mode-wrapper">
+      <span class="mode-note">現在のモード</span>
+      <div class="mode-label-wrapper">
+        <div class="mode-label">
+          {{ selectedSpeedMode.label }} × {{ selectedGenreMode.label }}
+        </div>
       </div>
+      <span class="mode-note">🎛️から変更できるよ</span>
     </div>
 
     <!-- ステータスバー -->
@@ -64,6 +66,16 @@
       />
     </div>
 
+<!-- ゲームオーバー表示（入力欄の直下） -->
+<div v-if="gameOver" class="gameover-wrapper">
+  <div class="gameover-message" @animationend="showRestartHint = true">
+    ⏰ ゲームオーバー
+  </div>
+  <div v-if="showRestartHint" class="restart-hint">
+    ↻ からリスタートしてね
+  </div>
+</div>
+
     <!-- 会話履歴 -->
     <div class="message-list">
       <div
@@ -72,7 +84,7 @@
         class="message-pair"
       >
         <div class="bot-message">
-          Bot：
+          🤖：
           <div v-if="entry.bot === '...'" class="gpt-dots-loader">
             <div class="dot"></div>
             <div class="dot"></div>
@@ -84,8 +96,6 @@
           あなた：{{ entry.user }}
         </div>
       </div>
-
-      <div v-if="gameOver" class="gameover-message">⏰ ゲームオーバー</div>
     </div>
 
     <!-- モード選択モーダル -->
@@ -106,6 +116,7 @@ import { wordPool } from '@/data/wordPool.js'
 import { Auth } from 'aws-amplify'
 
 const iconColor = ref('#274c77')
+const showRestartHint = ref(false)
 
 onMounted(async () => {
   try {
@@ -272,6 +283,7 @@ onUnmounted(() => {
   overflow: hidden;
 }
 
+/* ヘッダー */
 .header {
   text-align: center;
   margin-bottom: 1rem;
@@ -298,6 +310,7 @@ onUnmounted(() => {
   cursor: pointer;
 }
 
+/* ステータスバー */
 .status-bar-container {
   width: 100%;
   height: 10px;
@@ -317,6 +330,7 @@ onUnmounted(() => {
   background-color: #fca5a5;
 }
 
+/* 入力欄 */
 .input-area {
   margin: 1rem auto;
   width: 100%;
@@ -330,6 +344,7 @@ input {
   border: 1px solid #ccc;
 }
 
+/* 会話履歴 */
 .message-list {
   flex: 1;
   overflow-y: auto;
@@ -346,14 +361,52 @@ input {
   margin: 0.3rem 0;
 }
 
-.gameover-message {
+.gameover-wrapper {
   text-align: center;
-  font-size: 1.4rem;
-  color: crimson;
   margin-top: 1rem;
-  font-weight: bold;
 }
 
+.gameover-message {
+  font-size: 1.4rem;
+  color: crimson;
+  font-weight: bold;
+  animation: bounceDown 0.8s ease-out forwards;
+}
+
+.restart-hint {
+  margin-top: 0.5rem;
+  font-size: 1rem;
+  color: #555;
+  opacity: 0;
+  animation: fadeIn 0.8s ease-out forwards;
+  animation-delay: 0.2s;
+}
+
+@keyframes bounceDown {
+  0% {
+    transform: translateY(-100px);
+    opacity: 0;
+  }
+  60% {
+    transform: translateY(20px);
+    opacity: 1;
+  }
+  80% {
+    transform: translateY(-10px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+  }
+}
+
+
+/* ゲームスタートボタン */
 .start-screen {
   display: flex;
   justify-content: center;
@@ -371,6 +424,7 @@ input {
   opacity: 0.9;
 }
 
+/* ↻ 回転アニメ */
 @keyframes rotate-once {
   0%   { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
@@ -378,5 +432,52 @@ input {
 .rotate-once {
   animation: rotate-once 0.5s ease-in-out;
 }
+
+.selected-mode-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  position: relative;
+}
+
+.mode-label-wrapper {
+  flex: 0 0 auto;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.mode-label {
+  display: inline-block;
+  font-size: 1.1rem;
+  font-weight: bold;
+  padding: 0.4rem 1rem;
+  border-radius: 20px;
+  background-color: #e0f2f1;
+  color: #065f46;
+  white-space: nowrap;
+}
+
+.mode-note {
+  font-size: 0.9rem;
+  color: #888;
+  white-space: nowrap;
+}
+
+@media (prefers-color-scheme: dark) {
+  .mode-label {
+    background-color: #1f2937;
+    color: #a7f3d0;
+  }
+
+  .mode-note {
+    color: #ccc;
+  }
+}
+
 </style>
 
