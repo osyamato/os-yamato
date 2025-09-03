@@ -51,19 +51,21 @@
 
     <!-- 入力欄 -->
     <div class="input-area">
-      <input
-        v-model="userInput"
-        @keydown.enter.prevent="submitWord"
-        :disabled="gameOver"
-        placeholder="ひらがなを入力してね"
-        autocomplete="off"
-      />
+<input
+  v-model="userInput"
+  @keydown.enter.prevent="submitWord"
+  :disabled="gameOver"
+  placeholder="ひらがなを入力してね"
+  autocomplete="off"
+/>
     </div>
 
-<!-- ゲームオーバー表示（入力欄の直下） -->
 <div v-if="gameOver" class="gameover-wrapper">
-  <div class="gameover-message" @animationend="showRestartHint = true">
-    ⏰ ゲームオーバー
+  <div
+    class="gameover-message"
+    @animationend="showRestartHint = true"
+  >
+    {{ playerWin ? '🎉 あなたの勝ち！' : '⏰ ゲームオーバー' }}
   </div>
   <div v-if="showRestartHint" class="restart-hint">
     ↻ からリスタートしてね
@@ -109,9 +111,28 @@ import { speedModes, genreModes } from '@/components/shiritoriModes.js'
 import { wordPool } from '@/data/wordPool.js'
 import { Auth } from 'aws-amplify'
 
+// 状態
 const iconColor = ref('#274c77')
 const showRestartHint = ref(false)
+const userInput = ref('')
+const history = ref([])
+const gameOver = ref(false)
+const playerWin = ref(false)
+const timerStarted = ref(false)
+const progress = ref(0)
+const showModeModal = ref(false)
+const selectedSpeedKey = ref('ume')
+const selectedGenreKey = ref('any')
+const isRotating = ref(false)
 
+let intervalId = null
+let startTime = null
+
+const selectedSpeedMode = computed(() => speedModes[selectedSpeedKey.value])
+const selectedGenreMode = computed(() => genreModes[selectedGenreKey.value])
+const TIMER_DURATION = computed(() => selectedSpeedMode.value.timeLimit)
+
+// 🌈 ユーザー情報
 onMounted(async () => {
   try {
     const user = await Auth.currentAuthenticatedUser()
@@ -121,29 +142,23 @@ onMounted(async () => {
   }
 })
 
-// 🎨 文字色を動的に決定
 function getTextColor(bg) {
   const darkColors = ['#274c77', '#14532d']
   return darkColors.includes(bg.toLowerCase()) ? 'white' : 'black'
 }
 
-// その他状態管理
-const userInput = ref('')
-const history = ref([])
-const gameOver = ref(false)
-const timerStarted = ref(false)
-const progress = ref(0)
-const showModeModal = ref(false)
-const selectedSpeedKey = ref('ume')
-const selectedGenreKey = ref('any')
-const isRotating = ref(false)
-let intervalId = null
-let startTime = null
+// 🎯 最後の有効な bot 応答だけ使う
+function getLastValidBotWord() {
+  for (let i = history.value.length - 1; i >= 0; i--) {
+    const bot = history.value[i].bot
+    if (bot && bot !== '...' && !bot.includes('じゃないみたい')) {
+      return bot
+    }
+  }
+  return null
+}
 
-const selectedSpeedMode = computed(() => speedModes[selectedSpeedKey.value])
-const selectedGenreMode = computed(() => genreModes[selectedGenreKey.value])
-const TIMER_DURATION = computed(() => selectedSpeedMode.value.timeLimit)
-
+// 🔁 リセットやモード変更
 function handleResetWithAnimation() {
   isRotating.value = true
   resetGame()
@@ -159,6 +174,7 @@ function handleModeSelect({ speed, genre }) {
   resetGame()
 }
 
+// 🎮 ゲーム開始
 function startGame() {
   resetGame()
   const pool = wordPool[selectedGenreKey.value] || []
@@ -167,7 +183,26 @@ function startGame() {
   startTimer()
 }
 
+// ⏱️ タイマー処理
+function startTimer() {
+  clearInterval(intervalId)
+  progress.value = 0
+  startTime = Date.now()
+  timerStarted.value = true
+
+  intervalId = setInterval(() => {
+    const elapsed = Date.now() - startTime
+    progress.value = Math.min(100, (elapsed / TIMER_DURATION.value) * 100)
+    if (elapsed >= TIMER_DURATION.value) {
+      clearInterval(intervalId)
+      gameOver.value = true
+    }
+  }, 100)
+}
+
+// 🔤 小文字→通常文字処理
 function getLastChar(word) {
+  if (!word || typeof word !== 'string') return ''
   const base = word.replace(/ー$/, '')
   const last = base.at(-1)
   const map = {
@@ -178,58 +213,69 @@ function getLastChar(word) {
   return map[last] || last
 }
 
-function getBotReply(lastChar) {
-  const pool = wordPool[selectedGenreKey.value] || []
-  return pool.find(word => word.startsWith(lastChar)) || 'おわり'
-}
-
+// 📛 カタカナ→ひらがな
 function toHiragana(str) {
   return str.replace(/[\u30a1-\u30f6]/g, c =>
     String.fromCharCode(c.charCodeAt(0) - 0x60)
   )
 }
 
-function startTimer() {
-  clearInterval(intervalId)
-  progress.value = 0
-  startTime = Date.now()
-  timerStarted.value = true
+// 🤖 bot 返答
+function getBotReply(lastChar) {
+  const pool = wordPool[selectedGenreKey.value] || []
+  return pool.find(word => word.startsWith(lastChar)) || 'おわり'
+}
 
-  intervalId = setInterval(() => {
-    const elapsed = Date.now() - startTime
-    const percentage = Math.min(100, (elapsed / TIMER_DURATION.value) * 100)
-    progress.value = percentage
-
-    const bar = document.querySelector('.status-bar')
-    if (bar) {
-      bar.classList.toggle('warning', percentage >= 66)
-    }
-
-    if (elapsed >= TIMER_DURATION.value) {
-      clearInterval(intervalId)
-      gameOver.value = true
-    }
-  }, 100)
+// 📡 GPT ジャンル判定
+async function validateWithGPT(word, genreKey) {
+  const genreLabel = genreModes[genreKey]?.label || genreKey
+  try {
+    const res = await fetch('https://tfxc3pudv4.execute-api.ap-northeast-1.amazonaws.com/Yamato_GPT_mini', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messages: [
+          {
+            role: 'system',
+            content: `ユーザーが入力した単語が「${genreLabel}」のジャンル（例：動物、食べ物など）に該当するか判定してください。`
+          },
+          {
+            role: 'user',
+            content: `単語：「${word}」\nジャンル：「${genreLabel}」\nこの単語は該当しますか？はい/いいえで答えてください。`
+          }
+        ],
+        mode: 'factual',
+        language: 'ja'
+      })
+    })
+    const data = await res.json()
+    return data.text?.includes('はい') || false
+  } catch (e) {
+    console.error('❌ GPT 判定失敗:', e)
+    return false
+  }
 }
 
 async function submitWord() {
   const input = toHiragana(userInput.value.trim())
   if (!input) return
+
   if (!/^[ぁ-んー]+$/.test(input)) {
     alert('ひらがなのみ入力してください')
     userInput.value = ''
     return
   }
 
-  const previousEntry = history.value.at(-1)
-  if (previousEntry) {
-    const lastChar = getLastChar(previousEntry.bot)
+  const previousBot = getLastValidBotWord()
+  if (previousBot) {
+    const lastChar = getLastChar(previousBot)
     const firstChar = input[0]
     const mismatch = selectedSpeedMode.value.rules.allowSmallKanaMismatch
       ? getLastChar(firstChar) !== getLastChar(lastChar)
       : firstChar !== lastChar
+
     if (mismatch) {
-      alert(`前の単語は「${previousEntry.bot}」なので、「${lastChar}」から始めてください`)
+      alert(`前の単語は「${previousBot}」なので、「${lastChar}」から始めてください`)
       return
     }
   }
@@ -239,33 +285,62 @@ async function submitWord() {
   clearInterval(intervalId)
   timerStarted.value = false
 
-  setTimeout(() => {
+  setTimeout(async () => {
+    let botResponse = ''
     const last = getLastChar(input)
-    const bot = input.endsWith('ん')
-      ? '「ん」で終わったので終了です！'
-      : getBotReply(last)
-    history.value[history.value.length - 1].bot = bot
-    if (!bot || bot.includes('終了') || bot === 'おわり') {
+
+    const pool = wordPool[selectedGenreKey.value] || []
+    if (selectedGenreKey.value !== 'any' && !pool.includes(input)) {
+      const isValid = await validateWithGPT(input, selectedGenreKey.value)
+      if (!isValid) {
+        botResponse = `「${input}」は「${selectedGenreMode.value.label}」じゃないみたい...🥺`
+        history.value[history.value.length - 1].bot = botResponse
+
+        // 💡 初手以外ならタイマーを再始動
+        if (history.value.length > 1) {
+          startTimer()
+        }
+        return
+      }
+    }
+
+    if (input.endsWith('ん')) {
+      botResponse = '「ん」で終わったので終了です！'
       gameOver.value = true
     } else {
-      startTimer()
+      const reply = getBotReply(last)
+      if (!reply || reply === 'おわり') {
+        botResponse = 'まいりました🥺'
+        gameOver.value = true
+        playerWin.value = true
+      } else {
+        botResponse = reply
+        startTimer()
+      }
     }
-  }, 2000)
+
+    history.value[history.value.length - 1].bot = botResponse
+  }, 800)
 }
 
+// 🔄 リセット
 function resetGame() {
   userInput.value = ''
   history.value = []
   gameOver.value = false
+  playerWin.value = false
   progress.value = 0
   timerStarted.value = false
   clearInterval(intervalId)
 }
 
+// クリーンアップ
 onUnmounted(() => {
   clearInterval(intervalId)
 })
 </script>
+
+
 
 <style scoped>
 .chat-wrapper {
