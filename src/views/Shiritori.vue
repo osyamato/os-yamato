@@ -1,7 +1,7 @@
 <template>
   <div class="chat-wrapper">
     <!-- タイトルとアイコン -->
-    <div class="header">
+<div class="header header-animated">
       <h2 class="header-title">しりとり</h2>
       <div class="icon-button-group">
         <button
@@ -264,14 +264,21 @@ async function submitWord() {
   const input = toHiragana(userInput.value.trim())
   if (!input) return
 
-  // ひらがなチェック
+  // ✅ ひらがなチェック
   if (!/^[ぁ-んー]+$/.test(input)) {
     history.value.push({ user: input, bot: 'ひらがなのみ入力してね' })
     userInput.value = ''
     return
   }
 
-  // 最後の bot 応答の末尾と比較
+  // ✅ 「ん」で終わったら即終了（最優先チェック）
+  if (input.endsWith('ん')) {
+    history.value.push({ user: input, bot: '「ん」で終わったので終了です！' })
+    gameOver.value = true
+    return
+  }
+
+  // ✅ botの直前ワードと接続チェック
   const previousBot = getLastValidBotWord()
   if (previousBot) {
     const lastChar = getLastChar(previousBot)
@@ -286,7 +293,7 @@ async function submitWord() {
     }
   }
 
-  // すでに使われた単語のチェック
+  // ✅ 重複チェック
   const allUsedWords = history.value.flatMap(entry => [entry.user, entry.bot])
   if (allUsedWords.includes(input)) {
     history.value.push({ user: input, bot: `「${input}」はすでに使われました！ゲームオーバーです。` })
@@ -294,19 +301,19 @@ async function submitWord() {
     return
   }
 
-  // 入力履歴に追加（bot: '...' を一時表示）
+  // ✅ 入力を記録、bot「...」で考え中表示
   history.value.push({ user: input, bot: '...' })
   userInput.value = ''
   clearInterval(intervalId)
   timerStarted.value = false
 
-  // 少し待ってから bot 応答
+  // ✅ 少し待って bot 応答
   setTimeout(async () => {
     let botResponse = ''
     const last = getLastChar(input)
-
-    // ジャンル制限チェック（any以外 & 未登録語）
     const pool = wordPool[selectedGenreKey.value] || []
+
+    // ✅ ジャンルチェック（any 以外 & 手動辞書に未登録）
     if (selectedGenreKey.value !== 'any' && !pool.includes(input)) {
       const isValid = await validateWithGPT(input, selectedGenreKey.value)
       if (!isValid) {
@@ -317,25 +324,21 @@ async function submitWord() {
       }
     }
 
-    // 「ん」で終了
-    if (input.endsWith('ん')) {
-      botResponse = '「ん」で終わったので終了です！'
+    // ✅ bot の返答候補から、未使用かつ接続できるワードを選定
+    const candidate = pool.find(word =>
+      word.startsWith(last) && !allUsedWords.includes(word)
+    )
+
+    if (!candidate) {
+      botResponse = 'まいりました🥺'
       gameOver.value = true
+      playerWin.value = true
     } else {
-      // bot の応答候補から履歴未使用のものを選ぶ
-      const candidate = (wordPool[selectedGenreKey.value] || []).find(
-        word => word.startsWith(last) && !allUsedWords.includes(word)
-      )
-      if (!candidate) {
-        botResponse = 'まいりました🥺'
-        gameOver.value = true
-        playerWin.value = true
-      } else {
-        botResponse = candidate
-        startTimer()
-      }
+      botResponse = candidate
+      startTimer()
     }
 
+    // ✅ bot の返答を反映
     history.value[history.value.length - 1].bot = botResponse
   }, 800)
 }
@@ -388,9 +391,9 @@ onUnmounted(() => {
 .icon-button {
   border: none;
   border-radius: 50%;
-  font-size: 1.4rem;
-  width: 44px;
-  height: 44px;
+  font-size: 1.2rem;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -540,31 +543,41 @@ input {
 }
 
 .mode-label {
-  display: inline-block;
-  font-size: 1.1rem;
+  color: #fca5a5; /* ← 淡い赤（tailwind の rose-300 相当） */
+  background: none;
   font-weight: bold;
-  padding: 0.4rem 1rem;
-  border-radius: 20px;
-  background-color: #e0f2f1;
-  color: #065f46;
-  white-space: nowrap;
+  font-size: 1.1rem;
+  padding: 0;
+  border: none;
 }
 
 .mode-note {
   font-size: 0.9rem;
   color: #888;
   white-space: nowrap;
+  letter-spacing: -0.5px; /* 👈 追加 */
 }
 
 @media (prefers-color-scheme: dark) {
   .mode-label {
-    background-color: #1f2937;
-    color: #a7f3d0;
+    color: #fca5a5;  /* ← ここも同じ色で統一 */
+    background: none !important;
   }
+}
 
-  .mode-note {
-    color: #ccc;
+@keyframes fadeSlideDown {
+  0% {
+    opacity: 0;
+    transform: translateY(-40px);
   }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.header-animated {
+  animation: fadeSlideDown 0.6s ease-out;
 }
 
 </style>

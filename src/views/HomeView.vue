@@ -76,6 +76,8 @@
 <!-- ✅ 目標 -->
 <button @click="goTo('mission')" class="icon-button" style="background-image: url('/mission.png')"></button>
 
+<button @click="goTo('shiritori')" class="icon-button" style="background-image: url('/shiritori.icon.png?v=1')"></button>
+
     </div>
   </div>
 </template>
