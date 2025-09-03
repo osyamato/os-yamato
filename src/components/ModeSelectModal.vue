@@ -1,22 +1,15 @@
 <template>
   <Modal :visible="true" @close="emit('close')">
-    <div class="mode-modal">
-      <h3 class="mode-title">モードを選んでね</h3>
-
-      <!-- スピードモード -->
+    <div class="mode-modal" :style="{ '--icon-color': iconColor, '--text-color': getTextColor(iconColor) }">
       <div class="mode-section">
-        <div class="section-title">スピードモード</div>
+        <div class="section-title">スピード選択</div>
         <div class="mode-options horizontal">
           <button
             v-for="(mode, key) in speedModes"
             :key="key"
             class="mode-button"
-            @click="selectSpeed(key)"
             :class="{ selected: selectedSpeed === key }"
-            :style="{
-              backgroundColor: iconColor,
-              color: getTextColor(iconColor)
-            }"
+            @click="selectSpeed(key)"
           >
             {{ mode.label }}
           </button>
@@ -28,18 +21,14 @@
 
       <!-- ジャンルモード -->
       <div class="mode-section">
-        <div class="section-title">ジャンルモード</div>
+        <div class="section-title">ジャンル選択</div>
         <div class="mode-options horizontal">
           <button
             v-for="(mode, key) in genreModes"
             :key="key"
             class="mode-button"
-            @click="selectGenre(key)"
             :class="{ selected: selectedGenre === key }"
-            :style="{
-              backgroundColor: iconColor,
-              color: getTextColor(iconColor)
-            }"
+            @click="selectGenre(key)"
           >
             {{ mode.label }}
           </button>
@@ -50,14 +39,7 @@
       </div>
 
       <!-- 決定ボタン -->
-      <button
-        class="confirm-button"
-        @click="confirmSelection"
-        :style="{
-          backgroundColor: iconColor,
-          color: getTextColor(iconColor)
-        }"
-      >
+      <button class="confirm-button" @click="confirmSelection">
         このモードで遊ぶ
       </button>
     </div>
@@ -94,7 +76,6 @@ function confirmSelection() {
   emit('close')
 }
 
-// 🎨 iconColor に応じて文字色を切り替え
 function getTextColor(bg) {
   const darkColors = ['#274c77', '#14532d']
   return darkColors.includes(bg.toLowerCase()) ? 'white' : 'black'
@@ -133,20 +114,28 @@ function getTextColor(bg) {
   margin-bottom: 0.5rem;
   flex-wrap: wrap;
 }
+
 .mode-button {
   font-size: 1rem;
   padding: 0.5rem 1.2rem;
-  border: none;
   border-radius: 9999px;
   cursor: pointer;
-  transition: filter 0.2s ease, transform 0.1s ease;
+  border: 2px solid var(--icon-color);
+  background-color: transparent;
+  color: var(--icon-color);
+  transition: all 0.2s ease;
 }
+
+/* ✅ 選択中スタイル */
 .mode-button.selected {
-  filter: brightness(1.2);
+  background-color: var(--icon-color);
+  color: var(--text-color);
   font-weight: bold;
-  transform: scale(1.05);
   box-shadow: 0 0 0 2px #fff inset;
+  transform: scale(1.05);
 }
+
+/* 説明文 */
 .mode-description {
   font-size: 0.95rem;
   color: #555;
@@ -156,6 +145,8 @@ function getTextColor(bg) {
     color: #aaa;
   }
 }
+
+/* 決定ボタン */
 .confirm-button {
   margin-top: 1rem;
   font-size: 1rem;
@@ -163,6 +154,8 @@ function getTextColor(bg) {
   border: none;
   border-radius: 9999px;
   cursor: pointer;
+  background-color: var(--icon-color);
+  color: var(--text-color);
   transition: filter 0.2s ease, transform 0.1s ease;
 }
 .confirm-button:hover {
