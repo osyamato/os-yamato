@@ -220,11 +220,15 @@ function toHiragana(str) {
   )
 }
 
-// 🤖 bot 返答
 function getBotReply(lastChar) {
   const pool = wordPool[selectedGenreKey.value] || []
-  return pool.find(word => word.startsWith(lastChar)) || 'おわり'
+  const usedWords = history.value.flatMap(entry => [entry.user, entry.bot])
+  const candidates = pool.filter(
+    word => word.startsWith(lastChar) && !usedWords.includes(word)
+  )
+  return candidates[0] || null
 }
+
 
 // 📡 GPT ジャンル判定
 async function validateWithGPT(word, genreKey) {
@@ -260,12 +264,14 @@ async function submitWord() {
   const input = toHiragana(userInput.value.trim())
   if (!input) return
 
+  // ひらがなチェック
   if (!/^[ぁ-んー]+$/.test(input)) {
-    alert('ひらがなのみ入力してください')
+    history.value.push({ user: input, bot: 'ひらがなのみ入力してね' })
     userInput.value = ''
     return
   }
 
+  // 最後の bot 応答の末尾と比較
   const previousBot = getLastValidBotWord()
   if (previousBot) {
     const lastChar = getLastChar(previousBot)
@@ -275,46 +281,57 @@ async function submitWord() {
       : firstChar !== lastChar
 
     if (mismatch) {
-      alert(`前の単語は「${previousBot}」なので、「${lastChar}」から始めてください`)
+      history.value.push({ user: input, bot: `「${previousBot}」のあとだから、「${lastChar}」で始めてね！` })
       return
     }
   }
 
+  // すでに使われた単語のチェック
+  const allUsedWords = history.value.flatMap(entry => [entry.user, entry.bot])
+  if (allUsedWords.includes(input)) {
+    history.value.push({ user: input, bot: `「${input}」はすでに使われました！ゲームオーバーです。` })
+    gameOver.value = true
+    return
+  }
+
+  // 入力履歴に追加（bot: '...' を一時表示）
   history.value.push({ user: input, bot: '...' })
   userInput.value = ''
   clearInterval(intervalId)
   timerStarted.value = false
 
+  // 少し待ってから bot 応答
   setTimeout(async () => {
     let botResponse = ''
     const last = getLastChar(input)
 
+    // ジャンル制限チェック（any以外 & 未登録語）
     const pool = wordPool[selectedGenreKey.value] || []
     if (selectedGenreKey.value !== 'any' && !pool.includes(input)) {
       const isValid = await validateWithGPT(input, selectedGenreKey.value)
       if (!isValid) {
         botResponse = `「${input}」は「${selectedGenreMode.value.label}」じゃないみたい...🥺`
         history.value[history.value.length - 1].bot = botResponse
-
-        // 💡 初手以外ならタイマーを再始動
-        if (history.value.length > 1) {
-          startTimer()
-        }
+        if (history.value.length > 1) startTimer()
         return
       }
     }
 
+    // 「ん」で終了
     if (input.endsWith('ん')) {
       botResponse = '「ん」で終わったので終了です！'
       gameOver.value = true
     } else {
-      const reply = getBotReply(last)
-      if (!reply || reply === 'おわり') {
+      // bot の応答候補から履歴未使用のものを選ぶ
+      const candidate = (wordPool[selectedGenreKey.value] || []).find(
+        word => word.startsWith(last) && !allUsedWords.includes(word)
+      )
+      if (!candidate) {
         botResponse = 'まいりました🥺'
         gameOver.value = true
         playerWin.value = true
       } else {
-        botResponse = reply
+        botResponse = candidate
         startTimer()
       }
     }
@@ -322,6 +339,7 @@ async function submitWord() {
     history.value[history.value.length - 1].bot = botResponse
   }, 800)
 }
+
 
 // 🔄 リセット
 function resetGame() {
