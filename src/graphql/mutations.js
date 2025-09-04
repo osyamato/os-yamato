@@ -1378,3 +1378,120 @@ export const deleteMission = /* GraphQL */ `
     }
   }
 `;
+export const createShiritoriRoom = /* GraphQL */ `
+  mutation CreateShiritoriRoom(
+    $input: CreateShiritoriRoomInput!
+    $condition: ModelShiritoriRoomConditionInput
+  ) {
+    createShiritoriRoom(input: $input, condition: $condition) {
+      id
+      title
+      hostId
+      guestId
+      status
+      charLimit
+      genreKey
+      currentTurn
+      winnerId
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const updateShiritoriRoom = /* GraphQL */ `
+  mutation UpdateShiritoriRoom(
+    $input: UpdateShiritoriRoomInput!
+    $condition: ModelShiritoriRoomConditionInput
+  ) {
+    updateShiritoriRoom(input: $input, condition: $condition) {
+      id
+      title
+      hostId
+      guestId
+      status
+      charLimit
+      genreKey
+      currentTurn
+      winnerId
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const deleteShiritoriRoom = /* GraphQL */ `
+  mutation DeleteShiritoriRoom(
+    $input: DeleteShiritoriRoomInput!
+    $condition: ModelShiritoriRoomConditionInput
+  ) {
+    deleteShiritoriRoom(input: $input, condition: $condition) {
+      id
+      title
+      hostId
+      guestId
+      status
+      charLimit
+      genreKey
+      currentTurn
+      winnerId
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const createTurn = /* GraphQL */ `
+  mutation CreateTurn(
+    $input: CreateTurnInput!
+    $condition: ModelTurnConditionInput
+  ) {
+    createTurn(input: $input, condition: $condition) {
+      id
+      roomId
+      userId
+      word
+      order
+      isValid
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const updateTurn = /* GraphQL */ `
+  mutation UpdateTurn(
+    $input: UpdateTurnInput!
+    $condition: ModelTurnConditionInput
+  ) {
+    updateTurn(input: $input, condition: $condition) {
+      id
+      roomId
+      userId
+      word
+      order
+      isValid
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const deleteTurn = /* GraphQL */ `
+  mutation DeleteTurn(
+    $input: DeleteTurnInput!
+    $condition: ModelTurnConditionInput
+  ) {
+    deleteTurn(input: $input, condition: $condition) {
+      id
+      roomId
+      userId
+      word
+      order
+      isValid
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;

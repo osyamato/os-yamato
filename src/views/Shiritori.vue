@@ -19,6 +19,15 @@
         >
           ↻
         </button>
+
+<button
+  class="icon-button"
+  @click="goToMatchView"
+  :style="{ backgroundColor: iconColor, color: getTextColor(iconColor) }"
+>
+  👥
+</button>
+
       </div>
     </div>
 
@@ -110,6 +119,7 @@ import ModeSelectModal from '@/components/ModeSelectModal.vue'
 import { speedModes, genreModes } from '@/components/shiritoriModes.js'
 import { wordPool } from '@/data/wordPool.js'
 import { Auth } from 'aws-amplify'
+import { useRouter } from 'vue-router'
 
 // 状態
 const iconColor = ref('#274c77')
@@ -131,6 +141,14 @@ let startTime = null
 const selectedSpeedMode = computed(() => speedModes[selectedSpeedKey.value])
 const selectedGenreMode = computed(() => genreModes[selectedGenreKey.value])
 const TIMER_DURATION = computed(() => selectedSpeedMode.value.timeLimit)
+
+
+const router = useRouter()
+
+
+function goToMatchView() {
+  router.push({ name: 'shiritori-match' })
+}
 
 // 🌈 ユーザー情報
 onMounted(async () => {

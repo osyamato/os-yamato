@@ -1393,3 +1393,123 @@ export const onDeleteMission = /* GraphQL */ `
     }
   }
 `;
+export const onCreateShiritoriRoom = /* GraphQL */ `
+  subscription OnCreateShiritoriRoom(
+    $filter: ModelSubscriptionShiritoriRoomFilterInput
+    $hostId: String
+    $guestId: String
+  ) {
+    onCreateShiritoriRoom(filter: $filter, hostId: $hostId, guestId: $guestId) {
+      id
+      title
+      hostId
+      guestId
+      status
+      charLimit
+      genreKey
+      currentTurn
+      winnerId
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const onUpdateShiritoriRoom = /* GraphQL */ `
+  subscription OnUpdateShiritoriRoom(
+    $filter: ModelSubscriptionShiritoriRoomFilterInput
+    $hostId: String
+    $guestId: String
+  ) {
+    onUpdateShiritoriRoom(filter: $filter, hostId: $hostId, guestId: $guestId) {
+      id
+      title
+      hostId
+      guestId
+      status
+      charLimit
+      genreKey
+      currentTurn
+      winnerId
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const onDeleteShiritoriRoom = /* GraphQL */ `
+  subscription OnDeleteShiritoriRoom(
+    $filter: ModelSubscriptionShiritoriRoomFilterInput
+    $hostId: String
+    $guestId: String
+  ) {
+    onDeleteShiritoriRoom(filter: $filter, hostId: $hostId, guestId: $guestId) {
+      id
+      title
+      hostId
+      guestId
+      status
+      charLimit
+      genreKey
+      currentTurn
+      winnerId
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const onCreateTurn = /* GraphQL */ `
+  subscription OnCreateTurn(
+    $filter: ModelSubscriptionTurnFilterInput
+    $userId: String
+  ) {
+    onCreateTurn(filter: $filter, userId: $userId) {
+      id
+      roomId
+      userId
+      word
+      order
+      isValid
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const onUpdateTurn = /* GraphQL */ `
+  subscription OnUpdateTurn(
+    $filter: ModelSubscriptionTurnFilterInput
+    $userId: String
+  ) {
+    onUpdateTurn(filter: $filter, userId: $userId) {
+      id
+      roomId
+      userId
+      word
+      order
+      isValid
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const onDeleteTurn = /* GraphQL */ `
+  subscription OnDeleteTurn(
+    $filter: ModelSubscriptionTurnFilterInput
+    $userId: String
+  ) {
+    onDeleteTurn(filter: $filter, userId: $userId) {
+      id
+      roomId
+      userId
+      word
+      order
+      isValid
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
