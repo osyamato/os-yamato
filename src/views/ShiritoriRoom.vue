@@ -124,7 +124,7 @@ const handleSubmit = async () => {
 }
 
 .room-title {
-  font-size: 1.6rem;
+  font-size: 1.4rem;
   margin-bottom: 1.5rem;
   font-weight: bold;
 }
