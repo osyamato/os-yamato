@@ -13,14 +13,13 @@
     </div>
 
     <!-- モーダル -->
-    <RoomCreateModal
-      v-if="showModal"
-      :visible="showModal"
-      @close="showModal = false"
-      @create="handleCreateRoom"
-    />
+<RoomCreateModal
+  v-show="showModal"
+  :visible="showModal"
+  @close="showModal = false"
+/>
 
-    <!-- 待機中ルームがない -->
+    <!-- 空状態 -->
     <div v-if="rooms.length === 0" class="empty-state">
       <h3 class="text-lg font-medium mb-1">🕊️ 待機中の部屋</h3>
       <p class="text-gray-400">誰も待機していません。</p>
@@ -29,33 +28,21 @@
       </p>
     </div>
 
-    <!-- 待機中ルーム一覧 -->
-    <div v-else class="room-list-wrapper">
-      <ul class="space-y-4 max-w-md mx-auto">
-        <li
-          v-for="room in rooms"
-          :key="room.id"
-          class="flex flex-col items-center bg-white dark:bg-gray-800 p-4 rounded shadow"
-        >
-          <div class="text-2xl">🚪</div>
-          <div class="mt-2 text-base font-semibold text-black dark:text-white">
-            {{ room.title }}
-          </div>
-          <div class="mt-1 text-sm text-gray-600 dark:text-gray-300">
-            モード：{{ genreLabel(room.genreKey) }}
-          </div>
-          <div class="text-sm text-gray-600 dark:text-gray-300">
-            文字数：{{ room.charLimit || '無制限' }}
-          </div>
-          <button
-            @click="joinRoom(room.id)"
-            class="mt-3 bg-blue-500 text-white px-4 py-1 rounded hover:bg-blue-600"
-          >
-            参加
-          </button>
-        </li>
-      </ul>
-    </div>
+    <!-- ルームリスト -->
+    <ul v-else class="space-y-4 max-w-xl mx-auto mt-6">
+      <li
+        v-for="room in rooms"
+        :key="room.id"
+        class="room-card"
+      >
+        <div class="room-info">
+          <div class="room-title">{{ room.title }}</div>
+          <div class="room-meta">モード：{{ genreLabel(room.genreKey) }}</div>
+          <div class="room-meta">文字数：{{ room.charLimit || '無制限' }}</div>
+        </div>
+        <button class="room-button" @click="joinRoom(room.id)">参加</button>
+      </li>
+    </ul>
   </div>
 </template>
 
@@ -73,7 +60,7 @@ const rooms = ref([])
 const showModal = ref(false)
 const iconColor = ref('#f87171')
 
-// ✅ ジャンル表示マップ
+// ジャンル表示
 function genreLabel(key) {
   const map = {
     any: '🌈 なんでも',
@@ -85,7 +72,7 @@ function genreLabel(key) {
   return map[key] || '❓ 未設定'
 }
 
-// ✅ 文字色調整（背景によって黒or白）
+// 背景に応じてテキストカラー
 function getTextColor(bg) {
   if (!bg) return '#000'
   const color = bg.replace('#', '')
@@ -96,7 +83,7 @@ function getTextColor(bg) {
   return brightness > 128 ? '#000' : '#fff'
 }
 
-// ✅ onMounted: 色取得と部屋一覧
+// 初期化処理
 onMounted(async () => {
   try {
     const user = await Auth.currentAuthenticatedUser()
@@ -108,7 +95,7 @@ onMounted(async () => {
   fetchRooms()
 })
 
-// ✅ 部屋一覧取得
+// 部屋取得
 async function fetchRooms() {
   try {
     const res = await API.graphql(graphqlOperation(listShiritoriRooms, {
@@ -120,7 +107,7 @@ async function fetchRooms() {
   }
 }
 
-// ✅ 作成処理
+// 作成処理
 async function handleCreateRoom({ title, genreKey, charLimit }) {
   try {
     const user = await Auth.currentAuthenticatedUser()
@@ -140,7 +127,7 @@ async function handleCreateRoom({ title, genreKey, charLimit }) {
   }
 }
 
-// ✅ 参加処理
+// 参加処理
 async function joinRoom(roomId) {
   try {
     const user = await Auth.currentAuthenticatedUser()
@@ -158,6 +145,7 @@ async function joinRoom(roomId) {
 </script>
 
 <style scoped>
+/* ヘッダー */
 .header {
   display: flex;
   flex-direction: column;
@@ -165,17 +153,16 @@ async function joinRoom(roomId) {
   margin-bottom: 2rem;
 }
 .header-title {
-  font-size: 2rem;
+  font-size: 1.8rem;
   font-weight: bold;
   margin-bottom: 1rem;
 }
-
 .icon-button {
   border: none;
   border-radius: 50%;
-  font-size: 1.5rem;
-  width: 64px;
-  height: 64px;
+  font-size: 1.2rem;
+  width: 38px;
+  height: 38px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -186,23 +173,65 @@ async function joinRoom(roomId) {
   opacity: 0.85;
 }
 
+/* 空状態 */
 .empty-state {
   text-align: center;
   margin-top: 3rem;
 }
 
-.header-animated {
-  animation: fadeSlideDown 0.6s ease-out;
+/* カード */
+.room-card {
+  position: relative;
+  border: 1px solid #ccc;
+  border-radius: 12px;
+  background-color: #f4f4f4;
+  padding: 0.5rem 0.5rem; /* ✅ 上下余白広め */
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  min-height: 140px;
+  overflow: hidden;
 }
-@keyframes fadeSlideDown {
-  0% {
-    opacity: 0;
-    transform: translateY(-40px);
+
+/* テキスト側 */
+.room-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.room-title {
+  font-size: 1rem;
+  font-weight: bold;
+}
+.room-meta {
+  font-size: 0.9rem;
+  color: #444;
+}
+
+/* 参加ボタン（右下固定） */
+.room-button {
+  position: absolute;
+  right: 1rem;
+  bottom: 1rem;
+  padding: 0.5rem 1.2rem;
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.room-button:hover {
+  background-color: #2563eb;
+}
+
+/* ダークモード対応 */
+@media (prefers-color-scheme: dark) {
+  .room-card {
+    background-color: #2e2e2e;
+    border: 1px solid #fff;
+    color: #f0f0f0;
   }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
+  .room-meta {
+    color: #ccc;
   }
 }
 </style>
-
