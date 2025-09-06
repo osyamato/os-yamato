@@ -1,4 +1,5 @@
 {
+"homeButton": "Botón de inicio",
   "photoUpload.limitReached": "Ya has subido {max} fotos hoy.",
   "photoUpload.uploadFailed": "Error al subir la foto.",
 

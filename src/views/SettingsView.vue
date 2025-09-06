@@ -51,6 +51,24 @@
     </div>
 
 <div class="setting-group horizontal-toggle">
+<span class="label-text">{{ t('homeButton') }}</span>
+  <div class="toggle-options">
+    <div
+      :class="['toggle-option', { active: showHomeButton === false }]"
+      @click="showHomeButton = false"
+    >
+      OFF
+    </div>
+    <div
+      :class="['toggle-option', { active: showHomeButton === true }]"
+      @click="showHomeButton = true"
+    >
+      ON
+    </div>
+  </div>
+</div>
+
+<div class="setting-group horizontal-toggle">
   <span class="label-text">{{ t('messageAnimationLabel') }}</span>
   <div class="toggle-options">
     <div
@@ -123,6 +141,13 @@ const availableColors = [
   '#aedbff', '#d6bbf9', '#cccccc', '#ffd8a8', '#14532d'
 ]
 
+const showHomeButton = ref(true)
+
+onMounted(() => {
+  const saved = localStorage.getItem('showHomeButton')
+  showHomeButton.value = saved !== 'false' // 未設定なら true
+})
+
 onMounted(async () => {
   const user = await Auth.currentAuthenticatedUser()
 
@@ -163,13 +188,22 @@ async function saveSettings() {
     'custom:language': selectedLanguage.value,
     'custom:wallpaper': selectedWallpaper.value,
     'custom:iconColor': selectedColor.value,
-    'custom:message_animation': selectedMessageAnimation.value || 'on' // ✅ ← 追加！
+    'custom:message_animation': selectedMessageAnimation.value || 'on'
   })
+
+  // ✅ ホームボタン表示設定をローカルに保存
+  localStorage.setItem('showHomeButton', showHomeButton.value)
 
   document.documentElement.style.setProperty('--yamato-button-color', selectedColor.value)
   locale.value = selectedLanguage.value
   buttonKey.value++
+
   alert(t('saveMessage'))
+
+  // ✅ 反映のためページを再読み込み
+  setTimeout(() => {
+    window.location.reload()
+  }, 300) // ちょっと間を空けると自然
 }
 
 function goToAccount() {

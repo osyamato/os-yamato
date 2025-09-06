@@ -1,4 +1,5 @@
 {
+"homeButton": "Bouton d'accueil",
 "photoUpload.limitReached": "Vous avez déjà téléchargé {max} photos aujourd'hui.",
   "photoUpload.uploadFailed": "Échec du téléchargement de la photo.",
 

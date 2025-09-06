@@ -348,3 +348,45 @@ type Mission @model @auth(rules: [{ allow: owner }]) {
   deletedAt: AWSDateTime
 }
 
+enum RoomStatus {
+  open
+  playing
+  finished
+}
+
+type ShiritoriRoom
+  @model
+  @auth(rules: [
+    { allow: owner, ownerField: "hostId", operations: [create, read, update, delete] },
+    { allow: owner, ownerField: "guestId", operations: [read, update, delete] },
+    { allow: private, operations: [read, update] }  # ✅ ← 追加
+  ]) {
+  id: ID!
+  title: String!
+  hostId: ID!
+  guestId: ID
+  status: RoomStatus!
+  charLimit: Int
+  genreKey: String
+  currentTurn: String
+  winnerId: String
+  createdAt: AWSDateTime
+  updatedAt: AWSDateTime
+}
+
+type Turn
+  @model
+  @auth(rules: [
+    { allow: owner, ownerField: "userId", operations: [create, read, update, delete] },
+    { allow: private, operations: [read] }
+  ]) {
+  id: ID!
+  roomId: ID!
+  userId: ID!
+  word: String!
+  order: Int!
+  isValid: Boolean!
+  createdAt: AWSDateTime
+  updatedAt: AWSDateTime
+}
+

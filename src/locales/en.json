@@ -1,4 +1,5 @@
 {
+"homeButton": "Home Button",
   "photoUpload.limitReached": "You have already uploaded {max} photos today.",
   "photoUpload.uploadFailed": "Photo upload failed.",
 

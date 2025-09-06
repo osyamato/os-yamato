@@ -967,6 +967,88 @@ export const listMissions = /* GraphQL */ `
     }
   }
 `;
+export const getShiritoriRoom = /* GraphQL */ `
+  query GetShiritoriRoom($id: ID!) {
+    getShiritoriRoom(id: $id) {
+      id
+      title
+      hostId
+      guestId
+      status
+      charLimit
+      genreKey
+      currentTurn
+      winnerId
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const listShiritoriRooms = /* GraphQL */ `
+  query ListShiritoriRooms(
+    $filter: ModelShiritoriRoomFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    listShiritoriRooms(filter: $filter, limit: $limit, nextToken: $nextToken) {
+      items {
+        id
+        title
+        hostId
+        guestId
+        status
+        charLimit
+        genreKey
+        currentTurn
+        winnerId
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const getTurn = /* GraphQL */ `
+  query GetTurn($id: ID!) {
+    getTurn(id: $id) {
+      id
+      roomId
+      userId
+      word
+      order
+      isValid
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const listTurns = /* GraphQL */ `
+  query ListTurns(
+    $filter: ModelTurnFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    listTurns(filter: $filter, limit: $limit, nextToken: $nextToken) {
+      items {
+        id
+        roomId
+        userId
+        word
+        order
+        isValid
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
 export const messagesByRoomId = /* GraphQL */ `
   query MessagesByRoomId(
     $roomId: ID!

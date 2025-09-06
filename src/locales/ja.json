@@ -1,4 +1,5 @@
 {
+"homeButton": "ホームボタン",
   "photoUpload.limitReached": "本日はすでに {max} 枚アップロード済みです。",
   "photoUpload.uploadFailed": "アップロードに失敗しました。",
 
