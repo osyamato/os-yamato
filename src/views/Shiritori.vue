@@ -21,6 +21,7 @@
         </button>
 
 <button
+  v-if="false"
   class="icon-button"
   @click="goToMatchView"
   :style="{ backgroundColor: iconColor, color: getTextColor(iconColor) }"

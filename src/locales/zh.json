@@ -1,4 +1,5 @@
 {
+"homeButton": "主页按钮",
   "photoUpload.limitReached": "您今天已上传 {max} 张照片。",
   "photoUpload.uploadFailed": "照片上传失败。",
 
