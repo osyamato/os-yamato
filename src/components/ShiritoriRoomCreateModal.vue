@@ -24,9 +24,7 @@
       />
 
       <div class="modal-actions">
-        <YamatoButton color="green" @click="handleCreate">
-          作成する
-        </YamatoButton>
+        <button @click="handleCreate" class="primary">作成する</button>
       </div>
     </div>
   </Modal>
@@ -35,7 +33,6 @@
 <script setup>
 import { ref } from 'vue'
 import Modal from '@/components/Modal.vue'
-import YamatoButton from '@/components/YamatoButton.vue'
 
 const props = defineProps({
   visible: Boolean
@@ -65,13 +62,11 @@ function handleCreate() {
 </script>
 
 <style scoped>
-/* モーダル本体 */
 .room-create-modal {
   padding: 1.5rem;
   text-align: center;
 }
 
-/* ラベル */
 .modal-label {
   display: block;
   text-align: left;
@@ -80,7 +75,6 @@ function handleCreate() {
   color: #555;
 }
 
-/* 入力欄とセレクトボックス */
 .modal-select,
 .modal-input {
   width: 100%;
@@ -89,31 +83,24 @@ function handleCreate() {
   border: 1px solid #ccc;
   border-radius: 6px;
   margin-bottom: 1rem;
-  background-color: #fff; /* ライトモード用 */
-  color: #111;
 }
 
-/* アクションボタンエリア */
 .modal-actions {
   margin-top: 1.4rem;
 }
 
-/* ダークモード */
-@media (prefers-color-scheme: dark) {
-  .modal-label {
-    color: #ccc;
-  }
+button.primary {
+  background-color: #222;
+  color: white;
+  border: none;
+  padding: 0.7rem 1.4rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+}
 
-  .modal-input,
-  .modal-select {
-    background-color: #2e2e2e;
-    color: #fff;
-    border-color: #444;
-  }
-
-  .modal-input::placeholder,
-  .modal-select::placeholder {
-    color: #aaa;
-  }
+button.primary:hover {
+  background-color: #444;
 }
 </style>
+

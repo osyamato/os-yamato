@@ -17,6 +17,7 @@
   v-show="showModal"
   :visible="showModal"
   @close="showModal = false"
+  @create="handleCreateRoom"
 />
 
     <!-- 空状態 -->
