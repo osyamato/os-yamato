@@ -1,234 +1,315 @@
 <template>
+ <transition name="fade-out">
+    <div v-if="!isFadingOut" class="chat-wrapper">
+
   <div class="chat-wrapper">
-    <div class="header header-animated">
-      <h2 class="header-title">しりとり対戦</h2>
+    <h2 class="header-title">しりとり対戦</h2>
+
+    <!-- ⏳ マッチング待機中 -->
+    <div v-if="!roomReady" class="waiting-room">
+      <p>相手の参加を待っています...</p>
+      <div class="status-bar-container">
+        <div class="status-bar" :style="{ width: `${matchProgress}%` }"></div>
+      </div>
+      <p class="time-left">⏳ 残り {{ timeLeft }} 秒</p>
     </div>
 
-    <div class="matching-timer" v-if="matching">
-      マッチング中... {{ remainingSeconds }}秒
-    </div>
+    <!-- 🎮 ゲーム開始後 -->
+    <div v-else>
+      <div class="turn-status">
+        <template v-if="isFirstTurn">
+          <template v-if="isMyTurn">
+            <span>
+              🎉 しりとりできる相手が見つかりました！<br />
+              最初の一言を入力してください。<br />
+              ゲームが始まります。
+            </span>
+          </template>
+          <template v-else>
+            <span class="waiting">
+              🎉 しりとりできる相手が見つかりました！<br />
+              相手の初手を待っています...
+            </span>
+          </template>
+        </template>
 
-    <div v-if="!matching && gameStarted" class="status-bar-container" v-show="timerVisible">
-      <div class="status-bar" :style="{ width: `${progress}%` }"></div>
-    </div>
+        <template v-else>
+          <template v-if="isMyTurn">
+            <span>あなたの番です</span>
+          </template>
+          <template v-else>
+            <span class="waiting">相手の番です...</span>
+          </template>
+        </template>
+      </div>
 
-    <div class="turn-status" v-if="gameStarted">
-      <span v-if="isMyTurn">あなたの番です</span>
-      <span v-else class="waiting">相手の番を待っています...</span>
-    </div>
+<div class="input-area">
+  <input
+    v-model="inputWord"
+    @keydown.enter="handleSubmit"
+    :disabled="!isMyTurn"
+    placeholder="ひらがなを入力してね"
+  />
+  <div v-if="alertMessage" class="alert">{{ alertMessage }}</div>
+</div>
 
-    <div class="input-area">
-      <input
-        v-model="inputWord"
-        @keydown.enter="handleSubmit"
-        :disabled="!isMyTurn || matching"
-        placeholder="ひらがなを入力してね"
-        autocomplete="off"
-      />
-    </div>
+<div v-if="showResultMessage" class="result-message">
+  {{ showResultMessage }}
+</div>
 
-    <div class="message-list">
-      <div
-        v-for="(entry, index) in reversedHistory"
-        :key="entry.id || index"
-        class="message-pair"
-      >
-        <div v-if="entry.userId === 'typing'" class="bot-message gpt-dots-loader">
-          <div class="dot"></div><div class="dot"></div><div class="dot"></div>
-        </div>
-        <div v-else-if="entry.userId === mySub" class="user-message">
-          あなた：{{ entry.word }}
-        </div>
-        <div v-else class="bot-message">
-          相手：{{ entry.word }}
+      <div class="message-list">
+        <div
+          v-for="entry in reversedHistory"
+          :key="entry.id"
+          class="message-pair"
+        >
+          <div v-if="entry.userId === mySub" class="user-message">
+            あなた：{{ entry.word }}
+          </div>
+          <div v-else class="bot-message">
+            相手：{{ entry.word }}
+          </div>
         </div>
       </div>
     </div>
   </div>
+  </div>
+  </transition>
+
 </template>
 
-<script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { API, graphqlOperation, Auth } from 'aws-amplify'
+<script setup lang="ts">
+import { onMounted, onUnmounted, ref, computed, watch } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
+import { API, graphqlOperation } from 'aws-amplify'
 import { getShiritoriRoom } from '@/graphql/queries'
-import { onCreateTurn, onUpdateShiritoriRoom } from '@/graphql/subscriptions'
+import { deleteShiritoriRoom } from '@/graphql/mutations'
+import { onUpdateShiritoriRoom } from '@/graphql/subscriptions'
+import { onBeforeUnmount } from 'vue'
 import { createTurn } from '@/graphql/mutations'
-import { listTurns } from '@/graphql/queries'
+import { onCreateTurn } from '@/graphql/subscriptions'
 
-const route = useRoute()
 const router = useRouter()
-const roomId = route.params.id
+const route = useRoute()
+const roomId = ref<string>('')
+const showResultMessage = ref('')
+const isGameOver = ref(false) //
 
-const roomTitle = ref('')
+const isFadingOut = ref(false)
 const mySub = ref('')
-const history = ref([])
+const shiritoriRoom = ref<Record<string, any> | null>(null)
+const matchTimer = ref<ReturnType<typeof setInterval> | null>(null)
+const matchProgress = ref(0)
+const timeLeft = ref(180)
+const subscription = ref<any>(null)
+const roomReady = ref(false)
+
 const inputWord = ref('')
-const gameStarted = ref(false)
-const timerVisible = ref(false)
-const progress = ref(0)
-let gameTimer = null
-const TIMER_DURATION = 10000
+const history = ref<any[]>([])
+const isSubmitting = ref(false)
 
-const typingIndicator = { id: 'typing', word: '...', userId: 'typing' }
-
-// マッチング制御
-const matching = ref(true)
-const remainingSeconds = ref(180)
-let matchingTimer = null
-let roomSubscription = null
-let turnSubscription = null
-
+const isHost = computed(() => mySub.value === shiritoriRoom.value?.hostId)
+const isFirstTurn = computed(() => history.value.length === 0)
 const sortedHistory = computed(() => [...history.value].sort((a, b) => a.order - b.order))
+const lastChar = computed(() => {
+  const lastTurn = sortedHistory.value.at(-1)
+  return lastTurn?.word?.slice(-1) || null
+})
+
+watch(lastChar, (char) => {
+  if (char === 'ん') {
+    if (isMyTurn.value) {
+      // 自分のターンで "ん" → 相手が「ん」で終わる語を言った → 自分の勝ち
+      showResultMessage.value = 'あなたの勝ちです！🎉'
+    } else {
+      // 相手のターンで "ん" → 自分が「ん」で終わる語を言った → 自分の負け
+      showResultMessage.value = 'あなたの負けです…💦'
+    }
+    isGameOver.value = true
+  }
+})
+
 const reversedHistory = computed(() => [...sortedHistory.value].reverse())
 
+const alertMessage = ref('')
+
 const isMyTurn = computed(() => {
-  const last = sortedHistory.value.at(-1)
-  if (!last) return true
-  if (last.userId === 'typing') return false
-  return last.userId !== mySub.value
+  const lastTurn = sortedHistory.value.at(-1)
+  if (!lastTurn) {
+    return !isHost.value
+  }
+  return lastTurn.userId !== mySub.value
 })
 
 onMounted(async () => {
-  const user = await Auth.currentAuthenticatedUser()
-  mySub.value = user.username
+  try {
+    const user = await import('aws-amplify').then(m => m.Auth.currentAuthenticatedUser())
+    mySub.value = user.attributes.sub
 
-  await fetchRoom()
-  startMatchingTimer()
-  subscribeToRoomUpdates()
+    roomId.value = route.params.id as string
+
+    const res = await API.graphql(graphqlOperation(getShiritoriRoom, { id: roomId.value }))
+    shiritoriRoom.value = res.data.getShiritoriRoom
+
+    subscribeToRoom(roomId.value)
+
+    if (isHost.value) {
+      startMatchTimer()
+    } else {
+      roomReady.value = !!shiritoriRoom.value?.hostId
+    }
+
+    // ✅ どちらもリアルタイム更新を受け取るために追加
+    subscribeToTurns(roomId.value)
+
+  } catch (err) {
+    console.error('初期化エラー:', err)
+  }
+})
+
+watch(() => shiritoriRoom.value?.guestId, (newGuestId) => {
+  if (newGuestId && !roomReady.value) {
+    roomReady.value = true
+  }
 })
 
 onUnmounted(() => {
-  clearInterval(matchingTimer)
-  stopGameTimer()
-  roomSubscription?.unsubscribe()
-  turnSubscription?.unsubscribe()
+  stopMatchTimer()
+  subscription.value?.unsubscribe?.()
 })
 
-async function fetchRoom() {
-  try {
-    const res = await API.graphql(graphqlOperation(getShiritoriRoom, { id: roomId }))
-    const room = res.data.getShiritoriRoom
-    roomTitle.value = room.title
-
-    if (room.guestId) {
-      startGame()
-    }
-  } catch (e) {
-    console.error('❌ ルーム取得失敗', e)
-  }
+function fadeOutAndNavigate(path: string) {
+  isFadingOut.value = true
+  setTimeout(() => {
+    router.push({ name: path })
+  }, 800)
 }
-
-function startMatchingTimer() {
-  matchingTimer = setInterval(() => {
-    remainingSeconds.value--
-    if (remainingSeconds.value <= 0) {
-      clearInterval(matchingTimer)
-      router.push({ name: 'shiritori-match' })
-    }
-  }, 1000)
-}
-
-function subscribeToRoomUpdates() {
-  roomSubscription = API.graphql(
-    graphqlOperation(onUpdateShiritoriRoom)
-  ).subscribe({
-    next: ({ value }) => {
-      const updatedRoom = value.data.onUpdateShiritoriRoom
-      if (updatedRoom.id === roomId && updatedRoom.guestId) {
-        clearInterval(matchingTimer)
-        startGame()
-      }
-    },
-    error: (err) => console.error('❌ サブスクリプション失敗', err)
-  })
-}
-
-async function startGame() {
-  matching.value = false
-  gameStarted.value = true
-  await fetchTurns()
-  subscribeToTurns()
-}
-
-async function fetchTurns() {
-  try {
-    const res = await API.graphql(graphqlOperation(listTurns, {
-      filter: { roomId: { eq: roomId } }
-    }))
-    history.value = res.data.listTurns.items
-  } catch (e) {
-    console.error('❌ ターン取得失敗', e)
-  }
-}
-
-function subscribeToTurns() {
-  turnSubscription = API.graphql(graphqlOperation(onCreateTurn)).subscribe({
-    next: ({ value }) => {
-      const newTurn = value.data.onCreateTurn
-      if (newTurn.roomId !== roomId) return
-      const exists = history.value.some(t => t.id === newTurn.id)
-      if (!exists) {
-        history.value = history.value.filter(t => t.id !== 'typing')
-        history.value.push(newTurn)
-        if (newTurn.userId !== mySub.value) startGameTimer()
-      }
-    },
-    error: (err) => console.error('❌ onCreateTurn 失敗', err)
-  })
-}
-
-// ⏱️ ゲームタイマー
-function startGameTimer() {
-  progress.value = 0
-  stopGameTimer()
-  timerVisible.value = true
-  const start = Date.now()
-  gameTimer = setInterval(() => {
-    const elapsed = Date.now() - start
-    progress.value = Math.min(100, (elapsed / TIMER_DURATION) * 100)
-    if (elapsed >= TIMER_DURATION) stopGameTimer()
-  }, 100)
-}
-
-function stopGameTimer() {
-  clearInterval(gameTimer)
-  timerVisible.value = false
-}
-
-const isSubmitting = ref(false)
 
 async function handleSubmit() {
-  if (!isMyTurn.value || isSubmitting.value) return
   const word = inputWord.value.trim()
   if (!word) return
+  if (!roomReady.value || !isMyTurn.value || isSubmitting.value) return
 
+  // ✅ 前の文字との比較（1ターン目はスキップ）
+  if (!isFirstTurn.value && lastChar.value && word[0] !== lastChar.value) {
+    alertMessage.value = `「${lastChar.value}」から始まる言葉を入力してください`
+    return
+  }
+
+  alertMessage.value = ''
   isSubmitting.value = true
-  inputWord.value = ''
 
   try {
     const input = {
-      roomId,
+      roomId: roomId.value,
       userId: mySub.value,
       word,
-      isValid: true,
-      order: history.value.length
+      order: history.value.length,
+      isValid: true
     }
 
-    const res = await API.graphql(graphqlOperation(createTurn, { input }))
-    const created = res.data.createTurn
-    const exists = history.value.some(t => t.id === created.id)
-    if (!exists) {
-      history.value.push(created)
-    }
-    stopGameTimer()
-    history.value.push(typingIndicator)
-  } catch (e) {
-    console.error('❌ 投稿失敗', e)
+    await API.graphql(graphqlOperation(createTurn, { input }))
+
+    inputWord.value = ''
+  } catch (err) {
+    console.error('送信失敗:', err)
   } finally {
     isSubmitting.value = false
   }
 }
+
+function subscribeToTurns(roomId: string) {
+  API.graphql(graphqlOperation(onCreateTurn)).subscribe({
+    next: ({ value }: any) => {
+      const newTurn = value.data.onCreateTurn
+      if (newTurn.roomId !== roomId) return
+
+      // 重複チェック（すでにIDが存在するか）
+      if (history.value.find(t => t.id === newTurn.id)) return
+
+      history.value.push(newTurn)
+      history.value.sort((a, b) => a.order - b.order)
+    },
+    error: (err: any) => {
+      console.error('ターンサブスクリプションエラー:', err)
+    }
+  })
+}
+
+function subscribeToRoom(roomId: string) {
+  subscription.value = API.graphql(graphqlOperation(onUpdateShiritoriRoom)).subscribe({
+    next: ({ value }: any) => {
+      const updatedRoom = value.data.onUpdateShiritoriRoom
+      if (updatedRoom.id !== roomId) return
+
+      shiritoriRoom.value = updatedRoom
+
+      if (updatedRoom.guestId && updatedRoom.hostId) {
+        roomReady.value = true
+      }
+    },
+    error: (err: any) => {
+      console.error('サブスクリプションエラー:', err)
+    }
+  })
+}
+
+function startMatchTimer() {
+  const DURATION = 180_000
+  const start = Date.now()
+  matchProgress.value = 0
+  timeLeft.value = DURATION / 1000
+
+  matchTimer.value = setInterval(async () => {
+    const elapsed = Date.now() - start
+    const remaining = Math.ceil((DURATION - elapsed) / 1000)
+
+    matchProgress.value = Math.min(100, (elapsed / DURATION) * 100)
+    timeLeft.value = Math.max(0, remaining)
+
+    if (elapsed >= DURATION) {
+      stopMatchTimer()
+
+      if (
+        shiritoriRoom.value &&
+        shiritoriRoom.value.hostId === mySub.value &&
+        !shiritoriRoom.value.guestId
+      ) {
+        try {
+          await API.graphql(graphqlOperation(deleteShiritoriRoom, {
+            input: { id: shiritoriRoom.value.id }
+          }))
+          console.log('🗑️ ルーム削除成功')
+        } catch (err) {
+          console.error('❌ ルーム削除失敗', err)
+        }
+      }
+
+      fadeOutAndNavigate('shiritori-match')
+    }
+  }, 200)
+}
+
+function stopMatchTimer() {
+  if (matchTimer.value) {
+    clearInterval(matchTimer.value)
+    matchTimer.value = null
+  }
+}
+onBeforeUnmount(async () => {
+  if (roomId.value) {
+    try {
+      await API.graphql(graphqlOperation(deleteShiritoriRoom, {
+        input: { id: roomId.value }
+      }))
+      console.log('🗑️ 離脱によりルーム削除（常に削除）')
+    } catch (err) {
+      console.error('ルーム削除失敗', err)
+    }
+  }
+})
+
+
 </script>
 
 <style scoped>
@@ -237,104 +318,109 @@ async function handleSubmit() {
   flex-direction: column;
   height: 100dvh;
   padding: 1rem;
-  overflow: hidden;
 }
-.header {
-  text-align: center;
-  margin-bottom: 0.5rem;
-}
+
 .header-title {
+  text-align: center;
   font-size: 1.6rem;
   font-weight: bold;
-}
-.matching-timer {
-  text-align: center;
-  font-size: 1rem;
-  color: #f59e0b;
   margin-bottom: 1rem;
 }
+
 .status-bar-container {
   height: 10px;
-  background-color: #ddd;
+  background: #ddd;
   border-radius: 5px;
   overflow: hidden;
-  margin: 0.5rem auto;
-  max-width: 400px;
-  width: 100%;
+  margin: 1rem 0;
 }
 .status-bar {
   height: 100%;
-  background-color: #3b82f6;
-  transition: width 0.1s linear;
+  background: #3b82f6;
+  transition: width 0.2s linear;
 }
+
 .turn-status {
   text-align: center;
+  margin: 0.5rem 0 1rem;
   font-size: 0.95rem;
-  margin-bottom: 1rem;
 }
-.waiting {
-  color: #999;
-}
+
 .input-area {
+  max-width: 300px;
   margin: 0 auto 1rem;
-  max-width: 280px;
-  width: 100%;
 }
 input {
   width: 100%;
   padding: 0.6rem 1rem;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   border-radius: 20px;
   border: 1px solid #ccc;
 }
+
 .message-list {
   flex: 1;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  padding-bottom: 1rem;
 }
 .message-pair {
   text-align: center;
 }
 .user-message {
-  font-size: 1.2rem;
   color: #1e40af;
 }
 .bot-message {
-  font-size: 1.2rem;
   color: #16a34a;
 }
-.gpt-dots-loader {
-  display: flex;
-  justify-content: center;
-  gap: 5px;
+.turn-status {
+  text-align: center;
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
 }
-.dot {
-  width: 6px;
-  height: 6px;
-  background-color: #ccc;
-  border-radius: 50%;
-  animation: blink 1.4s infinite;
+
+.turn-status .waiting {
+  color: #888;
+  font-style: italic;
 }
-.dot:nth-child(2) {
-  animation-delay: 0.2s;
+
+.time-left {
+  text-align: center;
+  font-size: 0.95rem;
+  color: #555;
+  margin-top: 0.5rem;
 }
-.dot:nth-child(3) {
-  animation-delay: 0.4s;
-}
-@keyframes blink {
-  0%, 80%, 100% { opacity: 0 }
-  40% { opacity: 1 }
-}
+
 @media (prefers-color-scheme: dark) {
-  input {
-    background-color: #2e2e2e;
-    color: #fff;
-    border-color: #555;
-  }
-  .dot {
-    background-color: #aaa;
+  .time-left {
+    color: #ccc;
   }
 }
-</style>
+
+.fade-out-enter-active,
+.fade-out-leave-active {
+  transition: opacity 0.8s ease;
+}
+.fade-out-enter-from,
+.fade-out-leave-to {
+  opacity: 0;
+}
+.alert {
+  margin-top: 0.5rem;
+  color: #dc2626;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.result-message {
+  text-align: center;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #e11d48;
+  margin-top: 1rem;
+}
+
+</style> 
+
