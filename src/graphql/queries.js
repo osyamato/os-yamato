@@ -979,6 +979,9 @@ export const getShiritoriRoom = /* GraphQL */ `
       genreKey
       currentTurn
       winnerId
+      isFinished
+      finalMessageHost
+      finalMessageGuest
       createdAt
       updatedAt
       __typename
@@ -1002,6 +1005,9 @@ export const listShiritoriRooms = /* GraphQL */ `
         genreKey
         currentTurn
         winnerId
+        isFinished
+        finalMessageHost
+        finalMessageGuest
         createdAt
         updatedAt
         __typename
@@ -1020,6 +1026,7 @@ export const getTurn = /* GraphQL */ `
       word
       order
       isValid
+      isFinalMessage
       createdAt
       updatedAt
       __typename
@@ -1040,6 +1047,7 @@ export const listTurns = /* GraphQL */ `
         word
         order
         isValid
+        isFinalMessage
         createdAt
         updatedAt
         __typename
