@@ -162,7 +162,9 @@ async function handleCreateRoom({ title }) {
       status: 'open'
     }
     const res = await API.graphql(graphqlOperation(createShiritoriRoom, { input }))
-    router.push(`/shiritori-room/${res.data.createShiritoriRoom.id}`)
+
+    // ✅ ここを replace に変更！
+    router.replace(`/shiritori-room/${res.data.createShiritoriRoom.id}`)
   } catch (e) {
     console.error('❌ 作成失敗', e)
   } finally {
