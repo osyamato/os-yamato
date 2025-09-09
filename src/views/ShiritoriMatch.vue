@@ -31,8 +31,6 @@
         >
           <div class="room-info">
             <div class="room-title">{{ room.title }}</div>
-            <div class="room-meta">モード：{{ genreLabel(room.genreKey) }}</div>
-            <div class="room-meta">文字数：{{ room.charLimit || '無制限' }}</div>
           </div>
           <button class="room-button" @click="joinRoom(room.id)">参加</button>
         </li>
@@ -60,11 +58,8 @@ import { Auth, API, graphqlOperation } from 'aws-amplify'
 import { useRouter } from 'vue-router'
 import { onActivated } from 'vue'
 
-
 import RoomCreateModal from '@/components/ShiritoriRoomCreateModal.vue'
-import {
-  listShiritoriRooms
-} from '@/graphql/queries'
+import { listShiritoriRooms } from '@/graphql/queries'
 import {
   createShiritoriRoom,
   updateShiritoriRoom
@@ -73,7 +68,7 @@ import {
   onCreateShiritoriRoom,
   onUpdateShiritoriRoom,
   onDeleteShiritoriRoom
-} from '@/graphql/subscriptions' // ✅ ここだけで定義！
+} from '@/graphql/subscriptions'
 
 const router = useRouter()
 const rooms = ref([])
@@ -83,7 +78,6 @@ const iconColor = ref('#f87171')
 let createSub = null
 let updateSub = null
 let deleteSub = null
-
 
 function getTextColor(bg) {
   if (!bg) return '#000'
@@ -95,18 +89,6 @@ function getTextColor(bg) {
   return brightness > 128 ? '#000' : '#fff'
 }
 
-// ✅ ジャンル名表示
-function genreLabel(key) {
-  const map = {
-    any: '🌈 なんでも',
-    food: '🍙 食べ物',
-    animal: '🦁 動物',
-    sport: '⚽ スポーツ',
-    place: '🗺️ 場所'
-  }
-  return map[key] || '❓ 未設定'
-}
-
 onMounted(async () => {
   try {
     const user = await Auth.currentAuthenticatedUser()
@@ -115,19 +97,17 @@ onMounted(async () => {
     console.error('❌ アイコンカラー取得失敗', e)
   }
 
-  rooms.value = []            // ← キャッシュを明示的にクリア
+  rooms.value = []
   await fetchRooms()
   subscribeToRoomChanges()
 })
 
-// ✅ クリーンアップ
 onUnmounted(() => {
   createSub?.unsubscribe?.()
   updateSub?.unsubscribe?.()
   deleteSub?.unsubscribe?.()
 })
 
-// ✅ ルーム取得
 async function fetchRooms() {
   try {
     const res = await API.graphql(graphqlOperation(listShiritoriRooms, {
@@ -139,8 +119,6 @@ async function fetchRooms() {
   }
 }
 
-
-// ✅ サブスクリプション登録
 function subscribeToRoomChanges() {
   createSub = API.graphql(graphqlOperation(onCreateShiritoriRoom)).subscribe({
     next: ({ value }) => {
@@ -156,7 +134,6 @@ function subscribeToRoomChanges() {
     next: ({ value }) => {
       const updated = value.data.onUpdateShiritoriRoom
       const index = rooms.value.findIndex(r => r.id === updated.id)
-
       if (updated.status !== 'open') {
         if (index !== -1) rooms.value.splice(index, 1)
       } else {
@@ -176,16 +153,13 @@ function subscribeToRoomChanges() {
   })
 }
 
-// ✅ 作成処理
-async function handleCreateRoom({ title, genreKey, charLimit }) {
+async function handleCreateRoom({ title }) {
   try {
     const user = await Auth.currentAuthenticatedUser()
     const input = {
       title,
       hostId: user.username,
-      status: 'open',
-      genreKey,
-      charLimit: charLimit || null
+      status: 'open'
     }
     const res = await API.graphql(graphqlOperation(createShiritoriRoom, { input }))
     router.push(`/shiritori-room/${res.data.createShiritoriRoom.id}`)
@@ -196,7 +170,6 @@ async function handleCreateRoom({ title, genreKey, charLimit }) {
   }
 }
 
-// ✅ 参加処理
 async function joinRoom(roomId) {
   try {
     const user = await Auth.currentAuthenticatedUser()
@@ -218,12 +191,10 @@ onActivated(() => {
     fetchRooms()
   }, 100)
 })
-
 </script>
 
-
 <style scoped>
-/* ヘッダー */
+/* 省略せず全体に反映 */
 .header {
   display: flex;
   flex-direction: column;
@@ -251,25 +222,21 @@ onActivated(() => {
   opacity: 0.85;
 }
 
-/* 空状態 */
 .empty-state {
   text-align: center;
   margin-top: 3rem;
 }
 
-/* カード */
 .room-card {
   position: relative;
   border: 1px solid #ccc;
   border-radius: 12px;
   background-color: #f4f4f4;
-  padding: 0.5rem 0.5rem; /* ✅ 上下余白広め */
+  padding: 0.5rem 0.5rem;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-  min-height: 140px;
+  min-height: 100px;
   overflow: hidden;
 }
-
-/* テキスト側 */
 .room-info {
   display: flex;
   flex-direction: column;
@@ -279,12 +246,6 @@ onActivated(() => {
   font-size: 1rem;
   font-weight: bold;
 }
-.room-meta {
-  font-size: 0.9rem;
-  color: #444;
-}
-
-/* 参加ボタン（右下固定） */
 .room-button {
   position: absolute;
   right: 1rem;
@@ -295,21 +256,16 @@ onActivated(() => {
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  white-space: nowrap;
 }
 .room-button:hover {
   background-color: #2563eb;
 }
 
-/* ダークモード対応 */
 @media (prefers-color-scheme: dark) {
   .room-card {
     background-color: #2e2e2e;
     border: 1px solid #fff;
     color: #f0f0f0;
-  }
-  .room-meta {
-    color: #ccc;
   }
 }
 
@@ -318,11 +274,9 @@ onActivated(() => {
   50%  { transform: translateY(-6px); }
   100% { transform: translateY(0); }
 }
-
 .animated-hint {
   animation: gentleFloat 5s ease-in-out infinite;
   text-align: center;
   line-height: 1.6;
 }
-
 </style>
