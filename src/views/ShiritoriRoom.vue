@@ -15,51 +15,55 @@
       <!-- 🎮 ゲーム中 -->
       <div v-else>
         <!-- ⏱️ 入力タイマー -->
-<div class="turn-timer" v-if="isMyTurn && !isFirstTurn && !isGameOver">
-    ⏳ {{ turnTimeLeft }} 秒以内に入力
-<div class="progress-bar">
-  <div
-    class="progress"
-    :class="{ warning: turnProgress <= 33 }"
-    :style="{
-      transform: `scaleX(${turnProgress / 100})`,
-      transformOrigin: 'right'
-    }"
-  ></div>
-</div>
+        <div class="turn-timer" v-if="isMyTurn && !isFirstTurn && !isGameOver">
+          <!-- バー（上） -->
+          <div class="progress-bar">
+            <div
+              class="progress"
+              :class="{ warning: turnProgress <= 33 }"
+              :style="{
+                transform: `scaleX(${turnProgress / 100})`,
+                transformOrigin: 'right'
+              }"
+            ></div>
+          </div>
+          <!-- 秒数（下） -->
+          <p class="turn-countdown">
+            ⏳ {{ turnTimeLeft }} 秒以内に入力
+          </p>
         </div>
 
         <!-- 🔁 ターン状態 -->
-<div class="turn-status">
-  <template v-if="shiritoriRoom?.isFinished">
-    <span class="thank-you-message">🌸 相手にお礼の一言を伝えましょう</span>
-  </template>
-  <template v-else>
-    <template v-if="isFirstTurn">
-      <template v-if="isMyTurn">
-        <span>
-          🎉 しりとりできる相手が見つかりました！<br />
-          最初の一言を入力してください。<br />
-          ゲームが始まります。
-        </span>
-      </template>
-      <template v-else>
-        <span class="waiting">
-          🎉 しりとりできる相手が見つかりました！<br />
-          相手の初手を待っています...
-        </span>
-      </template>
-    </template>
-    <template v-else>
-      <template v-if="isMyTurn">
-        <span>あなたの番です</span>
-      </template>
-      <template v-else>
-        <span class="waiting">相手の番です...</span>
-      </template>
-    </template>
-  </template>
-</div>
+        <div class="turn-status">
+          <template v-if="shiritoriRoom?.isFinished">
+            <span class="thank-you-message">🌸 相手にお礼の一言を伝えましょう</span>
+          </template>
+          <template v-else>
+            <template v-if="isFirstTurn">
+              <template v-if="isMyTurn">
+                <span>
+                  🎉 しりとりできる相手が見つかりました！<br />
+                  最初の一言を入力してください。<br />
+                  ゲームが始まります。
+                </span>
+              </template>
+              <template v-else>
+                <span class="waiting">
+                  🎉 しりとりできる相手が見つかりました！<br />
+                  相手の初手を待っています...
+                </span>
+              </template>
+            </template>
+            <template v-else>
+              <template v-if="isMyTurn">
+                <span>あなたの番です</span>
+              </template>
+              <template v-else>
+                <span class="waiting">相手の番です...</span>
+              </template>
+            </template>
+          </template>
+        </div>
 
         <!-- ✏️ 入力欄 -->
         <div class="input-area">
@@ -146,7 +150,7 @@ const lastChar = computed(() => {
 })
 
 
-const TURN_LIMIT = 15 // 秒（例）
+const TURN_LIMIT = 10 // 秒
 const turnTimer = ref<ReturnType<typeof setTimeout> | null>(null)
 const turnTimeLeft = ref(TURN_LIMIT)
 const turnProgress = ref(100)
@@ -510,8 +514,16 @@ watch(() => shiritoriRoom.value?.isFinished, (finished) => {
 
 .turn-status {
   text-align: center;
-  margin: 0.5rem 0 1rem;
-  font-size: 0.95rem;
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+}
+.turn-status .waiting {
+  color: #888;
+  font-style: italic;
+}
+.thank-you-message {
+  font-size: 1rem;
+  color: #16a34a;
 }
 
 .input-area {
@@ -539,19 +551,14 @@ input {
 }
 .user-message {
   color: #1e40af;
-}
-.bot-message {
-  color: #16a34a;
-}
-.turn-status {
-  text-align: center;
-  margin-bottom: 1rem;
-  font-size: 1.1rem;
+  font-size: 1.2rem;     /* 👈 少し大きく */
+  font-weight: 600;      /* 👈 強調 */
 }
 
-.turn-status .waiting {
-  color: #888;
-  font-style: italic;
+.bot-message {
+  color: #16a34a;
+  font-size: 1.2rem;     /* 👈 少し大きく */
+  font-weight: 600;      /* 👈 強調 */
 }
 
 .time-left {
@@ -560,7 +567,6 @@ input {
   color: #555;
   margin-top: 0.5rem;
 }
-
 @media (prefers-color-scheme: dark) {
   .time-left {
     color: #ccc;
@@ -575,6 +581,7 @@ input {
 .fade-out-leave-to {
   opacity: 0;
 }
+
 .alert {
   margin-top: 0.5rem;
   color: #dc2626;
@@ -590,18 +597,47 @@ input {
   margin-top: 1rem;
 }
 
+/* ✅ 修正: ターンタイマー構造対応 */
 .turn-timer {
+  margin: 1.2rem 0 0.5rem;
+}
+.turn-countdown {
   text-align: center;
-  margin-top: 0.5rem;
-  font-size: 0.9rem;
+  margin-top: 0.6rem;
+  font-size: 0.95rem;
+  color: #444;
+}
+@media (prefers-color-scheme: dark) {
+  .turn-countdown {
+    color: #ccc;
+  }
+}
+
+.progress-bar {
+  height: 8px;
+  width: 100%;
+  background: #ddd;
+  border-radius: 4px;
+  overflow: hidden;
+}
+@media (prefers-color-scheme: dark) {
+  .progress-bar {
+    background: #444;
+  }
 }
 
 .progress {
   height: 100%;
-  background: #f43f5e;
-  transition: width 0.2s linear;
+  background: #93c5fd; /* 通常：淡い青 (blue-300) */
+  transform-origin: right;
+  transform: scaleX(1);
+  transition: transform 1s linear, background-color 0.3s ease;
+}
+.progress.warning {
+  background: #fca5a5; /* 残り1/3で警告色：rose-300 */
 }
 
+/* 🌸 勝敗後の一言メッセージ表示 */
 .final-messages {
   margin-top: 2rem;
   padding: 1rem 1.5rem;
@@ -612,20 +648,17 @@ input {
   animation: fadeIn 0.6s ease;
   text-align: center;
 }
-
 @media (prefers-color-scheme: dark) {
   .final-messages {
     background-color: rgba(30, 30, 30, 0.85);
     color: #eee;
   }
 }
-
 .final-messages h3 {
   font-size: 1.2rem;
   font-weight: bold;
   margin-bottom: 0.8rem;
 }
-
 .final-message-content {
   font-size: 1rem;
   line-height: 1.6;
@@ -633,14 +666,11 @@ input {
   word-break: break-word;
   margin-bottom: 1rem;
 }
-
-/* 入力欄のみ中央に配置・ボタンなし */
 .final-message-form {
   display: flex;
   justify-content: center;
   margin-top: 1rem;
 }
-
 .final-message-form textarea {
   width: 80%;
   max-width: 400px;
@@ -654,39 +684,12 @@ input {
   color: #000;
   text-align: center;
 }
-
 @media (prefers-color-scheme: dark) {
   .final-message-form textarea {
     background: #222;
     color: #fff;
     border: 1px solid #555;
   }
-}
-
-.progress-bar {
-  height: 8px;
-  width: 100%;
-  background: #ddd;
-  border-radius: 4px;
-  overflow: hidden;
-  margin-top: 4px;
-}
-
-@media (prefers-color-scheme: dark) {
-  .progress-bar {
-    background: #444;
-  }
-}
-
-.progress {
-  height: 100%;
-  background: #93c5fd; /* 通常：淡い青 (blue-300) */
-  transform-origin: right;
-  transition: transform 1s linear, background-color 0.3s ease;
-}
-
-.progress.warning {
-  background: #fca5a5; /* 残り1/3で警告色：淡い赤 (rose-300) */
 }
 
 </style> 

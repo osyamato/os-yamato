@@ -4,28 +4,15 @@
       <h2 class="modal-title">🌱 ルームを作成</h2>
 
       <label class="modal-label">ルーム名</label>
-      <input v-model="title" class="modal-input" placeholder="例：ねこ部屋" />
-
-      <label class="modal-label">ジャンル</label>
-      <select v-model="genreKey" class="modal-select">
-        <option disabled value="">選択してください</option>
-        <option value="any">🎲 制限なし</option>
-        <option value="animal">🦁 動物</option>
-        <option value="food">🍎 食べ物</option>
-      </select>
-
-      <label class="modal-label">文字数制限（省略可）</label>
       <input
-        type="number"
-        v-model.number="charLimit"
+        v-model="title"
         class="modal-input"
-        placeholder="例：3"
-        min="1"
+        placeholder="例：ねこ部屋"
       />
 
-<div class="modal-actions">
-  <YamatoButton @click="handleCreate">作成</YamatoButton>
-</div>
+      <div class="modal-actions">
+        <YamatoButton @click="handleCreate">作成</YamatoButton>
+      </div>
     </div>
   </Modal>
 </template>
@@ -33,7 +20,7 @@
 <script setup>
 import { ref } from 'vue'
 import Modal from '@/components/Modal.vue'
-import YamatoButton from '@/components/YamatoButton.vue' // ✅ 追加
+import YamatoButton from '@/components/YamatoButton.vue'
 
 const props = defineProps({
   visible: Boolean
@@ -42,23 +29,19 @@ const props = defineProps({
 const emit = defineEmits(['close', 'create'])
 
 const title = ref('')
-const genreKey = ref('')
-const charLimit = ref(null)
 
 function handleClose() {
   emit('close')
 }
 
 function handleCreate() {
-  if (!title.value || !genreKey.value) {
-    alert('ルーム名とジャンルを選択してください')
+  if (!title.value.trim()) {
+    alert('ルーム名を入力してください')
     return
   }
 
   emit('create', {
-    title: title.value,
-    genreKey: genreKey.value,
-    charLimit: charLimit.value || null
+    title: title.value.trim()
   })
 
   emit('close')
@@ -85,7 +68,6 @@ function handleCreate() {
   color: #555;
 }
 
-.modal-select,
 .modal-input {
   width: 100%;
   padding: 0.6rem;
@@ -93,7 +75,7 @@ function handleCreate() {
   border: 1px solid #ccc;
   border-radius: 6px;
   margin-bottom: 1rem;
-  background-color: white;  /* ✅ ライトモード白背景 */
+  background-color: white;
   color: black;
 }
 
@@ -102,9 +84,8 @@ function handleCreate() {
 }
 
 @media (prefers-color-scheme: dark) {
-  .modal-select,
   .modal-input {
-    background-color: #222;   /* ✅ ダークモード背景 */
+    background-color: #222;
     color: white;
     border: 1px solid #666;
   }
@@ -114,4 +95,3 @@ function handleCreate() {
   }
 }
 </style>
-
