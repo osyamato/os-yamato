@@ -30,31 +30,36 @@
         </div>
 
         <!-- 🔁 ターン状態 -->
-        <div class="turn-status">
-          <template v-if="isFirstTurn">
-            <template v-if="isMyTurn">
-              <span>
-                🎉 しりとりできる相手が見つかりました！<br />
-                最初の一言を入力してください。<br />
-                ゲームが始まります。
-              </span>
-            </template>
-            <template v-else>
-              <span class="waiting">
-                🎉 しりとりできる相手が見つかりました！<br />
-                相手の初手を待っています...
-              </span>
-            </template>
-          </template>
-          <template v-else>
-            <template v-if="isMyTurn">
-              <span>あなたの番です</span>
-            </template>
-            <template v-else>
-              <span class="waiting">相手の番です...</span>
-            </template>
-          </template>
-        </div>
+<div class="turn-status">
+  <template v-if="shiritoriRoom?.isFinished">
+    <span class="thank-you-message">🌸 相手にお礼の一言を伝えましょう</span>
+  </template>
+  <template v-else>
+    <template v-if="isFirstTurn">
+      <template v-if="isMyTurn">
+        <span>
+          🎉 しりとりできる相手が見つかりました！<br />
+          最初の一言を入力してください。<br />
+          ゲームが始まります。
+        </span>
+      </template>
+      <template v-else>
+        <span class="waiting">
+          🎉 しりとりできる相手が見つかりました！<br />
+          相手の初手を待っています...
+        </span>
+      </template>
+    </template>
+    <template v-else>
+      <template v-if="isMyTurn">
+        <span>あなたの番です</span>
+      </template>
+      <template v-else>
+        <span class="waiting">相手の番です...</span>
+      </template>
+    </template>
+  </template>
+</div>
 
         <!-- ✏️ 入力欄 -->
         <div class="input-area">
@@ -162,12 +167,12 @@ watch(lastChar, (char) => {
 
 
 const isInputDisabled = computed(() => {
-  // ゲーム終了後でまだ自分が一言を投稿していないなら、入力可能
-  if (shiritoriRoom.value?.isFinished && !hasPostedFinalMessage.value) {
-    return false
+  // ゲーム終了後は、すでに自分が一言を投稿済みなら入力無効
+  if (shiritoriRoom.value?.isFinished) {
+    return hasPostedFinalMessage.value
   }
 
-  // 通常のターン中は、自分の番以外は無効
+  // ゲーム中は、自分の番でなければ無効
   return !isMyTurn.value
 })
 

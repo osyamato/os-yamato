@@ -2,7 +2,7 @@
   <div class="p-4">
     <!-- ヘッダー -->
     <div class="header header-animated">
-      <h2 class="header-title">しりとり マッチング</h2>
+      <h2 class="header-title">誰かとしりとり</h2>
       <button
         class="icon-button"
         @click="showModal = true"
