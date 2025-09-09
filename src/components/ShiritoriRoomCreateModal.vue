@@ -23,11 +23,9 @@
         min="1"
       />
 
-      <div class="modal-actions">
-        <YamatoButton color="green" @click="handleCreate">
-          作成する
-        </YamatoButton>
-      </div>
+<div class="modal-actions">
+  <YamatoButton @click="handleCreate">作成</YamatoButton>
+</div>
     </div>
   </Modal>
 </template>
@@ -35,11 +33,12 @@
 <script setup>
 import { ref } from 'vue'
 import Modal from '@/components/Modal.vue'
-import YamatoButton from '@/components/YamatoButton.vue'
+import YamatoButton from '@/components/YamatoButton.vue' // ✅ 追加
 
 const props = defineProps({
   visible: Boolean
 })
+
 const emit = defineEmits(['close', 'create'])
 
 const title = ref('')
@@ -55,23 +54,29 @@ function handleCreate() {
     alert('ルーム名とジャンルを選択してください')
     return
   }
+
   emit('create', {
     title: title.value,
     genreKey: genreKey.value,
     charLimit: charLimit.value || null
   })
+
   emit('close')
 }
 </script>
 
 <style scoped>
-/* モーダル本体 */
 .room-create-modal {
   padding: 1.5rem;
   text-align: center;
 }
 
-/* ラベル */
+.modal-title {
+  font-size: 1.4rem;
+  font-weight: bold;
+  margin-bottom: 1.2rem;
+}
+
 .modal-label {
   display: block;
   text-align: left;
@@ -80,7 +85,6 @@ function handleCreate() {
   color: #555;
 }
 
-/* 入力欄とセレクトボックス */
 .modal-select,
 .modal-input {
   width: 100%;
@@ -89,31 +93,25 @@ function handleCreate() {
   border: 1px solid #ccc;
   border-radius: 6px;
   margin-bottom: 1rem;
-  background-color: #fff; /* ライトモード用 */
-  color: #111;
+  background-color: white;  /* ✅ ライトモード白背景 */
+  color: black;
 }
 
-/* アクションボタンエリア */
 .modal-actions {
   margin-top: 1.4rem;
 }
 
-/* ダークモード */
 @media (prefers-color-scheme: dark) {
+  .modal-select,
+  .modal-input {
+    background-color: #222;   /* ✅ ダークモード背景 */
+    color: white;
+    border: 1px solid #666;
+  }
+
   .modal-label {
     color: #ccc;
   }
-
-  .modal-input,
-  .modal-select {
-    background-color: #2e2e2e;
-    color: #fff;
-    border-color: #444;
-  }
-
-  .modal-input::placeholder,
-  .modal-select::placeholder {
-    color: #aaa;
-  }
 }
 </style>
+

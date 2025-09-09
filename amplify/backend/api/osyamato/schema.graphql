@@ -359,7 +359,7 @@ type ShiritoriRoom
   @auth(rules: [
     { allow: owner, ownerField: "hostId", operations: [create, read, update, delete] },
     { allow: owner, ownerField: "guestId", operations: [read, update, delete] },
-    { allow: private, operations: [read, update] }  # ✅ ← 追加
+    { allow: private, operations: [read, update] }
   ]) {
   id: ID!
   title: String!
@@ -370,6 +370,12 @@ type ShiritoriRoom
   genreKey: String
   currentTurn: String
   winnerId: String
+
+  # ✅ すべて null 許容にする（← マイグレーションしやすくなる）
+  isFinished: Boolean
+  finalMessageHost: String
+  finalMessageGuest: String
+
   createdAt: AWSDateTime
   updatedAt: AWSDateTime
 }
@@ -386,6 +392,10 @@ type Turn
   word: String!
   order: Int!
   isValid: Boolean!
+
+  # ✅ nullable にする（新規追加なので）
+  isFinalMessage: Boolean
+
   createdAt: AWSDateTime
   updatedAt: AWSDateTime
 }

@@ -2,7 +2,7 @@
   <div class="p-4">
     <!-- ヘッダー -->
     <div class="header header-animated">
-      <h2 class="header-title">しりとり マッチング</h2>
+      <h2 class="header-title">誰かとしりとり</h2>
       <button
         class="icon-button"
         @click="showModal = true"
@@ -13,54 +13,89 @@
     </div>
 
     <!-- モーダル -->
-<RoomCreateModal
-  v-show="showModal"
-  :visible="showModal"
-  @close="showModal = false"
-/>
+    <RoomCreateModal
+      v-show="showModal"
+      :visible="showModal"
+      @close="showModal = false"
+      @create="handleCreateRoom"
+    />
 
-    <!-- 空状態 -->
-    <div v-if="rooms.length === 0" class="empty-state">
-      <h3 class="text-lg font-medium mb-1">🕊️ 待機中の部屋</h3>
-      <p class="text-gray-400">誰も待機していません。</p>
-      <p class="text-gray-400 text-sm mt-1">
-        ＋アイコンから部屋を作って、少しだけ待ってみましょう。
-      </p>
-    </div>
+    <!-- 分岐表示 -->
+    <template v-if="rooms.length > 0">
+      <!-- ルームリスト -->
+      <ul class="space-y-4 max-w-xl mx-auto mt-6">
+        <li
+          v-for="room in rooms"
+          :key="room.id"
+          class="room-card"
+        >
+          <div class="room-info">
+            <div class="room-title">{{ room.title }}</div>
+            <div class="room-meta">モード：{{ genreLabel(room.genreKey) }}</div>
+            <div class="room-meta">文字数：{{ room.charLimit || '無制限' }}</div>
+          </div>
+          <button class="room-button" @click="joinRoom(room.id)">参加</button>
+        </li>
+      </ul>
+    </template>
 
-    <!-- ルームリスト -->
-    <ul v-else class="space-y-4 max-w-xl mx-auto mt-6">
-      <li
-        v-for="room in rooms"
-        :key="room.id"
-        class="room-card"
-      >
-        <div class="room-info">
-          <div class="room-title">{{ room.title }}</div>
-          <div class="room-meta">モード：{{ genreLabel(room.genreKey) }}</div>
-          <div class="room-meta">文字数：{{ room.charLimit || '無制限' }}</div>
-        </div>
-        <button class="room-button" @click="joinRoom(room.id)">参加</button>
-      </li>
-    </ul>
+    <template v-else>
+      <!-- 空状態 -->
+      <div class="empty-state animated-hint">
+        <p class="text-gray-400 text-lg font-medium">
+          誰も待機していません。
+        </p>
+        <p class="text-gray-400 text-lg font-medium mt-2">
+          ＋アイコンから部屋を作って<br>
+          少しだけ待ってみましょう。
+        </p>
+      </div>
+    </template>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { Auth, API, graphqlOperation } from 'aws-amplify'
 import { useRouter } from 'vue-router'
+import { onActivated } from 'vue'
+
 
 import RoomCreateModal from '@/components/ShiritoriRoomCreateModal.vue'
-import { listShiritoriRooms } from '@/graphql/queries'
-import { createShiritoriRoom, updateShiritoriRoom } from '@/graphql/mutations'
+import {
+  listShiritoriRooms
+} from '@/graphql/queries'
+import {
+  createShiritoriRoom,
+  updateShiritoriRoom
+} from '@/graphql/mutations'
+import {
+  onCreateShiritoriRoom,
+  onUpdateShiritoriRoom,
+  onDeleteShiritoriRoom
+} from '@/graphql/subscriptions' // ✅ ここだけで定義！
 
 const router = useRouter()
 const rooms = ref([])
 const showModal = ref(false)
 const iconColor = ref('#f87171')
 
-// ジャンル表示
+let createSub = null
+let updateSub = null
+let deleteSub = null
+
+
+function getTextColor(bg) {
+  if (!bg) return '#000'
+  const color = bg.replace('#', '')
+  const r = parseInt(color.substring(0, 2), 16)
+  const g = parseInt(color.substring(2, 4), 16)
+  const b = parseInt(color.substring(4, 6), 16)
+  const brightness = (r * 299 + g * 587 + b * 114) / 1000
+  return brightness > 128 ? '#000' : '#fff'
+}
+
+// ✅ ジャンル名表示
 function genreLabel(key) {
   const map = {
     any: '🌈 なんでも',
@@ -72,18 +107,6 @@ function genreLabel(key) {
   return map[key] || '❓ 未設定'
 }
 
-// 背景に応じてテキストカラー
-function getTextColor(bg) {
-  if (!bg) return '#000'
-  const color = bg.replace('#', '')
-  const r = parseInt(color.substring(0, 2), 16)
-  const g = parseInt(color.substring(2, 4), 16)
-  const b = parseInt(color.substring(4, 6), 16)
-  const brightness = (r * 299 + g * 587 + b * 114) / 1000
-  return brightness > 128 ? '#000' : '#fff'
-}
-
-// 初期化処理
 onMounted(async () => {
   try {
     const user = await Auth.currentAuthenticatedUser()
@@ -92,10 +115,19 @@ onMounted(async () => {
     console.error('❌ アイコンカラー取得失敗', e)
   }
 
-  fetchRooms()
+  rooms.value = []            // ← キャッシュを明示的にクリア
+  await fetchRooms()
+  subscribeToRoomChanges()
 })
 
-// 部屋取得
+// ✅ クリーンアップ
+onUnmounted(() => {
+  createSub?.unsubscribe?.()
+  updateSub?.unsubscribe?.()
+  deleteSub?.unsubscribe?.()
+})
+
+// ✅ ルーム取得
 async function fetchRooms() {
   try {
     const res = await API.graphql(graphqlOperation(listShiritoriRooms, {
@@ -107,7 +139,44 @@ async function fetchRooms() {
   }
 }
 
-// 作成処理
+
+// ✅ サブスクリプション登録
+function subscribeToRoomChanges() {
+  createSub = API.graphql(graphqlOperation(onCreateShiritoriRoom)).subscribe({
+    next: ({ value }) => {
+      const newRoom = value.data.onCreateShiritoriRoom
+      if (newRoom.status === 'open') {
+        rooms.value.push(newRoom)
+      }
+    },
+    error: e => console.error('onCreate error', e)
+  })
+
+  updateSub = API.graphql(graphqlOperation(onUpdateShiritoriRoom)).subscribe({
+    next: ({ value }) => {
+      const updated = value.data.onUpdateShiritoriRoom
+      const index = rooms.value.findIndex(r => r.id === updated.id)
+
+      if (updated.status !== 'open') {
+        if (index !== -1) rooms.value.splice(index, 1)
+      } else {
+        if (index !== -1) rooms.value[index] = updated
+        else rooms.value.push(updated)
+      }
+    },
+    error: e => console.error('onUpdate error', e)
+  })
+
+  deleteSub = API.graphql(graphqlOperation(onDeleteShiritoriRoom)).subscribe({
+    next: ({ value }) => {
+      const deleted = value.data.onDeleteShiritoriRoom
+      rooms.value = rooms.value.filter(r => r.id !== deleted.id)
+    },
+    error: e => console.error('onDelete error', e)
+  })
+}
+
+// ✅ 作成処理
 async function handleCreateRoom({ title, genreKey, charLimit }) {
   try {
     const user = await Auth.currentAuthenticatedUser()
@@ -127,7 +196,7 @@ async function handleCreateRoom({ title, genreKey, charLimit }) {
   }
 }
 
-// 参加処理
+// ✅ 参加処理
 async function joinRoom(roomId) {
   try {
     const user = await Auth.currentAuthenticatedUser()
@@ -142,7 +211,16 @@ async function joinRoom(roomId) {
     console.error('❌ 参加失敗', e)
   }
 }
+
+onActivated(() => {
+  rooms.value = []
+  setTimeout(() => {
+    fetchRooms()
+  }, 100)
+})
+
 </script>
+
 
 <style scoped>
 /* ヘッダー */
@@ -234,4 +312,17 @@ async function joinRoom(roomId) {
     color: #ccc;
   }
 }
+
+@keyframes gentleFloat {
+  0%   { transform: translateY(0); }
+  50%  { transform: translateY(-6px); }
+  100% { transform: translateY(0); }
+}
+
+.animated-hint {
+  animation: gentleFloat 5s ease-in-out infinite;
+  text-align: center;
+  line-height: 1.6;
+}
+
 </style>

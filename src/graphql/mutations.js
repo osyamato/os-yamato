@@ -1393,6 +1393,9 @@ export const createShiritoriRoom = /* GraphQL */ `
       genreKey
       currentTurn
       winnerId
+      isFinished
+      finalMessageHost
+      finalMessageGuest
       createdAt
       updatedAt
       __typename
@@ -1414,6 +1417,9 @@ export const updateShiritoriRoom = /* GraphQL */ `
       genreKey
       currentTurn
       winnerId
+      isFinished
+      finalMessageHost
+      finalMessageGuest
       createdAt
       updatedAt
       __typename
@@ -1435,6 +1441,9 @@ export const deleteShiritoriRoom = /* GraphQL */ `
       genreKey
       currentTurn
       winnerId
+      isFinished
+      finalMessageHost
+      finalMessageGuest
       createdAt
       updatedAt
       __typename
@@ -1453,6 +1462,7 @@ export const createTurn = /* GraphQL */ `
       word
       order
       isValid
+      isFinalMessage
       createdAt
       updatedAt
       __typename
@@ -1471,6 +1481,7 @@ export const updateTurn = /* GraphQL */ `
       word
       order
       isValid
+      isFinalMessage
       createdAt
       updatedAt
       __typename
@@ -1489,6 +1500,7 @@ export const deleteTurn = /* GraphQL */ `
       word
       order
       isValid
+      isFinalMessage
       createdAt
       updatedAt
       __typename
