@@ -52,10 +52,10 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 import { Auth, API, graphqlOperation } from 'aws-amplify'
-import { useRouter } from 'vue-router'
+import { onBeforeRouteLeave, useRouter } from 'vue-router'
 import { onActivated } from 'vue'
 
 import RoomCreateModal from '@/components/ShiritoriRoomCreateModal.vue'
@@ -191,6 +191,16 @@ onActivated(() => {
     fetchRooms()
   }, 100)
 })
+
+onBeforeRouteLeave((to, from, next) => {
+  if (from.name === 'shiritori-room') {
+    next({ name: 'shiritori' })  // ← 強制的にトップへ
+  } else {
+    next()
+  }
+})
+
+
 </script>
 
 <style scoped>

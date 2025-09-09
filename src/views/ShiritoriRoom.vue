@@ -190,8 +190,8 @@ const isMyTurn = computed(() => {
 })
 
 
-watch(isMyTurn, (newVal) => {
-  if (newVal && !isFirstTurn.value && !isGameOver.value) {
+watch(isMyTurn, () => {
+  if (!isFirstTurn.value && !isGameOver.value) {
     startTurnTimer()
   } else {
     stopTurnTimer()
@@ -243,7 +243,7 @@ onUnmounted(() => {
 function fadeOutAndNavigate(path: string) {
   isFadingOut.value = true
   setTimeout(() => {
-    router.push({ name: path })
+    router.replace({ name: path }) // ← push → replace に変更！
   }, 800)
 }
 
@@ -391,7 +391,7 @@ function stopMatchTimer() {
 }
 
 function startTurnTimer() {
-  stopTurnTimer() // 既存のタイマーを止める
+  stopTurnTimer()
   turnTimeLeft.value = TURN_LIMIT
   turnProgress.value = 100
 
@@ -403,9 +403,15 @@ function startTurnTimer() {
 
     if (elapsed >= TURN_LIMIT) {
       stopTurnTimer()
-      showResultMessage.value = '時間切れ…あなたの負けです⏰'
+
+      if (isMyTurn.value) {
+        showResultMessage.value = '時間切れ…あなたの負けです⏰'
+      } else {
+        showResultMessage.value = '相手の時間切れ！あなたの勝ちです🎉'
+      }
+
       isGameOver.value = true
-markGameAsFinished() 
+      markGameAsFinished()
     }
   }, 200)
 }
@@ -475,7 +481,7 @@ async function submitFinalMessage(message: string) {
 watch(() => shiritoriRoom.value?.isFinished, (finished) => {
   if (finished) {
     setTimeout(() => {
-      fadeOutAndNavigate('shiritori-match')
+      router.replace({ name: 'shiritori-match' })  // ← replace にすることで履歴を上書き
     }, 20000)
   }
 })
