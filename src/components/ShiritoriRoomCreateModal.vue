@@ -23,9 +23,9 @@
         min="1"
       />
 
-      <div class="modal-actions">
-        <button @click="handleCreate" class="primary">作成する</button>
-      </div>
+<div class="modal-actions">
+  <YamatoButton @click="handleCreate">作成</YamatoButton>
+</div>
     </div>
   </Modal>
 </template>
@@ -33,10 +33,12 @@
 <script setup>
 import { ref } from 'vue'
 import Modal from '@/components/Modal.vue'
+import YamatoButton from '@/components/YamatoButton.vue' // ✅ 追加
 
 const props = defineProps({
   visible: Boolean
 })
+
 const emit = defineEmits(['close', 'create'])
 
 const title = ref('')
@@ -52,11 +54,13 @@ function handleCreate() {
     alert('ルーム名とジャンルを選択してください')
     return
   }
+
   emit('create', {
     title: title.value,
     genreKey: genreKey.value,
     charLimit: charLimit.value || null
   })
+
   emit('close')
 }
 </script>
@@ -65,6 +69,12 @@ function handleCreate() {
 .room-create-modal {
   padding: 1.5rem;
   text-align: center;
+}
+
+.modal-title {
+  font-size: 1.4rem;
+  font-weight: bold;
+  margin-bottom: 1.2rem;
 }
 
 .modal-label {
@@ -83,24 +93,25 @@ function handleCreate() {
   border: 1px solid #ccc;
   border-radius: 6px;
   margin-bottom: 1rem;
+  background-color: white;  /* ✅ ライトモード白背景 */
+  color: black;
 }
 
 .modal-actions {
   margin-top: 1.4rem;
 }
 
-button.primary {
-  background-color: #222;
-  color: white;
-  border: none;
-  padding: 0.7rem 1.4rem;
-  border-radius: 8px;
-  font-size: 1rem;
-  cursor: pointer;
-}
+@media (prefers-color-scheme: dark) {
+  .modal-select,
+  .modal-input {
+    background-color: #222;   /* ✅ ダークモード背景 */
+    color: white;
+    border: 1px solid #666;
+  }
 
-button.primary:hover {
-  background-color: #444;
+  .modal-label {
+    color: #ccc;
+  }
 }
 </style>
 

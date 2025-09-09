@@ -12,17 +12,24 @@
         <p class="time-left">⏳ 残り {{ timeLeft }} 秒</p>
       </div>
 
-      <!-- 🎮 ゲーム開始後 -->
+      <!-- 🎮 ゲーム中 -->
       <div v-else>
-        <!-- ⏱️ ターンタイマー -->
-        <div class="turn-timer" v-if="isMyTurn && !isFirstTurn && !isGameOver">
-          ⏳ {{ turnTimeLeft }} 秒以内に入力
-          <div class="progress-bar">
-            <div class="progress" :style="{ width: `${turnProgress}%` }"></div>
-          </div>
+        <!-- ⏱️ 入力タイマー -->
+<div class="turn-timer" v-if="isMyTurn && !isFirstTurn && !isGameOver">
+    ⏳ {{ turnTimeLeft }} 秒以内に入力
+<div class="progress-bar">
+  <div
+    class="progress"
+    :class="{ warning: turnProgress <= 33 }"
+    :style="{
+      transform: `scaleX(${turnProgress / 100})`,
+      transformOrigin: 'right'
+    }"
+  ></div>
+</div>
         </div>
 
-        <!-- 🔁 ターン状態表示 -->
+        <!-- 🔁 ターン状態 -->
         <div class="turn-status">
           <template v-if="isFirstTurn">
             <template v-if="isMyTurn">
@@ -51,22 +58,23 @@
 
         <!-- ✏️ 入力欄 -->
         <div class="input-area">
-<input
-  v-model="inputWord"
-  @keydown.enter="handleSubmit"
-  :disabled="isInputDisabled"
-  placeholder="ひらがなを入力してね"
-/>
+          <input
+            v-model="inputWord"
+            @keydown.enter="handleSubmit"
+            :disabled="isInputDisabled"
+            placeholder="ひらがなを入力してね"
+          />
           <div v-if="alertMessage" class="alert">{{ alertMessage }}</div>
         </div>
 
-<div v-if="shiritoriRoom?.isFinished" class="final-messages">
-  <p>最後の言葉</p>
-  <p v-if="shiritoriRoom?.finalMessageHost">{{ shiritoriRoom.finalMessageHost }}</p>
-  <p v-if="shiritoriRoom?.finalMessageGuest">{{ shiritoriRoom.finalMessageGuest }}</p>
-</div>
+        <!-- 🌸 最後の一言 -->
+        <div v-if="shiritoriRoom?.isFinished" class="final-messages">
+          <p>最後の言葉</p>
+          <p v-if="shiritoriRoom?.finalMessageHost">{{ shiritoriRoom.finalMessageHost }}</p>
+          <p v-if="shiritoriRoom?.finalMessageGuest">{{ shiritoriRoom.finalMessageGuest }}</p>
+        </div>
 
-        <!-- 🏁 勝敗結果表示 -->
+        <!-- 🏁 勝敗メッセージ -->
         <div v-if="showResultMessage" class="result-message">
           {{ showResultMessage }}
         </div>
@@ -86,8 +94,7 @@
             </div>
           </div>
         </div>
-
-    </div>
+      </div>
     </div>
   </transition>
 </template>
@@ -583,22 +590,6 @@ input {
   margin-top: 0.5rem;
   font-size: 0.9rem;
 }
-.progress {
-  height: 100%;
-  background: #f43f5e;
-  transform-origin: left; /* 👈 これを追加 */
-  transform: scaleX(0);
-  animation: growLeft 15s linear forwards;
-}
-
-@keyframes growLeft {
-  from {
-    transform: scaleX(0);
-  }
-  to {
-    transform: scaleX(1);
-  }
-}
 
 .progress {
   height: 100%;
@@ -665,6 +656,32 @@ input {
     color: #fff;
     border: 1px solid #555;
   }
+}
+
+.progress-bar {
+  height: 8px;
+  width: 100%;
+  background: #ddd;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .progress-bar {
+    background: #444;
+  }
+}
+
+.progress {
+  height: 100%;
+  background: #93c5fd; /* 通常：淡い青 (blue-300) */
+  transform-origin: right;
+  transition: transform 1s linear, background-color 0.3s ease;
+}
+
+.progress.warning {
+  background: #fca5a5; /* 残り1/3で警告色：淡い赤 (rose-300) */
 }
 
 </style> 
