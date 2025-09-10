@@ -20,35 +20,29 @@
       @create="handleCreateRoom"
     />
 
-    <!-- 分岐表示 -->
+    <!-- ルームリスト or 空状態 -->
     <template v-if="rooms.length > 0">
-      <!-- ルームリスト -->
-      <ul class="space-y-4 max-w-xl mx-auto mt-6">
-        <li
-          v-for="room in rooms"
-          :key="room.id"
-          class="room-card"
-        >
-          <div class="room-info">
-            <div class="room-title">{{ room.title }}</div>
+      <ul class="room-list">
+        <li v-for="room in rooms" :key="room.id" class="room-card">
+          <div class="room-item">
+            <div class="room-title" :title="room.title">{{ room.title }}</div>
+            <button class="room-button" @click="joinRoom(room.id)">参加</button>
           </div>
-          <button class="room-button" @click="joinRoom(room.id)">参加</button>
         </li>
       </ul>
     </template>
 
-    <template v-else>
-      <!-- 空状態 -->
-      <div class="empty-state animated-hint">
-        <p class="text-gray-400 text-lg font-medium">
-          誰も待機していません。
-        </p>
-        <p class="text-gray-400 text-lg font-medium mt-2">
-          ＋アイコンから部屋を作って<br>
-          少しだけ待ってみましょう。
-        </p>
-      </div>
-    </template>
+<template v-else>
+  <div class="empty-state animated-hint">
+    <p class="text-gray-400 text-xl font-medium">
+      誰も待機していません。
+    </p>
+    <p class="text-gray-400 text-xl font-medium mt-2">
+      ＋アイコンから部屋を作って<br />
+      少しだけ待ってみましょう。
+    </p>
+  </div>
+</template>
   </div>
 </template>
 
@@ -206,18 +200,19 @@ onBeforeRouteLeave((to, from, next) => {
 </script>
 
 <style scoped>
-/* 省略せず全体に反映 */
 .header {
   display: flex;
   flex-direction: column;
   align-items: center;
   margin-bottom: 2rem;
 }
+
 .header-title {
   font-size: 1.8rem;
   font-weight: bold;
   margin-bottom: 1rem;
 }
+
 .icon-button {
   border: none;
   border-radius: 50%;
@@ -234,43 +229,62 @@ onBeforeRouteLeave((to, from, next) => {
   opacity: 0.85;
 }
 
-.empty-state {
-  text-align: center;
-  margin-top: 3rem;
+.room-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0; /* ← 🔥 隙間ゼロに */
+  max-width: 640px;
+  margin: 1rem auto 0; /* 🔽 上だけ少し */
+  padding: 0;
+  list-style: none;
 }
 
 .room-card {
-  position: relative;
+  background-color: #f4f4f4;
   border: 1px solid #ccc;
   border-radius: 12px;
-  background-color: #f4f4f4;
-  padding: 0.5rem 0.5rem;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-  min-height: 100px;
-  overflow: hidden;
-}
-.room-info {
   display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  margin: 0;          /* ✅ 上下余白なし */
+  padding: 0.6rem 1rem; /* ⬅️ 最小限の内側パディング */
 }
+
+.room-item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
 .room-title {
   font-size: 1rem;
   font-weight: bold;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
 }
+
 .room-button {
-  position: absolute;
-  right: 1rem;
-  bottom: 1rem;
   padding: 0.5rem 1.2rem;
   background-color: #3b82f6;
   color: white;
   border: none;
   border-radius: 8px;
   cursor: pointer;
+  white-space: nowrap;
 }
 .room-button:hover {
   background-color: #2563eb;
+}
+
+.empty-state {
+  text-align: center;
+  margin-top: 3rem;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -279,13 +293,20 @@ onBeforeRouteLeave((to, from, next) => {
     border: 1px solid #fff;
     color: #f0f0f0;
   }
+  .room-button {
+    background-color: #60a5fa;
+  }
+  .room-button:hover {
+    background-color: #3b82f6;
+  }
 }
 
 @keyframes gentleFloat {
-  0%   { transform: translateY(0); }
-  50%  { transform: translateY(-6px); }
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
   100% { transform: translateY(0); }
 }
+
 .animated-hint {
   animation: gentleFloat 5s ease-in-out infinite;
   text-align: center;
