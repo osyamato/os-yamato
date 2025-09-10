@@ -165,11 +165,17 @@ function getTextColor(bg) {
   return darkColors.includes(bg.toLowerCase()) ? 'white' : 'black'
 }
 
-// 🎯 最後の有効な bot 応答だけ使う
 function getLastValidBotWord() {
   for (let i = history.value.length - 1; i >= 0; i--) {
     const bot = history.value[i].bot
-    if (bot && bot !== '...' && !bot.includes('じゃないみたい')) {
+    if (
+      bot &&
+      bot !== '...' &&
+      !bot.includes('じゃないみたい') &&
+      !bot.includes('で始めてね') && // ← ここ追加
+      !bot.includes('まいりました') && // bot降参時
+      /^[ぁ-んー]+$/.test(bot)           // ← ひらがなのみ
+    ) {
       return bot
     }
   }
