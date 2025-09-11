@@ -168,6 +168,15 @@
       <!-- 🗳️ 入力栏 -->
       <div class="input-area">
         <button type="button" @click="openPhotoPicker" class="circle-button">🖼</button>
+ <button type="button" class="circle-button" @click="triggerFileInput">📷</button>
+  <input
+    ref="fileInputRef"
+    type="file"
+    accept="image/*"
+    @change="handleLocalImageUpload"
+    style="display: none"
+  />
+
         <textarea
           ref="textareaRef"
           v-model="newMessage"
@@ -266,6 +275,13 @@ const messageAnimationEnabled = ref(true)
 const messageEffectEnabled = userSettings.value?.messageEffectEnabled ?? true
 
 const { maybePlayEffect } = useChatEffects(chatEffect, messageAnimationEnabled)
+
+
+const fileInputRef = ref(null)
+
+function triggerFileInput() {
+  fileInputRef.value?.click()
+}
 
 let reactionSubscription = null
 
@@ -1187,6 +1203,93 @@ function linkify(content) {
   }).replace(/\n/g, '<br>')
 }
 
+async function handleLocalImageUpload(event) {
+  const file = event.target.files?.[0]
+  if (!file) return
+
+  const timestamp = Date.now()
+  const fileName = `chat/${mySub.value}/${timestamp}_${file.name}`
+  const thumbnailFileName = fileName.replace(/(\.\w+)$/, '_thumb$1')
+  const now = new Date()
+  const tempId = `temp-${now.getTime()}`
+
+  // ✅ 仮メッセージ追加（imageUrl は空）
+  const previewThumbUrl = URL.createObjectURL(file)
+  messages.value.push({
+    id: tempId,
+    roomId: roomId.value,
+    senderSub: mySub.value,
+    senderYamatoId: myYamatoId.value,
+    receiverSub: receiverSub.value,
+    receiverYamatoId: receiverYamatoId.value,
+    content: '',
+    contentType: 'image',
+    imageKey: fileName,
+    thumbnailKey: thumbnailFileName,
+    timestamp: now.toISOString(),
+    thumbnailUrl: previewThumbUrl,
+    isTemporary: true
+  })
+
+  await nextTick()
+  scrollToBottom()
+
+  try {
+    const thumbnailBlob = await createThumbnail(file)
+
+    await Storage.put(fileName, file, {
+      level: 'public',
+      contentType: file.type,
+    })
+
+    await Storage.put(thumbnailFileName, thumbnailBlob, {
+      level: 'public',
+      contentType: thumbnailBlob.type,
+    })
+
+    await sendImageMessage(fileName, thumbnailFileName)
+  } catch (error) {
+    console.error('画像アップロード中にエラー:', error)
+    // ここでエラー処理を入れるなら、UI表示のままでもOK
+  } finally {
+    // ✅ メモリ解放
+    URL.revokeObjectURL(previewThumbUrl)
+  }
+}
+async function createThumbnail(file) {
+  const img = new Image()
+  const objectURL = URL.createObjectURL(file)
+  img.src = objectURL
+  await new Promise((resolve) => (img.onload = resolve))
+
+  const canvas = document.createElement('canvas')
+  const size = 256
+  canvas.width = size
+  canvas.height = size
+  const ctx = canvas.getContext('2d')
+
+  // 中央トリミング処理
+  const aspect = img.width / img.height
+  let sx = 0, sy = 0, sWidth = img.width, sHeight = img.height
+
+  if (aspect > 1) {
+    // 横長：左右をカット
+    sx = (img.width - img.height) / 2
+    sWidth = sHeight = img.height
+  } else {
+    // 縦長：上下をカット
+    sy = (img.height - img.width) / 2
+    sHeight = sWidth = img.width
+  }
+
+  ctx.drawImage(img, sx, sy, sWidth, sHeight, 0, 0, size, size)
+  URL.revokeObjectURL(objectURL)
+
+  return new Promise((resolve) =>
+    canvas.toBlob((blob) => resolve(blob), 'image/jpeg', 0.8)
+  )
+}
+
 </script>
 
  
@@ -1289,7 +1392,7 @@ button.disabled {
   align-items: flex-end; /* ✅ ボタンを下端にそろえる */
   padding: 1rem;
   border-top: 1px solid #333;
-  gap: 0.5rem;
+  gap: 0rem;
 }
 
 .modal-title {

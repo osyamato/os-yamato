@@ -1,10 +1,12 @@
 <template>
   <transition name="fade-out">
     <div v-if="!isFadingOut" class="chat-wrapper">
-      <h2 class="header-title">しりとり対戦</h2>
+     
+<ChatEffect ref="chatEffect" /> 
+ <h2 class="header-title">しりとり対戦</h2>
 
       <!-- ⏳ マッチング待機中 -->
-      <div v-if="!roomReady" class="waiting-room">
+<div v-if="!roomReady && !isGameOver" class="waiting-room">
         <p>相手の参加を待っています...</p>
         <div class="status-bar-container">
           <div class="status-bar" :style="{ width: `${matchProgress}%` }"></div>
@@ -105,6 +107,7 @@
         </div>
       </div>
     </div>
+
   </transition>
 </template>
 
@@ -119,6 +122,8 @@ import { onBeforeUnmount } from 'vue'
 import { createTurn } from '@/graphql/mutations'
 import { onCreateTurn } from '@/graphql/subscriptions'
 import { updateShiritoriRoom } from '@/graphql/mutations'
+import { useChatEffects } from '@/composables/useChatEffects'
+import ChatEffect from '@/components/ChatEffect.vue'
 
 
 const router = useRouter()
@@ -150,16 +155,21 @@ const lastChar = computed(() => {
 })
 
 
-const TURN_LIMIT = 10 // 秒
+const TURN_LIMIT = 15 // 秒
 const turnTimer = ref<ReturnType<typeof setTimeout> | null>(null)
 const turnTimeLeft = ref(TURN_LIMIT)
 const turnProgress = ref(100)
+const chatEffect = ref<any>(null)
+const messageAnimationEnabled = ref(true) // 必要に応じて切り替え可
+const { maybePlayEffect } = useChatEffects(chatEffect, messageAnimationEnabled)
+
 
 watch(lastChar, (char) => {
   if (char === 'ん') {
     if (isMyTurn.value) {
       // 自分のターンで "ん" → 相手が「ん」で終わる語を言った → 自分の勝ち
       showResultMessage.value = 'あなたの勝ちです！🎉'
+maybePlayEffect('おめでとう') 
     } else {
       // 相手のターンで "ん" → 自分が「ん」で終わる語を言った → 自分の負け
       showResultMessage.value = 'あなたの負けです…💦'
@@ -313,7 +323,8 @@ function subscribeToTurns(roomId: string) {
           showResultMessage.value = 'あなたの負けです（重複）…💦'
         } else {
           showResultMessage.value = 'あなたの勝ちです！（相手が重複）🎉'
-        }
+maybePlayEffect('おめでとう')         
+}
         isGameOver.value = true
         markGameAsFinished() // ✅ ← ここを追加！
       } else {
@@ -408,7 +419,8 @@ function startTurnTimer() {
         showResultMessage.value = '時間切れ…あなたの負けです⏰'
       } else {
         showResultMessage.value = '相手の時間切れ！あなたの勝ちです🎉'
-      }
+maybePlayEffect('おめでとう')      
+ }
 
       isGameOver.value = true
       markGameAsFinished()
