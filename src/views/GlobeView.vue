@@ -589,4 +589,11 @@ onMounted(async () => {
   transition: background-color 0.3s ease;
 }
 
+html, body {
+  margin: 0;
+  padding: 0;
+  background-color: black;
+  overflow-x: hidden;
+}
+
 </style>
