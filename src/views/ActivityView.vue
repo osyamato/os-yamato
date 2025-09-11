@@ -579,5 +579,12 @@ html, body {
   transform: translateY(0);
 }
 
+html, body {
+  margin: 0;
+  padding: 0;
+  background-color: black;
+  overflow-x: hidden;
+}
+
 </style>
 
