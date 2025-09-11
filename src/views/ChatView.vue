@@ -102,13 +102,16 @@
                     @click="openImageModal(msg.imageUrl, msg.imageKey)"
                     @load="onImageLoad"
                   />
-                  <div
-                    v-else-if="msg.imageKey"
-                    class="message-placeholder"
-                    @click="loadImageOnDemand(msg)"
-                  >
-                    🖼️
-                  </div>
+<div
+  v-else-if="msg.imageKey"
+  class="message-placeholder"
+  @click="loadImageOnDemand(msg)"
+>
+  <div class="image-loader">
+    <span class="spinner-ring" />
+    <span class="image-icon">🖼️</span>
+  </div>
+</div>
                 </div>
               </template>
 
@@ -1809,6 +1812,40 @@ button:hover {
   color: #007aff;
   text-decoration: underline;
   word-break: break-word;
+}
+
+.image-loader {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.image-icon {
+  font-size: 24px;
+  z-index: 2;
+}
+
+.spinner-ring {
+  position: absolute;
+  width: 48px;
+  height: 48px;
+  border: 3px solid #ccc;
+  border-top: 3px solid #007aff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  z-index: 1;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 </style>
