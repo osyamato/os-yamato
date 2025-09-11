@@ -1204,6 +1204,7 @@ function linkify(content) {
 }
 
 async function handleLocalImageUpload(event) {
+  const start = performance.now()
   const file = event.target.files?.[0]
   if (!file) return
 
@@ -1213,8 +1214,9 @@ async function handleLocalImageUpload(event) {
   const now = new Date()
   const tempId = `temp-${now.getTime()}`
 
-  // ✅ 仮メッセージ追加（imageUrl は空）
   const previewThumbUrl = URL.createObjectURL(file)
+  // console.log('[🖼️ PREVIEW]', previewThumbUrl)
+
   messages.value.push({
     id: tempId,
     roomId: roomId.value,
@@ -1235,32 +1237,45 @@ async function handleLocalImageUpload(event) {
   scrollToBottom()
 
   try {
+    const t1 = performance.now()
+    // console.log('[⚙️ サムネイル生成中]')
     const thumbnailBlob = await createThumbnail(file)
+    // console.log(`[⚙️ サムネイル生成完了] ${Math.round(performance.now() - t1)}ms`)
 
+    const t2 = performance.now()
     await Storage.put(fileName, file, {
       level: 'public',
       contentType: file.type,
     })
+    // console.log(`[✅ 本体アップロード完了] ${Math.round(performance.now() - t2)}ms`)
 
+    const t3 = performance.now()
     await Storage.put(thumbnailFileName, thumbnailBlob, {
       level: 'public',
       contentType: thumbnailBlob.type,
     })
+    // console.log(`[✅ サムネイルアップロード完了] ${Math.round(performance.now() - t3)}ms`)
 
+    const t4 = performance.now()
     await sendImageMessage(fileName, thumbnailFileName)
+    // console.log(`[✉️ メッセージ送信完了] ${Math.round(performance.now() - t4)}ms`)
   } catch (error) {
-    console.error('画像アップロード中にエラー:', error)
-    // ここでエラー処理を入れるなら、UI表示のままでもOK
+    // console.error('❌ 画像アップロード中にエラー:', error)
   } finally {
-    // ✅ メモリ解放
     URL.revokeObjectURL(previewThumbUrl)
+    // console.log(`[⏱️ 合計所要時間] ${Math.round(performance.now() - start)}ms`)
   }
 }
+
 async function createThumbnail(file) {
   const img = new Image()
   const objectURL = URL.createObjectURL(file)
   img.src = objectURL
-  await new Promise((resolve) => (img.onload = resolve))
+
+  await new Promise((resolve, reject) => {
+    img.onload = resolve
+    img.onerror = reject
+  })
 
   const canvas = document.createElement('canvas')
   const size = 256
@@ -1268,16 +1283,13 @@ async function createThumbnail(file) {
   canvas.height = size
   const ctx = canvas.getContext('2d')
 
-  // 中央トリミング処理
   const aspect = img.width / img.height
   let sx = 0, sy = 0, sWidth = img.width, sHeight = img.height
 
   if (aspect > 1) {
-    // 横長：左右をカット
     sx = (img.width - img.height) / 2
     sWidth = sHeight = img.height
   } else {
-    // 縦長：上下をカット
     sy = (img.height - img.width) / 2
     sHeight = sWidth = img.width
   }
@@ -1285,9 +1297,15 @@ async function createThumbnail(file) {
   ctx.drawImage(img, sx, sy, sWidth, sHeight, 0, 0, size, size)
   URL.revokeObjectURL(objectURL)
 
-  return new Promise((resolve) =>
-    canvas.toBlob((blob) => resolve(blob), 'image/jpeg', 0.8)
-  )
+  return new Promise((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (blob) {
+        resolve(blob)
+      } else {
+        reject(new Error('Thumbnail blob creation failed'))
+      }
+    }, 'image/jpeg', 0.8)
+  })
 }
 
 </script>
@@ -1392,7 +1410,7 @@ button.disabled {
   align-items: flex-end; /* ✅ ボタンを下端にそろえる */
   padding: 1rem;
   border-top: 1px solid #333;
-  gap: 0rem;
+  gap: 0.4rem;
 }
 
 .modal-title {
@@ -1533,8 +1551,8 @@ button:hover {
   color: #fff;
   border: none;
   border-radius: 50%;
-  width: 2.4rem !important;
-  height: 2.4rem !important;
+  width: 2.0rem !important;
+  height: 2.0rem !important;
   font-size: 1.2rem;
   display: inline-flex;         /* 💡 PC時の拡張を抑制 */
   align-items: center;
