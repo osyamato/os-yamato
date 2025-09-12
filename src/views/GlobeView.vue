@@ -1,4 +1,5 @@
 <template>
+  <div class="globe-wrapper">
   <div class="globe-container">
     <!-- 背景の星 -->
     <div class="starry-background" v-if="showStars">
@@ -62,6 +63,7 @@
 @close="showYamatoSearchModal = false"
 />
   </div>
+</div>
 </template>
 
 <script setup>
@@ -589,11 +591,15 @@ onMounted(async () => {
   transition: background-color 0.3s ease;
 }
 
-html, body {
-  margin: 0;
-  padding: 0;
-  background-color: black;
-  overflow-x: hidden;
-}
 
+.globe-wrapper {
+  position: fixed;
+  inset: 0;
+  background-color: black;
+  z-index: 9999;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
 </style>

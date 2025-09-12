@@ -1,4 +1,6 @@
 <template>
+  <div class="activity-wrapper">
+
   <div class="planet-view" :style="{ opacity: allTexturesLoaded ? 1 : 0, backgroundColor: 'black' }">
 
     <!-- 宇宙背景 -->
@@ -48,6 +50,7 @@
       <span class="count-label">{{ currentLabel }} : {{ currentCount }}</span>
     </div>
 
+  </div>
   </div>
 </template>
 
@@ -579,11 +582,15 @@ html, body {
   transform: translateY(0);
 }
 
-html, body {
-  margin: 0;
-  padding: 0;
+.activity-wrapper {
+  position: fixed;
+  inset: 0;
   background-color: black;
-  overflow-x: hidden;
+  z-index: 9999;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 </style>
