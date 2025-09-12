@@ -1,7 +1,9 @@
 <template>
   <div class="wind-view">
     <h2 class="view-title">{{ t('wind.sentTitle') }}</h2>
-    <p class="view-subtitle">{{ t('wind.cancelNotice') }}</p>
+<p v-if="filteredOpenedMessages.length === 0" class="empty-notice floaty">
+   {{ t('wind.cancelNotice') }}
+</p>
 
     <!-- 📜 送信済み手紙リスト -->
     <ul class="wind-list">
@@ -276,6 +278,21 @@ function formatDeliveryHint(dateStr) {
   justify-content: center;
   border-radius: 50%;
 }
+
+@keyframes float {
+  0%   { transform: translateY(0px); }
+  50%  { transform: translateY(-6px); }
+  100% { transform: translateY(0px); }
+}
+
+.floaty {
+  display: inline-block;
+  animation: float 3s ease-in-out infinite;
+  font-size: 0.95rem;
+  color: #666;
+  margin-top: 1rem;
+}
+
 
 </style>
 
