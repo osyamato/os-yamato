@@ -1,6 +1,6 @@
 <template>
 
-  <div class="chat-room-list">
+ <div :class="['chat-room-list', { 'animate-enter': shouldAnimate }]">
 
 <!-- 🔷 ヘッダー -->
 <div class="chat-header">
@@ -178,6 +178,7 @@ import ChatRequestModal from '@/components/ChatRequestModal.vue'
 import ProfileSetupView from '@/views/ProfileSetupView.vue'
 import IconButton from '@/components/IconButton.vue'
 import { useNotificationStore } from '@/stores/notificationStore'
+import { onBeforeRouteUpdate } from 'vue-router'
 
 
 import '@/assets/variables.css'
@@ -201,13 +202,22 @@ const openSentWindMessages = () => {
 }
 
 onMounted(() => {
-  // ✅ from=home のときのみアニメーションフラグON
-  if (route.query.from === 'home') {
+  const fromHome = route.query.from === 'home'
+  const isReturning = getIsBack()
+
+  if (fromHome || isReturning) {
     shouldAnimate.value = true
-    router.replace({ path: route.path }) // クエリを除去
+    if (fromHome) {
+      router.replace({ path: route.path }) // クエリを消すのは初回だけ
+    }
   }
 
-  isBack.value = getIsBack()
+  isBack.value = isReturning
+})
+
+onBeforeRouteUpdate((to, from, next) => {
+  shouldAnimate.value = true
+  next()
 })
 
 onMounted(async () => {
