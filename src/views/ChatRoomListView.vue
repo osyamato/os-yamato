@@ -42,8 +42,8 @@
         </span>
       </div>
       <div class="menu-group">
-        <span class="menu-dots" @click.stop="openOptions(room)">⋯</span>
-        <span class="mail-icon" @click.stop="openWindMessage(room)">✉️</span>
+  <span class="icon-wrapper" @click.stop="openWindMessage(room)">✉️</span>
+  <span class="icon-wrapper" @click.stop="openOptions(room)">⋯</span>
       </div>
     </div>
     <p class="last-message">
@@ -84,8 +84,8 @@
             </span>
           </div>
           <div class="menu-group">
-            <span class="menu-dots" @click.stop="openOptions(room)">⋯</span>
-            <span class="mail-icon" @click.stop="openWindMessage(room)">✉️</span>
+  <span class="icon-wrapper" @click.stop="openWindMessage(room)">✉️</span>
+  <span class="icon-wrapper" @click.stop="openOptions(room)">⋯</span>
           </div>
         </div>
         <p class="last-message">
@@ -878,13 +878,31 @@ alert(t('alertNeedProfile'))
   text-overflow: ellipsis;
 }
 
-/* …と✉️ */
 .menu-group {
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  margin-left: auto; /* ✅ 右寄せ強制 */
+  margin-left: auto;
 }
+
+.icon-wrapper {
+  background-color: #eee; /* ← お好みで */
+  border-radius: 50%;
+  padding: 0.4rem;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.icon-wrapper:hover {
+  background-color: #ddd;
+}
+
 .menu-dots,
 .mail-icon {
   font-size: 1.1rem;
