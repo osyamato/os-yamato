@@ -205,20 +205,17 @@ onMounted(() => {
   const fromHome = route.query.from === 'home'
   const isReturning = getIsBack()
 
-  if (fromHome || isReturning) {
+  // ✅ 初回のみアニメーション（戻り時はオフ）
+  if (fromHome) {
     shouldAnimate.value = true
-    if (fromHome) {
-      router.replace({ path: route.path }) // クエリを消すのは初回だけ
-    }
+    router.replace({ path: route.path }) // クエリを消す
+  } else {
+    shouldAnimate.value = false
   }
 
   isBack.value = isReturning
 })
 
-onBeforeRouteUpdate((to, from, next) => {
-  shouldAnimate.value = true
-  next()
-})
 
 onMounted(async () => {
   const user = await Auth.currentAuthenticatedUser()
