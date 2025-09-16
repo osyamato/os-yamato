@@ -20,7 +20,9 @@
     </div>
 
 
-    <div class="icon-grid">
+<GlobalFixedHomeButton @trigger-pop="runIconPopAnimation" />
+
+<div class="icon-grid" :class="{ 'pop-animation': iconPop }">
       <!-- ✅ カレンダー（文字オーバーレイのため特殊対応） -->
       <button @click="goTo('calendar')" class="icon-button calendar-button" style="background-image: url('/calendar.png')">
         <span class="calendar-date">{{ currentDay }}</span>
@@ -89,11 +91,15 @@ import { Auth, API, graphqlOperation } from 'aws-amplify'
 import { onCreateMessage } from '@/graphql/subscriptions'
 import { useI18n } from 'vue-i18n'
 import { useNotificationStore } from '@/stores/notificationStore'
+import GlobalFixedHomeButton from '@/components/GlobalFixedHomeButton.vue'
+
 
 const notificationStore = useNotificationStore()
 const router = useRouter()
 const wallpaper = ref('')
 const subscription = ref(null)
+
+const iconPop = ref(false)
 
 const { t } = useI18n()
 const today = new Date()
@@ -124,6 +130,16 @@ const colorMap = {
     backgroundRepeat: 'no-repeat'
   }
 })
+
+function runIconPopAnimation() {
+  iconPop.value = false
+  requestAnimationFrame(() => {
+    iconPop.value = true
+    setTimeout(() => {
+      iconPop.value = false
+    }, 300)
+  })
+}
 
 function goTo(path) {
   router.push(`/${path}`)
@@ -388,5 +404,14 @@ onUnmounted(() => {
   }
 }
 
-</style>
+@keyframes popAllIcons {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
 
+.pop-animation > .icon-button {
+  animation: popAllIcons 1.2s ease;
+}
+
+</style>
