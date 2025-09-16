@@ -42,8 +42,8 @@
         </span>
       </div>
       <div class="menu-group">
-  <span class="icon-wrapper" @click.stop="openWindMessage(room)">✉️</span>
-  <span class="icon-wrapper" @click.stop="openOptions(room)">⋯</span>
+        <span class="menu-dots" @click.stop="openOptions(room)">⋯</span>
+        <span class="mail-icon" @click.stop="openWindMessage(room)">✉️</span>
       </div>
     </div>
     <p class="last-message">
@@ -84,8 +84,8 @@
             </span>
           </div>
           <div class="menu-group">
-  <span class="icon-wrapper" @click.stop="openWindMessage(room)">✉️</span>
-  <span class="icon-wrapper" @click.stop="openOptions(room)">⋯</span>
+            <span class="menu-dots" @click.stop="openOptions(room)">⋯</span>
+            <span class="mail-icon" @click.stop="openWindMessage(room)">✉️</span>
           </div>
         </div>
         <p class="last-message">
@@ -159,7 +159,7 @@
       />
     </Modal>
   </div>
-</template>
+</template> 
 
 
 <script setup>
@@ -822,7 +822,7 @@ alert(t('alertNeedProfile'))
   width: 330px;
   height: 90px;
   overflow: hidden;
-  padding: 0.8rem 0.8rem 0.8rem 2.4rem;
+padding: 0.2rem 0.8rem 0.2rem 2.4rem;
   background: white;
   border-bottom: 1px solid #ccc;
   border-radius: 8px;
@@ -878,31 +878,13 @@ alert(t('alertNeedProfile'))
   text-overflow: ellipsis;
 }
 
+/* …と✉️ */
 .menu-group {
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  margin-left: auto;
+  margin-left: auto; /* ✅ 右寄せ強制 */
 }
-
-.icon-wrapper {
-  background-color: #eee; /* ← お好みで */
-  border-radius: 50%;
-  padding: 0.4rem;
-  width: 2rem;
-  height: 2rem;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.icon-wrapper:hover {
-  background-color: #ddd;
-}
-
 .menu-dots,
 .mail-icon {
   font-size: 1.1rem;
@@ -921,7 +903,12 @@ alert(t('alertNeedProfile'))
   font-size: 0.95rem;
   color: #bbb;
   overflow: hidden;
+
+  /* ✅ 追加ポイント */
+  line-height: 1.4;
+  padding: 0.3rem 0;     /* ← 上下に余白を確保 */
 }
+
 .message-text {
   flex-grow: 1;
   overflow: hidden;
@@ -937,10 +924,10 @@ alert(t('alertNeedProfile'))
 }
 
 
-/* 時刻 */
 .last-time {
   font-size: 0.8rem;
   color: #888;
+  margin-top: 0.4rem; /* ← 下に少しスペースを空ける */
 }
 
 /* モーダルなど */
@@ -1042,4 +1029,6 @@ alert(t('alertNeedProfile'))
 }
 
 </style>
+
+
 
