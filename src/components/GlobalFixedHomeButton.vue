@@ -14,6 +14,8 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 
+const emit = defineEmits(['trigger-pop']) 
+
 const router = useRouter()
 const isDragging = ref(false)
 const dragOffset = ref({ x: 0, y: 0 })
@@ -59,8 +61,11 @@ function handleMouseUp(e) {
     isDragging.value = false
     localStorage.setItem('homeBtnPos', JSON.stringify(position.value))
   } else if (!longPressed) {
-    // 普通のクリック時に home に戻る
-    router.push('/home')
+    if (router.currentRoute.value.path === '/home') {
+      emit('trigger-pop') // ←🔥 アニメーション発火を親に通知！
+    } else {
+      router.push('/home')
+    }
   }
 }
 
@@ -96,8 +101,11 @@ function handleTouchEnd() {
     isDragging.value = false
     localStorage.setItem('homeBtnPos', JSON.stringify(position.value))
   } else if (!longPressed) {
-    // タップのみで home に戻る
-    router.push('/home')
+    if (router.currentRoute.value.path === '/home') {
+      emit('trigger-pop')  // ←🔥 タップでもアニメ通知
+    } else {
+      router.push('/home')
+    }
   }
 }
 
@@ -140,4 +148,3 @@ function startDrag(clientX, clientY) {
 }
 
 </style>
-
