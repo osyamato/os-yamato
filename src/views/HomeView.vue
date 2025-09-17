@@ -20,7 +20,6 @@
     </div>
 
 
-<GlobalFixedHomeButton @trigger-pop="runIconPopAnimation" />
 
 <div class="icon-grid" :class="{ 'pop-animation': iconPop }">
       <!-- ✅ カレンダー（文字オーバーレイのため特殊対応） -->
