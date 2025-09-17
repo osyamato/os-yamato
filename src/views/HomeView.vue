@@ -406,8 +406,8 @@ onUnmounted(() => {
 
 @keyframes popAllIcons {
   0%   { transform: scale(1); }
-  50%  { transform: scale(1.3); } /* ← ここを大きく */
-  100% { transform: scale(1); }
+  30%  { transform: scale(1.2); } /* 拡大を早めに */
+  100% { transform: scale(1); }   /* 残り70%の時間でゆっくり縮む */
 }
 
 .pop-animation > .icon-button {
