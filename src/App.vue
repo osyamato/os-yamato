@@ -101,7 +101,6 @@ function updateHomeButtonVisibility() {
   const userWantsButton = saved !== 'false'
   showHomeButton.value = userWantsButton && !hiddenRoutes.includes(route.path)
 }
-
 onMounted(() => {
   updateHomeButtonVisibility()
 })
