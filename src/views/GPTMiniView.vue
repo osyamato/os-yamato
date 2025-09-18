@@ -168,9 +168,11 @@ async function createSession() {
 function toggleMode(mode) {
   if (selectedMode.value === mode) {
     selectedMode.value = ''
+    localStorage.removeItem('lastGptMiniMode')
     router.replace({ query: {} })
   } else {
     selectedMode.value = mode
+    localStorage.setItem('lastGptMiniMode', mode)
     router.replace({ query: { mode } })
   }
 }
@@ -242,6 +244,7 @@ function cancelDelete() {
 }
 
 onMounted(async () => {
+  // ユーザーのアイコン色取得
   try {
     const user = await Auth.currentAuthenticatedUser()
     iconColor.value = user.attributes['custom:iconColor'] || '#274c77'
@@ -251,20 +254,27 @@ onMounted(async () => {
 
   await fetchSessions()
 
+  // 💡 クエリがあれば優先、なければローカル保存されたモードを使う
   if (route.query.mode) {
     selectedMode.value = route.query.mode
+  } else {
+    const cached = localStorage.getItem('lastGptMiniMode')
+    if (cached && modes.some(m => m.key === cached)) {
+      selectedMode.value = cached
+      router.replace({ query: { mode: cached } }) // UIとURLを揃える
+    }
   }
 
-  // ✅ fromChat フラグで判定
-if (history.state && history.state.fromChat) {
-  animateOnce.value = false
-  history.replaceState({}, '')
-  setTimeout(async () => {
-    await fetchSessions()
-  }, 300) // ← 適当な遅延で画面安定後に呼ぶ
-} else {
-  animateOnce.value = true
-}
+  // アニメーション制御など
+  if (history.state && history.state.fromChat) {
+    animateOnce.value = false
+    history.replaceState({}, '')
+    setTimeout(async () => {
+      await fetchSessions()
+    }, 300)
+  } else {
+    animateOnce.value = true
+  }
 
   showHeader.value = true
   setTimeout(() => {
