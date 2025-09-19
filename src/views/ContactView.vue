@@ -33,12 +33,13 @@
     <div v-if="filteredContacts.length === 0" class="empty-message">
     </div>
     <div v-else class="contact-list">
-      <div
-        v-for="contact in filteredContacts"
-        :key="contact.id"
-        class="contact-card"
-        @click="openViewModal(contact)"
-      >
+<div
+  v-for="(contact, index) in filteredContacts"
+  :key="contact.id"
+  class="contact-card fade-item"
+  :style="{ animationDelay: `${index * 50}ms` }"
+  @click="openViewModal(contact)"
+>
         <div class="name-with-icon">
           <span class="flower-icon">{{ getLifeStageIcon(contact) }}</span>
           <h3 class="contact-name">{{ contact.name }}</h3>
@@ -913,6 +914,24 @@ textarea {
   background-color: white !important;
   color: black !important;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25); /* 濃くて柔らかい影 */
+}
+
+.fade-item {
+  opacity: 0;
+  transform: translateY(10px);
+  animation: fadeUp 0.35s ease-out forwards;
+}
+
+/* アニメーション定義 */
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 </style>
