@@ -49,12 +49,13 @@
 
     <!-- メモ一覧 -->
     <div v-if="filteredMemos.length > 0" class="memo-list">
-      <div
-        v-for="memo in filteredMemos"
-        :key="memo.id"
-        class="memo-card"
-        @click="openEditMemoModal(memo)"
-      >
+<div
+  v-for="(memo, index) in filteredMemos"
+  :key="memo.id"
+  class="memo-card fade-item"
+  :style="{ animationDelay: `${index * 50}ms` }"
+  @click="openEditMemoModal(memo)"
+>
         <div v-if="isSelectionMode" class="checkbox-wrapper">
           <label>
             <input
@@ -1133,5 +1134,21 @@ font-size: 16px;
   color: #274c77 !important;
 }
 
+.fade-item {
+  opacity: 0;
+  transform: translateY(10px);
+  animation: fadeUp 0.35s ease-out forwards;
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 
 </style>
