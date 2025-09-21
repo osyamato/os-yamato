@@ -63,7 +63,12 @@
 <section>
   <h3>{{ $t('about.contactTitle') }}</h3>
   <p>{{ $t('about.developer') }}: OS Yamato (Japan)</p>
-  <p>Email: support-weather@hanaco875.com</p>
+<p>
+  Email:
+  <a href="mailto:support-weather@hanaco875.com">
+    support-weather@hanaco875.com
+  </a>
+</p>
   <p>
     Website:
     <a href="https://hanaco875.com" target="_blank">
