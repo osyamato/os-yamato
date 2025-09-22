@@ -912,7 +912,7 @@ async function confirmAndDeleteMonth() {
   content: '';
   position: absolute;
   top: 2px;
-  right: 5px; /* ← さらに右へ2px移動 */
+  right: 4px; /* ← さらに右へ2px移動 */
   width: 24px;
   height: 24px;
   background: rgba(255, 50, 50, 0.4); /* 鮮やかな赤で強調 */
