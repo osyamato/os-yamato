@@ -15,6 +15,8 @@
     ☁️
   </button>
 
+<span class="like-icon">♡</span>
+
   <!-- 👤 編集 -->
   <button
     class="edit-icon"
