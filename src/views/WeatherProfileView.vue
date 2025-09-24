@@ -15,7 +15,13 @@
     ☁️
   </button>
 
-<span class="like-icon">♡</span>
+ <button
+    class="like-icon"
+    @click="toggleLike"
+    :style="{ backgroundColor: iconColor }"
+  >
+    ♡
+  </button>
 
   <!-- 👤 編集 -->
   <button
