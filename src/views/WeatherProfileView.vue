@@ -15,6 +15,8 @@
     ☁️
   </button>
 
+<IconButton :color="iconColor" @click="toggleLike">♡</IconButton>
+
   <!-- 👤 編集 -->
   <button
     class="edit-icon"
@@ -157,6 +159,12 @@ import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import MyWeatherReplyModal from '@/components/MyWeatherReplyModal.vue'
 import WeatherProfileModal from '@/components/WeatherProfileModal.vue'
 import BlockedUsersModal from '@/components/BlockedUsersModal.vue'
+
+import IconButton from '@/components/IconButton.vue'
+
+function toggleLike() {
+  console.log('❤️ Like toggled!')
+}
 
 const selectedComment = ref(null)
 
