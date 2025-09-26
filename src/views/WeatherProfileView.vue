@@ -15,7 +15,16 @@
     ☁️
   </button>
 
-<IconButton :color="iconColor" @click="toggleLike">♡</IconButton>
+<IconButton
+  class="like-icon"
+  @click="toggleLikeSort"
+  :style="{
+    backgroundColor: iconColor,
+    color: isSortedByLikes ? '#e57373' : iconTextColor
+  }"
+>
+  ♡
+</IconButton>
 
   <!-- 👤 編集 -->
   <button
@@ -162,8 +171,15 @@ import BlockedUsersModal from '@/components/BlockedUsersModal.vue'
 
 import IconButton from '@/components/IconButton.vue'
 
-function toggleLike() {
-  console.log('❤️ Like toggled!')
+function toggleLikeSort() {
+  if (!isSortedByLikes.value) {
+    // ♡が多い順に並べ替え
+    myComments.value = [...myComments.value].sort((a, b) => (b.likeCount || 0) - (a.likeCount || 0))
+  } else {
+    // 元の順番に戻す
+    myComments.value = [...originalOrder.value]
+  }
+  isSortedByLikes.value = !isSortedByLikes.value
 }
 
 const selectedComment = ref(null)
@@ -172,6 +188,15 @@ const selectedComment = ref(null)
 const showModal = ref(false)
 
 const showBlockModal = ref(false)
+
+const iconTextColor = computed(() => {
+  const darkColors = ['#274c77', '#14532d'] // 濃い青・濃い緑
+  return darkColors.includes(iconColor.value.toLowerCase()) ? 'white' : 'black'
+})
+
+
+const originalPosts = ref<Post[]>([]) // ← もとの順
+const posts = ref<Post[]>([])    
 
 // 📄 プロフィールデータ
 const profile = ref({
@@ -186,8 +211,6 @@ const profile = ref({
 
 const profileLoaded = ref(false)
 
-// 📝 投稿コメント一覧
-const myComments = ref([])
 
 // 🖼️ 画像モーダル
 const showImageModal = ref(false)
@@ -242,7 +265,10 @@ profile.value = {
   }
 }
 
-// 📝 コメント取得
+const myComments = ref([])
+const originalOrder = ref([])
+const isSortedByLikes = ref(false)
+
 async function fetchMyComments() {
   try {
     const user = await Auth.currentAuthenticatedUser()
@@ -255,7 +281,6 @@ async function fetchMyComments() {
 
     const items = res.data.listWeatherComments.items
 
-    // 画像がある場合は URL を取得
     for (const item of items) {
       if (item.imageKey) {
         try {
@@ -267,11 +292,11 @@ async function fetchMyComments() {
     }
 
     myComments.value = items
+    originalOrder.value = [...items] // ← 順序を保存
   } catch (e) {
     console.error('❌ コメント取得失敗:', e)
   }
 }
-
 const showReplyModal = ref(false)
 const replyingToCommentId = ref<string | null>(null)
 
