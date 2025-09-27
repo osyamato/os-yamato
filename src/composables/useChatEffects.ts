@@ -40,7 +40,9 @@ export function useChatEffects(
     { pattern: /(星空|モンゴル|星|夜空|stars|starry sky|night sky|mongolia|cielo estrellado|夜空)/i, effect: 'starry' },
     { pattern: /(虹|rainbow|🌈)/i, effect: 'rainbow' },
     { pattern: /(シャボン玉|泡|bubble|bubbles|soap bubble|burbuja|泡泡)/i, effect: 'bubble' },
-  { pattern: /(新緑|greenery|風|fresh green|verdor)/i, effect: 'leaf' } 
+  { pattern: /(新緑|greenery|風|fresh green|verdor)/i, effect: 'leaf' } ,
+  { pattern: /(雷|稲妻|雷鳴|thunder|lightning|tormenta)/i, effect: 'lightning' }
+
   ]
 
   const seasonalPatterns: EffectPattern[] = [
