@@ -129,6 +129,11 @@
   />
 </div>
 
+<div v-if="effectType === 'lightning'" class="effect-container lightning">
+  <div class="lightning-flash"></div>
+  <div class="lightning-bolt"></div>
+</div>
+
   </Teleport>
 
 </template>
@@ -274,6 +279,7 @@ defineExpose({
 　triggerBubble,
 triggerRainbow, 
   triggerLeaf,
+ triggerLightning, 
   playEffect
 })
 
@@ -487,6 +493,27 @@ function randomLeafStyle(index) {
     animationFillMode: 'forwards',
     '--dx': dx,
     '--dy': dy
+  }
+}
+
+function triggerLightning() {
+  effectType.value = 'lightning'
+  resetAfterDelay(1000) // 稲妻は短め
+}
+
+function randomBranchStyle() {
+  const angle = (Math.random() - 0.5) * 60  // -30°〜+30°でランダム枝分かれ
+  const top = 20 + Math.random() * 60       // 上から20〜80%で分岐
+  const length = 40 + Math.random() * 80    // 枝の長さ
+
+  return {
+    top: `${top}%`,
+    left: '0',
+    width: '2px',
+    height: `${length}px`,
+    transform: `rotate(${angle}deg)`,
+    background: 'linear-gradient(to bottom, #ffffcc, #fff, transparent)',
+    animation: 'boltBranch 0.5s ease-out',
   }
 }
 
@@ -716,6 +743,49 @@ function randomLeafStyle(index) {
   position: absolute;
   animation: autumn-pop ease-out forwards;
 }
+
+
+.lightning-flash {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%;
+  height: 100%;
+  background: white;
+  opacity: 0;
+  animation: flash 0.8s ease-out;
+  z-index: 1000;
+}
+
+/* 稲妻っぽい縦の光 */
+.lightning-bolt {
+  position: absolute;
+  top: -20%;
+  left: 50%;
+  width: 4px;
+  height: 140%;
+  background: linear-gradient(to bottom, #ffffcc, #ffffff, #ffffcc);
+  opacity: 0;
+  transform: skewX(-10deg);
+  animation: bolt 0.6s ease-out;
+  z-index: 1001;
+}
+
+@keyframes flash {
+  0%, 20% { opacity: 0; }
+  25% { opacity: 0.8; }
+  40% { opacity: 0.2; }
+  60% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes bolt {
+  0% { opacity: 0; transform: translateY(-100%) skewX(-10deg); }
+  20% { opacity: 1; transform: translateY(0) skewX(-10deg); }
+  40% { opacity: 0.8; transform: translateY(10%) skewX(-10deg); }
+  60% { opacity: 0.4; transform: translateY(20%) skewX(-10deg); }
+  100% { opacity: 0; transform: translateY(100%) skewX(-10deg); }
+}
+
 
 
 </style>
