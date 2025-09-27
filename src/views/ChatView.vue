@@ -1351,6 +1351,53 @@ button.disabled {
   display: flex;
   flex-direction: column;
   padding: 1rem;
+  margin: 0 auto;         /* PC用に中央寄せ */
+  max-width: 800px;       /* PC用の最大幅制限 */
+  width: 100%;
+}
+
+.input-area {
+  display: flex;
+  align-items: flex-end;
+  padding: 1rem;
+  border-top: 1px solid #333;
+  gap: 0.4rem;
+
+  /* iOS セーフエリア対応 */
+  padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+  position: sticky;
+  bottom: 0;
+
+  background-color: #fff;
+  color: #000;
+
+  margin: 0 auto;        /* PC用に中央寄せ */
+  max-width: 800px;      /* PC用の最大幅制限 */
+  width: 100%;
+}
+
+/* 🌙 ダークモード */
+@media (prefers-color-scheme: dark) {
+  .input-area {
+    background-color: #111;
+    border-top: 1px solid #555;
+    color: #fff;
+  }
+
+  .message-input {
+    background-color: #222;
+    border: 1px solid #444;
+    color: #fff;
+  }
+}
+
+/* 📱 スマホでは幅いっぱいにする */
+@media (max-width: 768px) {
+  .message-list,
+  .input-area {
+    max-width: none;
+    margin: 0;
+  }
 }
 
 /* 吹き出し + 時間の1セット（横並び） */
@@ -1407,14 +1454,6 @@ button.disabled {
   color: #bbb;
 }
 
-/* 入力欄 */
-.input-area {
-  display: flex;
-  align-items: flex-end; /* ✅ ボタンを下端にそろえる */
-  padding: 1rem;
-  border-top: 1px solid #333;
-  gap: 0.4rem;
-}
 
 .modal-title {
   color: #111; /* ← ライトモード用の黒文字 */
