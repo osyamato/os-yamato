@@ -1191,15 +1191,8 @@ function handleInputFocus() {
   if (!isMobile.value) return
 
   setTimeout(() => {
-    bottomOfChat.value?.scrollIntoView({
-      block: "end",
-      behavior: "smooth"
-    })
-    // Safari の viewport 更新を確実に待つ
-    setTimeout(() => {
-      window.scrollTo(0, document.body.scrollHeight)
-    }, 150) // ← 100 → 150 に調整
-  }, 400)   // ← 300 → 400 に調整
+    window.scrollTo(0, document.body.scrollHeight)
+  }, 500)
 }
 
 function linkify(content) {
@@ -1362,6 +1355,7 @@ button.disabled {
   width: 100%;
 }
 
+
 .input-area {
   display: flex;
   align-items: flex-end;
@@ -1377,10 +1371,13 @@ button.disabled {
   background-color: #fff;
   color: #000;
 
-  margin: 0 auto;        /* PC用に中央寄せ */
-  max-width: 800px;      /* PC用の最大幅制限 */
+  margin: 0 auto;        
+  max-width: 800px;	 
   width: 100%;
   overflow: hidden;
+
+  /* 👇 少しだけ余白をつけて「被り」を防ぐ */
+  margin-bottom: 6px; /* ← 調整用。4〜8pxが目安 */
 }
 
 /* 🌙 ダークモード */
@@ -1487,9 +1484,11 @@ button.disabled {
 
 .view-wrapper {
   height: 100vh;
+  min-height: 100dvh; /* iOS16+ のみ有効になる */
   display: flex;
   flex-direction: column;
 }
+
 .chat-header {
   position: sticky;
   top: 0;
