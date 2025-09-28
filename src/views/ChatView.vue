@@ -1374,6 +1374,7 @@ button.disabled {
   margin: 0 auto;        /* PC用に中央寄せ */
   max-width: 800px;      /* PC用の最大幅制限 */
   width: 100%;
+  overflow: hidden;
 }
 
 /* 🌙 ダークモード */
