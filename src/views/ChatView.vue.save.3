@@ -1190,16 +1190,10 @@ function groupMessagesByDate(messages) {
 function handleInputFocus() {
   if (!isMobile.value) return
 
+  // ソフトキーボード表示直後にスクロール
   setTimeout(() => {
-    bottomOfChat.value?.scrollIntoView({
-      block: "end",
-      behavior: "smooth"
-    })
-    // Safari の viewport 更新を確実に待つ
-    setTimeout(() => {
-      window.scrollTo(0, document.body.scrollHeight)
-    }, 150) // ← 100 → 150 に調整
-  }, 400)   // ← 300 → 400 に調整
+    scrollToBottom(true) // 即座にジャンプ
+  }, 300) // モバイルでの keyboard 開くタイミングに合わせて微調整
 }
 
 function linkify(content) {
@@ -1314,6 +1308,12 @@ async function createThumbnail(file) {
         reject(new Error('Thumbnail blob creation failed'))
       }
     }, 'image/jpeg', 0.8)
+  })
+}
+
+function ensureInputVisible() {
+  requestAnimationFrame(() => {
+    window.scrollTo(0, document.body.scrollHeight)
   })
 }
 
