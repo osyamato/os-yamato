@@ -1145,13 +1145,11 @@ function subscribeToNewMessages() {
 
 
 
-function scrollToBottom(immediate = false) {
-  if (suppressAutoScroll.value) {
-    console.log('🚫 scrollToBottom suppressed')
+function scrollToBottom(immediate = false, force = false) {
+  if (suppressAutoScroll.value && !force) {
     suppressAutoScroll.value = false
     return
   }
-
   bottomOfChat.value?.scrollIntoView({ behavior: immediate ? 'auto' : 'smooth' })
 }
 
@@ -1193,7 +1191,6 @@ function groupMessagesByDate(messages) {
 
 function handleInputFocus() {
   if (!isMobile.value) return
-
   setTimeout(() => {
     window.scrollTo(0, document.body.scrollHeight)
   }, 500)
