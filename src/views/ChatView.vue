@@ -283,7 +283,11 @@ const { maybePlayEffect } = useChatEffects(chatEffect, messageAnimationEnabled)
 const fileInputRef = ref(null)
 
 function triggerFileInput() {
-  fileInputRef.value?.click()
+  textareaRef.value?.blur();
+  setTimeout(() => {
+    window.scrollTo(0, document.body.scrollHeight);
+    fileInputRef.value?.click();
+  }, 50); // OS がフォーカスを外す直前に合わせる
 }
 
 let reactionSubscription = null
@@ -1321,7 +1325,7 @@ async function createThumbnail(file) {
 .chat-container {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  flex: 1;             /* ← これで親の高さにフィット */
   background: #ffffff;
   color: #000;
   box-sizing: border-box;
@@ -1336,6 +1340,13 @@ async function createThumbnail(file) {
   .chat-container {
     min-width: 600px;
   }
+}
+
+.view-wrapper {
+  height: 100dvh;      /* iOS16+ の正しい表示領域 */
+  min-height: 100vh;   /* 古い環境のフォールバック */
+  display: flex;
+  flex-direction: column;
 }
 
 
@@ -1379,6 +1390,7 @@ button.disabled {
   /* 👇 少しだけ余白をつけて「被り」を防ぐ */
   margin-bottom: 6px; /* ← 調整用。4〜8pxが目安 */
 }
+
 
 /* 🌙 ダークモード */
 @media (prefers-color-scheme: dark) {
@@ -1482,12 +1494,7 @@ button.disabled {
   box-sizing: border-box;
 }
 
-.view-wrapper {
-  height: 100vh;
-  min-height: 100dvh; /* iOS16+ のみ有効になる */
-  display: flex;
-  flex-direction: column;
-}
+
 
 .chat-header {
   position: sticky;
