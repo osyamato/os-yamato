@@ -5,70 +5,70 @@
       <h2 class="header-title">{{ t('photo.title') }}</h2>
     </div>
 
-<!-- 🎛️ アクションボタン -->
-<div class="header-actions">
-  <IconButton :color="iconColor" @click="triggerFileInput">＋</IconButton>
-  <input
-    ref="fileInput"
-    type="file"
-    accept="image/*"
-    multiple
-    @change="handleFileUpload"
-    hidden
-  />
+    <!-- 🎛️ アクションボタン -->
+    <div class="header-actions">
+      <IconButton :color="iconColor" @click="triggerFileInput">＋</IconButton>
+      <input
+        ref="fileInput"
+        type="file"
+        accept="image/*"
+        multiple
+        @change="handleFileUpload"
+        hidden
+      />
 
-  <IconButton
-    :color="iconColor"
-    :class="{ 'selected-icon': filterFavoritesOnly }"
-    @click="toggleHeartFilter"
-  >
-    ♡
-  </IconButton>
-
-<div class="icon-with-picker">
-  <!-- 📁 ピッカートグル -->
-<IconButton
-  :color="iconColor"
-  :class="{ 'selected-icon': showAlbumPicker }"
-  @click="toggleAlbumPicker"
->
-  📁
-</IconButton>
-
-  <!-- 🔽 ピッカー -->
- <div v-if="showAlbumPicker" class="inline-album-picker">
-    <select
-      class="custom-picker"
-      v-model="selectedAlbum"
-    >
-      <option value="">{{ t('photo.allAlbums') }}</option>
-      <option
-	v-for="album in uniqueAlbumNames"
-        :key="album"
-        :value="album"
+      <IconButton
+        :color="iconColor"
+        :class="{ 'selected-icon': filterFavoritesOnly }"
+        @click="toggleHeartFilter"
       >
-       	{{ album }}
-      </option>
-    </select>
-  </div>
-</div>
+        ♡
+      </IconButton>
 
-  <IconButton
-    :color="iconColor"
-    :class="{ 'selected-icon': isSelectionMode }"
-    @click="toggleSelectionMode"
-  >
-    ☑️
-  </IconButton>
+      <div class="icon-with-picker">
+        <!-- 📁 ピッカートグル -->
+        <IconButton
+          :color="iconColor"
+          :class="{ 'selected-icon': showAlbumPicker }"
+          @click="toggleAlbumPicker"
+        >
+          📁
+        </IconButton>
 
-  <IconButton
-    :color="iconColor"
-    :class="{ 'selected-icon': filterWiltingOnly }"
-    @click="toggleWiltingFilter"
-  >
-    🥀
-  </IconButton>
-</div>
+        <!-- 🔽 ピッカー -->
+        <div v-if="showAlbumPicker" class="inline-album-picker">
+          <select
+            class="custom-picker"
+            v-model="selectedAlbum"
+          >
+            <option value="">{{ t('photo.allAlbums') }}</option>
+            <option
+              v-for="album in uniqueAlbumNames"
+              :key="album"
+              :value="album"
+            >
+              {{ album }}
+            </option>
+          </select>
+        </div>
+      </div>
+
+      <IconButton
+        :color="iconColor"
+        :class="{ 'selected-icon': isSelectionMode }"
+        @click="toggleSelectionMode"
+      >
+        ☑️
+      </IconButton>
+
+      <IconButton
+        :color="iconColor"
+        :class="{ 'selected-icon': filterWiltingOnly }"
+        @click="toggleWiltingFilter"
+      >
+        🥀
+      </IconButton>
+    </div>
 
     <!-- 🌱 アップロード中 or 削除中 -->
     <div v-if="(isLoading || isDeleting) && iconStage" class="upload-life-cycle">
@@ -96,7 +96,12 @@
           :class="{ selected: isSelectionMode && selectedPhotoIds.includes(photo.id) }"
           @click="isSelectionMode ? toggleSelection(photo.id) : openModal(photo)"
         >
-<img :src="photo.thumbnailUrl" class="photo-thumbnail" style="cursor: pointer" />
+          <img
+            :src="photo.thumbnailUrl"
+            class="photo-thumbnail"
+            style="cursor: pointer"
+            @mouseenter="preloadFullImage(photo)"
+          />
           <span v-if="isWilting(photo)" class="wilt-icon">🥀</span>
           <div v-if="isSelectionMode && selectedPhotoIds.includes(photo.id)" class="check-overlay">☑️</div>
           <div class="photo-info">
@@ -117,39 +122,44 @@
       @touchend="handleTouchEnd"
     >
       <div class="modal-content-wrapper" @click.stop>
-<div v-if="isImageLoaded" class="modal-toolbar-centered">
-  <!-- ダウンロード ↓ -->
-  <span class="modal-download-icon" @click.stop="downloadCurrentPhoto">↓</span>
+        <div v-if="isImageLoaded" class="modal-toolbar-centered">
+          <!-- ダウンロード ↓ -->
+          <span class="modal-download-icon" @click.stop="downloadCurrentPhoto">↓</span>
 
-  <!-- お気に入り ♡ -->
-  <span
-    class="modal-favorite-icon"
-    :class="{ active: currentPhoto?.isFavorite }"
-    @click.stop="toggleFavorite(currentPhoto)"
-  >♡</span>
+          <!-- お気に入り ♡ -->
+          <span
+            class="modal-favorite-icon"
+            :class="{ active: currentPhoto?.isFavorite }"
+            @click.stop="toggleFavorite(currentPhoto)"
+          >♡</span>
 
-  <!-- 撮影日 📅 -->
-  <span class="modal-date-text" v-if="currentPhoto?.photoTakenAt">
-    {{ formatDate(currentPhoto.photoTakenAt) }}
-  </span>
+          <!-- 撮影日 📅 -->
+          <span class="modal-date-text" v-if="currentPhoto?.photoTakenAt">
+            {{ formatDate(currentPhoto.photoTakenAt) }}
+          </span>
 
-  <!-- アルバム 📁 -->
-<span class="modal-album-icon" @click.stop="openAlbumModal(photo)">📁</span>
+          <!-- アルバム 📁 -->
+          <span class="modal-album-icon" @click.stop="openAlbumModal(photo)">📁</span>
 
-  <!-- 削除 🗑️ -->
-  <button class="modal-delete-button-above" @click.stop.prevent="promptDeletePhoto(currentPhoto)">🗑</button>
-</div>
+          <!-- 削除 🗑️ -->
+          <button class="modal-delete-button-above" @click.stop.prevent="promptDeletePhoto(currentPhoto)">🗑</button>
+        </div>
 
         <div class="modal-content">
-          <div v-if="!isImageLoaded" class="modal-loading-overlay">
-            <span class="modal-loading-icon">🌱</span>
-          </div>
-          <div class="modal-image-wrapper fade-in-image">
+          <div class="modal-image-wrapper">
+            <!-- ① サムネイルを先に表示（ぼかさずにそのまま） -->
+            <img
+              v-if="currentPhoto?.thumbnailUrl"
+              :src="currentPhoto.thumbnailUrl"
+              class="placeholder-thumbnail"
+            />
+
+            <!-- ② フル画像をロードしてフェードイン -->
             <img
               :src="fullImageUrl"
               class="full-image"
               @load="isImageLoaded = true"
-              v-show="isImageLoaded"
+              :class="{ 'visible': isImageLoaded }"
             />
           </div>
         </div>
@@ -165,14 +175,13 @@
       @cancel="cancelDelete"
     />
 
-<AlbumSelectorModal
-  :visible="showAlbumModal"
-  :photo="currentPhoto"
-  :allPhotos="photoList" 
-  @close="showAlbumModal = false"
-  @updated="refreshPhotoList"
-/>
-
+    <AlbumSelectorModal
+      :visible="showAlbumModal"
+      :photo="currentPhoto"
+      :allPhotos="photoList" 
+      @close="showAlbumModal = false"
+      @updated="refreshPhotoList"
+    />
   </div>
 </template>
 
@@ -216,6 +225,18 @@ const uniqueAlbumNames = computed(() => {
   return [...new Set(names)].sort()
 })
 
+
+const fullImageUrlCache = ref<Record<string, string>>({})
+
+async function preloadFullImage(photo) {
+  if (fullImageUrlCache.value[photo.id]) return
+  try {
+    const url = await Storage.get(photo.fileName, { level: 'protected' })
+    fullImageUrlCache.value[photo.id] = url
+  } catch (e) {
+    console.error('プリロード失敗:', e)
+  }
+}
 
 
 function toggleAlbumPicker() {
@@ -891,8 +912,14 @@ async function openModal(photo) {
     modalClosing.value = false
     modalVisible.value = true
 
-    const url = await Storage.get(photo.fileName, { level: 'protected' })
-    fullImageUrl.value = url
+    // 🔹 キャッシュ優先で取得
+    if (fullImageUrlCache.value[photo.id]) {
+      fullImageUrl.value = fullImageUrlCache.value[photo.id]
+    } else {
+      const url = await Storage.get(photo.fileName, { level: 'protected' })
+      fullImageUrl.value = url
+      fullImageUrlCache.value[photo.id] = url
+    }
 
     const nowIso = new Date().toISOString()
 
@@ -1209,13 +1236,35 @@ watch(selectedAlbum, (newVal, oldVal) => {
 
 /* 画像表示 */
 .modal-image-wrapper {
-  padding-top: 3.2rem; /* ツールバーの高さに応じて調整 */
+  position: relative;   /* ← 必須：子要素を絶対配置するため */
+  padding-top: 3.2rem;  /* ツールバー分の余白 */
+  overflow: hidden;
 }
+
+.placeholder-thumbnail {
+  width: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 0;
+  opacity: 0.85;        /* ← 少し薄くして「差し替え感」を出す */
+  filter: brightness(0.95); /* ← 軽く暗めにしても自然 */
+}
+
+
+/* フル画像は最初非表示、ロード後フェードイン */
 .full-image {
   max-width: 100%;
   max-height: 80vh;
   object-fit: contain;
   border-radius: 8px;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  position: relative;
+  z-index: 1;
+}
+.full-image.visible {
+  opacity: 1;
 }
 
 .header-actions {
