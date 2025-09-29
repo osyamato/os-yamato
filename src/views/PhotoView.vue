@@ -145,24 +145,24 @@
           <button class="modal-delete-button-above" @click.stop.prevent="promptDeletePhoto(currentPhoto)">🗑</button>
         </div>
 
-        <div class="modal-content">
-          <div class="modal-image-wrapper">
-            <!-- ① サムネイルを先に表示（ぼかさずにそのまま） -->
-            <img
-              v-if="currentPhoto?.thumbnailUrl"
-              :src="currentPhoto.thumbnailUrl"
-              class="placeholder-thumbnail"
-            />
+<div class="modal-content">
+  <div class="modal-image-wrapper">
+    <!-- ✅ フル画像が読み込まれるまでだけサムネイルを表示する -->
+    <img
+      v-if="currentPhoto?.thumbnailUrl && !isImageLoaded"
+      :src="currentPhoto.thumbnailUrl"
+      class="placeholder-thumbnail"
+    />
 
-            <!-- ② フル画像をロードしてフェードイン -->
-            <img
-              :src="fullImageUrl"
-              class="full-image"
-              @load="isImageLoaded = true"
-              :class="{ 'visible': isImageLoaded }"
-            />
-          </div>
-        </div>
+    <!-- ✅ フル画像をロードしてフェードイン -->
+    <img
+      :src="fullImageUrl"
+      class="full-image"
+      @load="isImageLoaded = true"
+      :class="{ 'visible': isImageLoaded }"
+    />
+  </div>
+</div>
       </div>
     </div>
 
