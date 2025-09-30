@@ -963,15 +963,27 @@ onMounted(fetchPhotos)
 
 const touchStartX = ref(0)
 
-function handleTouchStart(e) {
+function handleTouchStart(e: TouchEvent) {
+  // 2本以上指が触れてるときはスワイプ開始扱いにしない
+  if (e.touches.length > 1) {
+    touchStartX.value = null
+    return
+  }
   touchStartX.value = e.touches[0].clientX
 }
 
-function handleTouchEnd(e) {
+function handleTouchEnd(e: TouchEvent) {
+  // ピンチや複数指 → 無視
+  if (e.changedTouches.length > 1 || touchStartX.value === null) return
+
   const touchEndX = e.changedTouches[0].clientX
   const diff = touchStartX.value - touchEndX
-  if (diff > 50) showNextPhoto()
-  else if (diff < -50) showPrevPhoto()
+  if (diff > 50) {
+    showNextPhoto()
+  } else if (diff < -50) {
+    showPrevPhoto()
+  }
+  touchStartX.value = null
 }
 
 
@@ -1126,7 +1138,6 @@ watch(selectedAlbum, (newVal, oldVal) => {
   margin-top: 0.5rem;
 }
 
-/* モーダル全体 */
 .modal-overlay {
   position: fixed;
   overflow: auto;
@@ -1134,8 +1145,8 @@ watch(selectedAlbum, (newVal, oldVal) => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(17px); /* 🔍 追加：背景ぼかし強化 */
+  background: transparent;        /* ✅ グレーを消す */
+  backdrop-filter: blur(17px);    /* ✅ ぼかしは残す */
   z-index: 1000;
   display: flex;
   justify-content: center;
@@ -1150,7 +1161,7 @@ watch(selectedAlbum, (newVal, oldVal) => {
   padding: 0;
   max-width: 90vw;
   max-height: 90vh;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+  box-shadow: none; 
   animation: scaleFadeIn 0.2s ease-out forwards;
   display: block;
   margin: 0 auto;
@@ -1180,7 +1191,6 @@ watch(selectedAlbum, (newVal, oldVal) => {
   border-bottom-right-radius: 12px;
   backdrop-filter: none;             /* ← ✅ ブラーも消す */
 }
-
 .modal-toolbar-centered .modal-date-text {
   position: relative;
   transform: none;
@@ -1247,8 +1257,10 @@ watch(selectedAlbum, (newVal, oldVal) => {
   top: 0;
   left: 0;
   z-index: 0;
-  opacity: 0.85;        /* ← 少し薄くして「差し替え感」を出す */
-  filter: brightness(0.95); /* ← 軽く暗めにしても自然 */
+  opacity: 0.85;        /* 少し薄くして「差し替え感」を出す */
+  filter: brightness(0.95); /* 軽く暗めにしても自然 */
+  border-radius: 8px;   /* ← フル画像と同じ角丸を追加 */
+  object-fit: contain;  /* ← 念のため、比率も合わせる */
 }
 
 

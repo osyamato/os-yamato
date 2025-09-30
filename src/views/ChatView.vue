@@ -1088,7 +1088,11 @@ const messageListRef = ref(null)
 
 function handleScrollTop() {
   const el = messageListRef.value
-  if (el && el.scrollTop === 0) {
+  if (!el) return
+  console.log("scrollTop:", el.scrollTop)
+
+  if (el.scrollTop <= 5) {
+    console.log("📥 過去メッセージ取得発火")
     fetchMoreMessages()
   }
 }
@@ -1191,8 +1195,10 @@ function groupMessagesByDate(messages) {
 
 function handleInputFocus() {
   if (!isMobile.value) return
+
   setTimeout(() => {
-    window.scrollTo(0, document.body.scrollHeight)
+    const extra = 60 // ← 押し上げたい分の余白
+    window.scrollTo(0, document.body.scrollHeight + extra)
   }, 500)
 }
 
@@ -1353,14 +1359,20 @@ button.disabled {
 }
 
 .message-list {
-  flex: 1;
-  overflow-y: auto;
+  flex: 1;                          /* 親 flex に合わせて縦いっぱい */
+  overflow-y: auto;                 /* 縦スクロールを有効化 */
+  -webkit-overflow-scrolling: touch;/* iOS でスムーズスクロール */
+  
   display: flex;
   flex-direction: column;
+
   padding: 1rem;
-  margin: 0 auto;         /* PC用に中央寄せ */
-  max-width: 800px;       /* PC用の最大幅制限 */
+  margin: 0 auto;                   /* PC用に中央寄せ */
+  max-width: 800px;                 /* PC用の最大幅制限 */
   width: 100%;
+
+  height: 100%;                     /* 💡 高さを明示する */
+  box-sizing: border-box;           /* padding込みで計算 */
 }
 
 
