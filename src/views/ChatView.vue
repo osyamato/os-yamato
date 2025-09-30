@@ -1031,9 +1031,6 @@ async function fetchMoreMessages() {
     suppressAutoScroll.value = true
     const list = messageListRef.value
 
-    console.log('🔄 過去メッセージ取得 nextToken:', nextToken)
-
-    // 取得前のスクロール位置を保存
     const prevScrollTop = list.scrollTop
     const prevScrollHeight = list.scrollHeight
 
@@ -1064,23 +1061,23 @@ async function fetchMoreMessages() {
       return
     }
 
-    // 🔼 古いメッセージを前方に追加
-    messages.value = [...enriched, ...messages.value]
+    // 追加は unshift
+    messages.value.unshift(...enriched)
 
     await nextTick()
 
-    // ✅ 差分スクロール：スクロール位置を維持するためにずらす
-    const newScrollHeight = list.scrollHeight
-    const diff = newScrollHeight - prevScrollHeight
-    list.scrollTop = prevScrollTop + diff
-
-    suppressAutoScroll.value = false
+    // 👇 高さ確定を待ってから補正
+    requestAnimationFrame(() => {
+      const newScrollHeight = list.scrollHeight
+      const diff = newScrollHeight - prevScrollHeight
+      list.scrollTop = Math.max(0, prevScrollTop + diff)
+      suppressAutoScroll.value = false
+    })
   } catch (err) {
     console.error('❌ fetchMoreMessages エラー:', JSON.stringify(err, null, 2))
     suppressAutoScroll.value = false
   }
 }
-
  
 
 
