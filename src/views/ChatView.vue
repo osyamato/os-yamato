@@ -1091,7 +1091,8 @@ function handleScrollTop() {
   if (!el) return
   console.log("scrollTop:", el.scrollTop)
 
-  if (el.scrollTop <= 5) {
+  // バウンスでマイナスになるのを無視する
+  if (el.scrollTop >= 0 && el.scrollTop <= 20) {
     console.log("📥 過去メッセージ取得発火")
     fetchMoreMessages()
   }
@@ -1196,10 +1197,26 @@ function groupMessagesByDate(messages) {
 function handleInputFocus() {
   if (!isMobile.value) return
 
+  // もし suppressAutoScroll が有効なら「過去読み込み中」とみなしスクロールしない
+  if (suppressAutoScroll.value) return
+
+  const fixOnce = () => {
+    // 直前に過去ログを遡っていない場合のみスクロール
+    if (!suppressAutoScroll.value) {
+      scrollToBottom(true, true) // ← 強制スクロール
+    }
+    window.visualViewport.removeEventListener("resize", fixOnce)
+  }
+
+  // viewport が変わったら一度だけ処理
+  window.visualViewport.addEventListener("resize", fixOnce)
+
+  // フォールバック（600ms 後に再確認）
   setTimeout(() => {
-    const extra = 60 // ← 押し上げたい分の余白
-    window.scrollTo(0, document.body.scrollHeight + extra)
-  }, 500)
+    if (!suppressAutoScroll.value) {
+      scrollToBottom(true, true)
+    }
+  }, 600)
 }
 
 function linkify(content) {
@@ -1328,14 +1345,15 @@ async function createThumbnail(file) {
 .chat-container {
   display: flex;
   flex-direction: column;
-  flex: 1;             /* ← これで親の高さにフィット */
+  flex: 1;                /* 親(view-wrapper)の高さいっぱいにする */
   background: #ffffff;
   color: #000;
   box-sizing: border-box;
 
   width: 100%;
   margin: 0 auto;
-  max-width: 600px; /* ✅ PC向け最大幅 */
+  max-width: 600px;       /* ✅ PC向け最大幅 */
+  overflow: hidden;       /* 👈 window全体スクロールを防ぐ */
 }
 
 /* ✅ PC向けにmin-widthを追加 */
@@ -1344,10 +1362,9 @@ async function createThumbnail(file) {
     min-width: 600px;
   }
 }
-
 .view-wrapper {
-  height: 100dvh;      /* iOS16+ の正しい表示領域 */
-  min-height: 100vh;   /* 古い環境のフォールバック */
+  height: 100dvh;              /* iOS16+ */
+  min-height: 100vh;           /* 古い環境 */
   display: flex;
   flex-direction: column;
 }
