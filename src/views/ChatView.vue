@@ -1190,16 +1190,15 @@ function handleInputFocus() {
   const adjust = () => {
     scrollToBottom(true, true)
     attempts++
-    // 3回ぐらいで終了
     if (attempts >= 3) {
       window.visualViewport?.removeEventListener("resize", adjust)
     }
   }
 
-  // キーボード開閉で複数回resizeが来るので複数回対応
+  // キーボードが開くと resize が複数回走るので数回だけ追従
   window.visualViewport?.addEventListener("resize", adjust)
 
-  // 保険で遅延してもう一度補正
+  // 保険：遅延で追加
   setTimeout(adjust, 700)
   setTimeout(adjust, 1200)
 }
@@ -1920,3 +1919,4 @@ button:hover {
 }
 
 </style>
+
