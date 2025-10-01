@@ -741,12 +741,6 @@ watch(messages, () => {
 })
 
 
-function dismissKeyboard() {
-  const activeElement = document.activeElement
-  if (activeElement && typeof activeElement.blur === 'function') {
-    activeElement.blur()
-  }
-}
 
 function handleOuterClick(event) {
   const target = event.target
@@ -1086,11 +1080,9 @@ const messageListRef = ref(null)
 function handleScrollTop() {
   const el = messageListRef.value
   if (!el) return
-  console.log("scrollTop:", el.scrollTop)
 
   // バウンスでマイナスになるのを無視する
   if (el.scrollTop >= 0 && el.scrollTop <= 20) {
-    console.log("📥 過去メッセージ取得発火")
     fetchMoreMessages()
   }
 }
@@ -1192,29 +1184,33 @@ function groupMessagesByDate(messages) {
 }
 
 function handleInputFocus() {
-  if (!isMobile.value) return
+  if (!isMobile.value || suppressAutoScroll.value) return
 
-  // もし suppressAutoScroll が有効なら「過去読み込み中」とみなしスクロールしない
-  if (suppressAutoScroll.value) return
-
-  const fixOnce = () => {
-    // 直前に過去ログを遡っていない場合のみスクロール
-    if (!suppressAutoScroll.value) {
-      scrollToBottom(true, true) // ← 強制スクロール
+  let attempts = 0
+  const adjust = () => {
+    scrollToBottom(true, true)
+    attempts++
+    // 3回ぐらいで終了
+    if (attempts >= 3) {
+      window.visualViewport?.removeEventListener("resize", adjust)
     }
-    window.visualViewport.removeEventListener("resize", fixOnce)
   }
 
-  // viewport が変わったら一度だけ処理
-  window.visualViewport.addEventListener("resize", fixOnce)
+  // キーボード開閉で複数回resizeが来るので複数回対応
+  window.visualViewport?.addEventListener("resize", adjust)
 
-  // フォールバック（600ms 後に再確認）
-  setTimeout(() => {
-    if (!suppressAutoScroll.value) {
-      scrollToBottom(true, true)
-    }
-  }, 600)
+  // 保険で遅延してもう一度補正
+  setTimeout(adjust, 700)
+  setTimeout(adjust, 1200)
 }
+
+function dismissKeyboard() {
+  const activeElement = document.activeElement
+  if (activeElement && typeof activeElement.blur === 'function') {
+    activeElement.blur()
+  }
+}
+
 
 function linkify(content) {
   if (!content) return ''
