@@ -881,7 +881,6 @@ box-shadow:
   color: gray;
 }
 
-/* ♡ ハートボタン（未いいね状態） */
 .like-button {
   background: none;
   border: none;
@@ -889,12 +888,21 @@ box-shadow:
   cursor: pointer;
   color: gray;
   transition: color 0.4s ease;
+
+  /* 🔑 クリック時にグレー四角を消す */
+  outline: none;
+  -webkit-tap-highlight-color: transparent; /* iOS対策 */
+}
+
+.like-button:active {
+  background: none !important;
+  box-shadow: none !important;
 }
 
 /* ♡ いいね状態のとき */
 .like-button.liked {
   color: #f8a8b5; /* 淡いピンク */
-  animation: pop 0.5s ease;
+  animation: pop 0.7s ease;
 }
 
 /* ゆっくり大きく膨らんで戻るアニメーション */
@@ -903,7 +911,7 @@ box-shadow:
     transform: scale(1);
   }
   40% {
-    transform: scale(1.8);
+    transform: scale(2);
   }
   100% {
     transform: scale(1);
