@@ -17,7 +17,9 @@
         </div>
 
         <!-- 🆔 Yamato ID -->
-        <p class="profile-id" v-if="profile.yamatoId">@{{ profile.yamatoId }}</p>
+<p class="profile-id" v-if="profile.yamatoId">
+  <strong>Yamato ID:</strong> @{{ profile.yamatoId }}
+</p>
 
         <!-- 📖 自己紹介 -->
         <p class="profile-bio" v-if="profile.bio">{{ profile.bio }}</p>
