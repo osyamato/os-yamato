@@ -147,12 +147,15 @@ function resizeImage(file, maxWidth) {
     reader.onload = (e) => {
       const img = new Image()
       img.onload = () => {
+        // アスペクト比を維持してリサイズ
         const scale = maxWidth / img.width
         const canvas = document.createElement('canvas')
         canvas.width = maxWidth
         canvas.height = img.height * scale
         const ctx = canvas.getContext('2d')
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+
+        // JPEG 85% 品質で出力
         canvas.toBlob((blob) => resolve(blob), 'image/jpeg', 0.85)
       }
       img.src = e.target.result
@@ -188,7 +191,7 @@ async function submitComment() {
     const user = await Auth.currentAuthenticatedUser()
     const sub = user.attributes.sub
 
-    // ✅ キャッシュ対応で最適化された取得
+    // ✅ プロフィールキャッシュから取得
     const profile = await getCachedProfile()
 
     const owner = sub
@@ -198,24 +201,29 @@ async function submitComment() {
     let imageKey = null
     let thumbnailKey = null
 
-    if (imageFile.value && thumbnailBlob.value) {
+    if (imageFile.value) {
       const ext = imageFile.value.name.split('.').pop()
       const baseName = `weather/${Date.now()}`
       const imageFileName = `${baseName}.${ext}`
       const thumbFileName = `${baseName}_thumb.${ext}`
 
-      await Storage.put(imageFileName, imageFile.value, {
-        contentType: imageFile.value.type
+      // 🔹 オリジナル画像を横幅1280pxにリサイズ
+      const resizedOriginal = await resizeImage(imageFile.value, 1280)
+      await Storage.put(imageFileName, resizedOriginal, {
+        contentType: 'image/jpeg'
       })
 
-      await Storage.put(thumbFileName, thumbnailBlob.value, {
-        contentType: thumbnailBlob.value.type
+      // 🔹 サムネイルを横幅300pxで生成
+      const resizedThumb = await resizeImage(imageFile.value, 300)
+      await Storage.put(thumbFileName, resizedThumb, {
+        contentType: 'image/jpeg'
       })
 
       imageKey = imageFileName
       thumbnailKey = thumbFileName
     }
 
+    // ✅ GraphQLでコメント作成
     await API.graphql(graphqlOperation(createWeatherComment, {
       input: {
         owner,
@@ -248,6 +256,7 @@ async function submitComment() {
     loading.value = false
   }
 }
+
 </script>
 
 

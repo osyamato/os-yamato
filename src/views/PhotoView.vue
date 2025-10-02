@@ -1194,9 +1194,16 @@ watch(selectedAlbum, (newVal, oldVal) => {
 .modal-toolbar-centered .modal-date-text {
   position: relative;
   transform: none;
-  color: #fff;
+  color: black;   /* ✅ ライトモードでは黒 */
   font-size: 0.8rem;
   pointer-events: none;
+}
+
+/* 🌙 ダークモードでは白に切り替え */
+@media (prefers-color-scheme: dark) {
+  .modal-toolbar-centered .modal-date-text {
+    color: white;
+  }
 }
 
 .modal-toolbar-centered .modal-favorite-icon,
@@ -1460,7 +1467,7 @@ watch(selectedAlbum, (newVal, oldVal) => {
 }
 
 .modal-download-icon {
-  color: white;
+  color: black;           /* デフォルトはライトモード用に黒 */
   background: none;
   border: none;
   font-size: 1.2rem;
@@ -1472,6 +1479,14 @@ watch(selectedAlbum, (newVal, oldVal) => {
   justify-content: center;
   cursor: pointer;
 }
+
+/* 🌙 ダークモード時だけ白にする */
+@media (prefers-color-scheme: dark) {
+  .modal-download-icon {
+    color: white;
+  }
+}
+
 .fade-in-image {
   animation: fadeIn 0.4s ease-out;
 }
