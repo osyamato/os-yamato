@@ -93,18 +93,16 @@
     </div>
 
 <!-- 🌿 Yamatoについてリンク -->
-<div class="account-row" @click="goToAbout">
+<div class="account-row">
   <span class="account-text">{{ t('about') }}</span>
   <IconButton :color="selectedColor" size="medium" @click="goToAbout"> > </IconButton>
 </div>
 
-
-    <!-- 👤 アカウントリンク -->
-
-    <div class="account-row" @click="goToAccount">
-      <span class="account-text">{{ t('account') }}</span>
-      <IconButton :color="selectedColor" size="medium" @click="goToAccount"> > </IconButton>
-    </div>
+<!-- 👤 アカウントリンク -->
+<div class="account-row">
+  <span class="account-text">{{ t('account') }}</span>
+  <IconButton :color="selectedColor" size="medium" @click="goToAccount"> > </IconButton>
+</div>
   </div>
 </template>
 
