@@ -1511,7 +1511,20 @@ button.disabled {
   transition: height 0.1s ease-out;
   box-sizing: border-box;
 }
+@media (prefers-color-scheme: dark) {
+  .input-area {
+    background-color: #111;
+    border-top: 1px solid #555;
+    color: #fff;
+  }
 
+  /* ✏️ 入力欄はグレー背景にする */
+  .message-input {
+    background-color: #333;   /* ← 濃いグレー */
+    border: 1px solid #555;   /* 枠も少し明るめに */
+    color: #fff;
+  }
+}
 
 
 .chat-header {
