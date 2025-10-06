@@ -459,6 +459,14 @@ input {
   border: 1px solid #ccc;
 }
 
+@media (prefers-color-scheme: dark) {
+  input {
+    background-color: #333;
+    color: #fff;
+    border: 1px solid #555;
+  }
+}
+
 /* 会話履歴 */
 .message-list {
   flex: 1;
