@@ -471,8 +471,8 @@ async function fetchMatchingComments() {
 
   const minTemp = temp - 3
   const maxTemp = temp + 3
-  const minHour = Math.floor(hour - 1.5)
-  const maxHour = Math.floor(hour + 1.5)
+  const minHour = Math.floor(hour - 1.0)
+  const maxHour = Math.floor(hour + 1.0)
 
   try {
     const result = await API.graphql({
