@@ -918,15 +918,14 @@ textarea {
 
 .fade-item {
   opacity: 0;
-  transform: translateY(10px);
-  animation: fadeUp 0.35s ease-out forwards;
+  transform: translateY(-10px); /* 上から */
+  animation: fadeDown 0.35s ease-out forwards;
 }
 
-/* アニメーション定義 */
-@keyframes fadeUp {
+@keyframes fadeDown {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(-10px);
   }
   to {
     opacity: 1;
