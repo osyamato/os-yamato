@@ -43,6 +43,7 @@ import MissionView from '../views/Mission.vue'
 import ShiritoriView from '../views/Shiritori.vue' // ✅ しりとりViewのインポート
 import ShiritoriMatchView from '../views/ShiritoriMatch.vue' 
 import ShiritoriRoom from '@/views/ShiritoriRoom.vue'
+import SnapKeepsPrivacyPolicyView from '../views/SnapKeepsPrivacyPolicyView.vue' 
 import { Auth } from 'aws-amplify'
 
 
@@ -64,7 +65,11 @@ const routes = [
   { path: '/photo', name: 'photo', component: PhotoView },
 { path: '/shiritori', name: 'shiritori', component: ShiritoriView },
 { path: '/shiritori-match', name: 'shiritori-match', component: ShiritoriMatchView },
-
+{
+  path: '/snapkeeps-privacy',
+  name: 'snapkeeps-privacy',
+  component: SnapKeepsPrivacyPolicyView
+},
   {
     path: '/shiritori-room/:id',
     name: 'shiritori-room',

@@ -634,8 +634,18 @@
 "mission.expiredTitle": "Unachieved Goals",
 "mission.expiredEmpty": "There are no unachieved goals.",
 "mission.dueDate": "Due Date",
-"mission.confirm.delete": "Are you sure you want to delete this goal?"
+"mission.confirm.delete": "Are you sure you want to delete this goal?",
 
+ "about_title": "About SnapKeeps",
+  "about_description1": "SnapKeeps is an app that temporarily stores photos and screenshots. Once the specified time has passed, the images are automatically deleted.",
+  "about_description2": "It’s designed for quick use — like saving a work schedule or jotting down a quick visual note. Let unneeded images return to the wind, and keep your album clean.",
+  
+  "privacy_title": "Privacy Policy",
+  "privacy_description1": "SnapKeeps (hereafter referred to as \"the app\") is designed with user privacy as a top priority.",
+  "privacy_description2": "The app does not collect or transmit personal information. All data is stored locally on the device and never shared externally.",
+  "privacy_description3": "No internet communication occurs, except for rare cases such as checking for App Store updates.",
+  "privacy_description4": "The developer is not responsible for any data loss caused by device malfunction or loss.",
+  "privacy_contact": "For inquiries, please contact support-weather@hanaco875.com."
 
 
 
