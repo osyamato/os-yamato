@@ -130,7 +130,14 @@ let historyStack = []
 let isBack = false
 
 router.beforeEach(async (to, from, next) => {
-  const publicPages = ['/signin', '/register', '/forgot-password', '/verify-email', '/about']
+const publicPages = [
+  '/signin',
+  '/register',
+  '/forgot-password',
+  '/verify-email',
+  '/about',
+  '/snapkeeps-privacy' // ← 🔑 これを追加！
+]
   const authRequired = !publicPages.includes(to.path)
 
   // 戻り遷移かどうかを記録（既存ロジック）
