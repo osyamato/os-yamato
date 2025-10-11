@@ -60,6 +60,13 @@
       </p>
     </section>
 
+<section @click="goToSnapkeeps" class="snapkeeps-section">
+  <h3 class="snapkeeps-link">
+    SnapKeeps
+    <span class="snapkeeps-arrow">→</span>
+  </h3>
+</section>
+
 <section>
   <h3>{{ $t('about.contactTitle') }}</h3>
   <p>{{ $t('about.developer') }}: OS Yamato (Japan)</p>
@@ -100,6 +107,13 @@ import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import TermsModal from '@/components/TermsModal.vue'
 import PremiumModal from '@/components/PremiumModal.vue'
+
+import { useRouter } from 'vue-router'
+const router = useRouter()
+
+const goToSnapkeeps = () => {
+  router.push('/snapkeeps-privacy') // 必要に応じてルート名に変更
+}
 
 const showPremium = ref(false)
 const showTerms = ref(false)
@@ -194,6 +208,33 @@ a {
 .logo-image.visible {
   opacity: 1;
 }
+
+.snapkeeps-section {
+  cursor: pointer;
+  margin-bottom: 2rem;
+}
+
+.snapkeeps-link {
+  font-size: 1.2rem;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: black; /* デフォルト（ライトモード） */
+}
+
+/* 🌙 ダークモード用：SnapKeeps を白に */
+@media (prefers-color-scheme: dark) {
+  .snapkeeps-link {
+    color: white;
+  }
+}
+
+.snapkeeps-arrow {
+  color: var(--yamato-primary); /* → の色 */
+  font-size: 1.2rem;
+}
+
 </style>
 
 
