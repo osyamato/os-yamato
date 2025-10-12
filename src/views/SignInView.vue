@@ -1,5 +1,5 @@
 <template>
-  <div class="signin-root">
+<div class="signin-root" @click="handleBackgroundTap">
     <!-- 🌸 桜の花びら（12枚） -->
     <img
       v-for="petal in sakuraList"
@@ -97,6 +97,17 @@ const signIn = async () => {
     router.push('/transition')
   } catch (error) {
     errorMessage.value = error.message || 'サインインに失敗しました。'
+  }
+}
+const handleBackgroundTap = (event) => {
+  const target = event.target
+  const isInput = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA'
+  if (!isInput) {
+    // アクティブな要素のフォーカスを外す
+    const active = document.activeElement
+    if (active && typeof active.blur === 'function') {
+      active.blur()
+    }
   }
 }
 
