@@ -9,7 +9,19 @@
         <select v-model="selectedLanguage" @change="changeLanguage" id="language">
           <option value="ja">{{ t('japanese') }}</option>
           <option value="en">{{ t('english') }}</option>
+          <option value="zh">{{ $t('chinese') }}</option>
         </select>
+      </div>
+
+      <!-- 🔗 App Storeリンク -->
+      <div class="appstore-link">
+        <a
+          href="https://apps.apple.com/app/snapkeeps/id6753777082"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          SnapKeeps →
+        </a>
       </div>
 
       <p>{{ $t('about_description1') }}</p>
@@ -87,4 +99,19 @@ const changeLanguage = () => {
   align-items: center;
   gap: 0.5rem;
 }
+
+.appstore-link {
+  margin-bottom: 1.5rem;
+}
+
+.appstore-link a {
+  color: var(--yamato-primary, #007aff); /* OS Yamato の primary 色に対応 */
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.appstore-link a:hover {
+  text-decoration: underline;
+}
+
 </style>
