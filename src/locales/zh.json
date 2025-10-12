@@ -596,7 +596,19 @@
 "mission.expiredTitle": "未完成的目标",
 "mission.expiredEmpty": "暂无未完成的目标。",
 "mission.dueDate": "截止日期",
-"mission.confirm.delete": "确定要删除这个目标吗？"
+"mission.confirm.delete": "确定要删除这个目标吗？",
+
+"about_title": "关于 SnapKeeps",
+  "about_description1": "SnapKeeps 是一款临时保存照片和截图的应用程序。达到设定的时间后，图像将自动被删除。",
+  "about_description2": "它旨在让用户轻松记录工作日程或作为便签使用。让不需要的照片随风而去，保持相册整洁。",
+
+  "privacy_title": "隐私政策",
+  "privacy_description1": "SnapKeeps（以下简称“本应用”）在设计时始终将用户隐私保护放在首位。",
+  "privacy_description2": "本应用不会收集或传输任何个人信息。所有数据仅保存在设备本地，绝不会传送到外部。",
+  "privacy_description3": "本应用通常无需网络连接，仅在 App Store 检查更新等系统级功能中可能使用网络通信。",
+  "privacy_description4": "对于因设备丢失或故障导致的数据丢失，开发者不承担任何责任。",
+  "privacy_contact": "联系方式：support-weather@hanaco875.com"
+
 
 
 
