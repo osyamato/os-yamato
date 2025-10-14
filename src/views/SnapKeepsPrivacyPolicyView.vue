@@ -20,7 +20,7 @@
           target="_blank"
           rel="noopener noreferrer"
         >
-          SnapKeeps →
+          SnapKeeps (iOS App) →
         </a>
       </div>
 
