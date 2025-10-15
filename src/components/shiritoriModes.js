@@ -2,7 +2,7 @@ export const speedModes = {
   ume: {
     name: 'Plum',
     timeLimit: 15000,
-    label: '梅',
+    label: '🐢',
     description: 'ゆったり遊べる初心者モード',
     rules: {
       allowRepeat: true,
@@ -12,7 +12,7 @@ export const speedModes = {
   take: {
     name: 'Bamboo',
     timeLimit: 10000,
-    label: '竹',
+    label: '🐿️',
     description: '標準のバランスモード',
     rules: {
       allowRepeat: false,
@@ -22,7 +22,7 @@ export const speedModes = {
   matsu: {
     name: 'Pine',
     timeLimit: 5000,
-    label: '松',
+    label: '🐇',
     description: 'スピード勝負の上級者モード',
     rules: {
       allowRepeat: false,
