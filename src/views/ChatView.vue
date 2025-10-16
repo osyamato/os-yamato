@@ -69,14 +69,15 @@
 
               <template v-else>
                 <div class="message-wrapper text-with-time">
-                  <div
-                    class="message"
-                    @touchstart="startLongPress(msg.id)"
-                    @touchend="cancelLongPress"
-                    @mousedown="startLongPress(msg.id)"
-                    @mouseup="cancelLongPress"
-                    @mouseleave="cancelLongPress"
-                  >
+<div
+  class="message"
+  @touchstart="isMobile ? startLongPress(msg.id) : null"
+  @touchend="isMobile ? cancelLongPress() : null"
+  @mousedown="!isMobile ? null : startLongPress(msg.id)"
+  @mouseup="!isMobile ? null : cancelLongPress()"
+  @mouseleave="!isMobile ? null : cancelLongPress()"
+  @dblclick="!isMobile && handleDesktopDoubleClick(msg.id)"
+>
  <div v-html="linkify(msg.content)"></div>
                   </div>
                   <span class="timestamp-right">{{ formatTime(msg.timestamp) }}</span>
@@ -1324,6 +1325,14 @@ async function createThumbnail(file) {
       }
     }, 'image/jpeg', 0.8)
   })
+}
+
+function handleDesktopDoubleClick(messageId) {
+  if (!isMobile.value) {
+    showReactionPickerFor.value =
+      showReactionPickerFor.value === messageId ? null : messageId
+    copiableMessageId.value = messageId
+  }
 }
 
 </script>
