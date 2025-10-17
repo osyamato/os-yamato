@@ -18,13 +18,23 @@
   >
     ✏️
   </IconButton>
-<IconButton
-  :color="filterWiltingOnly ? 'white' : selectedColor"
-  size="medium"
-  @click="toggleWiltingFilter"
->
-  🥀
-</IconButton>
+
+  <IconButton
+    :color="filterWiltingOnly ? 'white' : selectedColor"
+    size="medium"
+    @click="toggleWiltingFilter"
+  >
+    🥀
+  </IconButton>
+
+  <!-- 📃 listモード切り替えボタン -->
+  <IconButton
+:color="filterWiltingOnly ? 'white' : selectedColor"
+    size="medium"
+    @click="viewMode = 'list'"
+  >
+    📃
+  </IconButton>
 </div>
 
 <p v-if="filterWiltingOnly" class="wilted-message">
@@ -144,6 +154,8 @@ import Modal from '@/components/Modal.vue'
 import IconButton from '@/components/IconButton.vue'
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
+
+const viewMode = ref('flower') 
 
 const selectedColor = ref('#274c77')
 
