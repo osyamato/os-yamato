@@ -44,6 +44,7 @@ import ShiritoriView from '../views/Shiritori.vue' // ✅ しりとりViewのイ
 import ShiritoriMatchView from '../views/ShiritoriMatch.vue' 
 import ShiritoriRoom from '@/views/ShiritoriRoom.vue'
 import SnapKeepsPrivacyPolicyView from '../views/SnapKeepsPrivacyPolicyView.vue' 
+
 import { Auth } from 'aws-amplify'
 
 

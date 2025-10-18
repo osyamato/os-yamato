@@ -1,48 +1,28 @@
 <template>
   <div class="gradient-background"></div>
   <div class="diary-container">
-<div class="year-header">
-  <div class="year-title">
-    <button class="arrow-inline" @click="prevYear">&lt;</button>
-<h2 class="diary-title">{{ $t('diary.title', { year: currentYear }) }}</h2>
-    <button class="arrow-inline" @click="nextYear">&gt;</button>
-  </div>
+    <!-- 年タイトル -->
+    <div class="year-header">
+      <div class="year-title">
+        <button class="arrow-inline" @click="prevYear">&lt;</button>
+        <h2 class="diary-title">{{ $t('diary.title', { year: currentYear }) }}</h2>
+        <button class="arrow-inline" @click="nextYear">&gt;</button>
+      </div>
     </div>
 
-    <!-- ペンシルボタンは年の下に独立 -->
-<div class="edit-button-wrapper">
-  <IconButton
-    :color="selectedColor"
-    size="medium"
-    @click="openNewDiaryModal"
-  >
-    ✏️
-  </IconButton>
+    <!-- アイコンボタン類 -->
+    <div class="edit-button-wrapper">
+      <IconButton :color="selectedColor" size="medium" @click="openNewDiaryModal">✏️</IconButton>
+      <IconButton :color="filterWiltingOnly ? 'white' : selectedColor" size="medium" @click="toggleWiltingFilter">🥀</IconButton>
+      <IconButton :color="viewMode === 'list' ? 'white' : selectedColor" size="medium" @click="viewMode = 'list'">📃</IconButton>
+      <IconButton :color="viewMode === 'flower' ? 'white' : selectedColor" size="medium" @click="viewMode = 'flower'">🌸</IconButton>
+    </div>
 
-  <IconButton
-    :color="filterWiltingOnly ? 'white' : selectedColor"
-    size="medium"
-    @click="toggleWiltingFilter"
-  >
-    🥀
-  </IconButton>
+    <!-- 枯れたメッセージ -->
+    <p v-if="filterWiltingOnly" class="wilted-message">{{ t('message.memoryFlower') }}</p>
 
-  <!-- 📃 listモード切り替えボタン -->
-  <IconButton
-:color="filterWiltingOnly ? 'white' : selectedColor"
-    size="medium"
-    @click="viewMode = 'list'"
-  >
-    📃
-  </IconButton>
-</div>
-
-<p v-if="filterWiltingOnly" class="wilted-message">
-  {{ t('message.memoryFlower') }}
-</p>
-
-
-    <div class="full-flower-area">
+    <!-- 花ビュー -->
+    <div class="full-flower-area" v-if="viewMode === 'flower'">
       <div
         class="flower"
         v-for="(diary, index) in diaries"
@@ -57,19 +37,23 @@
             alt="花"
             @error="e => e.target.style.display = 'none'"
           />
-          <div
-            v-if="isRecentlyOpened(diary)"
-            class="butterfly-wrapper"
-          >
-            <div
-              class="butterfly"
-              :style="{ '--delay': `${(Math.random() * 10).toFixed(2)}s` }"
-            >
-              🦋
-            </div>
+          <div v-if="isRecentlyOpened(diary)" class="butterfly-wrapper">
+            <div class="butterfly" :style="{ '--delay': `${(Math.random() * 10).toFixed(2)}s` }">🦋</div>
           </div>
         </div>
         <small>{{ formatDate(diary.date) }}</small>
+      </div>
+    </div>
+
+    <!-- メモビュー -->
+    <div v-if="viewMode === 'list'" class="diary-memo-list">
+      <div
+        class="diary-memo-card"
+        v-for="diary in sortedDiaries"
+        :key="diary.id"
+      >
+        <div class="diary-date">{{ formatDate(diary.date) }}</div>
+        <div class="diary-text">{{ truncate(diary.content) }}</div>
       </div>
     </div>
 
@@ -78,69 +62,61 @@
       <div class="diary-modal-overlay" v-if="showNewDiaryModal" @click.self="closeModal">
         <div class="diary-modal" @click.stop>
           <div class="note-date">
-            <input
-              type="date"
-              v-model="selectedDate"
-              class="diary-date-input"
-            />
+            <input type="date" v-model="selectedDate" class="diary-date-input" />
           </div>
-<div
-  class="note-editor"
-  contenteditable="true"
-  :data-placeholder="$t('diary.placeholder')"
-  @input="handleInput"
-  @keyup="handleInput"
-  @compositionend="handleInput"
-  ref="editor"
-/>
+          <div
+            class="note-editor"
+            contenteditable="true"
+            :data-placeholder="$t('diary.placeholder')"
+            @input="handleInput"
+            @keyup="handleInput"
+            @compositionend="handleInput"
+            ref="editor"
+          />
           <div class="button-row">
-<YamatoButton
-  type="default"
-  @click="saveDiary"
-  :disabled="!newDiaryContent.replace(/\s/g, '')"
->
-  {{ t('save') }}
-</YamatoButton>
+            <YamatoButton
+              type="default"
+              @click="saveDiary"
+              :disabled="!newDiaryContent.replace(/\s/g, '')"
+            >
+              {{ t('save') }}
+            </YamatoButton>
           </div>
         </div>
       </div>
     </transition>
 
     <!-- モーダル：閲覧 -->
-<transition name="drop-modal">
-  <div class="modal" v-if="selectedDiary">
-    <div class="modal-background" @click="closeDiaryModal"></div>
-    <div class="diary-modal" @click.stop>
-      
-      <!-- ✅ ヘッダー（日付：中央、メニュー：右上） -->
-      <div class="modal-header">
-        <div class="note-date center">{{ formatDisplayDate(selectedDiary.date) }}</div>
-        <IconButton
-          class="menu-button no-bg no-radius"
-          :color="'transparent'"
-          size="small"
-          @click="showDiaryMenu = true"
-        >
-          ⋯
-        </IconButton>
+    <transition name="drop-modal">
+      <div class="modal" v-if="selectedDiary">
+        <div class="modal-background" @click="closeDiaryModal"></div>
+        <div class="diary-modal" @click.stop>
+          <div class="modal-header">
+            <div class="note-date center">{{ formatDisplayDate(selectedDiary.date) }}</div>
+            <IconButton
+              class="menu-button no-bg no-radius"
+              :color="'transparent'"
+              size="small"
+              @click="showDiaryMenu = true"
+            >
+              ⋯
+            </IconButton>
+          </div>
+          <div class="note-editor" v-text="selectedDiary.content"></div>
+        </div>
+
+        <ConfirmDialog
+          v-if="showDiaryMenu"
+          :visible="true"
+          :message="t('confirm.delete')"
+          @confirm="handleConfirmedDelete"
+          @cancel="showDiaryMenu = false"
+        />
       </div>
-
-      <!-- ✅ 本文 -->
-      <div class="note-editor" v-text="selectedDiary.content"></div>
-    </div>
-
-    <!-- ✅ 削除確認ダイアログ -->
-    <ConfirmDialog
-      v-if="showDiaryMenu"
-      :visible="true"
-      :message="t('confirm.delete')"
-      @confirm="handleConfirmedDelete"
-      @cancel="showDiaryMenu = false"
-    />
-  </div>
-</transition>
+    </transition>
   </div>
 </template>
+
 
 
 <script setup>
@@ -152,10 +128,20 @@ import { listDiaries } from '@/graphql/queries'
 import YamatoButton from '@/components/YamatoButton.vue'
 import Modal from '@/components/Modal.vue'
 import IconButton from '@/components/IconButton.vue'
+import { computed } from 'vue'
+
+import { useRouter } from 'vue-router'
+const router = useRouter()
+
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 
 const viewMode = ref('flower') 
+
+
+const toggleViewMode = () => {
+  viewMode.value = viewMode.value === 'flower' ? 'list' : 'flower'
+}
 
 const selectedColor = ref('#274c77')
 
@@ -183,6 +169,11 @@ const currentIndex = ref(0)
 const editor = ref(null)
 
 const showDiaryMenu = ref(false)
+
+const sortedDiaries = computed(() => {
+  return diaries.value.slice().sort((a, b) => new Date(b.date) - new Date(a.date))
+})
+
 
 function handleConfirmedDelete() {
   if (selectedDiary.value?.id) {
@@ -362,6 +353,10 @@ const filterWiltingOnly = ref(false)
 function toggleWiltingFilter() {
   filterWiltingOnly.value = !filterWiltingOnly.value
   fetchDiaries()
+}
+
+function truncate(text, max = 40) {
+  return text?.length > max ? text.slice(0, max) + '…' : text
 }
 
 </script>
@@ -807,5 +802,39 @@ margin: auto;
   100% { transform: translateY(-10px) rotate(-1deg); opacity: 0.85; }
 }
 
+.note-list-view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;  /* ⬅ ノートを中央寄せに */
+  gap: 2rem;            /* ⬅ ノート同士の間隔 */
+  padding: 1rem 0 4rem;
+}
+.diary-memo-list {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding-bottom: 2rem;
+}
+.diary-memo-card {
+  background: #fff;
+  width: 90%;
+  max-width: 460px;
+  padding: 1rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  text-align: left;
+}
+.diary-date {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 0.3rem;
+}
+.diary-text {
+  font-size: 1rem;
+  color: #222;
+  white-space: pre-wrap;
+}
 
 </style>
+
