@@ -707,6 +707,19 @@ margin: auto;
   }
 }
 
+@media (min-width: 481px) and (max-width: 1024px) {
+  .full-flower-area {
+    grid-template-columns: repeat(6, 1fr);
+  }
+}
+
+/* PC用：8列 */
+@media (min-width: 1025px) {
+  .full-flower-area {
+    grid-template-columns: repeat(8, 1fr);
+  }
+}
+
 .flower small {
   display: block;
   margin-top: 0.2rem;       /* ✅ 少し詰める */
