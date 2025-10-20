@@ -45,18 +45,21 @@
       </div>
     </div>
 
-    <!-- メモビュー -->
-    <div v-if="viewMode === 'list'" class="diary-memo-list">
 <div
-  class="diary-memo-card"
-  v-for="diary in sortedDiaries"
-  :key="diary.id"
-  @click="openDiary(diary)"
+  v-if="viewMode === 'list'"
+  class="diary-memo-list"
+  :key="viewMode"
 >
-        <div class="diary-date">{{ formatDate(diary.date) }}</div>
-        <div class="diary-text">{{ truncate(diary.content) }}</div>
-      </div>
-    </div>
+  <div
+    v-for="(diary, index) in sortedDiaries"
+    :key="diary.id"
+    class="diary-memo-card fade-down"
+    :style="{ animationDelay: `${index * 0.1}s` }"
+  >
+    <div class="diary-date">{{ formatDate(diary.date) }}</div>
+    <div class="diary-text">{{ truncate(diary.content) }}</div>
+  </div>    
+</div>
 
     <!-- モーダル：新規作成 -->
     <transition name="drop-modal">
@@ -359,6 +362,15 @@ function toggleWiltingFilter() {
 function truncate(text, max = 40) {
   return text?.length > max ? text.slice(0, max) + '…' : text
 }
+
+
+const showList = ref(false)
+
+onMounted(() => {
+  setTimeout(() => {
+    showList.value = true
+  }, 100) // 少し待ってから表示すると自然
+})
 
 </script>
 
@@ -695,6 +707,19 @@ margin: auto;
   }
 }
 
+@media (min-width: 481px) and (max-width: 1024px) {
+  .full-flower-area {
+    grid-template-columns: repeat(6, 1fr);
+  }
+}
+
+/* PC用：8列 */
+@media (min-width: 1025px) {
+  .full-flower-area {
+    grid-template-columns: repeat(8, 1fr);
+  }
+}
+
 .flower small {
   display: block;
   margin-top: 0.2rem;       /* ✅ 少し詰める */
@@ -835,6 +860,22 @@ box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
   font-size: 1rem;
   color: #222;
   white-space: pre-wrap;
+}
+
+@keyframes fadeDown {
+  0% {
+    opacity: 0;
+    transform: translateY(-24px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-down {
+  opacity: 0; /* 初期状態 */
+  animation: fadeDown 0.4s ease-out forwards;
 }
 
 </style>
