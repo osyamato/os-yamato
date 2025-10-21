@@ -136,17 +136,31 @@ h2 {
 }
 
 .icon-flex-grid {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
   gap: 1.2rem;
+  justify-items: center;
+  padding: 0 0.5rem;
+  max-width: 100%;
+  box-sizing: border-box;
   margin-bottom: 1rem;
+}
+
+/* 💻 PCだけ 8列固定＋中央寄せ */
+@media (min-width: 1025px) {
+  .icon-flex-grid {
+    grid-template-columns: repeat(8, 1fr);  /* 固定8列 */
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+  }
 }
 
 .icon-container {
   display: flex;
   justify-content: center;
 }
+
 
 .icon-box {
   width: 48px;
