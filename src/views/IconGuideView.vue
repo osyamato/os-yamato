@@ -2,7 +2,7 @@
   <div :class="['icon-guide', { dropDown: shouldAnimate }]">
     <h2>{{ $t('iconGuide.title') }}</h2>
 
-    <p class="guide-access">{{ $t('iconGuide.access') }}</p>
+<p class="guide-access">{{ $t('iconGuide.access') }}</p>
     <p class="guide-subtitle">{{ $t('iconGuide.subtitle') }}</p>
 
     <div class="guide-icon-wrapper">
@@ -208,7 +208,6 @@ h2 {
 }
 
 .guide-subtitle,
-.guide-access,
 .guide-instruction {
   text-align: center;
   font-size: 0.9rem;
@@ -216,11 +215,37 @@ h2 {
   white-space: pre-wrap;
 }
 
+.guide-access {
+  text-align: center;
+  font-size: 1.1rem;     /* ✅ アクセス案内だけ少し大きく */
+  font-weight: bold;     /* ✅ 太字で強調（任意） */
+  color: #333;
+  white-space: pre-wrap;
+  margin-bottom: 1rem;
+}
+
+.guide-access a {
+  display: inline-block;
+  margin-top: 0.3rem;
+  font-size: 1.05rem;     /* ✅ リンクを少し大きく */
+  color: #007bff;         /* ✅ 視認性の高い青色 */
+  font-weight: normal;    /* 本文よりは控えめに */
+  text-decoration: underline;
+  word-break: break-all;  /* ✅ 長いURLの折り返し対策 */
+}
+
 @media (prefers-color-scheme: dark) {
   .guide-subtitle,
-  .guide-access,
   .guide-instruction {
     color: #ccc;
+  }
+
+  .guide-access {
+    color: #fff;
+  }
+
+  .guide-access a {
+    color: #66bfff; /* ✅ ダークモードでも明るい青でリンクを表示 */
   }
 }
 
