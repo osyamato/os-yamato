@@ -137,6 +137,7 @@ const publicPages = [
   '/forgot-password',
   '/verify-email',
   '/about',
+ '/icon-guide', 
   '/snapkeeps-privacy' // ← 🔑 これを追加！
 ]
   const authRequired = !publicPages.includes(to.path)
