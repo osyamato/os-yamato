@@ -151,7 +151,7 @@
             >
               <div class="emoji-list">
                 <span
-                  v-for="emoji in ['❤️','😆','🥺','😮','😂','🥰','😭',👍']"
+  v-for="emoji in ['❤️','😆','🥺','😮','😂','🥰','😭','👍']"
                   :key="emoji"
                   @click="selectReaction(emoji, msg)"
                 >
