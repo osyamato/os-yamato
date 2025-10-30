@@ -231,10 +231,16 @@ a {
 }
 
 .snapkeeps-arrow {
-  color: var(--yamato-primary); /* → の色 */
+  background-color: var(--yamato-primary);
+  color: white;
   font-size: 1.2rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
 }
-
 </style>
 
 
