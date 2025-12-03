@@ -309,13 +309,28 @@ const isAllDay = ref(false)
 // -----------------------
 // 📌 Fetch & Apply
 // -----------------------
-async function fetchSchedules() {
-  const user = await Auth.currentAuthenticatedUser()
-  language.value = user.attributes['custom:language'] || 'ja'
-  const { data } = await API.graphql(graphqlOperation(listSchedules, {
-    filter: { owner: { eq: user.username } }
-  }))
-  schedules.value = data.listSchedules.items
+async function fetchSchedules(year = currentYear.value, month = currentMonth.value) {
+  try {
+    const user = await Auth.currentAuthenticatedUser()
+    language.value = user.attributes['custom:language'] || 'ja'
+
+    const prefix = `${year}-${(month + 1).toString().padStart(2, '0')}`
+
+    const { data } = await API.graphql(graphqlOperation(listSchedules, {
+      filter: {
+        owner: { eq: user.username },
+        date: { beginsWith: prefix }
+      }
+    }))
+
+    schedules.value = (data.listSchedules.items || []).map(item => ({
+      ...item,
+      date: new Date(item.date).toLocaleDateString('sv-SE')
+    }))
+
+  } catch (err) {
+    console.error('fetchSchedules failed:', err)
+  }
 }
 
 const isEditing = ref(false)
@@ -634,9 +649,14 @@ async function createSchedule() {
     owner: user.username
   }
 
-  await API.graphql(graphqlOperation(createScheduleMutation, { input }))
-  await fetchSchedules()
-  selectedDate.value = null
+
+  try {
+    const res = await API.graphql(graphqlOperation(createScheduleMutation, { input }))
+    await fetchSchedules()
+    selectedDate.value = null
+  } catch (err) {
+    alert('予定の保存に失敗しました')
+  }
 }
 
 async function updateSchedule() {
@@ -672,7 +692,7 @@ async function updateSchedule() {
 
 function nextMonth() {
   animationDirection.value = ''
-  setTimeout(() => {
+  setTimeout(async () => {
     animationDirection.value = 'slide-left'
     if (currentMonth.value === 11) {
       currentMonth.value = 0
@@ -680,12 +700,13 @@ function nextMonth() {
     } else {
       currentMonth.value++
     }
+    await fetchSchedules(currentYear.value, currentMonth.value)
   }, 10)
 }
 
 function prevMonth() {
   animationDirection.value = ''
-  setTimeout(() => {
+  setTimeout(async () => {
     animationDirection.value = 'slide-right'
     if (currentMonth.value === 0) {
       currentMonth.value = 11
@@ -693,6 +714,7 @@ function prevMonth() {
     } else {
       currentMonth.value--
     }
+    await fetchSchedules(currentYear.value, currentMonth.value)
   }, 10)
 }
 
