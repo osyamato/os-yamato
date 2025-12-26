@@ -1083,14 +1083,14 @@ watch(selectedAlbum, (newVal, oldVal) => {
 
 .photo-grid {
   display: grid;
-  gap: 0.15rem; /* ✅ ここを小さくする（0.5rem → 0.25rem） */
+  gap: 0.35rem; /* ✅ ここを小さくする（0.5rem → 0.25rem） */
   grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
 }
 
 @media (max-width: 430px) {
   .photo-grid {
     grid-template-columns: repeat(4, 1fr);
-    gap: 0.15rem; /* ✅ スマホはさらに詰める */
+    gap: 0.40rem; /* ✅ スマホはさらに詰める */
   }
 }
 .photo-card {
