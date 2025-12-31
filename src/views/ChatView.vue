@@ -591,6 +591,19 @@ const bottomOfChat = ref(null)
 const partnerDisplayName = ref('')
 const messages = ref([])
 const newMessage = ref('')
+
+// 🔐 下書き保存キー
+const DRAFT_KEY = 'chat_draft_message'
+
+// ✍️ 入力中の内容を常に保存
+watch(newMessage, (val) => {
+  if (val && val.trim() !== '') {
+    localStorage.setItem(DRAFT_KEY, val)
+  } else {
+    localStorage.removeItem(DRAFT_KEY)
+  }
+})
+
 const myYamatoId = ref('')
 const mySub = ref('')
 const roomId = ref('')
@@ -770,6 +783,12 @@ function hideKeyboard() {
 
 
 onMounted(async () => {
+
+// ♻️ 下書き復元（iOS Safari対策）
+const draft = localStorage.getItem(DRAFT_KEY)
+if (draft) {
+  newMessage.value = draft
+}
   // ✅ 1. 認証ユーザーの取得と基本情報
   const user = await Auth.currentAuthenticatedUser()
   mySub.value = user.attributes.sub
@@ -912,7 +931,9 @@ async function sendMessage() {
 
     // ✅ 成功後処理
     newMessage.value = ''
-    await nextTick()
+localStorage.removeItem(DRAFT_KEY)
+ 
+   await nextTick()
 
  if (textareaRef.value) {
       textareaRef.value.style.height = 'auto'
@@ -951,6 +972,14 @@ function formatTime(ts) {
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 }
 
+
+onMounted(() => {
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      localStorage.setItem(DRAFT_KEY, newMessage.value || '')
+    }
+  })
+})
 
 async function fetchMessages() {
   try {

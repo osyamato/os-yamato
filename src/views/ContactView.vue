@@ -163,6 +163,7 @@ import IconButton from '@/components/IconButton.vue'
 import { nextTick } from 'vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import { useI18n } from 'vue-i18n'
+
 const { t } = useI18n()
 
 
@@ -551,6 +552,7 @@ async function handleConfirmedDelete() {
     await fetchContacts()
   }
 }
+
 
 </script>
 
