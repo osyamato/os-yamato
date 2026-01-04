@@ -573,11 +573,19 @@ function getEvents(date) {
 
 function getEventCellStyle(date) {
   if (!isValidDate(date)) return {}
+
   const count = getEvents(date).length
-  if (count === 0) return { backgroundColor: 'rgba(100, 150, 255, 0.08)' }
-  else if (count === 1) return { backgroundColor: 'rgba(255, 180, 130, 0.18)' }
-  else if (count === 2) return { backgroundColor: 'rgba(255, 120, 80, 0.2)' }
-  else return { backgroundColor: 'rgba(180, 60, 60, 0.25)' }
+
+  if (count === 1) {
+    return { backgroundColor: 'rgba(255, 180, 130, 0.18)' }
+  } else if (count === 2) {
+    return { backgroundColor: 'rgba(255, 120, 80, 0.2)' }
+  } else if (count >= 3) {
+    return { backgroundColor: 'rgba(180, 60, 60, 0.25)' }
+  }
+
+  // ✅ 0件のときは「何も指定しない」
+  return {}
 }
 
 function getHolidayNameSafe(date) {
