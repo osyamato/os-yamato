@@ -62,7 +62,7 @@
 
 <section @click="goToSnapkeeps" class="snapkeeps-section">
   <h3 class="snapkeeps-link">
-    SnapKeeps
+    SnapKeeps(iOS App)
     <span class="snapkeeps-arrow">→</span>
   </h3>
 </section>
