@@ -46,7 +46,10 @@
         class="session-card"
       >
         <div class="session-info" @click="goToSession(session.id)">
-          <h3 class="session-title">{{ session.title || t('common.untitled') }}</h3>
+<h3 class="session-title">
+  <span class="session-icon">{{ getExpiryIcon(session) }}</span>
+  {{ session.title || t('common.untitled') }}
+</h3>
           <p class="session-date">{{ t('gptMini.updated') }}: {{ formatDate(session.updatedAt) }}</p>
         </div>
         <button class="more-button" @click.stop="openConfirm(session)">…</button>
@@ -282,6 +285,21 @@ onMounted(async () => {
   }, 600)
 })
 
+function getExpiryIcon(session) {
+  const base = session.updatedAt || session.createdAt
+  if (!base) return '🌱'
+
+  const now = new Date()
+  const baseDate = new Date(base)
+  if (isNaN(baseDate)) return '🌱'
+
+  const diffDays = (now - baseDate) / (1000 * 60 * 60 * 24)
+
+  if (diffDays < 30) return '🌱'
+  else if (diffDays < 300) return '🌷'
+  else return '🥀'
+}
+
 watch(() => route.query.mode, (newMode) => {
   selectedMode.value = newMode || ''
 })
@@ -499,6 +517,9 @@ watch(() => route.query.mode, (newMode) => {
     color: #fff;
   }
 }
-
+.session-icon {
+  margin-right: 8px;
+  font-size: 1.1rem;
+}
 
 </style>
