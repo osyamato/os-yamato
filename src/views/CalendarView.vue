@@ -365,13 +365,22 @@ onBeforeUnmount(() => {
 })
 
 function handleKeydown(e) {
-  if (e.key === 'ArrowLeft') {
-    prevMonth()
-  } else if (e.key === 'ArrowRight') {
-    nextMonth()
+  // 予定モーダルが開いていて、編集中でない
+  if (!selectedDate.value || isEditing.value) return
+
+  // Delete / Backspace（Mac対応）
+  if (e.key === 'Delete' || e.key === 'Backspace') {
+    if (selectedEvents.value.length === 1) {
+      // 1件だけなら即対象を決める
+      promptDeleteEvent(selectedEvents.value[0].id)
+    }
+  }
+
+  // Enterで削除確定
+  if (e.key === 'Enter' && showConfirm.value) {
+    handleConfirmedDelete()
   }
 }
-
 
 function startEdit(event) {
   editingEventId.value = event.id
