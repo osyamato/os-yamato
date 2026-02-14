@@ -44,6 +44,7 @@ import ShiritoriView from '../views/Shiritori.vue' // ✅ しりとりViewのイ
 import ShiritoriMatchView from '../views/ShiritoriMatch.vue' 
 import ShiritoriRoom from '@/views/ShiritoriRoom.vue'
 import SnapKeepsPrivacyPolicyView from '../views/SnapKeepsPrivacyPolicyView.vue' 
+import PrivacyView from '../views/PrivacyView.vue'
 
 import { Auth } from 'aws-amplify'
 
@@ -70,6 +71,11 @@ const routes = [
   path: '/snapkeeps-privacy',
   name: 'snapkeeps-privacy',
   component: SnapKeepsPrivacyPolicyView
+},
+{
+  path: '/privacy',
+  name: 'privacy',
+  component: PrivacyView
 },
   {
     path: '/shiritori-room/:id',
@@ -138,6 +144,7 @@ const publicPages = [
   '/verify-email',
   '/about',
  '/icon-guide', 
+'/privacy',
   '/snapkeeps-privacy' // ← 🔑 これを追加！
 ]
   const authRequired = !publicPages.includes(to.path)
