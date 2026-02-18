@@ -587,7 +587,10 @@
 "mission.expiredTitle": "Objetivos no cumplidos",
 "mission.expiredEmpty": "No hay objetivos no cumplidos.",
 "mission.dueDate": "Fecha límite",
-"mission.confirm.delete": "¿Estás seguro de que deseas eliminar este objetivo?"
+"mission.confirm.delete": "¿Estás seguro de que deseas eliminar este objetivo?",
+
+ "about.hanacoGarden": "Jardin hanaco",
+  "about.hanacoWeather": "Météo hanaco"
 
 
 

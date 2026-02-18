@@ -67,6 +67,21 @@
   </h3>
 </section>
 
+<section @click="goToHanacoGarden" class="snapkeeps-section">
+  <h3 class="snapkeeps-link">
+    {{ $t('about.hanacoGarden') }}
+    <span class="snapkeeps-arrow">→</span>
+  </h3>
+</section>
+
+<!-- 🌤 花子天気 -->
+<section @click="goToHanacoWeather" class="snapkeeps-section">
+  <h3 class="snapkeeps-link">
+    {{ $t('about.hanacoWeather') }}
+    <span class="snapkeeps-arrow">→</span>
+  </h3>
+</section>
+
 <section>
   <h3>{{ $t('about.contactTitle') }}</h3>
   <p>{{ $t('about.developer') }}: OS Yamato (Japan)</p>
@@ -113,6 +128,17 @@ const router = useRouter()
 
 const goToSnapkeeps = () => {
   router.push('/snapkeeps-privacy') // 必要に応じてルート名に変更
+}
+
+const goToHanacoGarden = () => {
+  router.push('/privacy') // PrivacyView.vue のルート
+}
+
+const goToHanacoWeather = () => {
+  window.open(
+    'https://apps.apple.com/app/%E8%8A%B1%E5%AD%90%E5%A4%A9%E6%B0%97/id6740754478',
+    '_blank'
+  )
 }
 
 const showPremium = ref(false)

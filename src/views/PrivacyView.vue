@@ -50,7 +50,11 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
+
+onMounted(() => {
+  window.scrollTo({ top: 0, behavior: 'auto' })
+})
 
 const lang = ref(localStorage.getItem('yamato-locale') || 'ja')
 watch(lang, v => localStorage.setItem('yamato-locale', v))
@@ -58,7 +62,7 @@ watch(lang, v => localStorage.setItem('yamato-locale', v))
 const dict = {
   ja: {
     title: "プライバシーポリシー",
-    intro: "花子のにわは、静かで穏やかな体験を大切にしています。本プライバシーポリシーは、本アプリにおける情報の取り扱いについて説明するものです。",
+    intro: "花子の庭は、静かで穏やかな体験を大切にしています。本プライバシーポリシーは、本アプリにおける情報の取り扱いについて説明するものです。",
 
     s1: "第1条（取得する情報）",
     s1_1: "本アプリはユーザー登録を必要としません。",
@@ -87,7 +91,7 @@ const dict = {
 
   en: {
     title: "Privacy Policy",
-    intro: "Hanaco Garden values a calm and gentle experience. This privacy policy explains how information is handled within the app.",
+    intro: "hanaco Garden values a calm and gentle experience. This privacy policy explains how information is handled within the app.",
 
     s1: "1. Information We Collect",
     s1_1: "No user registration is required.",

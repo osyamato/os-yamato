@@ -607,7 +607,10 @@
   "privacy_description2": "本应用不会收集或传输任何个人信息。所有数据仅保存在设备本地，绝不会传送到外部。",
   "privacy_description3": "本应用通常无需网络连接，仅在 App Store 检查更新等系统级功能中可能使用网络通信。",
   "privacy_description4": "对于因设备丢失或故障导致的数据丢失，开发者不承担任何责任。",
-  "privacy_contact": "联系方式：support-weather@hanaco875.com"
+  "privacy_contact": "联系方式：support-weather@hanaco875.com",
+
+"about.hanacoGarden": "花子庭园",
+  "about.hanacoWeather": "花子天气"
 
 
 

@@ -645,7 +645,11 @@
   "privacy_description2": "The app does not collect or transmit personal information. All data is stored locally on the device and never shared externally.",
   "privacy_description3": "No internet communication occurs, except for rare cases such as checking for App Store updates.",
   "privacy_description4": "The developer is not responsible for any data loss caused by device malfunction or loss.",
-  "privacy_contact": "For inquiries, please contact support-weather@hanaco875.com."
+  "privacy_contact": "For inquiries, please contact support-weather@hanaco875.com.",
+
+  "about.hanacoGarden": "hanaco Garden",
+  "about.hanacoWeather": "hanaco Weather"
+
 
 
 

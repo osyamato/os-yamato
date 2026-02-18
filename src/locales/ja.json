@@ -623,7 +623,10 @@
   "privacy_description2": "本アプリは個人情報を収集・送信しません。データはすべて端末内に保存され、外部へ送信されることはありません。",
   "privacy_description3": "インターネット通信は行わず、例外的にApp Storeへのアップデート確認などが発生する可能性があります。",
   "privacy_description4": "端末の紛失や故障によるデータ損失について、開発者は責任を負いません。",
-"privacy_contact": "お問い合わせ先 support-weather@hanaco875.com"
+"privacy_contact": "お問い合わせ先 support-weather@hanaco875.com",
+
+"about.hanacoGarden": "花子の庭",
+  "about.hanacoWeather": "花子天気"
 
 }
 
