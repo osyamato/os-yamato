@@ -579,7 +579,10 @@
 "mission.expiredTitle": "Tujuan yang belum tercapai",
 "mission.expiredEmpty": "Tidak ada tujuan yang belum tercapai.",
 "mission.dueDate": "Tanggal target",
-"mission.confirm.delete": "Apakah Anda yakin ingin menghapus tujuan ini?"
+"mission.confirm.delete": "Apakah Anda yakin ingin menghapus tujuan ini?",
+
+"about.hanacoGarden": "Taman hanaco",
+  "about.hanacoWeather": "Cuaca hanaco"
 
 
 
