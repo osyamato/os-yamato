@@ -1507,3 +1507,60 @@ export const deleteTurn = /* GraphQL */ `
     }
   }
 `;
+export const createHanacoGardenBackup = /* GraphQL */ `
+  mutation CreateHanacoGardenBackup(
+    $input: CreateHanacoGardenBackupInput!
+    $condition: ModelHanacoGardenBackupConditionInput
+  ) {
+    createHanacoGardenBackup(input: $input, condition: $condition) {
+      id
+      owner
+      coins
+      goldCoins
+      itemsJson
+      encyclopediaJson
+      rareItemsJson
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const updateHanacoGardenBackup = /* GraphQL */ `
+  mutation UpdateHanacoGardenBackup(
+    $input: UpdateHanacoGardenBackupInput!
+    $condition: ModelHanacoGardenBackupConditionInput
+  ) {
+    updateHanacoGardenBackup(input: $input, condition: $condition) {
+      id
+      owner
+      coins
+      goldCoins
+      itemsJson
+      encyclopediaJson
+      rareItemsJson
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const deleteHanacoGardenBackup = /* GraphQL */ `
+  mutation DeleteHanacoGardenBackup(
+    $input: DeleteHanacoGardenBackupInput!
+    $condition: ModelHanacoGardenBackupConditionInput
+  ) {
+    deleteHanacoGardenBackup(input: $input, condition: $condition) {
+      id
+      owner
+      coins
+      goldCoins
+      itemsJson
+      encyclopediaJson
+      rareItemsJson
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;

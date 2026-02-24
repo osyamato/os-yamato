@@ -131,8 +131,10 @@ const goToSnapkeeps = () => {
 }
 
 const goToHanacoGarden = () => {
-  router.push('/privacy') // PrivacyView.vue のルート
-}
+  window.open(
+    'https://apps.apple.com/app/%E8%8A%B1%E5%AD%90%E3%81%AE%E5%BA%AD/id6759095190',
+    '_blank'
+  )}
 
 const goToHanacoWeather = () => {
   window.open(
