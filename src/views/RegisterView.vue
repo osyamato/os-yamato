@@ -7,6 +7,21 @@
       </h1>
 
       <div class="form-box" v-if="!completed">
+
+<!-- 🌐 言語ピッカー -->
+<div class="lang-select">
+  <span>🌐</span>
+  <label>{{ $t('auth.language') }}</label>
+  <select v-model="locale">
+    <option value="ja">{{ $t('japanese') }}</option>
+    <option value="en">{{ $t('english') }}</option>
+    <option value="es">{{ $t('spanish') }}</option>
+    <option value="zh">{{ $t('chinese') }}</option>
+    <option value="fr">{{ $t('french') }}</option>
+    <option value="id">{{ $t('indonesian') }}</option>
+  </select>
+</div>
+
         <!-- ✅ 規約リンク -->
         <div class="policy-links">
           <a href="#" @click.prevent="showTerms = true" class="policy-link">
@@ -101,17 +116,17 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { Auth } from 'aws-amplify'
 import { useI18n } from 'vue-i18n'
 import TermsModal from '@/components/TermsModal.vue'
+const { t, locale } = useI18n()
 
 const showTerms = ref(false)
 const agreed = ref(false)
 const completed = ref(false)
 
-const { t } = useI18n()
 const router = useRouter()
 
 const email = ref('')
@@ -197,6 +212,9 @@ const resendCode = async () => {
     message.value = `${t('auth.error')}: ${err.message}`
   }
 }
+watch(locale, (newLang) => {
+  localStorage.setItem('yamato-locale', newLang)
+})
 
 </script>
 
@@ -332,6 +350,22 @@ const resendCode = async () => {
   20% { opacity: 1; }
   80% { opacity: 1; }
   100% { opacity: 0; }
+}
+
+.lang-select {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  color: inherit;
+}
+
+.lang-select select {
+  padding: 0.3rem 0.6rem;
+  border-radius: 6px;
+  border: 1px solid #aaa;
 }
 
 </style>
