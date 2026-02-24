@@ -1057,6 +1057,50 @@ export const listTurns = /* GraphQL */ `
     }
   }
 `;
+export const getHanacoGardenBackup = /* GraphQL */ `
+  query GetHanacoGardenBackup($id: ID!) {
+    getHanacoGardenBackup(id: $id) {
+      id
+      owner
+      coins
+      goldCoins
+      itemsJson
+      encyclopediaJson
+      rareItemsJson
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const listHanacoGardenBackups = /* GraphQL */ `
+  query ListHanacoGardenBackups(
+    $filter: ModelHanacoGardenBackupFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    listHanacoGardenBackups(
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        owner
+        coins
+        goldCoins
+        itemsJson
+        encyclopediaJson
+        rareItemsJson
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
 export const messagesByRoomId = /* GraphQL */ `
   query MessagesByRoomId(
     $roomId: ID!

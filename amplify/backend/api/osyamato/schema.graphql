@@ -400,3 +400,20 @@ type Turn
   updatedAt: AWSDateTime
 }
 
+
+type HanacoGardenBackup
+  @model
+  @auth(rules: [{ allow: owner }]) {
+  id: ID!
+  owner: String!
+
+  coins: Int
+  goldCoins: Int
+
+  itemsJson: AWSJSON
+  encyclopediaJson: AWSJSON
+  rareItemsJson: AWSJSON
+
+  createdAt: AWSDateTime
+  updatedAt: AWSDateTime
+}
