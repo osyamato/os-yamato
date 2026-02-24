@@ -101,16 +101,16 @@ const signIn = async () => {
 }
 const handleBackgroundTap = (event) => {
   const target = event.target
-  const isInput = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA'
-  if (!isInput) {
-    // アクティブな要素のフォーカスを外す
+
+  const formTags = ['INPUT', 'TEXTAREA', 'SELECT', 'OPTION']
+
+  if (!formTags.includes(target.tagName)) {
     const active = document.activeElement
     if (active && typeof active.blur === 'function') {
       active.blur()
     }
   }
 }
-
 watch(locale, (newLang) => {
   localStorage.setItem('yamato-locale', newLang)
 })
