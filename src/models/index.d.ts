@@ -2,7 +2,11 @@ import { ModelInit, MutableModel, __modelMeta__, ManagedIdentifier } from "@aws-
 // @ts-ignore
 import { LazyLoading, LazyLoadingDisabled, AsyncCollection } from "@aws-amplify/datastore";
 
-
+export enum RoomStatus {
+  OPEN = "open",
+  PLAYING = "playing",
+  FINISHED = "finished"
+}
 
 
 
@@ -824,4 +828,166 @@ export declare type WeatherReply = LazyLoading extends LazyLoadingDisabled ? Eag
 
 export declare const WeatherReply: (new (init: ModelInit<WeatherReply>) => WeatherReply) & {
   copyOf(source: WeatherReply, mutator: (draft: MutableModel<WeatherReply>) => MutableModel<WeatherReply> | void): WeatherReply;
+}
+
+type EagerMission = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<Mission, 'id'>;
+    readOnlyFields: 'updatedAt';
+  };
+  readonly id: string;
+  readonly title: string;
+  readonly note?: string | null;
+  readonly goalDate: string;
+  readonly createdAt?: string | null;
+  readonly completedAt?: string | null;
+  readonly isCompleted: boolean;
+  readonly emoji?: string | null;
+  readonly colorHue?: number | null;
+  readonly importance?: number | null;
+  readonly deletedAt?: string | null;
+  readonly updatedAt?: string | null;
+}
+
+type LazyMission = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<Mission, 'id'>;
+    readOnlyFields: 'updatedAt';
+  };
+  readonly id: string;
+  readonly title: string;
+  readonly note?: string | null;
+  readonly goalDate: string;
+  readonly createdAt?: string | null;
+  readonly completedAt?: string | null;
+  readonly isCompleted: boolean;
+  readonly emoji?: string | null;
+  readonly colorHue?: number | null;
+  readonly importance?: number | null;
+  readonly deletedAt?: string | null;
+  readonly updatedAt?: string | null;
+}
+
+export declare type Mission = LazyLoading extends LazyLoadingDisabled ? EagerMission : LazyMission
+
+export declare const Mission: (new (init: ModelInit<Mission>) => Mission) & {
+  copyOf(source: Mission, mutator: (draft: MutableModel<Mission>) => MutableModel<Mission> | void): Mission;
+}
+
+type EagerShiritoriRoom = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<ShiritoriRoom, 'id'>;
+  };
+  readonly id: string;
+  readonly title: string;
+  readonly hostId: string;
+  readonly guestId?: string | null;
+  readonly status: RoomStatus | keyof typeof RoomStatus;
+  readonly charLimit?: number | null;
+  readonly genreKey?: string | null;
+  readonly currentTurn?: string | null;
+  readonly winnerId?: string | null;
+  readonly isFinished?: boolean | null;
+  readonly finalMessageHost?: string | null;
+  readonly finalMessageGuest?: string | null;
+  readonly createdAt?: string | null;
+  readonly updatedAt?: string | null;
+}
+
+type LazyShiritoriRoom = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<ShiritoriRoom, 'id'>;
+  };
+  readonly id: string;
+  readonly title: string;
+  readonly hostId: string;
+  readonly guestId?: string | null;
+  readonly status: RoomStatus | keyof typeof RoomStatus;
+  readonly charLimit?: number | null;
+  readonly genreKey?: string | null;
+  readonly currentTurn?: string | null;
+  readonly winnerId?: string | null;
+  readonly isFinished?: boolean | null;
+  readonly finalMessageHost?: string | null;
+  readonly finalMessageGuest?: string | null;
+  readonly createdAt?: string | null;
+  readonly updatedAt?: string | null;
+}
+
+export declare type ShiritoriRoom = LazyLoading extends LazyLoadingDisabled ? EagerShiritoriRoom : LazyShiritoriRoom
+
+export declare const ShiritoriRoom: (new (init: ModelInit<ShiritoriRoom>) => ShiritoriRoom) & {
+  copyOf(source: ShiritoriRoom, mutator: (draft: MutableModel<ShiritoriRoom>) => MutableModel<ShiritoriRoom> | void): ShiritoriRoom;
+}
+
+type EagerTurn = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<Turn, 'id'>;
+  };
+  readonly id: string;
+  readonly roomId: string;
+  readonly userId: string;
+  readonly word: string;
+  readonly order: number;
+  readonly isValid: boolean;
+  readonly isFinalMessage?: boolean | null;
+  readonly createdAt?: string | null;
+  readonly updatedAt?: string | null;
+}
+
+type LazyTurn = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<Turn, 'id'>;
+  };
+  readonly id: string;
+  readonly roomId: string;
+  readonly userId: string;
+  readonly word: string;
+  readonly order: number;
+  readonly isValid: boolean;
+  readonly isFinalMessage?: boolean | null;
+  readonly createdAt?: string | null;
+  readonly updatedAt?: string | null;
+}
+
+export declare type Turn = LazyLoading extends LazyLoadingDisabled ? EagerTurn : LazyTurn
+
+export declare const Turn: (new (init: ModelInit<Turn>) => Turn) & {
+  copyOf(source: Turn, mutator: (draft: MutableModel<Turn>) => MutableModel<Turn> | void): Turn;
+}
+
+type EagerHanacoGardenBackup = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<HanacoGardenBackup, 'id'>;
+  };
+  readonly id: string;
+  readonly coins?: number | null;
+  readonly goldCoins?: number | null;
+  readonly itemsJson?: string | null;
+  readonly gardenItemsJson?: string | null;
+  readonly encyclopediaJson?: string | null;
+  readonly rareItemsJson?: string | null;
+  readonly createdAt?: string | null;
+  readonly updatedAt?: string | null;
+}
+
+type LazyHanacoGardenBackup = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<HanacoGardenBackup, 'id'>;
+  };
+  readonly id: string;
+  readonly coins?: number | null;
+  readonly goldCoins?: number | null;
+  readonly itemsJson?: string | null;
+  readonly gardenItemsJson?: string | null;
+  readonly encyclopediaJson?: string | null;
+  readonly rareItemsJson?: string | null;
+  readonly createdAt?: string | null;
+  readonly updatedAt?: string | null;
+}
+
+export declare type HanacoGardenBackup = LazyLoading extends LazyLoadingDisabled ? EagerHanacoGardenBackup : LazyHanacoGardenBackup
+
+export declare const HanacoGardenBackup: (new (init: ModelInit<HanacoGardenBackup>) => HanacoGardenBackup) & {
+  copyOf(source: HanacoGardenBackup, mutator: (draft: MutableModel<HanacoGardenBackup>) => MutableModel<HanacoGardenBackup> | void): HanacoGardenBackup;
 }

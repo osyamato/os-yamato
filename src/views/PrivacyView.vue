@@ -80,12 +80,12 @@ const dict = {
     s4_body: "本アプリはAppleのアプリ内課金を利用しています。課金情報はAppleにより管理され、開発者が直接取得することはありません。",
 
     s5: "第5条（データの保存）",
-    s5_body: "データは端末内に保存されます。将来的にバックアップ機能の提供を予定していますが、現時点では実装されていません。",
+    s5_body: "データは通常端末内に保存されます。OS Yamatoアカウントにサインインすることで、任意でクラウドバックアップを作成できます。バックアップは常に上書き保存され、複数端末利用時には意図しない上書きが発生する可能性があります。バックアップ機能は補助的なものであり、データの完全な保全を保証するものではありません。データの消失・上書き・復元失敗について、運営は責任を負いかねます。",
 
     s6: "第6条（ポリシーの変更）",
     s6_body: "必要に応じて改訂され、掲載時点で効力を持ちます。",
 
-    updated: "最終更新日：2026年2月15日",
+    updated: "最終更新日：2026年3月3日",
     end: "どうか、この庭を安心してお楽しみください。"
   },
 
@@ -109,12 +109,12 @@ const dict = {
     s4_body: "This app uses Apple’s in-app purchase system. Payment data is handled by Apple and not accessed by the developer.",
 
     s5: "5. Data Storage",
-    s5_body: "All data is stored locally on your device. A backup feature is planned for the future but is not currently implemented.",
+    s5_body: "Data is normally stored locally on your device. By signing in with an OS Yamato account, you may optionally create a cloud backup. Backups overwrite previous data and using multiple devices may result in unintended overwrites. The backup feature is supplemental and does not guarantee complete data preservation. The developer is not responsible for data loss, overwriting, or restoration failures.",
 
     s6: "6. Policy Changes",
     s6_body: "This policy may be updated when necessary and becomes effective upon publication.",
 
-    updated: "Last updated: February 15, 2026",
+    updated: "Last updated: March 3, 2026",
     end: "We hope you enjoy this peaceful garden."
   }
 }

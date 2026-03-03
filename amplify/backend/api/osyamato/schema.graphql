@@ -404,13 +404,14 @@ type Turn
 type HanacoGardenBackup
   @model
   @auth(rules: [{ allow: owner }]) {
+
   id: ID!
-  owner: String!
 
   coins: Int
   goldCoins: Int
 
   itemsJson: AWSJSON
+  gardenItemsJson: AWSJSON
   encyclopediaJson: AWSJSON
   rareItemsJson: AWSJSON
 

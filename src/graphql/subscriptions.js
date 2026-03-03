@@ -1532,14 +1532,15 @@ export const onCreateHanacoGardenBackup = /* GraphQL */ `
   ) {
     onCreateHanacoGardenBackup(filter: $filter, owner: $owner) {
       id
-      owner
       coins
       goldCoins
       itemsJson
+      gardenItemsJson
       encyclopediaJson
       rareItemsJson
       createdAt
       updatedAt
+      owner
       __typename
     }
   }
@@ -1551,14 +1552,15 @@ export const onUpdateHanacoGardenBackup = /* GraphQL */ `
   ) {
     onUpdateHanacoGardenBackup(filter: $filter, owner: $owner) {
       id
-      owner
       coins
       goldCoins
       itemsJson
+      gardenItemsJson
       encyclopediaJson
       rareItemsJson
       createdAt
       updatedAt
+      owner
       __typename
     }
   }
@@ -1570,14 +1572,15 @@ export const onDeleteHanacoGardenBackup = /* GraphQL */ `
   ) {
     onDeleteHanacoGardenBackup(filter: $filter, owner: $owner) {
       id
-      owner
       coins
       goldCoins
       itemsJson
+      gardenItemsJson
       encyclopediaJson
       rareItemsJson
       createdAt
       updatedAt
+      owner
       __typename
     }
   }

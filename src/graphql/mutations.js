@@ -1514,14 +1514,15 @@ export const createHanacoGardenBackup = /* GraphQL */ `
   ) {
     createHanacoGardenBackup(input: $input, condition: $condition) {
       id
-      owner
       coins
       goldCoins
       itemsJson
+      gardenItemsJson
       encyclopediaJson
       rareItemsJson
       createdAt
       updatedAt
+      owner
       __typename
     }
   }
@@ -1533,14 +1534,15 @@ export const updateHanacoGardenBackup = /* GraphQL */ `
   ) {
     updateHanacoGardenBackup(input: $input, condition: $condition) {
       id
-      owner
       coins
       goldCoins
       itemsJson
+      gardenItemsJson
       encyclopediaJson
       rareItemsJson
       createdAt
       updatedAt
+      owner
       __typename
     }
   }
@@ -1552,14 +1554,15 @@ export const deleteHanacoGardenBackup = /* GraphQL */ `
   ) {
     deleteHanacoGardenBackup(input: $input, condition: $condition) {
       id
-      owner
       coins
       goldCoins
       itemsJson
+      gardenItemsJson
       encyclopediaJson
       rareItemsJson
       createdAt
       updatedAt
+      owner
       __typename
     }
   }
