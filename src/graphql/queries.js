@@ -1061,14 +1061,15 @@ export const getHanacoGardenBackup = /* GraphQL */ `
   query GetHanacoGardenBackup($id: ID!) {
     getHanacoGardenBackup(id: $id) {
       id
-      owner
       coins
       goldCoins
       itemsJson
+      gardenItemsJson
       encyclopediaJson
       rareItemsJson
       createdAt
       updatedAt
+      owner
       __typename
     }
   }
@@ -1086,14 +1087,15 @@ export const listHanacoGardenBackups = /* GraphQL */ `
     ) {
       items {
         id
-        owner
         coins
         goldCoins
         itemsJson
+        gardenItemsJson
         encyclopediaJson
         rareItemsJson
         createdAt
         updatedAt
+        owner
         __typename
       }
       nextToken
