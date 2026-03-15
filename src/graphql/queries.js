@@ -1103,6 +1103,50 @@ export const listHanacoGardenBackups = /* GraphQL */ `
     }
   }
 `;
+export const getGift = /* GraphQL */ `
+  query GetGift($id: ID!) {
+    getGift(id: $id) {
+      id
+      itemId
+      fromUserId
+      toUserId
+      roomId
+      messageId
+      status
+      createdAt
+      claimedAt
+      ttl
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const listGifts = /* GraphQL */ `
+  query ListGifts(
+    $filter: ModelGiftFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    listGifts(filter: $filter, limit: $limit, nextToken: $nextToken) {
+      items {
+        id
+        itemId
+        fromUserId
+        toUserId
+        roomId
+        messageId
+        status
+        createdAt
+        claimedAt
+        ttl
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
 export const messagesByRoomId = /* GraphQL */ `
   query MessagesByRoomId(
     $roomId: ID!

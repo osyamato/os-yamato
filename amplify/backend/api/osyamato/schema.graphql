@@ -418,3 +418,37 @@ type HanacoGardenBackup
   createdAt: AWSDateTime
   updatedAt: AWSDateTime
 }
+
+enum GiftStatus {
+  sent
+  claimed
+  cancelled
+  expired
+}
+
+type Gift
+  @model
+  @auth(rules: [
+    { allow: owner, ownerField: "fromUserId", operations: [create, read] },
+    { allow: owner, ownerField: "toUserId", operations: [read, update] },
+    { allow: private, operations: [read] }
+  ]) {
+
+  id: ID!
+
+  itemId: String!
+
+  fromUserId: String!
+  toUserId: String
+
+  roomId: ID
+  messageId: ID
+
+  status: GiftStatus!
+
+  createdAt: AWSDateTime
+  claimedAt: AWSDateTime
+
+  ttl: AWSTimestamp
+}
+
