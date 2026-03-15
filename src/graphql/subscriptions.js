@@ -1585,3 +1585,81 @@ export const onDeleteHanacoGardenBackup = /* GraphQL */ `
     }
   }
 `;
+export const onCreateGift = /* GraphQL */ `
+  subscription OnCreateGift(
+    $filter: ModelSubscriptionGiftFilterInput
+    $fromUserId: String
+    $toUserId: String
+  ) {
+    onCreateGift(
+      filter: $filter
+      fromUserId: $fromUserId
+      toUserId: $toUserId
+    ) {
+      id
+      itemId
+      fromUserId
+      toUserId
+      roomId
+      messageId
+      status
+      createdAt
+      claimedAt
+      ttl
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const onUpdateGift = /* GraphQL */ `
+  subscription OnUpdateGift(
+    $filter: ModelSubscriptionGiftFilterInput
+    $fromUserId: String
+    $toUserId: String
+  ) {
+    onUpdateGift(
+      filter: $filter
+      fromUserId: $fromUserId
+      toUserId: $toUserId
+    ) {
+      id
+      itemId
+      fromUserId
+      toUserId
+      roomId
+      messageId
+      status
+      createdAt
+      claimedAt
+      ttl
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const onDeleteGift = /* GraphQL */ `
+  subscription OnDeleteGift(
+    $filter: ModelSubscriptionGiftFilterInput
+    $fromUserId: String
+    $toUserId: String
+  ) {
+    onDeleteGift(
+      filter: $filter
+      fromUserId: $fromUserId
+      toUserId: $toUserId
+    ) {
+      id
+      itemId
+      fromUserId
+      toUserId
+      roomId
+      messageId
+      status
+      createdAt
+      claimedAt
+      ttl
+      updatedAt
+      __typename
+    }
+  }
+`;

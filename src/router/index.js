@@ -45,6 +45,8 @@ import ShiritoriMatchView from '../views/ShiritoriMatch.vue'
 import ShiritoriRoom from '@/views/ShiritoriRoom.vue'
 import SnapKeepsPrivacyPolicyView from '../views/SnapKeepsPrivacyPolicyView.vue' 
 import PrivacyView from '../views/PrivacyView.vue'
+import GiftView from "@/views/GiftView.vue"
+
 
 import { Auth } from 'aws-amplify'
 
@@ -87,6 +89,12 @@ const routes = [
   path: '/mission',
   name: 'Mission',
   component: MissionView
+},
+
+{
+  path: '/gift',
+  name: 'gift',
+  component: GiftView
 },
 
   {
