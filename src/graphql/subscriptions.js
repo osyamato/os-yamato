@@ -1586,16 +1586,8 @@ export const onDeleteHanacoGardenBackup = /* GraphQL */ `
   }
 `;
 export const onCreateGift = /* GraphQL */ `
-  subscription OnCreateGift(
-    $filter: ModelSubscriptionGiftFilterInput
-    $fromUserId: String
-    $toUserId: String
-  ) {
-    onCreateGift(
-      filter: $filter
-      fromUserId: $fromUserId
-      toUserId: $toUserId
-    ) {
+  subscription OnCreateGift($filter: ModelSubscriptionGiftFilterInput) {
+    onCreateGift(filter: $filter) {
       id
       itemId
       fromUserId
@@ -1612,16 +1604,8 @@ export const onCreateGift = /* GraphQL */ `
   }
 `;
 export const onUpdateGift = /* GraphQL */ `
-  subscription OnUpdateGift(
-    $filter: ModelSubscriptionGiftFilterInput
-    $fromUserId: String
-    $toUserId: String
-  ) {
-    onUpdateGift(
-      filter: $filter
-      fromUserId: $fromUserId
-      toUserId: $toUserId
-    ) {
+  subscription OnUpdateGift($filter: ModelSubscriptionGiftFilterInput) {
+    onUpdateGift(filter: $filter) {
       id
       itemId
       fromUserId
@@ -1638,16 +1622,8 @@ export const onUpdateGift = /* GraphQL */ `
   }
 `;
 export const onDeleteGift = /* GraphQL */ `
-  subscription OnDeleteGift(
-    $filter: ModelSubscriptionGiftFilterInput
-    $fromUserId: String
-    $toUserId: String
-  ) {
-    onDeleteGift(
-      filter: $filter
-      fromUserId: $fromUserId
-      toUserId: $toUserId
-    ) {
+  subscription OnDeleteGift($filter: ModelSubscriptionGiftFilterInput) {
+    onDeleteGift(filter: $filter) {
       id
       itemId
       fromUserId

@@ -427,12 +427,11 @@ enum GiftStatus {
 }
 
 type Gift
-  @model
-  @auth(rules: [
-    { allow: owner, ownerField: "fromUserId", operations: [create, read] },
-    { allow: owner, ownerField: "toUserId", operations: [read, update] },
-    { allow: private, operations: [read] }
-  ]) {
+@model
+@auth(rules: [
+  { allow: private, operations: [read, update] },
+  { allow: owner, ownerField: "fromUserId", operations: [create] }
+]) {
 
   id: ID!
 
@@ -451,4 +450,3 @@ type Gift
 
   ttl: AWSTimestamp
 }
-
