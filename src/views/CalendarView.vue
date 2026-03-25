@@ -318,9 +318,10 @@ async function fetchSchedules(year = currentYear.value, month = currentMonth.val
 
     const { data } = await API.graphql(graphqlOperation(listSchedules, {
       filter: {
-        owner: { eq: user.username },
+owner: { eq: user.attributes.sub },
         date: { beginsWith: prefix }
-      }
+      },
+limit: 1000
     }))
 
     schedules.value = (data.listSchedules.items || []).map(item => ({
@@ -515,7 +516,7 @@ for (const day of quickDates.value) {
     endTime: isAllDay ? null : selectedQuickTemplate.value.endTime,
     memo: '',
     isAllDay,
-    owner: user.username
+owner: user.attributes.sub
   }
 
   await API.graphql(graphqlOperation(createScheduleMutation, { input }))
@@ -663,7 +664,8 @@ async function createSchedule() {
     endTime: isAllDay.value ? null : endTime.value,
     memo: memo.value,
     isAllDay: isAllDay.value,
-    owner: user.username
+owner: user.attributes.sub
+
   }
 
 
@@ -832,7 +834,7 @@ async function confirmAndDeleteMonth() {
   if (!ok) return
 
   const user = await Auth.currentAuthenticatedUser()
-  const owner = user.username
+const owner = user.attributes.sub
 
   const year = currentYear.value
   const month = currentMonth.value + 1
@@ -842,7 +844,8 @@ async function confirmAndDeleteMonth() {
     filter: {
       owner: { eq: owner },
       date: { beginsWith: prefix }
-    }
+    },
+limit: 1000
   }))
 
   const items = data?.listSchedules?.items ?? []
