@@ -247,8 +247,8 @@ export const onCreateChatRoom = /* GraphQL */ `
       lastMessage
       lastContentType
       lastTimestamp
-      lastReadAtUser2
       lastReadAtUser1
+      lastReadAtUser2
       lastSenderId
       expiresAt
       deletedByUser1
@@ -275,8 +275,8 @@ export const onUpdateChatRoom = /* GraphQL */ `
       lastMessage
       lastContentType
       lastTimestamp
-      lastReadAtUser2
       lastReadAtUser1
+      lastReadAtUser2
       lastSenderId
       expiresAt
       deletedByUser1
@@ -303,8 +303,8 @@ export const onDeleteChatRoom = /* GraphQL */ `
       lastMessage
       lastContentType
       lastTimestamp
-      lastReadAtUser2
       lastReadAtUser1
+      lastReadAtUser2
       lastSenderId
       expiresAt
       deletedByUser1
@@ -1187,6 +1187,9 @@ export const onCreateWeatherComment = /* GraphQL */ `
       weather
       temperature
       timeOfDay
+      skyKey
+      timeBucket
+      season
       language
       content
       imageKey
@@ -1215,6 +1218,9 @@ export const onUpdateWeatherComment = /* GraphQL */ `
       weather
       temperature
       timeOfDay
+      skyKey
+      timeBucket
+      season
       language
       content
       imageKey
@@ -1243,6 +1249,9 @@ export const onDeleteWeatherComment = /* GraphQL */ `
       weather
       temperature
       timeOfDay
+      skyKey
+      timeBucket
+      season
       language
       content
       imageKey
@@ -1635,6 +1644,192 @@ export const onDeleteGift = /* GraphQL */ `
       claimedAt
       ttl
       updatedAt
+      __typename
+    }
+  }
+`;
+export const onCreateWeatherFootprint = /* GraphQL */ `
+  subscription OnCreateWeatherFootprint(
+    $filter: ModelSubscriptionWeatherFootprintFilterInput
+    $profileOwner: String
+  ) {
+    onCreateWeatherFootprint(filter: $filter, profileOwner: $profileOwner) {
+      id
+      profileOwner
+      visitorSub
+      visitorNickname
+      visitorIcon
+      footprintType
+      message
+      createdAt
+      expiresAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const onUpdateWeatherFootprint = /* GraphQL */ `
+  subscription OnUpdateWeatherFootprint(
+    $filter: ModelSubscriptionWeatherFootprintFilterInput
+    $profileOwner: String
+  ) {
+    onUpdateWeatherFootprint(filter: $filter, profileOwner: $profileOwner) {
+      id
+      profileOwner
+      visitorSub
+      visitorNickname
+      visitorIcon
+      footprintType
+      message
+      createdAt
+      expiresAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const onDeleteWeatherFootprint = /* GraphQL */ `
+  subscription OnDeleteWeatherFootprint(
+    $filter: ModelSubscriptionWeatherFootprintFilterInput
+    $profileOwner: String
+  ) {
+    onDeleteWeatherFootprint(filter: $filter, profileOwner: $profileOwner) {
+      id
+      profileOwner
+      visitorSub
+      visitorNickname
+      visitorIcon
+      footprintType
+      message
+      createdAt
+      expiresAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const onCreateSharedGarden = /* GraphQL */ `
+  subscription OnCreateSharedGarden(
+    $filter: ModelSubscriptionSharedGardenFilterInput
+    $owner: String
+  ) {
+    onCreateSharedGarden(filter: $filter, owner: $owner) {
+      id
+      owner
+      ownerSub
+      nickname
+      icon
+      title
+      message
+      itemsJSON
+      weather
+      timePeriod
+      isPublic
+      likeCount
+      footprintCount
+      publishedAt
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const onUpdateSharedGarden = /* GraphQL */ `
+  subscription OnUpdateSharedGarden(
+    $filter: ModelSubscriptionSharedGardenFilterInput
+    $owner: String
+  ) {
+    onUpdateSharedGarden(filter: $filter, owner: $owner) {
+      id
+      owner
+      ownerSub
+      nickname
+      icon
+      title
+      message
+      itemsJSON
+      weather
+      timePeriod
+      isPublic
+      likeCount
+      footprintCount
+      publishedAt
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const onDeleteSharedGarden = /* GraphQL */ `
+  subscription OnDeleteSharedGarden(
+    $filter: ModelSubscriptionSharedGardenFilterInput
+    $owner: String
+  ) {
+    onDeleteSharedGarden(filter: $filter, owner: $owner) {
+      id
+      owner
+      ownerSub
+      nickname
+      icon
+      title
+      message
+      itemsJSON
+      weather
+      timePeriod
+      isPublic
+      likeCount
+      footprintCount
+      publishedAt
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const onCreatePushDevice = /* GraphQL */ `
+  subscription OnCreatePushDevice(
+    $filter: ModelSubscriptionPushDeviceFilterInput
+    $owner: String
+  ) {
+    onCreatePushDevice(filter: $filter, owner: $owner) {
+      id
+      apnsToken
+      notificationEnabled
+      updatedAt
+      createdAt
+      owner
+      __typename
+    }
+  }
+`;
+export const onUpdatePushDevice = /* GraphQL */ `
+  subscription OnUpdatePushDevice(
+    $filter: ModelSubscriptionPushDeviceFilterInput
+    $owner: String
+  ) {
+    onUpdatePushDevice(filter: $filter, owner: $owner) {
+      id
+      apnsToken
+      notificationEnabled
+      updatedAt
+      createdAt
+      owner
+      __typename
+    }
+  }
+`;
+export const onDeletePushDevice = /* GraphQL */ `
+  subscription OnDeletePushDevice(
+    $filter: ModelSubscriptionPushDeviceFilterInput
+    $owner: String
+  ) {
+    onDeletePushDevice(filter: $filter, owner: $owner) {
+      id
+      apnsToken
+      notificationEnabled
+      updatedAt
+      createdAt
+      owner
       __typename
     }
   }

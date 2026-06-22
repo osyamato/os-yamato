@@ -8,6 +8,13 @@ export enum RoomStatus {
   FINISHED = "finished"
 }
 
+export enum GiftStatus {
+  SENT = "sent",
+  CLAIMED = "claimed",
+  CANCELLED = "cancelled",
+  EXPIRED = "expired"
+}
+
 
 
 type EagerMemo = {
@@ -168,8 +175,8 @@ type EagerChatRoom = {
   readonly lastMessage?: string | null;
   readonly lastContentType?: string | null;
   readonly lastTimestamp?: string | null;
-  readonly lastReadAtUser2?: string | null;
   readonly lastReadAtUser1?: string | null;
+  readonly lastReadAtUser2?: string | null;
   readonly lastSenderId?: string | null;
   readonly expiresAt?: number | null;
   readonly deletedByUser1?: boolean | null;
@@ -192,8 +199,8 @@ type LazyChatRoom = {
   readonly lastMessage?: string | null;
   readonly lastContentType?: string | null;
   readonly lastTimestamp?: string | null;
-  readonly lastReadAtUser2?: string | null;
   readonly lastReadAtUser1?: string | null;
+  readonly lastReadAtUser2?: string | null;
   readonly lastSenderId?: string | null;
   readonly expiresAt?: number | null;
   readonly deletedByUser1?: boolean | null;
@@ -745,6 +752,9 @@ type EagerWeatherComment = {
   readonly weather: string;
   readonly temperature: number;
   readonly timeOfDay: number;
+  readonly skyKey: string;
+  readonly timeBucket: string;
+  readonly season?: string | null;
   readonly language: string;
   readonly content: string;
   readonly imageKey?: string | null;
@@ -769,6 +779,9 @@ type LazyWeatherComment = {
   readonly weather: string;
   readonly temperature: number;
   readonly timeOfDay: number;
+  readonly skyKey: string;
+  readonly timeBucket: string;
+  readonly season?: string | null;
   readonly language: string;
   readonly content: string;
   readonly imageKey?: string | null;
@@ -990,4 +1003,166 @@ export declare type HanacoGardenBackup = LazyLoading extends LazyLoadingDisabled
 
 export declare const HanacoGardenBackup: (new (init: ModelInit<HanacoGardenBackup>) => HanacoGardenBackup) & {
   copyOf(source: HanacoGardenBackup, mutator: (draft: MutableModel<HanacoGardenBackup>) => MutableModel<HanacoGardenBackup> | void): HanacoGardenBackup;
+}
+
+type EagerGift = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<Gift, 'id'>;
+    readOnlyFields: 'updatedAt';
+  };
+  readonly id: string;
+  readonly itemId: string;
+  readonly fromUserId: string;
+  readonly toUserId?: string | null;
+  readonly roomId?: string | null;
+  readonly messageId?: string | null;
+  readonly status: GiftStatus | keyof typeof GiftStatus;
+  readonly createdAt?: string | null;
+  readonly claimedAt?: string | null;
+  readonly ttl?: number | null;
+  readonly updatedAt?: string | null;
+}
+
+type LazyGift = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<Gift, 'id'>;
+    readOnlyFields: 'updatedAt';
+  };
+  readonly id: string;
+  readonly itemId: string;
+  readonly fromUserId: string;
+  readonly toUserId?: string | null;
+  readonly roomId?: string | null;
+  readonly messageId?: string | null;
+  readonly status: GiftStatus | keyof typeof GiftStatus;
+  readonly createdAt?: string | null;
+  readonly claimedAt?: string | null;
+  readonly ttl?: number | null;
+  readonly updatedAt?: string | null;
+}
+
+export declare type Gift = LazyLoading extends LazyLoadingDisabled ? EagerGift : LazyGift
+
+export declare const Gift: (new (init: ModelInit<Gift>) => Gift) & {
+  copyOf(source: Gift, mutator: (draft: MutableModel<Gift>) => MutableModel<Gift> | void): Gift;
+}
+
+type EagerWeatherFootprint = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<WeatherFootprint, 'id'>;
+    readOnlyFields: 'updatedAt';
+  };
+  readonly id: string;
+  readonly profileOwner: string;
+  readonly visitorSub: string;
+  readonly visitorNickname?: string | null;
+  readonly visitorIcon?: string | null;
+  readonly footprintType?: string | null;
+  readonly message?: string | null;
+  readonly createdAt?: string | null;
+  readonly expiresAt?: number | null;
+  readonly updatedAt?: string | null;
+}
+
+type LazyWeatherFootprint = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<WeatherFootprint, 'id'>;
+    readOnlyFields: 'updatedAt';
+  };
+  readonly id: string;
+  readonly profileOwner: string;
+  readonly visitorSub: string;
+  readonly visitorNickname?: string | null;
+  readonly visitorIcon?: string | null;
+  readonly footprintType?: string | null;
+  readonly message?: string | null;
+  readonly createdAt?: string | null;
+  readonly expiresAt?: number | null;
+  readonly updatedAt?: string | null;
+}
+
+export declare type WeatherFootprint = LazyLoading extends LazyLoadingDisabled ? EagerWeatherFootprint : LazyWeatherFootprint
+
+export declare const WeatherFootprint: (new (init: ModelInit<WeatherFootprint>) => WeatherFootprint) & {
+  copyOf(source: WeatherFootprint, mutator: (draft: MutableModel<WeatherFootprint>) => MutableModel<WeatherFootprint> | void): WeatherFootprint;
+}
+
+type EagerSharedGarden = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<SharedGarden, 'id'>;
+  };
+  readonly id: string;
+  readonly owner?: string | null;
+  readonly ownerSub: string;
+  readonly nickname?: string | null;
+  readonly icon?: string | null;
+  readonly title?: string | null;
+  readonly message?: string | null;
+  readonly itemsJSON: string;
+  readonly weather?: string | null;
+  readonly timePeriod?: string | null;
+  readonly isPublic: boolean;
+  readonly likeCount?: number | null;
+  readonly footprintCount?: number | null;
+  readonly publishedAt?: string | null;
+  readonly createdAt?: string | null;
+  readonly updatedAt?: string | null;
+}
+
+type LazySharedGarden = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<SharedGarden, 'id'>;
+  };
+  readonly id: string;
+  readonly owner?: string | null;
+  readonly ownerSub: string;
+  readonly nickname?: string | null;
+  readonly icon?: string | null;
+  readonly title?: string | null;
+  readonly message?: string | null;
+  readonly itemsJSON: string;
+  readonly weather?: string | null;
+  readonly timePeriod?: string | null;
+  readonly isPublic: boolean;
+  readonly likeCount?: number | null;
+  readonly footprintCount?: number | null;
+  readonly publishedAt?: string | null;
+  readonly createdAt?: string | null;
+  readonly updatedAt?: string | null;
+}
+
+export declare type SharedGarden = LazyLoading extends LazyLoadingDisabled ? EagerSharedGarden : LazySharedGarden
+
+export declare const SharedGarden: (new (init: ModelInit<SharedGarden>) => SharedGarden) & {
+  copyOf(source: SharedGarden, mutator: (draft: MutableModel<SharedGarden>) => MutableModel<SharedGarden> | void): SharedGarden;
+}
+
+type EagerPushDevice = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<PushDevice, 'id'>;
+    readOnlyFields: 'createdAt';
+  };
+  readonly id: string;
+  readonly apnsToken: string;
+  readonly notificationEnabled: boolean;
+  readonly updatedAt?: string | null;
+  readonly createdAt?: string | null;
+}
+
+type LazyPushDevice = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<PushDevice, 'id'>;
+    readOnlyFields: 'createdAt';
+  };
+  readonly id: string;
+  readonly apnsToken: string;
+  readonly notificationEnabled: boolean;
+  readonly updatedAt?: string | null;
+  readonly createdAt?: string | null;
+}
+
+export declare type PushDevice = LazyLoading extends LazyLoadingDisabled ? EagerPushDevice : LazyPushDevice
+
+export declare const PushDevice: (new (init: ModelInit<PushDevice>) => PushDevice) & {
+  copyOf(source: PushDevice, mutator: (draft: MutableModel<PushDevice>) => MutableModel<PushDevice> | void): PushDevice;
 }

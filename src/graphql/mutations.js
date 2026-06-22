@@ -247,8 +247,8 @@ export const createChatRoom = /* GraphQL */ `
       lastMessage
       lastContentType
       lastTimestamp
-      lastReadAtUser2
       lastReadAtUser1
+      lastReadAtUser2
       lastSenderId
       expiresAt
       deletedByUser1
@@ -275,8 +275,8 @@ export const updateChatRoom = /* GraphQL */ `
       lastMessage
       lastContentType
       lastTimestamp
-      lastReadAtUser2
       lastReadAtUser1
+      lastReadAtUser2
       lastSenderId
       expiresAt
       deletedByUser1
@@ -303,8 +303,8 @@ export const deleteChatRoom = /* GraphQL */ `
       lastMessage
       lastContentType
       lastTimestamp
-      lastReadAtUser2
       lastReadAtUser1
+      lastReadAtUser2
       lastSenderId
       expiresAt
       deletedByUser1
@@ -1172,6 +1172,9 @@ export const createWeatherComment = /* GraphQL */ `
       weather
       temperature
       timeOfDay
+      skyKey
+      timeBucket
+      season
       language
       content
       imageKey
@@ -1200,6 +1203,9 @@ export const updateWeatherComment = /* GraphQL */ `
       weather
       temperature
       timeOfDay
+      skyKey
+      timeBucket
+      season
       language
       content
       imageKey
@@ -1228,6 +1234,9 @@ export const deleteWeatherComment = /* GraphQL */ `
       weather
       temperature
       timeOfDay
+      skyKey
+      timeBucket
+      season
       language
       content
       imageKey
@@ -1626,6 +1635,192 @@ export const deleteGift = /* GraphQL */ `
       claimedAt
       ttl
       updatedAt
+      __typename
+    }
+  }
+`;
+export const createWeatherFootprint = /* GraphQL */ `
+  mutation CreateWeatherFootprint(
+    $input: CreateWeatherFootprintInput!
+    $condition: ModelWeatherFootprintConditionInput
+  ) {
+    createWeatherFootprint(input: $input, condition: $condition) {
+      id
+      profileOwner
+      visitorSub
+      visitorNickname
+      visitorIcon
+      footprintType
+      message
+      createdAt
+      expiresAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const updateWeatherFootprint = /* GraphQL */ `
+  mutation UpdateWeatherFootprint(
+    $input: UpdateWeatherFootprintInput!
+    $condition: ModelWeatherFootprintConditionInput
+  ) {
+    updateWeatherFootprint(input: $input, condition: $condition) {
+      id
+      profileOwner
+      visitorSub
+      visitorNickname
+      visitorIcon
+      footprintType
+      message
+      createdAt
+      expiresAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const deleteWeatherFootprint = /* GraphQL */ `
+  mutation DeleteWeatherFootprint(
+    $input: DeleteWeatherFootprintInput!
+    $condition: ModelWeatherFootprintConditionInput
+  ) {
+    deleteWeatherFootprint(input: $input, condition: $condition) {
+      id
+      profileOwner
+      visitorSub
+      visitorNickname
+      visitorIcon
+      footprintType
+      message
+      createdAt
+      expiresAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const createSharedGarden = /* GraphQL */ `
+  mutation CreateSharedGarden(
+    $input: CreateSharedGardenInput!
+    $condition: ModelSharedGardenConditionInput
+  ) {
+    createSharedGarden(input: $input, condition: $condition) {
+      id
+      owner
+      ownerSub
+      nickname
+      icon
+      title
+      message
+      itemsJSON
+      weather
+      timePeriod
+      isPublic
+      likeCount
+      footprintCount
+      publishedAt
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const updateSharedGarden = /* GraphQL */ `
+  mutation UpdateSharedGarden(
+    $input: UpdateSharedGardenInput!
+    $condition: ModelSharedGardenConditionInput
+  ) {
+    updateSharedGarden(input: $input, condition: $condition) {
+      id
+      owner
+      ownerSub
+      nickname
+      icon
+      title
+      message
+      itemsJSON
+      weather
+      timePeriod
+      isPublic
+      likeCount
+      footprintCount
+      publishedAt
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const deleteSharedGarden = /* GraphQL */ `
+  mutation DeleteSharedGarden(
+    $input: DeleteSharedGardenInput!
+    $condition: ModelSharedGardenConditionInput
+  ) {
+    deleteSharedGarden(input: $input, condition: $condition) {
+      id
+      owner
+      ownerSub
+      nickname
+      icon
+      title
+      message
+      itemsJSON
+      weather
+      timePeriod
+      isPublic
+      likeCount
+      footprintCount
+      publishedAt
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const createPushDevice = /* GraphQL */ `
+  mutation CreatePushDevice(
+    $input: CreatePushDeviceInput!
+    $condition: ModelPushDeviceConditionInput
+  ) {
+    createPushDevice(input: $input, condition: $condition) {
+      id
+      apnsToken
+      notificationEnabled
+      updatedAt
+      createdAt
+      owner
+      __typename
+    }
+  }
+`;
+export const updatePushDevice = /* GraphQL */ `
+  mutation UpdatePushDevice(
+    $input: UpdatePushDeviceInput!
+    $condition: ModelPushDeviceConditionInput
+  ) {
+    updatePushDevice(input: $input, condition: $condition) {
+      id
+      apnsToken
+      notificationEnabled
+      updatedAt
+      createdAt
+      owner
+      __typename
+    }
+  }
+`;
+export const deletePushDevice = /* GraphQL */ `
+  mutation DeletePushDevice(
+    $input: DeletePushDeviceInput!
+    $condition: ModelPushDeviceConditionInput
+  ) {
+    deletePushDevice(input: $input, condition: $condition) {
+      id
+      apnsToken
+      notificationEnabled
+      updatedAt
+      createdAt
+      owner
       __typename
     }
   }
