@@ -10,15 +10,27 @@ onMounted(() => {
   const id = route.query.id
   if (!id) return
 
-  const appUrl = "hanaco875://gift?id=" + id
-  const storeUrl = "https://apps.apple.com/app/%E8%8A%B1%E5%AD%90%E3%81%AE%E5%BA%AD/id6759095190"
+  const appUrl =
+    "hanaco875://gift?id=" + id
 
-  // アプリ起動
+  const storeUrl =
+    "https://apps.apple.com/app/%E8%8A%B1%E5%AD%90%E3%81%AE%E5%BA%AD/id6759095190"
+
+  // 同じタブで再実行防止
+  if (sessionStorage.getItem("gift-opened")) {
+    return
+  }
+
+  sessionStorage.setItem("gift-opened", "1")
+
   window.location.href = appUrl
 
-  // フォールバック（アプリ未インストール）
   setTimeout(() => {
-    window.location.href = storeUrl
+
+    if (!document.hidden) {
+      window.location.href = storeUrl
+    }
+
   }, 1200)
 
 })

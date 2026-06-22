@@ -8,7 +8,14 @@ const RoomStatus = {
   "FINISHED": "finished"
 };
 
-const { Memo, Diary, Schedule, Contact, ChatRoom, Message, Reaction, PublicProfile, ChatRequest, Photo, Video, ScheduleTemplate, WindMessage, Blossom, BestRecord, GPTMiniSession, GPTMiniHistory, WeatherCity, WeatherProfile, WeatherComment, WeatherReply, Mission, ShiritoriRoom, Turn, HanacoGardenBackup } = initSchema(schema);
+const GiftStatus = {
+  "SENT": "sent",
+  "CLAIMED": "claimed",
+  "CANCELLED": "cancelled",
+  "EXPIRED": "expired"
+};
+
+const { Memo, Diary, Schedule, Contact, ChatRoom, Message, Reaction, PublicProfile, ChatRequest, Photo, Video, ScheduleTemplate, WindMessage, Blossom, BestRecord, GPTMiniSession, GPTMiniHistory, WeatherCity, WeatherProfile, WeatherComment, WeatherReply, Mission, ShiritoriRoom, Turn, HanacoGardenBackup, Gift, WeatherFootprint, SharedGarden, PushDevice } = initSchema(schema);
 
 export {
   Memo,
@@ -36,5 +43,10 @@ export {
   ShiritoriRoom,
   Turn,
   HanacoGardenBackup,
-  RoomStatus
+  Gift,
+  WeatherFootprint,
+  SharedGarden,
+  PushDevice,
+  RoomStatus,
+  GiftStatus
 };

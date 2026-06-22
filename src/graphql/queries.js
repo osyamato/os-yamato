@@ -1,6 +1,46 @@
 /* eslint-disable */
 // this is an auto generated file. This will be overwritten
 
+export const getFilteredWeatherComments = /* GraphQL */ `
+  query GetFilteredWeatherComments(
+    $skyKey: String!
+    $temperature: Float!
+    $hour: Int!
+    $blockedSubs: [String]
+    $languages: [String]
+  ) {
+    getFilteredWeatherComments(
+      skyKey: $skyKey
+      temperature: $temperature
+      hour: $hour
+      blockedSubs: $blockedSubs
+      languages: $languages
+    ) {
+      id
+      owner
+      ownerNickname
+      icon
+      weather
+      temperature
+      timeOfDay
+      skyKey
+      timeBucket
+      season
+      language
+      content
+      imageKey
+      thumbnailKey
+      profileView
+      likeCount
+      reportCount
+      replyCount
+      replyAllowed
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
 export const getMemo = /* GraphQL */ `
   query GetMemo($id: ID!) {
     getMemo(id: $id) {
@@ -175,8 +215,8 @@ export const getChatRoom = /* GraphQL */ `
       lastMessage
       lastContentType
       lastTimestamp
-      lastReadAtUser2
       lastReadAtUser1
+      lastReadAtUser2
       lastSenderId
       expiresAt
       deletedByUser1
@@ -205,8 +245,8 @@ export const listChatRooms = /* GraphQL */ `
         lastMessage
         lastContentType
         lastTimestamp
-        lastReadAtUser2
         lastReadAtUser1
+        lastReadAtUser2
         lastSenderId
         expiresAt
         deletedByUser1
@@ -825,6 +865,9 @@ export const getWeatherComment = /* GraphQL */ `
       weather
       temperature
       timeOfDay
+      skyKey
+      timeBucket
+      season
       language
       content
       imageKey
@@ -855,6 +898,9 @@ export const listWeatherComments = /* GraphQL */ `
         weather
         temperature
         timeOfDay
+        skyKey
+        timeBucket
+        season
         language
         content
         imageKey
@@ -1147,6 +1193,140 @@ export const listGifts = /* GraphQL */ `
     }
   }
 `;
+export const getWeatherFootprint = /* GraphQL */ `
+  query GetWeatherFootprint($id: ID!) {
+    getWeatherFootprint(id: $id) {
+      id
+      profileOwner
+      visitorSub
+      visitorNickname
+      visitorIcon
+      footprintType
+      message
+      createdAt
+      expiresAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const listWeatherFootprints = /* GraphQL */ `
+  query ListWeatherFootprints(
+    $filter: ModelWeatherFootprintFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    listWeatherFootprints(
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        profileOwner
+        visitorSub
+        visitorNickname
+        visitorIcon
+        footprintType
+        message
+        createdAt
+        expiresAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const getSharedGarden = /* GraphQL */ `
+  query GetSharedGarden($id: ID!) {
+    getSharedGarden(id: $id) {
+      id
+      owner
+      ownerSub
+      nickname
+      icon
+      title
+      message
+      itemsJSON
+      weather
+      timePeriod
+      isPublic
+      likeCount
+      footprintCount
+      publishedAt
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const listSharedGardens = /* GraphQL */ `
+  query ListSharedGardens(
+    $filter: ModelSharedGardenFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    listSharedGardens(filter: $filter, limit: $limit, nextToken: $nextToken) {
+      items {
+        id
+        owner
+        ownerSub
+        nickname
+        icon
+        title
+        message
+        itemsJSON
+        weather
+        timePeriod
+        isPublic
+        likeCount
+        footprintCount
+        publishedAt
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const getPushDevice = /* GraphQL */ `
+  query GetPushDevice($id: ID!) {
+    getPushDevice(id: $id) {
+      id
+      apnsToken
+      notificationEnabled
+      updatedAt
+      createdAt
+      owner
+      __typename
+    }
+  }
+`;
+export const listPushDevices = /* GraphQL */ `
+  query ListPushDevices(
+    $filter: ModelPushDeviceFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    listPushDevices(filter: $filter, limit: $limit, nextToken: $nextToken) {
+      items {
+        id
+        apnsToken
+        notificationEnabled
+        updatedAt
+        createdAt
+        owner
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
 export const messagesByRoomId = /* GraphQL */ `
   query MessagesByRoomId(
     $roomId: ID!
@@ -1277,6 +1457,85 @@ export const historiesBySession = /* GraphQL */ `
         createdAt
         updatedAt
         owner
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const weatherProfileByYamatoId = /* GraphQL */ `
+  query WeatherProfileByYamatoId(
+    $yamatoId: String!
+    $sortDirection: ModelSortDirection
+    $filter: ModelWeatherProfileFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    weatherProfileByYamatoId(
+      yamatoId: $yamatoId
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        icon
+        nickname
+        yamatoId
+        bio
+        homepage
+        blockedSubs
+        createdAt
+        updatedAt
+        owner
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const commentsBySkyKey = /* GraphQL */ `
+  query CommentsBySkyKey(
+    $skyKey: String!
+    $createdAt: ModelStringKeyConditionInput
+    $sortDirection: ModelSortDirection
+    $filter: ModelWeatherCommentFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    commentsBySkyKey(
+      skyKey: $skyKey
+      createdAt: $createdAt
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        owner
+        ownerNickname
+        icon
+        weather
+        temperature
+        timeOfDay
+        skyKey
+        timeBucket
+        season
+        language
+        content
+        imageKey
+        thumbnailKey
+        profileView
+        likeCount
+        reportCount
+        replyCount
+        replyAllowed
+        createdAt
+        updatedAt
         __typename
       }
       nextToken
