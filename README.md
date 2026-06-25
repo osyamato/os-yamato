@@ -1,5 +1,35 @@
 # OS Yamato 🌸
 
+
+🌱 hanaco Garden × OS Yamato
+
+hanaco Garden is the first application to bring the social features of OS Yamato into a living, interactive world.
+
+It demonstrates how messaging, weather, footprints, and gentle connections can exist naturally inside a game.
+
+🌷 Features already connected to OS Yamato:
+
+* 💬 Messages between players
+* ☁️ Weather posts from hanaco Weather
+* 👣 Footprints that quietly leave your presence behind
+* 🎁 Sharing and gifting items
+* 🌿 Gentle social interactions without pressure
+
+While tending your garden, you can discover messages floating through the sky, meet other players, and experience a slower form of connection.
+
+Hanako Garden is becoming a playful gateway into the world of OS Yamato.
+
+📱 App Store:
+https://apps.apple.com/app/%E8%8A%B1%E5%AD%90%E3%81%AE%E5%BA%AD/id6759095190
+
+⸻
+
+A garden.
+A sky.
+A message.
+
+Small connections, carried by the wind.
+
 ## 🗓️ New App: Goal — Visualize your goals across time
 
 We’re excited to introduce a new app in OS Yamato: Goal.
