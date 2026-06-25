@@ -23,8 +23,7 @@ hanaco Garden is becoming a playful gateway into the world of OS Yamato.
 https://apps.apple.com/app/%E8%8A%B1%E5%AD%90%E3%81%AE%E5%BA%AD/id6759095190
 
 ⸻
-
-<img width="1024" height="1024" alt="icon y 1 png 10-32-16-074" src="https://github.com/user-attachments/assets/08ffe3b3-bef0-43bc-810a-19649c0d3778" />
+<img width="1024" height="1024" alt="icon night 1" src="https://github.com/user-attachments/assets/97865703-e975-449e-ba19-3c08e54359ff" />
 
 
 A garden.
