@@ -118,7 +118,7 @@
         <div>
           <h3 class="modal-title">{{ t('chat.newConversationRequest') }}</h3>
           <div v-for="req in requests" :key="req.id" class="request-block">
-            <p><strong>{{ t('chat.requester') }}:</strong> {{ req.senderProfile?.displayName || t('chat.unknown') }}</p>
+            <p><strong>{{ t('chat.requester') }}:</strong> {{ req.senderProfile?.nickname || t('chat.unknown') }}</p>
             <p><strong>{{ t('chat.message') }}:</strong> {{ req.message || t('chat.none') }}</p>
             <div class="button-row">
               <YamatoButton @click="accept(req)">{{ t('chat.accept') }}</YamatoButton>
@@ -146,18 +146,17 @@
       </Modal>
     </transition>
 
-    <Modal
-      :visible="showProfileModal"
-      customClass="compact"
-      @close="() => showProfileModal = false"
-      @refresh="handleProfileRefresh"
-      @after-leave="scrollToTop"
-    >
-      <ProfileSetupView
-        @close="() => showProfileModal = false"
-        @refresh="handleProfileRefresh"
-      />
-    </Modal>
+<EditWeatherProfileModal
+
+  :visible="showProfileModal"
+
+  :profile="myProfile"
+
+  @close="showProfileModal = false"
+
+  @refresh="handleProfileRefresh"
+
+/>
   </div>
 </template> 
 
@@ -165,7 +164,7 @@
 <script setup>
 import { ref, onMounted, onUnmounted, onBeforeUnmount, computed } from 'vue'
 import { API, graphqlOperation, Auth } from 'aws-amplify'
-import { listChatRooms, getPublicProfile, listChatRequests } from '@/graphql/queries'
+import { listChatRooms, getWeatherProfile, listChatRequests } from '@/graphql/queries'
 import { updateChatRoom, updateChatRequest, createChatRoom, deleteChatRoom } from '@/graphql/mutations'
 import { onUpdateChatRoom } from '@/graphql/subscriptions'
 import { useRoute, useRouter } from 'vue-router'
@@ -175,7 +174,7 @@ import YamatoUserSearchModal from '@/components/YamatoUserSearchModal.vue'
 import YamatoButton from '@/components/YamatoButton.vue'
 import Modal from '@/components/Modal.vue'
 import ChatRequestModal from '@/components/ChatRequestModal.vue'
-import ProfileSetupView from '@/views/ProfileSetupView.vue'
+import EditWeatherProfileModal from '@/components/EditWeatherProfileModal.vue'
 import IconButton from '@/components/IconButton.vue'
 import { useNotificationStore } from '@/stores/notificationStore'
 import { onBeforeRouteUpdate } from 'vue-router'
@@ -183,6 +182,8 @@ import { onBeforeRouteUpdate } from 'vue-router'
 
 import '@/assets/variables.css'
 import { useI18n } from 'vue-i18n'
+
+const myProfile = ref(null)
 
 const notificationStore = useNotificationStore()
 
@@ -282,13 +283,17 @@ async function fetchRequests() {
       items.map(async item => {
         try {
           const profileRes = await API.graphql({
-            query: getPublicProfile,
+            query: getWeatherProfile,
             variables: { id: item.fromUserId },
             authMode: 'AMAZON_COGNITO_USER_POOLS'
           })
-          item.senderProfile = profileRes.data.getPublicProfile
+item.senderProfile = profileRes.data.getWeatherProfile
         } catch {
-          item.senderProfile = { displayName: '(取得失敗)' }
+item.senderProfile = {
+
+    nickname: '(取得失敗)'
+
+}
         }
         return item
       })
@@ -368,7 +373,7 @@ function openWindMessage(room) {
     name: 'wind-message',
     query: {
       toUserId: toSub,
-      toDisplayName: partner?.displayName || ''  // ✅ ここを追加
+toDisplayName: partner?.nickname || ''
     }
   })
 }
@@ -396,19 +401,46 @@ function scrollToTop() {
 function handleProfileRefresh() {
   fetchMyProfile()
 }
+
+
 async function fetchMyProfile() {
+
   try {
-    const res = await API.graphql(graphqlOperation(getPublicProfile, { id: mySub.value }))
-    const profile = res.data.getPublicProfile
+
+    const res = await API.graphql(
+
+      graphqlOperation(getWeatherProfile, { id: mySub.value })
+
+    )
+
+    const profile = res.data.getWeatherProfile
+
+    myProfile.value = profile
+
     if (profile) {
+
       hasProfile.value = true
-      myInitial.value = profile.displayName?.[0]?.toUpperCase() || '👤'
+
+      myInitial.value = profile.nickname?.[0]?.toUpperCase() || '👤'
+
     } else {
+
       hasProfile.value = false
+
+      myInitial.value = '👤'
+
     }
+
   } catch (err) {
-    console.error('❌ プロフィール取得エラー:', err)
+
+    console.error('❌ WeatherProfile取得エラー:', err)
+
+    hasProfile.value = false
+
+    myInitial.value = '👤'
+
   }
+
 }
 
 
@@ -434,12 +466,15 @@ onMounted(async () => {
     mySub.value = user.attributes.sub
 
     // 🔵 プロフィール情報取得
-    const res = await API.graphql(graphqlOperation(getPublicProfile, { id: mySub.value }))
-    const profile = res.data.getPublicProfile
+const res = await API.graphql(graphqlOperation(getWeatherProfile, { id: mySub.value }))
+
+const profile = res.data.getWeatherProfile
+
+myProfile.value = profile
 
     if (profile) {
       hasProfile.value = true
-      myInitial.value = profile.displayName?.[0]?.toUpperCase() || '👤'
+myInitial.value = profile.nickname?.[0]?.toUpperCase() || '👤'
     } else {
       hasProfile.value = false
     }
@@ -556,8 +591,8 @@ async function fetchChatRooms() {
       for (const id of idsToFetch) {
         if (id && !partnerProfiles.value[id]) {
           try {
-            const profileRes = await API.graphql(graphqlOperation(getPublicProfile, { id }))
-            const profile = profileRes.data.getPublicProfile
+            const profileRes = await API.graphql(graphqlOperation(getWeatherProfile, { id }))
+            const profile = profileRes.data.getWeatherProfile
             if (profile) {
               partnerProfiles.value[id] = profile
             }
@@ -576,7 +611,7 @@ async function fetchChatRooms() {
 function getPartnerDisplayName(room) {
   const partnerSub = room.user1 === mySub.value ? room.user2 : room.user1
   const profile = partnerProfiles.value[partnerSub]
-  return profile?.displayName || '（未設定）'
+return profile?.nickname || '（未設定）'
 }
 
 function getPartnerYamatoId(room) {
@@ -588,7 +623,7 @@ function getPartnerYamatoId(room) {
 function getSenderDisplayName(room) {
   const senderId = room.lastSenderId
   const profile = partnerProfiles.value[senderId]
-  return profile?.displayName || '（未設定）'
+return profile?.nickname || '（未設定）'
 }
 
 const sortedRooms = computed(() => {

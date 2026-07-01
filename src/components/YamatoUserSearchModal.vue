@@ -12,7 +12,6 @@
       <input
         v-model="inputYamatoId"
         placeholder="@yamato..."
-        @input="addAtMark"
       />
 <div class="button-row top-spaced">
   <YamatoButton @click="search">{{ t('chat.search') }}</YamatoButton>
@@ -26,7 +25,11 @@
           class="profile-preview"
         >
 <p class="profile-name">
-  <strong>{{ t('chat.name') }}：</strong>{{ profile.displayName || t('chat.unset') }}
+
+  <strong>{{ t('chat.name') }}：</strong>
+
+  {{ profile.nickname || t('chat.unset') }}
+
 </p>
 <p class="profile-bio">
   <strong>{{ t('chat.bio') }}：</strong>{{ profile.bio || t('chat.none') }}
@@ -44,7 +47,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { API, Auth, graphqlOperation } from 'aws-amplify'
-import { listChatRooms, publicProfileByYamatoId } from '@/graphql/queries'
+import { listChatRooms, weatherProfileByYamatoId } from '@/graphql/queries'
 import { updateChatRoom, createChatRequest } from '@/graphql/mutations'
 import YamatoButton from '@/components/YamatoButton.vue'
 import { useRouter } from 'vue-router'
@@ -91,11 +94,11 @@ async function search() {
 
   try {
     const res = await API.graphql({
-      query: publicProfileByYamatoId,
+query: weatherProfileByYamatoId,
       variables: { yamatoId },
       authMode: 'AMAZON_COGNITO_USER_POOLS'
     })
-    foundProfiles.value = res.data.publicProfileByYamatoId.items
+foundProfiles.value = res.data.weatherProfileByYamatoId.items
     if (foundProfiles.value.length === 0) {
       errorMessage.value = t('chat.notFound')
     }
