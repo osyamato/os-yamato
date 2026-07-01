@@ -15,7 +15,7 @@ const GiftStatus = {
   "EXPIRED": "expired"
 };
 
-const { Memo, Diary, Schedule, Contact, ChatRoom, Message, Reaction, PublicProfile, ChatRequest, Photo, Video, ScheduleTemplate, WindMessage, Blossom, BestRecord, GPTMiniSession, GPTMiniHistory, WeatherCity, WeatherProfile, WeatherComment, WeatherReply, Mission, ShiritoriRoom, Turn, HanacoGardenBackup, Gift, WeatherFootprint, SharedGarden, PushDevice } = initSchema(schema);
+const { Memo, Diary, Schedule, Contact, ChatRoom, Message, Reaction, PublicProfile, ChatRequest, Photo, Video, ScheduleTemplate, WindMessage, Blossom, BestRecord, GPTMiniSession, GPTMiniHistory, WeatherCity, WeatherProfile, WeatherComment, WeatherReply, Mission, ShiritoriRoom, Turn, HanacoGardenBackup, Gift, WeatherFootprint, SharedGarden, PushDevice, SleepyCatRecord } = initSchema(schema);
 
 export {
   Memo,
@@ -47,6 +47,7 @@ export {
   WeatherFootprint,
   SharedGarden,
   PushDevice,
+  SleepyCatRecord,
   RoomStatus,
   GiftStatus
 };

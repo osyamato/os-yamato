@@ -116,12 +116,15 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed, watch, onMounted } from 'vue'
+
+import { useRouter, useRoute } from 'vue-router'
 import { Auth } from 'aws-amplify'
 import { useI18n } from 'vue-i18n'
 import TermsModal from '@/components/TermsModal.vue'
 const { t, locale } = useI18n()
+const route = useRoute()
+
 
 const showTerms = ref(false)
 const agreed = ref(false)
@@ -140,51 +143,105 @@ const passwordsMatch = computed(() => {
   return password.value && confirmPassword.value && password.value === confirmPassword.value
 })
 
+onMounted(() => {
+
+    const source = route.query.source
+
+    if (typeof source === "string" && source.length > 0) {
+
+        sessionStorage.setItem("source", source)
+
+    }
+
+})
+
 const handleSignUp = async () => {
+
   if (!agreed.value || !passwordsMatch.value) {
     message.value = t('auth.passwordMismatch')
     return
   }
 
   try {
+
     message.value = ''
+
     await Auth.signUp({
       username: email.value,
       password: password.value,
-      attributes: { email: email.value },
+      attributes: {
+        email: email.value
+      },
     })
 
     message.value = t('auth.codeSent')
     step.value = 'confirm'
+
   } catch (error) {
+
     const msg = error.message || ''
+
     if (msg === 'User already exists') {
+
       try {
+
         await Auth.signIn(email.value, password.value)
+
         message.value = t('auth.userExists')
+
       } catch (signInError) {
+
         if (signInError.code === 'NotAuthorizedException') {
           message.value = t('auth.passwordInvalid')
           return
         }
-        if (signInError.code === 'UserNotConfirmedException') {
-          router.push({ name: 'verify-email', query: { email: email.value } })
-          return
+
+if (signInError.code === 'UserNotConfirmedException') {
+
+    router.push({
+
+        name: "verify-email",
+
+        query: {
+
+            email: email.value
+
         }
+
+    })
+
+    return
+
+}
+
         if (signInError.code === 'UserNotFoundException') {
+
           message.value = t('auth.userNotFound')
+
         } else {
+
           message.value = `${t('auth.error')}: ${signInError.message}`
+
         }
+
       }
+
     } else if (msg.includes('Password did not conform with policy')) {
+
       message.value = t('auth.passwordTooShort')
+
     } else if (msg.toLowerCase().includes('password')) {
+
       message.value = t('auth.passwordInvalid')
+
     } else {
+
       message.value = `${t('auth.error')}: ${msg}`
+
     }
+
   }
+
 }
 
 const handleConfirm = async () => {

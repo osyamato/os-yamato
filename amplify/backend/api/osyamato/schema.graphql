@@ -636,3 +636,36 @@ type PushDevice
 }
 
 
+type SleepyCatRecord
+
+@model
+
+@auth(rules: [
+
+  { allow: owner },
+
+  { allow: private, operations: [read] }
+
+]) {
+
+  id: ID!
+
+  nickname: String
+
+  bestTimeSec: Int!
+
+  todayBestTimeSec: Int!
+
+  todayDate: AWSDate!
+
+  playCount: Int!
+
+  totalPlayTimeSec: Int!
+
+  lastPlayedAt: AWSDateTime
+
+  createdAt: AWSDateTime
+
+  updatedAt: AWSDateTime
+
+}
