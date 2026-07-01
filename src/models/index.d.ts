@@ -1166,3 +1166,41 @@ export declare type PushDevice = LazyLoading extends LazyLoadingDisabled ? Eager
 export declare const PushDevice: (new (init: ModelInit<PushDevice>) => PushDevice) & {
   copyOf(source: PushDevice, mutator: (draft: MutableModel<PushDevice>) => MutableModel<PushDevice> | void): PushDevice;
 }
+
+type EagerSleepyCatRecord = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<SleepyCatRecord, 'id'>;
+  };
+  readonly id: string;
+  readonly nickname?: string | null;
+  readonly bestTimeSec: number;
+  readonly todayBestTimeSec: number;
+  readonly todayDate: string;
+  readonly playCount: number;
+  readonly totalPlayTimeSec: number;
+  readonly lastPlayedAt?: string | null;
+  readonly createdAt?: string | null;
+  readonly updatedAt?: string | null;
+}
+
+type LazySleepyCatRecord = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<SleepyCatRecord, 'id'>;
+  };
+  readonly id: string;
+  readonly nickname?: string | null;
+  readonly bestTimeSec: number;
+  readonly todayBestTimeSec: number;
+  readonly todayDate: string;
+  readonly playCount: number;
+  readonly totalPlayTimeSec: number;
+  readonly lastPlayedAt?: string | null;
+  readonly createdAt?: string | null;
+  readonly updatedAt?: string | null;
+}
+
+export declare type SleepyCatRecord = LazyLoading extends LazyLoadingDisabled ? EagerSleepyCatRecord : LazySleepyCatRecord
+
+export declare const SleepyCatRecord: (new (init: ModelInit<SleepyCatRecord>) => SleepyCatRecord) & {
+  copyOf(source: SleepyCatRecord, mutator: (draft: MutableModel<SleepyCatRecord>) => MutableModel<SleepyCatRecord> | void): SleepyCatRecord;
+}

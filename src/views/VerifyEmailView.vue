@@ -71,16 +71,34 @@ onMounted(() => {
 
 const handleConfirm = async () => {
   try {
+
     message.value = ''
+
     await Auth.confirmSignUp(email.value, code.value)
+
     confirmed.value = true
 
-    // 5秒後にサインインへ
     setTimeout(() => {
-      router.push('/signin')
+
+      const source = sessionStorage.getItem("source")
+
+      if (source === "ios") {
+
+        sessionStorage.removeItem("source")
+
+        window.location.href = "osyamato://signin"
+
+        return
+      }
+
+      router.push("/signin")
+
     }, 5000)
+
   } catch (error) {
+
     message.value = `${t('auth.error')}: ${error.message}`
+
   }
 }
 

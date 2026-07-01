@@ -1834,3 +1834,66 @@ export const onDeletePushDevice = /* GraphQL */ `
     }
   }
 `;
+export const onCreateSleepyCatRecord = /* GraphQL */ `
+  subscription OnCreateSleepyCatRecord(
+    $filter: ModelSubscriptionSleepyCatRecordFilterInput
+    $owner: String
+  ) {
+    onCreateSleepyCatRecord(filter: $filter, owner: $owner) {
+      id
+      nickname
+      bestTimeSec
+      todayBestTimeSec
+      todayDate
+      playCount
+      totalPlayTimeSec
+      lastPlayedAt
+      createdAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;
+export const onUpdateSleepyCatRecord = /* GraphQL */ `
+  subscription OnUpdateSleepyCatRecord(
+    $filter: ModelSubscriptionSleepyCatRecordFilterInput
+    $owner: String
+  ) {
+    onUpdateSleepyCatRecord(filter: $filter, owner: $owner) {
+      id
+      nickname
+      bestTimeSec
+      todayBestTimeSec
+      todayDate
+      playCount
+      totalPlayTimeSec
+      lastPlayedAt
+      createdAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;
+export const onDeleteSleepyCatRecord = /* GraphQL */ `
+  subscription OnDeleteSleepyCatRecord(
+    $filter: ModelSubscriptionSleepyCatRecordFilterInput
+    $owner: String
+  ) {
+    onDeleteSleepyCatRecord(filter: $filter, owner: $owner) {
+      id
+      nickname
+      bestTimeSec
+      todayBestTimeSec
+      todayDate
+      playCount
+      totalPlayTimeSec
+      lastPlayedAt
+      createdAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;

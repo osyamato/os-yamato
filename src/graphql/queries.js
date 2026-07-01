@@ -1327,6 +1327,54 @@ export const listPushDevices = /* GraphQL */ `
     }
   }
 `;
+export const getSleepyCatRecord = /* GraphQL */ `
+  query GetSleepyCatRecord($id: ID!) {
+    getSleepyCatRecord(id: $id) {
+      id
+      nickname
+      bestTimeSec
+      todayBestTimeSec
+      todayDate
+      playCount
+      totalPlayTimeSec
+      lastPlayedAt
+      createdAt
+      updatedAt
+      owner
+      __typename
+    }
+  }
+`;
+export const listSleepyCatRecords = /* GraphQL */ `
+  query ListSleepyCatRecords(
+    $filter: ModelSleepyCatRecordFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    listSleepyCatRecords(
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        nickname
+        bestTimeSec
+        todayBestTimeSec
+        todayDate
+        playCount
+        totalPlayTimeSec
+        lastPlayedAt
+        createdAt
+        updatedAt
+        owner
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
 export const messagesByRoomId = /* GraphQL */ `
   query MessagesByRoomId(
     $roomId: ID!
