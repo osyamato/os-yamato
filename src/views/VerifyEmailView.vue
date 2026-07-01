@@ -78,22 +78,22 @@ const handleConfirm = async () => {
 
     confirmed.value = true
 
-    setTimeout(() => {
+setTimeout(() => {
 
-      const source = sessionStorage.getItem("source")
+    const source = sessionStorage.getItem("source")
 
-      if (source === "ios") {
+    if (source === "ios") {
 
         sessionStorage.removeItem("source")
 
-        window.location.href = "osyamato://signin"
+        window.location.href = "hanaco875://signin"
 
         return
-      }
+    }
 
-      router.push("/signin")
+    router.push("/signin")
 
-    }, 5000)
+}, 5000)
 
   } catch (error) {
 
