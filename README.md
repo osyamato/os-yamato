@@ -3,6 +3,8 @@
 
 🌱 hanaco Garden × OS Yamato
 
+<img width="149" height="141" alt="スクリーンショット 2026-07-04 11 00 44" src="https://github.com/user-attachments/assets/c3b0b9ab-f99b-452a-accb-5f655ca25f9f" />
+
 hanaco Garden is the first application to bring the social features of OS Yamato into a living, interactive world.
 
 It demonstrates how messaging, weather, footprints, and gentle connections can exist naturally inside a game.
