@@ -76,11 +76,6 @@ function afterLeave() {
   if (typeof props.onClose === 'function') props.onClose()
 }
 
-function addAtMark() {
-  if (!inputYamatoId.value.startsWith('@')) {
-    inputYamatoId.value = '@' + inputYamatoId.value.replace(/^@+/, '')
-  }
-}
 
 async function search() {
   errorMessage.value = ''
