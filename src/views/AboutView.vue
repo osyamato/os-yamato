@@ -74,21 +74,14 @@
   </h3>
 </section>
 
-<!-- 🌤 花子天気 -->
-<section @click="goToHanacoWeather" class="snapkeeps-section">
-  <h3 class="snapkeeps-link">
-    {{ $t('about.hanacoWeather') }}
-    <span class="snapkeeps-arrow">→</span>
-  </h3>
-</section>
 
 <section>
   <h3>{{ $t('about.contactTitle') }}</h3>
   <p>{{ $t('about.developer') }}: OS Yamato (Japan)</p>
 <p>
   Email:
-  <a href="mailto:support-weather@hanaco875.com">
-    support-weather@hanaco875.com
+  <a href="mailto:support@hanaco875.com">
+    support@hanaco875.com
   </a>
 </p>
   <p>
