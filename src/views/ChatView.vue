@@ -733,11 +733,16 @@ async function sendImageMessage(imageKey, thumbnailKey) {
 }
 
 watchEffect(() => {
-  const params = route?.params || {}
-  roomId.value = params.roomId || ''
-  receiverYamatoId.value = params.receiverYamatoId || ''
-})
 
+  const params = route?.params || {}
+
+  roomId.value = params.roomId || ''
+
+  receiverSub.value = params.receiverSub || ''
+
+  receiverYamatoId.value = params.receiverYamatoId || ''
+
+})
 
 watch(groupedMessages, async () => {
   if (suppressAutoScroll.value) return
@@ -796,33 +801,90 @@ if (draft) {
   messageAnimationEnabled.value = animSetting !== 'off' // undefined も true 扱い
 
   // ✅ 2. 自分の Yamato ID を取得
-  const profileRes = await API.graphql({
-    query: /* GraphQL */ `
-      query GetMyProfile($id: ID!) {
-        getPublicProfile(id: $id) {
-          yamatoId
-        }
-      }`,
-    variables: { id: mySub.value },
-    authMode: 'AMAZON_COGNITO_USER_POOLS'
-  })
+const myProfileRes = await API.graphql({
 
-  myYamatoId.value = profileRes.data.getPublicProfile.yamatoId
+  query: /* GraphQL */ `
+
+    query GetMyWeatherProfile($id: ID!) {
+
+      getWeatherProfile(id: $id) {
+
+        nickname
+
+      }
+
+    }
+
+  `,
+
+  variables: {
+
+    id: mySub.value
+
+  },
+
+  authMode: 'AMAZON_COGNITO_USER_POOLS'
+
+})
+
+myYamatoId.value =
+
+  myProfileRes.data?.getWeatherProfile?.nickname || ''
 
   // ✅ 3. 相手のプロフィール取得
-  const partnerRes = await API.graphql(graphqlOperation(publicProfileByYamatoId, {
-    yamatoId: receiverYamatoId.value
-  }))
-  const partner = partnerRes.data.publicProfileByYamatoId.items[0]
+console.log('🔎 roomId:', roomId.value)
 
-  if (!partner) {
-    console.warn('⚠️ partner が見つかりませんでした')
-    partnerDisplayName.value = '不明'
-    return
-  }
+console.log('🔎 receiverYamatoId:', receiverYamatoId.value)
 
-  receiverSub.value = partner.id
-  partnerDisplayName.value = partner.displayName || '相手'
+try {
+
+  const profileRes = await API.graphql({
+
+    query: /* GraphQL */ `
+
+      query GetWeatherProfile($id: ID!) {
+
+        getWeatherProfile(id: $id) {
+
+          nickname
+
+        }
+
+      }
+
+    `,
+
+    variables: {
+
+      id: receiverSub.value
+
+    },
+
+    authMode: 'AMAZON_COGNITO_USER_POOLS'
+
+  })
+
+  const profile = profileRes.data?.getWeatherProfile
+
+  partnerDisplayName.value =
+
+    profile?.nickname ||
+
+    receiverYamatoId.value ||
+
+    '相手'
+
+} catch (error) {
+
+  console.warn('⚠️ WeatherProfile取得失敗:', error)
+
+  // プロフィール取得失敗だけでチャットを止めない
+
+  partnerDisplayName.value =
+
+    receiverYamatoId.value || '相手'
+
+}
 
   // ✅ 4. メッセージ取得とサブスクリプション登録（fetchMessages 内で subscribe 呼ぶ）
   await fetchMessages()

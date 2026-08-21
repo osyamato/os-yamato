@@ -97,12 +97,17 @@ const routes = [
   component: GiftView
 },
 
-  {
-    path: '/chat/:roomId/:receiverYamatoId',
-    name: 'chat',
-    component: ChatView,
-    props: true
-  },
+{
+
+  path: '/chat/:roomId/:receiverSub/:receiverYamatoId',
+
+  name: 'chat',
+
+  component: ChatView,
+
+  props: true
+
+},
   { path: '/chat-rooms', name: 'chat-rooms', component: ChatRoomListView },
   { path: '/chat-requests', name: 'chat-requests', component: ChatRequestListView },
   { path: '/profile-setup', name: 'profile-setup', component: ProfileSetupView },
