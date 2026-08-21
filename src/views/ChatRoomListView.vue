@@ -633,20 +633,61 @@ const sortedRooms = computed(() => {
 })
 
 function goToRoom(targetRoomId, receiverYamatoId) {
+
   showOptionsFor.value = null
-  const now = new Date().toISOString()
+
   const room = chatRooms.value.find(r => r.id === targetRoomId)
-  if (room) {
-    const input = {
-      id: room.id,
-      ...(room.user1 === mySub.value ? { lastReadAtUser1: now } : { lastReadAtUser2: now })
-    }
-    API.graphql(graphqlOperation(updateChatRoom, { input }))
-      .catch(err => console.warn('⚠️ 既読更新失敗:', err))
+
+  if (!room) {
+
+    console.warn('⚠️ ChatRoom が見つかりません:', targetRoomId)
+
+    return
+
   }
 
+  const receiverSub =
 
-  router.push({ name: 'chat', params: { roomId: targetRoomId, receiverYamatoId } })
+    room.user1 === mySub.value
+
+      ? room.user2
+
+      : room.user1
+
+  const now = new Date().toISOString()
+
+  const input = {
+
+    id: room.id,
+
+    ...(room.user1 === mySub.value
+
+      ? { lastReadAtUser1: now }
+
+      : { lastReadAtUser2: now })
+
+  }
+
+  API.graphql(graphqlOperation(updateChatRoom, { input }))
+
+    .catch(err => console.warn('⚠️ 既読更新失敗:', err))
+
+  router.push({
+
+    name: 'chat',
+
+    params: {
+
+      roomId: targetRoomId,
+
+      receiverSub,
+
+      receiverYamatoId
+
+    }
+
+  })
+
 }
 
 function hasUnread(room) {
