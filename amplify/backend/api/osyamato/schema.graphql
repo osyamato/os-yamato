@@ -350,7 +350,17 @@ type WeatherComment
 
   id: ID!
 
-  owner: String
+owner: String
+
+  @index(
+
+    name: "byOwner",
+
+    queryField: "commentsByOwner",
+
+    sortKeyFields: ["createdAt"]
+
+  )
   ownerNickname: String
   icon: String
 
@@ -358,18 +368,26 @@ type WeatherComment
   temperature: Float!
   timeOfDay: Float!
 
-  # ⭐ ここに付ける
-  skyKey: String!
+  # 🌤 既存：花子天気用
+  skyKey: String
     @index(
       name: "bySkyKey",
       queryField: "commentsBySkyKey",
       sortKeyFields: ["createdAt"]
     )
 
-  timeBucket: String!
+  # 📰 新規：SNSタイムライン用
+  timelineKey: String
+    @index(
+      name: "byTimeline",
+      queryField: "commentsByTimeline",
+      sortKeyFields: ["createdAt"]
+    )
+
+  timeBucket: String
   season: String
 
-  language: String!
+  language: String
   content: String!
 
   imageKey: String
