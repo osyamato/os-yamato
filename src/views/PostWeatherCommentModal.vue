@@ -233,6 +233,7 @@ async function submitComment() {
         temperature: selectedTemperature.value,
         timeOfDay: selectedHour.value,
         language: props.language,
+        timelineKey: 'GLOBAL',
         content: content.value,
         imageKey,
         thumbnailKey,

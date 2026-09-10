@@ -24,6 +24,7 @@ export const getFilteredWeatherComments = /* GraphQL */ `
       temperature
       timeOfDay
       skyKey
+      timelineKey
       timeBucket
       season
       language
@@ -866,6 +867,7 @@ export const getWeatherComment = /* GraphQL */ `
       temperature
       timeOfDay
       skyKey
+      timelineKey
       timeBucket
       season
       language
@@ -899,6 +901,7 @@ export const listWeatherComments = /* GraphQL */ `
         temperature
         timeOfDay
         skyKey
+        timelineKey
         timeBucket
         season
         language
@@ -1545,6 +1548,53 @@ export const weatherProfileByYamatoId = /* GraphQL */ `
     }
   }
 `;
+export const commentsByOwner = /* GraphQL */ `
+  query CommentsByOwner(
+    $owner: String!
+    $createdAt: ModelStringKeyConditionInput
+    $sortDirection: ModelSortDirection
+    $filter: ModelWeatherCommentFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    commentsByOwner(
+      owner: $owner
+      createdAt: $createdAt
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        owner
+        ownerNickname
+        icon
+        weather
+        temperature
+        timeOfDay
+        skyKey
+        timelineKey
+        timeBucket
+        season
+        language
+        content
+        imageKey
+        thumbnailKey
+        profileView
+        likeCount
+        reportCount
+        replyCount
+        replyAllowed
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
 export const commentsBySkyKey = /* GraphQL */ `
   query CommentsBySkyKey(
     $skyKey: String!
@@ -1571,6 +1621,54 @@ export const commentsBySkyKey = /* GraphQL */ `
         temperature
         timeOfDay
         skyKey
+        timelineKey
+        timeBucket
+        season
+        language
+        content
+        imageKey
+        thumbnailKey
+        profileView
+        likeCount
+        reportCount
+        replyCount
+        replyAllowed
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const commentsByTimeline = /* GraphQL */ `
+  query CommentsByTimeline(
+    $timelineKey: String!
+    $createdAt: ModelStringKeyConditionInput
+    $sortDirection: ModelSortDirection
+    $filter: ModelWeatherCommentFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    commentsByTimeline(
+      timelineKey: $timelineKey
+      createdAt: $createdAt
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        owner
+        ownerNickname
+        icon
+        weather
+        temperature
+        timeOfDay
+        skyKey
+        timelineKey
         timeBucket
         season
         language

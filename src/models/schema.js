@@ -2081,14 +2081,21 @@ export const schema = {
                     "name": "skyKey",
                     "isArray": false,
                     "type": "String",
-                    "isRequired": true,
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "timelineKey": {
+                    "name": "timelineKey",
+                    "isArray": false,
+                    "type": "String",
+                    "isRequired": false,
                     "attributes": []
                 },
                 "timeBucket": {
                     "name": "timeBucket",
                     "isArray": false,
                     "type": "String",
-                    "isRequired": true,
+                    "isRequired": false,
                     "attributes": []
                 },
                 "season": {
@@ -2102,7 +2109,7 @@ export const schema = {
                     "name": "language",
                     "isArray": false,
                     "type": "String",
-                    "isRequired": true,
+                    "isRequired": false,
                     "attributes": []
                 },
                 "content": {
@@ -2186,10 +2193,32 @@ export const schema = {
                 {
                     "type": "key",
                     "properties": {
+                        "name": "byOwner",
+                        "queryField": "commentsByOwner",
+                        "fields": [
+                            "owner",
+                            "createdAt"
+                        ]
+                    }
+                },
+                {
+                    "type": "key",
+                    "properties": {
                         "name": "bySkyKey",
                         "queryField": "commentsBySkyKey",
                         "fields": [
                             "skyKey",
+                            "createdAt"
+                        ]
+                    }
+                },
+                {
+                    "type": "key",
+                    "properties": {
+                        "name": "byTimeline",
+                        "queryField": "commentsByTimeline",
+                        "fields": [
+                            "timelineKey",
                             "createdAt"
                         ]
                     }
@@ -3380,5 +3409,5 @@ export const schema = {
     },
     "nonModels": {},
     "codegenVersion": "3.4.4",
-    "version": "ceb2fd46b5ee6f9173f48c4a5e0a17e7"
+    "version": "6d8ce96bf8163c8052aeddab1bfb704a"
 };

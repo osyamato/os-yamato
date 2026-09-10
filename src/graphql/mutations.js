@@ -1173,6 +1173,7 @@ export const createWeatherComment = /* GraphQL */ `
       temperature
       timeOfDay
       skyKey
+      timelineKey
       timeBucket
       season
       language
@@ -1204,6 +1205,7 @@ export const updateWeatherComment = /* GraphQL */ `
       temperature
       timeOfDay
       skyKey
+      timelineKey
       timeBucket
       season
       language
@@ -1235,6 +1237,7 @@ export const deleteWeatherComment = /* GraphQL */ `
       temperature
       timeOfDay
       skyKey
+      timelineKey
       timeBucket
       season
       language
